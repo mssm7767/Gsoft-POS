@@ -1,0 +1,66 @@
+﻿@model List<GSoftPosNew.Models.User>
+@{
+    ViewData["Title"] = "User List"; Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<link href="~/css/user.css" rel="stylesheet" />
+
+<h2 class="border-start border-4 border-success ps-3 mb-4">User List</h2>
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+<table class="table table-hover">
+    <thead class="table-light">
+        <tr>
+            <th>Pic</th>
+            <th>Name</th>
+            <th>Username</th>
+            <th>Contact</th>
+            <th>Role</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var u in Model)
+        {
+            <tr>
+                <td>
+                    @if (!string.IsNullOrEmpty(u.ProfilePicUrl))
+                    {
+                        <img src="@u.ProfilePicUrl" class="user-thumb" />
+                    }
+                </td>
+                <td>@u.FullName</td>
+                <td>@u.Username</td>
+                <td>@u.ContactNumber</td>
+                <td>
+                    @{
+                        string roleName = "";
+                        if (u.RoleId.HasValue && ViewBag.Roles is List<SelectListItem> roleList)
+                        {
+                            var role = roleList.FirstOrDefault(r => r.Value == u.RoleId.Value.ToString());
+                            if (role != null)
+                            {
+                                roleName = role.Text;
+                            }
+                        }
+                    }
+                    @roleName
+                </td>
+
+                <td>
+                    <a asp-action="Edit" asp-route-id="@u.Id" class="me-2 text-primary"><i class="fa fa-edit"></i></a>
+                    <form asp-action="Delete" asp-route-id="@u.Id" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-link text-danger p-0"><i class="fa fa-trash"></i></button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-action="Create" class="btn btn-success mt-3">
+    <i class="fa fa-user-plus me-1"></i> Add New User
+</a>

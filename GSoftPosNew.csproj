@@ -1,0 +1,45 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<!-- Make sure your root namespace matches your code namespaces -->
+		<RootNamespace>GSoftPosNew</RootNamespace>
+		<!-- (Optional) Ensure the assembly name lines up too -->
+		<AssemblyName>GSoftPosNew</AssemblyName>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+		<PackageReference Include="EPPlus" Version="8.0.7" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.6">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.6" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.6">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="ZXing.Net" Version="0.16.10" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Remove="wwwroot\css\receipt.css" />
+		<Content Remove="wwwroot\css\sidebar.css" />
+		<Content Remove="wwwroot\css\favicon.ico" />
+		<Content Remove="wwwroot\css\site.css" />
+		<Content Remove="wwwroot\css\dashboard.css" />
+		<Content Remove="wwwroot\css\pos.css" />
+		<Content Remove="wwwroot\css\purchase.css" />
+
+		<Folder Include="Migrations\" />
+
+		<Folder Include="wwwroot\images\" />
+	</ItemGroup>
+
+</Project>
+

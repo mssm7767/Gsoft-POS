@@ -1,0 +1,40 @@
+﻿<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Item Code</th>
+            <th>Item Name</th>
+            <th>Category</th>
+            <th>Unit</th>
+            <th>Qty</th>
+            <th>Purchase</th>
+            <th>Sale</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model.Any())
+        {
+            foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.ItemCode</td>
+                    <td>@item.ItemName</td>
+                    <td>@item.CategoryId</td>
+                    <td>@item.Unit</td>
+                    <td>@item.Quantity</td>
+                    <td>@item.PurchasePrice.ToString("0.00")</td>
+                    <td>@item.SalePrice.ToString("0.00")</td>
+                    <td>
+                        <a class="btn btn-sm btn-primary" href="@Url.Action("Edit", "Item", new { id = item.Id })">✏ Edit</a>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="8" class="text-center">No items found.</td>
+            </tr>
+        }
+    </tbody>
+</table>

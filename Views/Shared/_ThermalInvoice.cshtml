@@ -1,0 +1,93 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Thermal Invoice</title>
+    <link rel="stylesheet" href="invoiceslip.css" />
+</head>
+<body>
+    <div class="invoice">
+        <!-- Logo + Shop Info -->
+        <div class="header">
+            <img src="logo.png" alt="Logo" class="logo" />
+            <h2>My Shop Name</h2>
+            <p>Street Address, City</p>
+            <p>Contact: +92 300 1234567</p>
+        </div>
+
+        <!-- Customer & Invoice Info -->
+        <div class="meta">
+            <div class="left">
+                <strong>Customer:</strong> Walk-in Customer
+            </div>
+            <div class="right">
+                <strong>Date:</strong> 2024-07-07 15:30
+            </div>
+            <div class="left">
+                <strong>Invoice #:</strong> INV-0001
+            </div>
+            <div class="right">
+                <strong>Cashier:</strong> Admin
+            </div>
+        </div>
+
+        <!-- Items Table -->
+        <table class="items">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Item</th>
+                    <th>Price</th>
+                    <th>Qty</th>
+                    <th>Dis</th>
+                    <th>Tax</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>Product A</td>
+                    <td>100</td>
+                    <td>2</td>
+                    <td>5</td>
+                    <td>10</td>
+                    <td>190</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>Product B</td>
+                    <td>150</td>
+                    <td>1</td>
+                    <td>0</td>
+                    <td>15</td>
+                    <td>165</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Totals -->
+        <div class="totals">
+            <div class="left">
+                <strong>Total Items:</strong> 3
+                <br>
+                <strong>Old Balance:</strong> 200
+            </div>
+            <div class="right">
+                <strong>Sub Total:</strong> 355<br>
+                <strong>Discount:</strong> 5<br>
+                <strong>Tax:</strong> 25<br>
+                <strong>R.Change:</strong> 0<br>
+                <strong>Grand Total:</strong> 375
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>* Goods once sold will not be returned.</p>
+            <p>Thank you for shopping with us.</p>
+            <p>Software by GSoft Software | +92 300 1234567</p>
+        </div>
+    </div>
+</body>
+</html>

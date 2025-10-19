@@ -1,0 +1,132 @@
+﻿/* ========= SUPPLIER LIST – matches supplier family look (no company column) ========= */
+
+/* header card with subtle family gradient + green top strip accent */
+.sup-list-header {
+    overflow: hidden;
+    padding: 0;
+}
+
+    /* green strip (light, professional – not white) */
+    .sup-list-header .top-strip {
+        background: linear-gradient(135deg, #bbf7d0 0%, #86efac 50%, #34d399 100%);
+        border-bottom: 1px solid #a7f3d0;
+        padding: .75rem 1rem;
+    }
+
+    /* inner content area */
+    .sup-list-header .content {
+        background: #ffffff;
+    }
+
+/* search row */
+.search-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.searchbox {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    background: #ffffff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: .45rem .7rem;
+    box-shadow: var(--shadow);
+}
+
+    .searchbox input {
+        border: none;
+        outline: none;
+        min-width: 260px;
+    }
+
+    .searchbox button {
+        border: none;
+        background: transparent;
+        color: #475569;
+    }
+
+.quick-filters {
+    display: flex;
+    gap: .45rem;
+}
+
+.qf {
+    border: 1px solid var(--line);
+    background: #f8fafc;
+    color: #334155;
+    border-radius: 999px;
+    padding: .38rem .7rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+    .qf.active {
+        background: #e0f2fe;
+        border-color: #bae6fd;
+        color: #075985;
+    }
+
+/* avatar */
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #3730a3;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #c7d2fe;
+}
+
+/* table tweaks */
+.table thead th {
+    background: #f1f5f9 !important;
+    color: #1e293b;
+    font-weight: 800;
+    letter-spacing: .02em;
+}
+
+.table tbody td {
+    vertical-align: middle;
+}
+
+/* actions (mini buttons) – from base palette */
+.btn-mini {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: #f8fafc;
+    color: #334155;
+}
+
+    .btn-mini:hover {
+        background: #eef2f7;
+    }
+
+.btn-edit i {
+    color: #2563eb;
+}
+
+.btn-del i {
+    color: #dc2626;
+}
+
+/* success toast hide anim (pairs with base .save-alert) */
+.save-alert {
+    transition: all .35s ease;
+}
+
+    .save-alert.hide {
+        transform: translateY(-8px);
+        opacity: .0;
+    }

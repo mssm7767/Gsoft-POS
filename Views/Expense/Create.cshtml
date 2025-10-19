@@ -1,0 +1,83 @@
+﻿@model GSoftPosNew.Models.Expense
+@{
+    ViewData["Title"] = "New Expense";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var categories = ViewBag.Categories as List<SelectListItem>;
+}
+
+<div class="container mt-4" style="max-width:700px;">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h5><i class="fa fa-plus-circle"></i> Add New Expense</h5>
+        </div>
+        <div class="card-body">
+            @if (TempData["Message"] != null)
+            {
+                <div class="alert alert-success text-center" id="success-alert">
+                    <i class="fa fa-check-circle"></i> @TempData["Message"]
+                </div>
+            }
+
+
+            @using (Html.BeginForm("Create", "Expense", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.ExpenseDate, new { @class = "form-label" })
+                    @Html.TextBoxFor(m => m.ExpenseDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+                    @Html.ValidationMessageFor(m => m.ExpenseDate, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.ExpenseCategoryId, new { @class = "form-label" })
+                    @Html.DropDownListFor(m => m.ExpenseCategoryId, categories, "-- Select Category --", new { @class = "form-select" })
+                    @Html.ValidationMessageFor(m => m.ExpenseCategoryId, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="mb-3">
+                   @Html.LabelFor(m => m.ExpenseFor, new { @class = "form-label" })
+                   @Html.TextBoxFor(m => m.ExpenseFor, new { @class = "form-control" })
+                </div>
+
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.Amount, new { @class = "form-label" })
+                    @Html.TextBoxFor(m => m.Amount, new { @class = "form-control", type = "number", step = "0.01" })
+                    @Html.ValidationMessageFor(m => m.Amount, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.ReferenceNumber, new { @class = "form-label" })
+                    @Html.TextBoxFor(m => m.ReferenceNumber, new { @class = "form-control", placeholder = "Reference number" })
+                </div>
+
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.Note, new { @class = "form-label" })
+                    @Html.TextAreaFor(m => m.Note, new { @class = "form-control", rows = 2, placeholder = "Additional notes" })
+                </div>
+
+                <div class="text-end">
+                    <button type="submit" class="btn btn-success me-2">
+                        <i class="fa fa-save"></i> Save
+                    </button>
+                    <button type="reset" class="btn btn-secondary">
+                        <i class="fa fa-eraser"></i> Clear
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    setTimeout(function () {
+        var alertBox = document.getElementById("success-alert");
+        if (alertBox) {
+            alertBox.style.transition = "opacity 0.5s ease";
+            alertBox.style.opacity = "0";
+            setTimeout(function () {
+                alertBox.style.display = "none";
+            }, 500); // wait for fade-out
+        }
+    }, 2000); // 2 seconds
+</script>

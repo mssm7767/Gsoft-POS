@@ -1,0 +1,497 @@
+﻿@model ShopSetting
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Shop Settings</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
+    <style>
+        :root {
+            --brand: #0d6efd;
+            --brand-2: #00c6ff;
+            --ink: #0f172a;
+            --muted: #64748b;
+            --card: #ffffff;
+            --bg: #f5f7fa;
+            --ring: #93c5fd;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+        }
+
+        /* Page shell */
+        .page-wrap {
+            max-width: 1200px;
+            margin: 42px auto;
+            padding: 0 16px;
+        }
+
+        .page-head {
+            background: linear-gradient(120deg, rgba(13,110,253,.12), rgba(0,198,255,.12));
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            padding: 14px 16px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+            .page-head .title {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                font-size: 1.25rem;
+                font-weight: 800;
+                color: #0f172a;
+            }
+
+                .page-head .title i {
+                    color: var(--brand);
+                }
+
+            .page-head .actions .btn {
+                border-radius: 12px;
+                font-weight: 700;
+            }
+
+        /* Two-column layout */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1.05fr .95fr;
+            gap: 18px;
+        }
+
+        .grid-2 {
+            grid-template-columns: 1fr;
+        }
+
+        }
+
+        /* Cards */
+        .card-lite {
+            background: var(--card);
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(2,6,23,.05);
+        }
+
+            .card-lite .card-head {
+                padding: 14px 16px;
+                border-bottom: 1px solid #eef2f7;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+                .card-lite .card-head .h {
+                    font-weight: 800;
+                    color: var(--ink);
+                    display: flex;
+                    gap: 10px;
+                    align-items: center;
+                }
+
+                    .card-lite .card-head .h i {
+                        color: var(--brand);
+                    }
+
+            .card-lite .card-body {
+                padding: 16px;
+            }
+
+        /* Form groups */
+        .fg {
+            margin-bottom: 12px;
+        }
+
+        .label {
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .label i {
+                width: 22px;
+                text-align: center;
+            }
+
+        .input-group .input-group-text {
+            border-right: none;
+            background: #f8fafc;
+        }
+
+        .input-group .form-control, .input-group textarea {
+            border-left: none;
+        }
+
+        .form-control:focus, textarea:focus {
+            border-color: var(--ring) !important;
+            box-shadow: 0 0 0 .2rem rgba(13,110,253,.15) !important;
+        }
+
+        /* Avatar / Logo */
+        .logo-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-preview {
+            width: 84px;
+            height: 84px;
+            border-radius: 16px;
+            object-fit: cover;
+            border: 2px solid #e5e7eb;
+            cursor: pointer;
+            transition: transform .25s ease, border-color .25s ease;
+            background: #fff;
+        }
+
+            .logo-preview:hover {
+                transform: scale(1.03);
+                border-color: var(--brand);
+            }
+
+        #logoInput {
+            display: none;
+        }
+
+        /* Save bar (sticky) */
+        .savebar {
+            position: sticky;
+            bottom: 0;
+            padding: 12px;
+            border-top: 1px solid #eef2f7;
+            background: linear-gradient(180deg, rgba(255,255,255,.9), #fff);
+            border-radius: 0 0 18px 18px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .btn-grad {
+            background: linear-gradient(45deg, var(--brand), var(--brand-2));
+            border: none;
+            color: #fff;
+            font-weight: 800;
+            padding: 10px 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 18px rgba(13,110,253,.25);
+        }
+
+            .btn-grad:hover {
+                filter: brightness(1.05);
+            }
+
+        .btn-soft {
+            background: #eef2ff;
+            color: #1e3a8a;
+            border: 1px solid #c7d2fe;
+            font-weight: 700;
+            border-radius: 12px;
+            padding: 10px 16px;
+        }
+
+            .btn-soft:hover {
+                background: #e0e7ff;
+            }
+
+        /* Details panel (right) */
+        .preview-top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+        }
+
+        .shop-badge {
+            font-weight: 900;
+            color: #0f172a;
+            font-size: 1.1rem;
+        }
+
+        .kv {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            border: 1px solid #eef2f7;
+            border-radius: 12px;
+            background: #fff;
+        }
+
+            .kv i {
+                width: 22px;
+                text-align: center;
+                color: #2563eb;
+            }
+
+            .kv .k {
+                font-weight: 700;
+                color: #334155;
+                min-width: 74px;
+            }
+
+        .muted {
+            color: #64748b;
+        }
+
+        .divider {
+            height: 1px;
+            background: #eef2f7;
+            margin: 8px 0;
+        }
+
+        /* Alert fade */
+        .fade-auto {
+            transition: opacity .5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-wrap">
+
+        <!-- Top header -->
+        <div class="page-head card-lite">
+            <div class="title"><i class="fa-solid fa-sliders"></i> Shop Settings</div>
+            <div class="actions">
+                <div class="text-end d-flex justify-content-end gap-2">
+
+                    <div class="dropdown">
+                        <button class="btn btn-soft dropdown-toggle d-inline-flex align-items-center gap-2"
+                                type="button" id="backupDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa-solid fa-database"></i>
+                            Database
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="backupDropdown">
+                            <li>
+                                <a class="dropdown-item" asp-action="ResetDb" asp-controller="Settings">
+                                    Reset DB
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-action="ResetTransactions" asp-controller="Settings">
+                                    Reset Transactions
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-action="ResetItemQuantity" asp-controller="Settings">
+                                    Reset Item Quantity
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-action="DatabaseBackup" asp-controller="Settings">
+                                    Backup DB
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts -->
+        @if (TempData["Message"] != null)
+        {
+            <div id="successMessage" class="alert alert-success text-center fade-auto">
+                <i class="fa fa-check-circle"></i> @TempData["Message"]
+            </div>
+        }
+
+        <!-- Content -->
+        <div class="grid-2">
+
+            <!-- LEFT: Form panel -->
+            <div class="card-lite">
+                <div class="card-head">
+                    <div class="h"><i class="fa-solid fa-pen-to-square"></i> Edit Information</div>
+                    <small class="text-muted">All changes preview on the right</small>
+                </div>
+
+                <form asp-action="Index" method="post" enctype="multipart/form-data" class="card-body">
+                    <input type="hidden" asp-for="Id" />
+
+                    <!-- Logo + name -->
+                    <div class="fg">
+                        <div class="label"><i class="fa-solid fa-image"></i> Logo</div>
+                        <div class="logo-wrap">
+                            <img id="logoPreview"
+                                 class="logo-preview"
+                                 src="@(string.IsNullOrEmpty(Model.LogoPath) ? "https://cdn-icons-png.flaticon.com/512/149/149071.png" : Model.LogoPath)"
+                                 alt="Logo" title="Click to upload"
+                                 onclick="document.getElementById('logoInput').click()" />
+                            <input id="logoInput" asp-for="LogoFile" type="file" accept="image/*" onchange="previewLogo(event)" />
+                            <div class="flex-grow-1">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-store icon-store" style="color:#ff5722;"></i></span>
+                                    <input asp-for="ShopName" class="form-control" placeholder="Shop name" oninput="updatePreview('shopPreview', this.value, 'GSOFT POS')" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- IDs -->
+                    <div class="row">
+                        <div class="col-md-4 fg">
+                            <div class="label"><i class="fa-solid fa-id-card" style="color:#0d6efd;"></i> NTN</div>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-hashtag"></i></span>
+                                <input asp-for="NTN" class="form-control" placeholder="e.g. 1234567-8" oninput="updateText('#prev-ntn', this.value)" />
+                            </div>
+                        </div>
+                        <div class="col-md-4 fg">
+                            <div class="label"><i class="fa-solid fa-file-invoice" style="color:#fd7e14;"></i> STRN</div>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-receipt"></i></span>
+                                <input asp-for="STRN" class="form-control" placeholder="e.g. 12-34-5678-9" oninput="updateText('#prev-strn', this.value)" />
+                            </div>
+                        </div>
+                        <div class="col-md-4 fg">
+                            <div class="label"><i class="fa-solid fa-desktop" style="color:#198754;"></i> POS Id</div>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-terminal"></i></span>
+                                <input asp-for="POSId" class="form-control" placeholder="e.g. POS-01" oninput="updateText('#prev-pos', this.value)" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contacts -->
+                    <div class="row">
+                        <div class="col-md-6 fg">
+                            <div class="label"><i class="fa-solid fa-envelope icon-email" style="color:#2196f3;"></i> Email</div>
+                            <div class="input-group">
+
+                                <span class="input-group-text">&#64;</span>
+                                <input asp-for="Email" class="form-control" placeholder="email@domain.com" oninput="updateText('#prev-email', this.value)" />
+                            </div>
+                        </div>
+                        <div class="col-md-6 fg">
+                            <div class="label"><i class="fa-solid fa-phone icon-phone" style="color:#4caf50;"></i> Primary Phone</div>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-phone"></i></span>
+                                <input asp-for="Contact1" class="form-control" placeholder="+92 xxx xxxxxxx" oninput="updateText('#prev-phone1', this.value)" />
+                            </div>
+                        </div>
+                        <div class="col-md-6 fg">
+                            <div class="label"><i class="fa-solid fa-phone-volume icon-phone2" style="color:#9c27b0;"></i> Secondary Phone</div>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-phone-volume"></i></span>
+                                <input asp-for="Contact2" class="form-control" placeholder="+92 xxx xxxxxxx" oninput="updateText('#prev-phone2', this.value)" />
+                            </div>
+                        </div>
+                        <div class="col-md-6 fg">
+                            <div class="label"><i class="fa-solid fa-location-dot icon-location" style="color:#ff9800;"></i> Address</div>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-map"></i></span>
+                                <textarea asp-for="Address" rows="1" class="form-control" placeholder="Street, City" oninput="updateText('#prev-address', this.value)"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Message -->
+                    <div class="fg">
+                        <div class="label"><i class="fa-solid fa-message icon-message" style="color:#00bcd4;"></i> Welcome / Note</div>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa-regular fa-comment-dots"></i></span>
+                            <textarea asp-for="Message" rows="2" class="form-control" placeholder="This note can be printed on receipt…" oninput="updateText('#prev-message', this.value)"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Save bar -->
+                    <div class="savebar">
+                        <button type="submit" class="btn btn-grad d-inline-flex align-items-center gap-2">
+                            <i class="fa-solid fa-save"></i> Save Changes
+                        </button>
+                        
+                    </div>
+                </form>
+            </div>
+
+            <!-- RIGHT: Preview / Details -->
+            <div class="card-lite">
+                <div class="card-head">
+                    <div class="h"><i class="fa-solid fa-rectangle-list"></i> Saved Details (Preview)</div>
+                    <span class="muted">Frontend preview only</span>
+                </div>
+                <div class="card-body">
+                    <div class="preview-top mb-3">
+                        <img id="prev-logo"
+                             class="logo-preview"
+                             src="@(string.IsNullOrEmpty(Model.LogoPath) ? "https://cdn-icons-png.flaticon.com/512/149/149071.png" : Model.LogoPath)"
+                             alt="Logo" />
+                        <div>
+                            <div class="shop-badge" id="shopPreview">@(!string.IsNullOrEmpty(Model.ShopName) ? Model.ShopName : "GSOFT POS")</div>
+                            <div class="muted small">This pane shows how your data will look.</div>
+                        </div>
+                    </div>
+
+                    <div class="kv"><i class="fa-solid fa-id-card-clip"></i><span class="k">NTN</span><span id="prev-ntn" class="v muted">@Model.NTN</span></div>
+                    <div class="kv mt-2"><i class="fa-solid fa-file-invoice"></i><span class="k">STRN</span><span id="prev-strn" class="v muted">@Model.STRN</span></div>
+                    <div class="kv mt-2"><i class="fa-solid fa-desktop"></i><span class="k">POS Id</span><span id="prev-pos" class="v muted">@Model.POSId</span></div>
+
+                    <div class="divider"></div>
+
+                    <div class="kv"><i class="fa-solid fa-envelope"></i><span class="k">Email</span><span id="prev-email" class="v muted">@Model.Email</span></div>
+                    <div class="kv mt-2"><i class="fa-solid fa-phone"></i><span class="k">Phone #1</span><span id="prev-phone1" class="v muted">@Model.Contact1</span></div>
+                    <div class="kv mt-2"><i class="fa-solid fa-phone-volume"></i><span class="k">Phone #2</span><span id="prev-phone2" class="v muted">@Model.Contact2</span></div>
+
+                    <div class="divider"></div>
+
+                    <div class="kv"><i class="fa-solid fa-location-dot"></i><span class="k">Address</span><span id="prev-address" class="v muted">@Model.Address</span></div>
+                    <div class="kv mt-2"><i class="fa-regular fa-comment-dots"></i><span class="k">Message</span><span id="prev-message" class="v muted">@Model.Message</span></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Bootstrap JS (optional for components) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Fade out success alert
+        document.addEventListener("DOMContentLoaded", function () {
+          const messageBox = document.getElementById("successMessage");
+          if (messageBox) {
+            setTimeout(() => { messageBox.style.opacity = "0"; setTimeout(() => messageBox.remove(), 500); }, 2000);
+          }
+        });
+
+        // Live preview helpers
+        function updatePreview(id, value, fallback){
+          const el = document.getElementById(id);
+          if(!el) return;
+          el.innerText = (value && value.trim()) ? value : (fallback || "");
+        }
+        function updateText(sel, value){
+          const el = document.querySelector(sel);
+          if(!el) return;
+          el.innerText = value || "";
+        }
+        function previewLogo(ev){
+          const file = ev.target.files?.[0];
+          if(!file) return;
+          const url = URL.createObjectURL(file);
+          document.getElementById('logoPreview').src = url;
+          const prev = document.getElementById('prev-logo');
+          if(prev) prev.src = url;
+        }
+    </script>
+</body>
+</html>

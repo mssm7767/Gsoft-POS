@@ -1,0 +1,286 @@
+﻿@model GSoftPosNew.Models.Unit
+@{
+    ViewData["Title"] = "Add Unit";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var isEdit = Model != null && Model.Id > 0;
+}
+<link href="~/css/customer.css" rel="stylesheet" asp-append-version="true" />
+
+<!-- Breadcrumb -->
+<div class="breadcrumb-bar d-flex align-items-center mb-4 p-3 rounded shadow-sm" style="background: linear-gradient(90deg,#17408d 40%,#68eacc 100%);">
+    <a asp-controller="Dashboard" asp-action="Index" class="breadcrumb-link text-white fw-semibold me-2" style="text-decoration:none;">
+        <i class="fa fa-arrow-left me-2"></i> Dashboard
+    </a>
+    <i class="fa fa-chevron-right mx-2 separator-icon text-white-50"></i>
+    <h4 class="breadcrumb-title m-0 text-white">@ViewData["Title"]</h4>
+</div>
+
+<div class="container py-4">
+
+    <!-- Center Success Toast -->
+    @if (TempData["Success"] != null)
+    {
+        <div id="successToast">
+            <i class="fa fa-check-circle"></i>
+            <span>@TempData["Success"]</span>
+        </div>
+    }
+
+    <audio id="successSound" src="/sounds/windows_8_notify.mp3" preload="auto"></audio>
+
+
+    <!-- Top Error Bar -->
+    @if (TempData["Error"] != null)
+    {
+        <div id="errorBar" class="error-bar">
+            <i class="fa fa-exclamation-triangle me-2"></i>
+            @TempData["Error"]
+        </div>
+    }
+
+    <div class="row justify-content-center">
+        <div class="col-xl-8 col-lg-9 col-md-12">
+
+            <!-- Add/Edit Unit Form -->
+            <div class="card shadow-lg border-0 rounded-4 mb-5">
+                <div class="card-header text-white d-flex align-items-center rounded-top-4"
+                     style="background: linear-gradient(92deg, #18608c 60%, #89f7fe 100%);">
+                    <i class="fa fa-balance-scale fa-lg me-2"></i>
+                    <span class="fw-bold">@((isEdit ? "Edit" : "Add")) Unit</span>
+                </div>
+
+                <div class="card-body bg-light rounded-bottom-4">
+                    @using (Html.BeginForm(isEdit ? "Edit" : "Create", "Unit", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        @Html.HiddenFor(m => m.Id)
+                        @Html.ValidationSummary(false, "", new { @class = "text-danger mb-2" })
+
+                        <div class="row g-3">
+                            <!-- REQUIRED: Name -->
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="fa fa-tag text-primary me-1"></i>Unit Name *
+                                </label>
+                                @Html.TextBoxFor(m => m.Name, new { @class = "form-control", placeholder = "e.g., kg, pcs, pack" })
+                                @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger" })
+                            </div>
+
+                            <!-- OPTIONAL: Detail -->
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="fa fa-info-circle text-success me-1"></i>Detail (optional)
+                                </label>
+                                @Html.TextBoxFor(m => m.Detail, new { @class = "form-control", placeholder = "Description" })
+                            </div>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="mt-4 d-flex justify-content-between align-items-center">
+                            <div>
+                                <a class="btn btn-light border rounded-pill shadow-sm"
+                                   title="Clear form"
+                                   href="@Url.Action("Create", "Unit")">
+                                    <i class="fa fa-broom me-1"></i> Clear Form
+                                </a>
+                            </div>
+                            <div class="text-end">
+                                @if (isEdit)
+                                {
+                                    <button type="submit" class="btn btn-success btn-lg rounded-pill shadow me-2">
+                                        <i class="fa fa-save me-1"></i> Update Unit
+                                    </button>
+                                    <a class="btn btn-secondary btn-lg rounded-pill shadow"
+                                       href="@Url.Action("Create", "Unit")">
+                                        <i class="fa fa-times me-1"></i> Cancel
+                                    </a>
+                                }
+                                else
+                                {
+                                    <button type="submit" class="btn btn-success btn-lg rounded-pill shadow">
+                                        <i class="fa fa-save me-1"></i> Save Unit
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Unit List -->
+            <div class="card shadow-lg border-0 rounded-4 mt-4">
+                <div class="card-header text-white d-flex align-items-center justify-content-between rounded-top-4"
+                     style="background: linear-gradient(92deg, #474bff 60%, #38e4ae 100%);">
+                    <div>
+                        <i class="fa fa-list fa-lg me-2"></i>
+                        <span class="fw-bold">All Units</span>
+                    </div>
+
+                    <!-- Search -->
+                    <div class="w-auto">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white"><i class="fa fa-search"></i></span>
+                            <input id="unitSearch" type="text" class="form-control" placeholder="Search by name or detail">
+                            <button id="clearUnitSearch" type="button" class="btn btn-outline-light border-0 ms-2" title="Clear">
+                                <i class="fa fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body bg-white rounded-bottom-4 p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped mb-0 align-middle" id="unitsTable" tabindex="0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Detail</th>
+                                    <th class="text-end" style="width:120px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var u in ViewBag.UnitList as List<GSoftPosNew.Models.Unit>)
+                                {
+                                    var editUrl = Url.Action("Edit", "Unit", new { id = u.Id });
+                                    <tr data-id="@u.Id"
+                                        data-edit-url="@editUrl"
+                                        data-unit-name="@u.Name"
+                                        data-unit-detail="@u.Detail">
+                                        <td>@u.Name</td>
+                                        <td>@u.Detail</td>
+                                        <td class="text-end">
+                                            <a class="btn btn-sm btn-outline-primary me-1" href="@editUrl" title="Edit">
+                                                <i class="fa fa-pen"></i>
+                                            </a>
+                                            <form method="post" action="@Url.Action("Delete", "Unit", new { id = u.Id })"
+                                                  class="d-inline" onsubmit="return confirm('Delete unit: @u.Name ?');">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+          /* Error Bar auto-hide */
+          var bar = document.getElementById('errorBar');
+          if (bar) {
+            setTimeout(function () {
+              bar.classList.add('fade-out');
+              setTimeout(function(){ if (bar && bar.parentNode) bar.parentNode.removeChild(bar); }, 650);
+            }, 3000);
+          }
+
+          /* Success toast -> fade -> scroll to saved row */
+          var toast = document.getElementById('successToast');
+          if (toast) {
+            setTimeout(function () {
+              toast.classList.add('fade-out');
+              setTimeout(function () {
+                if (toast && toast.parentNode) toast.parentNode.removeChild(toast);
+                var name = '@(TempData["LastUnitName"] as string ?? "")'.trim();
+                if (!name) return;
+                var safe = (window.CSS && CSS.escape) ? CSS.escape(name) : name.replace(/["\\]/g,"\\$&");
+                var row = document.querySelector('tr[data-unit-name="' + safe + '"]');
+                if (row) {
+                  row.scrollIntoView({ behavior:'smooth', block:'center' });
+                  row.classList.add('row-highlight');
+                  setTimeout(function(){ row.classList.remove('row-highlight'); }, 2000);
+                }
+              }, 600);
+            }, 1500);
+          }
+
+          /* Live search */
+          var search = document.getElementById('unitSearch');
+          var clear = document.getElementById('clearUnitSearch');
+          var table = document.getElementById('unitsTable');
+          var tbody = table ? table.querySelector('tbody') : null;
+
+          function allRows(){ return Array.from(document.querySelectorAll('#unitsTable tbody tr')); }
+          function visibleRows(){ return allRows().filter(function(r){ return r.style.display !== 'none'; }); }
+          function applyFilter(){
+            var q = (search && search.value || '').toLowerCase().trim();
+            allRows().forEach(function(r){
+              var t = ((r.dataset.unitName||'') + ' ' + (r.dataset.unitDetail||'')).toLowerCase();
+              r.style.display = t.indexOf(q) >= 0 ? '' : 'none';
+              if (r.style.display === 'none') r.classList.remove('row-hover','row-selected');
+            });
+            // optional: auto-select first visible row
+            setTimeout(function(){
+              var first = visibleRows()[0];
+              if (first) { selectRow(first); table.focus(); }
+            }, 0);
+          }
+          if (search) search.addEventListener('input', applyFilter);
+          if (clear) clear.addEventListener('click', function(){ search.value=''; applyFilter(); search.focus(); });
+
+          /* Hover + click select + dblclick edit */
+          function clearSelection(){ allRows().forEach(function(r){ r.classList.remove('row-selected'); }); }
+          function selectRow(r){
+            if (!r || r.style.display === 'none') return;
+            clearSelection();
+            r.classList.add('row-selected');
+            r.scrollIntoView({ behavior:'smooth', block:'nearest' });
+          }
+          if (tbody) {
+            tbody.addEventListener('mouseover', function(e){
+              var tr = e.target.closest('tr'); if (!tr || tr.parentNode !== tbody) return;
+              tr.classList.add('row-hover');
+            });
+            tbody.addEventListener('mouseout', function(e){
+              var tr = e.target.closest('tr'); if (!tr || tr.parentNode !== tbody) return;
+              tr.classList.remove('row-hover');
+            });
+            tbody.addEventListener('click', function(e){
+              if (e.target.closest('a,button,form')) return;
+              var tr = e.target.closest('tr'); if (!tr || tr.parentNode !== tbody) return;
+              selectRow(tr); table.focus();
+            });
+            tbody.addEventListener('dblclick', function(e){
+              if (e.target.closest('a,button,form')) return;
+              var tr = e.target.closest('tr'); if (!tr || tr.parentNode !== tbody) return;
+              selectRow(tr); var url = tr.dataset.editUrl; if (url) window.location = url;
+            });
+          }
+
+          /* Keyboard nav */
+          if (table) {
+            table.setAttribute('tabindex','0');
+            table.addEventListener('keydown', function(e){
+              var k = e.key;
+              var rowsV = visibleRows();
+              var sel = table.querySelector('tbody tr.row-selected');
+              var idx = sel ? rowsV.indexOf(sel) : -1;
+              if (k === 'ArrowDown'){ e.preventDefault(); selectRow(rowsV[Math.min(idx+1, rowsV.length-1)]); }
+              else if (k === 'ArrowUp'){ e.preventDefault(); selectRow(rowsV[Math.max(idx-1, 0)]); }
+              else if (k === 'Enter'){ e.preventDefault(); if (sel && sel.dataset.editUrl) window.location = sel.dataset.editUrl; }
+              else if (k === 'Escape'){ clearSelection(); }
+            });
+
+            // initial focus + select first row
+            setTimeout(function(){
+              var first = visibleRows()[0];
+              if (first && !table.querySelector('tbody tr.row-selected')) selectRow(first);
+              table.focus();
+            }, 60);
+          }
+        });
+
+
+    </script>
+}

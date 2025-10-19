@@ -1,0 +1,161 @@
+﻿/* === Modern User Add/Edit Card Design === */
+
+/* Card container & header */
+.form-card, .list-card {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 16px rgba(44,196,197,0.09), 0 1.5px 4px rgba(32,66,102,0.07);
+    padding: 1.5rem 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-card-header {
+    background: linear-gradient(92deg, #28a745 60%, #76e5b1 100%);
+    color: #fff;
+    padding: 1rem 1.5rem;
+    border-radius: 18px 18px 0 0;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.15rem;
+    letter-spacing: 0.6px;
+}
+
+.breadcrumb-bar {
+    background: linear-gradient(90deg,#2574A9 40%,#71eeb8 100%) !important;
+    box-shadow: 0 3px 18px 0 rgba(36,176,193,0.06);
+    color: #fff;
+}
+
+.breadcrumb-link, .breadcrumb-title {
+    color: #fff;
+    font-weight: 500;
+    font-size: 1.13rem;
+    letter-spacing: 0.05rem;
+}
+
+.separator-icon {
+    color: #fff !important;
+    font-size: 1.13rem;
+}
+
+/* Form labels and controls */
+.form-label {
+    font-weight: 500;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+    color: #235;
+    letter-spacing: 0.03rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.form-control, .form-select {
+    border-radius: 9px !important;
+    box-shadow: 0 1px 5px rgba(32,66,102,0.04);
+    border: 1.1px solid #d8f0e2;
+    font-size: 1.06rem;
+    padding: 9px 13px;
+}
+
+    .form-control:focus, .form-select:focus {
+        border-color: #28a745;
+        box-shadow: 0 0 0 2px #71eeb888;
+        background: #e8fff7;
+    }
+
+/* Profile image preview */
+.img-preview-container {
+    text-align: center;
+    padding-top: 1.3rem;
+}
+
+.user-thumb {
+    width: 140px;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2.5px solid #28a745;
+    background: #e8fff0;
+    margin-top: 0.4rem;
+    box-shadow: 0 2px 12px #28a74522;
+}
+
+.img-preview-container img {
+    max-height: 160px;
+    border: 1.2px solid #e3e3e3;
+    border-radius: 50%;
+    background: #fafbfd;
+}
+
+/* Buttons */
+.btn-lg.rounded-pill {
+    font-size: 1.13rem;
+    border-radius: 25px !important;
+    padding-left: 32px;
+    padding-right: 32px;
+}
+
+.btn-success {
+    background: linear-gradient(90deg,#21c97a 60%,#33edb5 100%);
+    border: none;
+}
+
+    .btn-success:hover, .btn-success:focus {
+        background: linear-gradient(92deg,#33edb5 40%,#21c97a 100%);
+    }
+
+.btn-secondary {
+    background: #e3eaf7;
+    color: #205070;
+    border: none;
+}
+
+    .btn-secondary:hover {
+        background: #d1f7e6;
+        color: #1d8a62;
+    }
+
+/* Success alert */
+.alert-success {
+    background: linear-gradient(90deg,#cdffe6 0%,#e7fff7 100%);
+    color: #117b47;
+    border: none;
+    font-weight: 500;
+    font-size: 1.07rem;
+}
+
+/* Validation errors */
+.text-danger {
+    font-size: 0.97rem;
+    font-weight: 500;
+}
+
+/* Responsive for mobile */
+@media (max-width: 700px) {
+    .form-card, .list-card {
+        padding: 1rem 0.5rem;
+    }
+
+    .form-card-header {
+        font-size: 1rem;
+        padding: 0.6rem 0.6rem;
+    }
+
+    .user-thumb {
+        width: 96px;
+        height: 96px;
+    }
+
+    .img-preview-container img {
+        max-height: 80px;
+    }
+
+    .btn-lg.rounded-pill {
+        font-size: 1rem;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+}

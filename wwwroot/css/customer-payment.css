@@ -1,0 +1,54 @@
+﻿.bg-gradient-primary {
+    background: linear-gradient(90deg, #0068c7 0%, #18b6ff 100%) !important;
+}
+
+.card {
+    border-radius: 1.3rem;
+    border: none;
+    box-shadow: 0 4px 24px 0 rgba(44, 62, 80, 0.14);
+}
+
+.card-header {
+    border-radius: 1.3rem 1.3rem 0 0 !important;
+}
+
+.rounded-bottom-4 {
+    border-radius: 0 0 1.3rem 1.3rem !important;
+}
+
+.btn-lg {
+    font-size: 1.12rem;
+    padding: 0.7rem 2.1rem;
+}
+
+.btn-warning, .btn-info, .btn-success {
+    color: #fff !important;
+    font-weight: 600;
+    box-shadow: 0 1px 6px 0 rgba(44, 62, 80, 0.10);
+}
+
+.btn-warning {
+    background: linear-gradient(90deg, #ffb347 0%, #ffc857 100%);
+    border: none;
+}
+
+.btn-info {
+    background: linear-gradient(90deg, #36d1c4 0%, #46b2ff 100%);
+    border: none;
+}
+
+.btn:disabled, .btn.disabled {
+    opacity: .55;
+    pointer-events: none;
+}
+
+.table thead th {
+    background: #e9f5ff !important;
+    color: #2275bd;
+    font-weight: bold;
+    letter-spacing: .04em;
+}
+
+.table-hover tbody tr:hover {
+    background: #f3f9fe !important;
+}

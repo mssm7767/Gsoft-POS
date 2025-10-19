@@ -1,0 +1,358 @@
+﻿@model IEnumerable<GSoftPosNew.Models.CustomerReportDto>
+
+@{
+    ViewData["Title"] = "Customer Report";
+    var totalCustomers = Model?.Count() ?? 0;
+    var sumSales = Model?.Sum(x => x.Debit) ?? 0m;
+    var sumPayments = Model?.Sum(x => x.Credit) ?? 0m;
+    var sumAdvance = Model?.Sum(x => x.Advance) ?? 0m;
+    var sumReceivable = Model?.Sum(x => x.Receivable) ?? 0m;
+    var sumPayable = Model?.Sum(x => x.Payable) ?? 0m;
+}
+
+<style>
+    :root {
+        --ink: #0f172a;
+        --muted: #64748b;
+        --bg: #f8fafc;
+        --card: #fff;
+        --line: #e2e8f0;
+        --shadow: 0 8px 24px rgba(2,6,23,.06);
+        --blue: #2563eb;
+        --blue-2: #60a5fa;
+        --indigo: #1e3a8a;
+        --green: #10b981;
+        --amber: #f59e0b;
+        --red: #dc2626;
+    }
+
+    body {
+        background: var(--bg);
+    }
+
+    .card {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        background: var(--card);
+    }
+
+    /* Header: light, modern */
+    .card-header {
+        background: linear-gradient(135deg,#e0f2fe 0%,#dbeafe 40%,#bfdbfe 100%) !important;
+        border-bottom: 1px solid #c7d2fe;
+        padding: 12px 16px;
+    }
+
+    .hdr-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .hdr-title {
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+        font-weight: 800;
+        color: var(--indigo);
+        margin: 0;
+        letter-spacing: .2px;
+    }
+
+    .hdr-right {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .chip-time {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        background: #eff6ff;
+        color: var(--indigo);
+        border: 1px solid #bfdbfe;
+        border-radius: 999px;
+        padding: .35rem .6rem;
+        font-weight: 700;
+        font-size: .9rem;
+        white-space: nowrap;
+    }
+
+    .search-wrap {
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: .25rem .45rem;
+        min-width: 260px;
+    }
+
+        .search-wrap i {
+            color: #1e40af;
+        }
+
+    #searchBox {
+        border: none;
+        outline: none;
+        height: 38px;
+        flex: 1;
+        background: transparent;
+    }
+
+    /* Toolbar (Totals Buttons) */
+    .toolbar {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        padding: 10px 16px;
+        border-bottom: 1px dashed var(--line);
+        background: #fafcff;
+    }
+
+    .btn-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        border: 1px solid #cbd5e1;
+        background: #f8fafc;
+        color: var(--ink);
+        border-radius: 999px;
+        padding: .45rem .75rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background .15s ease,border-color .15s ease, transform .04s ease;
+    }
+
+        .btn-chip:hover {
+            background: #eef2f7;
+        }
+
+        .btn-chip:active {
+            transform: translateY(1px);
+        }
+
+        .btn-chip.active {
+            border-color: #93c5fd;
+            background: #e0f2fe;
+            color: #1e3a8a;
+        }
+
+        .btn-chip .sum {
+            font-weight: 800;
+        }
+
+        .btn-chip .arrow {
+            font-size: .95rem;
+            opacity: .8;
+        }
+
+    /* Table */
+    .table-responsive {
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        max-height: 70vh;
+        overflow: auto;
+    }
+
+    #customerTable thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #f1f5f9;
+        color: #0f172a;
+        border-bottom: 1px solid var(--line);
+        font-weight: 800;
+        letter-spacing: .02em;
+    }
+
+    .table-hover tbody tr:hover {
+        background: #f8fafc !important;
+    }
+
+    #customerTable td.text-end {
+        font-weight: 400;
+    }
+    /* numbers not bold */
+
+    /* Footer totals row */
+    #customerTable tfoot {
+        background: #eff6ff;
+        color: #1e3a8a;
+        border-top: 1px solid #bfdbfe;
+    }
+
+    /* Utility */
+    .muted {
+        color: var(--muted);
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="card rounded-3">
+        <!-- Header -->
+        <div class="card-header">
+            <div class="hdr-row">
+                <h3 class="hdr-title">
+                    <i class="fa-solid fa-user-group"></i> Customer Report
+                </h3>
+                <div class="hdr-right">
+                    <span class="chip-time">
+                        <i class="fa-regular fa-clock"></i>
+                        <span id="liveClock">—</span>
+                    </span>
+                    <div class="search-wrap">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="searchBox" placeholder="Search customer..." />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Totals Buttons Toolbar (TOP) -->
+        <div class="toolbar">
+            <button id="btnAll" class="btn-chip active" type="button" title="Show all">
+                <i class="fa-regular fa-rectangle-list"></i>
+                All <span class="sum">@totalCustomers</span>
+                <span class="arrow"><i class="fa-solid fa-angle-down"></i></span>
+            </button>
+
+            <button id="btnReceivable" class="btn-chip" type="button" title="Only receivable > 0">
+                <i class="fa-solid fa-arrow-trend-up"></i>
+                Receivable <span class="sum">@sumReceivable.ToString("N2")</span>
+                <span class="arrow"><i class="fa-solid fa-angle-down"></i></span>
+            </button>
+
+            <button id="btnPayable" class="btn-chip" type="button" title="Only payable > 0">
+                <i class="fa-solid fa-arrow-trend-down"></i>
+                Payable <span class="sum">@sumPayable.ToString("N2")</span>
+                <span class="arrow"><i class="fa-solid fa-angle-down"></i></span>
+            </button>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table id="customerTable" class="table table-bordered table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Customer</th>
+                            <th class="text-end">Total Sales (₨)</th>
+                            <th class="text-end">Payments (₨)</th>
+                            <th class="text-end">Advance (₨)</th>
+                            <th class="text-end">Receivable (₨)</th>
+                            <th class="text-end">Payable (₨)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr data-receivable="@item.Receivable.ToString("0.##")"
+                                data-payable="@item.Payable.ToString("0.##")">
+                                <td>@item.CustomerName</td>
+                                <td class="text-end">@item.Debit.ToString("N2")</td>
+                                <td class="text-end">@item.Credit.ToString("N2")</td>
+                                <td class="text-end">@item.Advance.ToString("N2")</td>
+                                <td class="text-end text-success">@item.Receivable.ToString("N2")</td>
+                                <td class="text-end text-danger">@item.Payable.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="fw-semibold">
+                        <tr>
+                            <td>Total</td>
+                            <td class="text-end">@sumSales.ToString("N2")</td>
+                            <td class="text-end">@sumPayments.ToString("N2")</td>
+                            <td class="text-end">@sumAdvance.ToString("N2")</td>
+                            <td class="text-end">@sumReceivable.ToString("N2")</td>
+                            <td class="text-end">@sumPayable.ToString("N2")</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+}
+
+@section Scripts {
+    <script>
+        // Live clock (header right)
+        function tickClock(){
+            const el = document.getElementById('liveClock');
+            if(!el) return;
+            el.textContent = new Date().toLocaleString('en-PK',{
+                year:'numeric',month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit'
+            });
+        }
+        tickClock(); setInterval(tickClock, 30000);
+
+        // Existing search filter (unchanged)
+        document.getElementById("searchBox").addEventListener("keyup", function () {
+            var value = this.value.toLowerCase();
+            var rows = document.querySelectorAll("#customerTable tbody tr");
+            let anyVisible = false;
+
+            rows.forEach(function (row) {
+                const txt = row.innerText.toLowerCase();
+                if (txt.includes(value) && row.dataset._hiddenByBtn !== "true") {
+                    row.style.display = "";
+                    anyVisible = true;
+                } else if (row.dataset._hiddenByBtn === "true") {
+                    row.style.display = "none";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+
+            let noRow = document.getElementById("noResultsRow");
+            if (!anyVisible) {
+                if (!noRow) {
+                    document.querySelector("#customerTable tbody")
+                        .insertAdjacentHTML("beforeend",
+                            "<tr id='noResultsRow'><td colspan='6' class='text-center text-muted'>No customers found</td></tr>");
+                }
+            } else if (noRow) { noRow.remove(); }
+        });
+
+        // Top totals buttons filtering (adds-on; search logic untouched)
+        const btnAll = document.getElementById('btnAll');
+        const btnRec = document.getElementById('btnReceivable');
+        const btnPay = document.getElementById('btnPayable');
+
+        function setActive(btn){
+            [btnAll, btnRec, btnPay].forEach(b=> b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function applyBtnFilter(mode){
+            const rows = document.querySelectorAll("#customerTable tbody tr");
+            rows.forEach(r=>{
+                const rec = parseFloat(r.dataset.receivable || "0") || 0;
+                const pay = parseFloat(r.dataset.payable   || "0") || 0;
+                let hide = false;
+                if(mode==='rec') hide = !(rec > 0);
+                else if(mode==='pay') hide = !(pay > 0);
+                else hide = false;
+                r.dataset._hiddenByBtn = hide ? "true" : "false";
+            });
+            // re-trigger search to combine both filters
+            document.getElementById("searchBox").dispatchEvent(new Event('keyup'));
+        }
+
+        btnAll.addEventListener('click', ()=>{ setActive(btnAll); applyBtnFilter('all'); });
+        btnRec.addEventListener('click', ()=>{ setActive(btnRec); applyBtnFilter('rec'); });
+        btnPay.addEventListener('click', ()=>{ setActive(btnPay); applyBtnFilter('pay'); });
+    </script>
+}

@@ -1,0 +1,188 @@
+﻿@model GSoftPosNew.ViewModels.ReceivePaymentViewModel
+
+@{
+    ViewBag.Title = "Customer Payment Receiving";
+}
+
+<div class="container-fluid py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-gradient-primary text-white d-flex align-items-center rounded-top-4" style="background: linear-gradient(90deg, #0068c7 0%, #18b6ff 100%);">
+                    <i class="fa fa-money-bill-wave fa-lg me-2"></i>
+                    <h4 class="mb-0 flex-grow-1">Customer Payment Receiving</h4>
+                    <span class="badge bg-white text-primary fw-bold ms-2"><i class="fa fa-calendar-alt me-1"></i> @DateTime.Now.ToString("MMM dd, yyyy")</span>
+                </div>
+                <div class="card-body bg-light rounded-bottom-4">
+                    @if (TempData["PaymentSuccess"] != null)
+                    {
+                        <div class="alert alert-success shadow-sm" id="alert-success">
+                            @TempData["PaymentSuccess"]
+                        </div>
+                    }
+                    <form asp-action="Receive" method="post" autocomplete="off" class="row g-4">
+                        @Html.AntiForgeryToken()
+                        <div class="col-12 col-md-6">
+                            <label class="form-label"><i class="fa fa-user text-primary me-1"></i>Customer</label>
+                            <select id="CustomerId" asp-for="CustomerId" class="form-select shadow-sm"
+                                    asp-items="@(new SelectList(Model.CustomerList, "Id", "CustomerName"))" required>
+                                <option value="">Select Customer</option>
+                            </select>
+
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label"><i class="fa fa-calendar text-secondary me-1"></i>Date & Time</label>
+                            <input asp-for="PaymentDate" class="form-control shadow-sm" type="datetime-local" value="@Model.PaymentDate.ToString("yyyy-MM-ddTHH:mm")" required />
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label"><i class="fa fa-balance-scale text-info me-1"></i>Old Balance</label>
+                            <input id="OldBalance"
+                                   class="form-control shadow-sm text-danger fw-bold"
+                                   type="text"
+                                   asp-for="OldBalance"
+                                   readonly />
+
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <label class="form-label"><i class="fa fa-money-check-alt text-success me-1"></i>Amount</label>
+                            <input asp-for="Amount" class="form-control shadow-sm" required />
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label"><i class="fa fa-coins text-warning me-1"></i>Advance</label>
+                            <input asp-for="Advance" class="form-control shadow-sm" placeholder="0" />
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label"><i class="fa fa-credit-card text-primary me-1"></i>Payment Method</label>
+                            <select asp-for="PaymentMethod" class="form-select shadow-sm" required>
+                                <option value="Cash"><i class="fa fa-money-bill-wave"></i> Cash</option>
+                                <option value="Online"><i class="fa fa-globe"></i> Online</option>
+                                <option value="Cheque"><i class="fa fa-bank"></i> Cheque</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label"><i class="fa fa-align-left text-muted me-1"></i>Narration / Note</label>
+                            <input asp-for="Narration" class="form-control shadow-sm" maxlength="200" />
+                        </div>
+                        <div class="col-12 text-end mt-2">
+                            <button type="submit" class="btn btn-success btn-lg rounded-pill me-2 shadow" title="Save Payment">
+                                <i class="fa fa-save me-1"></i> Save
+                            </button>
+                            <button type="button" class="btn btn-warning btn-lg rounded-pill me-2 shadow" title="Edit Payment" disabled>
+                                <i class="fa fa-edit me-1"></i> Edit
+                            </button>
+                            <button type="button" class="btn btn-info btn-lg rounded-pill shadow" title="Print Payment" onclick="window.print();">
+                                <i class="fa fa-print me-1"></i> Print
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Payment History Table -->
+            <div class="card mt-5 shadow-lg border-0 rounded-4">
+                <div class="card-header bg-secondary text-white d-flex align-items-center rounded-top-4">
+                    <i class="fa fa-list fa-lg me-2"></i>
+                    <span class="fw-bold">Latest Received Payments</span>
+                </div>
+                <div class="card-body bg-white rounded-bottom-4 p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Customer</th>
+                                    <th>Amount</th>
+                                    <th>Advance</th>
+                                    <th>Method</th>
+                                    <th>Narration</th>
+                                    <th>By</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.PaymentHistory?.Count > 0)
+                                {
+                                    foreach (var p in Model.PaymentHistory)
+                                    {
+                                        <tr>
+                                            <td>@p.PaymentDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                            <td>@p.Customer?.CustomerName</td>
+                                            <td class="text-success fw-bold">@p.Amount.ToString("N2")</td>
+                                            <td class="text-warning">@p.Advance.ToString("N2")</td>
+                                            <td>@p.PaymentMethod</td>
+                                            <td>@p.Narration</td>
+                                            <td><i class="fa fa-user"></i> @p.ReceivedBy ?? "Admin"</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted">No payment received yet.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+      // Run after DOM is ready
+            setTimeout(() => {
+                let alertBox = document.getElementById("alert-success");
+                if (alertBox) {
+                    alertBox.style.display = "none";
+                }
+            }, 2000);      
+    </script>
+
+    
+
+    <script>
+        $(document).ready(function () {
+            $("#CustomerId").change(function () {
+                var customerId = $(this).val();
+                if (customerId) {
+                    $.ajax({
+                        url: '@Url.Action("GetCustomerBalance", "CustomerPayment")',
+                        type: 'GET',
+                        data: { customerId: customerId },
+                        success: function (response) {
+                            var rawBalance = parseFloat(response.balance) || 0;
+
+                            // Assign raw value (for posting back to server)
+                            $("#OldBalance").val(rawBalance);
+
+                            // Assign formatted value (for user display)
+                            $("#OldBalanceDisplay").val(
+                                new Intl.NumberFormat('en-PK', {
+                                    style: 'currency',
+                                    currency: 'PKR'
+                                }).format(rawBalance)
+                            );
+                        },
+                        error: function () {
+                            alert("Failed to fetch customer balance.");
+                            $("#OldBalance").val(0);
+                            $("#OldBalanceDisplay").val("₨0.00");
+                        }
+                    });
+                } else {
+                    $("#OldBalance").val(0);
+                    $("#OldBalanceDisplay").val("₨0.00");
+                }
+            });
+
+            // Auto-load balance if customer already selected (edit mode)
+            if ($("#CustomerId").val()) {
+                $("#CustomerId").trigger("change");
+            }
+        });
+    </script>
+}

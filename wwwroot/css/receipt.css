@@ -1,0 +1,48 @@
+﻿
+body {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
+    width: 58mm;
+    margin: 0 auto;
+    background: white;
+}
+.receipt {
+    padding: 5px;
+}
+.center {
+    text-align: center;
+}
+.logo {
+    width: 40px;
+    height: auto;
+    margin-bottom: 4px;
+}
+.shop-name {
+    font-weight: bold;
+}
+hr {
+    border: none;
+    border-top: 1px dashed #000;
+    margin: 6px 0;
+}
+.row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+}
+.item-header, .item-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    margin-top: 2px;
+}
+.col-serial {
+    width: 10%;
+}
+.col-desc {
+    width: 88%;
+}
+.col {
+    width: 19%;
+    text-align: center;
+}

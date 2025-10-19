@@ -1,0 +1,128 @@
+﻿@model IEnumerable<GSoftPosNew.Models.Supplier>
+@{
+    ViewData["Title"] = "Supplier List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var count = Model?.Count() ?? 0;
+    decimal totalBalance = 0M;
+    if (Model != null)
+    {
+        foreach (var s in Model)
+        {
+            // OpeningBalance nullable ho sakti hai to guard:
+            totalBalance += (s.OpeningBalance ?? 0M);
+        }
+    }
+
+    // query + filter (optional, aap backend me handle kar sakte ho)
+    var q = Context?.Request?.Query["q"].ToString() ?? "";
+    var f = Context?.Request?.Query["f"].ToString() ?? "";
+}
+
+<link rel="stylesheet" href="~/css/supplier-base.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/supplier-list.css" asp-append-version="true" />
+
+<!-- Success Message -->
+@if (TempData["Success"] != null)
+{
+    <div class="save-alert" id="saveAlert">
+        @TempData["Success"]
+    </div>
+}
+
+<div class="container my-3">
+
+    <!-- SUPPLIER LIST HEADER (same family look) -->
+    <div class="sup-list-header sup-card mb-3">
+        <div class="top-strip">
+            <div class="d-flex align-items-center gap-2">
+                <i class="fa-solid fa-truck-field fa-lg"></i>
+                <h4 class="mb-0 fw-bold">Supplier List</h4>
+
+                <div class="ms-auto d-none d-md-flex align-items-center gap-2">
+                    <span class="kpi kpi-green"><i class="fa-regular fa-rectangle-list me-1"></i>@count Suppliers</span>
+                    <span class="kpi kpi-amber"><i class="fa-solid fa-scale-balanced me-1"></i>@totalBalance.ToString("N2")</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search + Quick Filters -->
+        <div class="content px-3 py-3">
+            <form method="get" class="search-row">
+                <div class="searchbox">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" name="q" value="@q" placeholder="Search supplier name, email or mobile…" />
+                    <button type="submit" title="Search"><i class="fa-solid fa-arrow-right"></i></button>
+                </div>
+
+                <div class="quick-filters">
+                    <a href="?f=all" class="qf @(string.IsNullOrWhiteSpace(f) || f == "all" ? "active" : "")">All</a>
+                    <a href="?f=pos" class="qf @(f == "pos" ? "active" : "")">Positive Balance</a>
+                    <a href="?f=zero" class="qf @(f == "zero" ? "active" : "")">Zero/Negative</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="sup-card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="min-width:220px;">Supplier</th>
+                        <th>Contact Person</th>
+                        <th>Email</th>
+                        <th>Mobile</th>
+                        <th class="text-end">Balance</th>
+                        <th style="width:100px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null)
+                    {
+                        foreach (var s in Model)
+                        {
+                            var bal = (s.OpeningBalance ?? 0M);
+                            var balClass = bal > 0 ? "text-success" : (bal == 0 ? "text-secondary" : "text-danger");
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="avatar">
+                                            <i class="fa-regular fa-user"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">@s.SupplierName</div>
+                                            <div class="text-muted small">ID: @s.Id</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>@s.ContactPerson</td>
+                                <td>@s.Email</td>
+                                <td>@s.MobileNumber</td>
+                                <td class="text-end fw-bold @balClass">@bal.ToString("N2")</td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-1">
+                                        <a asp-action="Edit" asp-route-id="@s.Id" class="btn-mini btn-edit" title="Edit">
+                                            <i class="fa-regular fa-pen-to-square"></i>
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@s.Id" class="btn-mini btn-del" title="Delete">
+                                            <i class="fa-regular fa-trash-can"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Success toast auto hide
+        setTimeout(()=>{ const el=document.getElementById('saveAlert'); if(el){ el.classList.add('hide'); } }, 2200);
+    </script>
+}

@@ -1,0 +1,631 @@
+﻿@using System.Text.Json
+@model IEnumerable<ItemModel>
+
+@{
+    ViewBag.Title = "GSoft POS";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var categories = ViewBag.Categories as IEnumerable<string> ?? new List<string>();
+    var safeModel = Model ?? new List<ItemModel>();
+    var itemsJson = JsonSerializer.Serialize(safeModel);
+    var cashierId = ViewBag.CashierId as string ?? "N/A";
+}
+
+<link href="~/Content/POS.css" rel="stylesheet" />
+<style>
+/* Invoice search box */
+.invoice-box {
+    max-width: 200px !important;
+}
+
+.invoice-box .btn-outline-secondary {
+    padding: 0.25rem 0.5rem;
+    border-color: #ced4da;
+}
+
+.invoice-box .btn-outline-secondary:hover {
+    background-color: #f8f9fa;
+}
+
+.invoice-box input {
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Responsive adjustments */
+@@media (max-width: 768px) {
+    .invoice-box {
+        max-width: 160px !important;
+    }
+}
+</style>
+<!-- HEADER -->
+<div class="pos-header">
+    <!-- Logo & Title (top left) -->
+
+    <!-- Scan box & right panel -->
+    <div class="d-flex align-items-center justify-content-between">
+     <span class="shop-name h6 mb-0">GSoft POS</span>
+        <div class="header-center d-flex justify-content-center align-items-center flex-grow-1">
+            <div class="input-group input-group-sm scan-input-group" style="max-width:350px;">
+                <span class="input-group-text scan-icon" style="height:2.5rem; line-height:1.9rem; padding:0 .5rem;">
+                    <i class="fa fa-barcode"></i>
+                </span>
+                <input type="text" id="scanInput" class="form-control form-control-sm scan-input"
+                       style="height:2.5rem; font-size:0.85rem;" placeholder="Scan code or search items..." 
+                       autocomplete="off" />
+                <button type="button" id="addNewItem" class="btn btn-primary btn-sm scan-btn"
+                        style="height:2.5rem; padding:0 .5rem;">
+                    <i class="fa fa-plus"></i>
+                </button>
+                <!-- Search results dropdown -->
+                <div id="searchResults" class="search-results-dropdown"></div>
+            </div>
+        </div>
+       <div class="d-flex align-items-center">
+    <div class="input-group invoice-box me-2" style="max-width:180px;">
+        <button type="button" id="prevInvoice" class="btn btn-outline-secondary btn-sm" title="Previous Invoice">
+            <i class="fa fa-chevron-left"></i>
+        </button>
+        <input type="text" id="invoiceNo" class="form-control form-control-sm" placeholder="Inv #" />
+        <button type="button" id="nextInvoice" class="btn btn-outline-secondary btn-sm" title="Next Invoice">
+            <i class="fa fa-chevron-right"></i>
+        </button>
+    </div>
+    <div class="session-info text-end ms-3">
+        <div id="liveTime" class="mb-1"></div>
+        <div>Cashier ID: <strong>@cashierId</strong></div>
+    </div>
+</div>
+    </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="pos-container">
+    <div class="d-flex">
+        <!-- LEFT 35%: Categories & Item Grid -->
+        <div class="category-section pe-3" style="width:35%;">
+            <!-- Category selector -->
+            <label for="categoryFilter" class="form-label">Category:</label>
+            <select id="categoryFilter" class="form-select mb-4">
+                <option value="">All</option>
+                @foreach (var cat in categories)
+                {
+                    <option value="@cat">@cat</option>
+                }
+            </select>
+
+            <!-- Items grid -->
+            <div class="row items-grid g-3" id="itemsGrid">
+                @foreach (var item in safeModel)
+                {
+                    <div class="col-6 col-md-3">
+                        <div class="card item-card" data-cat="@item.GenericName" data-item="@JsonSerializer.Serialize(item)">
+                            <div style="font-size: 15px; cursor: pointer;" class="card-body text-center p-2" onclick="addItemToCart(@item.Id)">
+                                <div class="item-name mb-1">@item.ItemName</div>
+                                <div class="item-price">@item.SalePrice</div>
+                                <small class="text-muted">@item.ItemCode</small>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            
+            <!-- SUMMARY CARDS -->
+           
+        </div>
+
+        <!-- RIGHT 65%: Transaction & Payment -->
+        <div class="transaction-section" style="width:65%;">
+            <div class="customer-info mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="customerType" id="walkInCustomer" checked>
+                    <label class="form-check-label" for="walkInCustomer">
+                        Walk-in customer
+                    </label>
+                </div>
+            </div>
+            
+            <table class="table line-items-table mb-3">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:5%;">#</th>
+                        <th style="width:35%;">Item Name</th>
+                        <th style="width:15%;">Price</th>
+                        <th style="width:10%;">Qty</th>
+                        <th style="width:10%;">Dis %</th>
+                        <th style="width:10%;">Tax %</th>
+                        <th style="width:10%;">Total</th>
+                        <th style="width:5%;"></th>
+                    </tr>
+                </thead>
+                <tbody id="line-items"></tbody>
+                <tfoot>
+                
+                   
+                    <tr class="table-active">
+                        <td colspan="5" class="text-end"><span>Items:</span></td>
+                        <td id="totalItems">0.00</td>
+                        <td></td>
+
+                         
+                    </tr>
+                    <tr class="table-active">
+                        <td colspan="1" class="text-end"><span>Subtotal:</span></td>
+                        <td id="subtotal">0.00</td>
+                        <td></td>
+
+                        
+                        <td colspan="2" class="text-end"><span>Tax:</span></td>
+                        <td id="tax">0.00</td>
+                        <td></td>
+                    </tr>
+                   
+                    <tr class="table-active">
+                        <td colspan="1" class="text-end"><span>Discount:</span></td>
+                        <td id="discount">0.00</td>
+                        <td></td>
+
+                          <td colspan="2" class="text-end"><span>Total:</span></td>
+                        <td id="total">0.00</td>
+                        <td></td>
+                    </tr>
+                  
+                </tfoot>
+            </table>
+
+            <!-- Process Payment -->
+            <div class="payment-section card">
+                <div class="card-body">
+                    @using (Html.BeginForm("ProcessPayment", "Sales", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" id="SubTotal" name="SubTotal" />
+                        <input type="hidden" id="Tax" name="Tax" />
+                        <input type="hidden" id="Discount" name="Discount" />
+                        <input type="hidden" id="TotalDue" name="TotalDue" />
+                        
+                        <div class="mb-3">
+                            <label for="paymentMethod" class="form-label">Payment Method</label>
+                            <select class="form-select" id="paymentMethod" name="PaymentMethod">
+                                <option value="Cash">Cash</option>
+                                <option value="Credit Card">Credit Card</option>
+                                <option value="Debit Card">Debit Card</option>
+                                <option value="Mobile Payment">Mobile Payment</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success w-100" id="processPaymentBtn">Process Payment</button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+// In your form submission handler, add the items JSON
+document.querySelector('form').addEventListener('submit', function(e) {
+    // Create an array of sale items to send to server
+    const saleItems = transaction.map(item => ({
+        ItemId: item.item.id,
+        Quantity: item.quantity,
+        UnitPrice: item.item.salePrice,
+        DiscountPercent: item.discountPercent,
+        TaxAmount: (item.item.salePrice * item.quantity * (1 - item.discountPercent/100)) * item.taxRate,
+        LineTotal: calculateLineTotal(item)
+    }));
+    
+    // Create a hidden input if it doesn't exist
+    let itemsInput = document.getElementById('ItemsJson');
+    if (!itemsInput) {
+        itemsInput = document.createElement('input');
+        itemsInput.type = 'hidden';
+        itemsInput.name = 'ItemsJson';
+        itemsInput.id = 'ItemsJson';
+        this.appendChild(itemsInput);
+    }
+    
+    // Set the JSON value
+    itemsInput.value = JSON.stringify(saleItems);
+    
+    return true;
+});
+     var items = @Html.Raw(itemsJson);
+        var transaction = [];
+// Add item to cart by clicking on product card
+window.addItemToCart = function(itemId) {
+    var item = items.find(x => x.Id == itemId);
+    if (item) {
+        const camelCaseItem = convertKeysToCamelCase(item);
+
+        addLineItem(camelCaseItem);
+        updateSummary();
+        
+        // Optional: Add visual feedback
+        const card = document.querySelector(`.item-card[data-item*='"Id":${itemId}']`);
+        if (card) {
+            card.classList.add('item-added');
+            setTimeout(() => card.classList.remove('item-added'), 300);
+        }
+    }
+};
+
+        // Add item to transaction
+        function addLineItem(item) {
+            // Check if item already exists in transaction
+            var existingItem = transaction.find(x => x.item.id === item.id);
+            if (existingItem) {
+                existingItem.quantity += 1;
+                updateExistingLineItem(existingItem);
+            } else {
+                var newItem = {
+                    item: item,
+                    quantity: 1,
+                    discountPercent: 0,
+                    taxRate: item.taxRate
+                };
+                transaction.push(newItem);
+                renderLineItem(newItem, transaction.length - 1);
+            }
+        }
+        
+        // Render new line item
+        function renderLineItem(lineItem, index) {
+            //debugger
+            var tbody = document.getElementById('line-items');
+            var row = document.createElement('tr');
+            row.dataset.itemId = lineItem.item.Id;
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${lineItem.item.genericName}</td>
+                <td>${lineItem.item.salePrice.toFixed(2)}</td>
+                <td><input type="number" class="form-control qty" value="${lineItem.quantity}" min="1" data-index="${index}"></td>
+                <td><input type="number" class="form-control disc" value="${lineItem.discountPercent}" min="0" max="100" data-index="${index}"></td>
+                <td>${(lineItem.taxRate * 100).toFixed(0)}%</td>
+                <td><span class="line-total">${calculateLineTotal(lineItem).toFixed(2)}</span></td>
+                <td><button class="btn btn-sm btn-danger remove-item" data-index="${index}"><i class="fa fa-trash"></i></button></td>
+            `;
+            tbody.appendChild(row);
+            attachEvents(index);
+        }
+
+        // Update existing line item
+        function updateExistingLineItem(lineItem) {
+            var index = transaction.findIndex(x => x.item.Id === lineItem.item.Id);
+            if (index !== -1) {
+                var row = document.querySelector(`tr[data-item-id="${lineItem.item.Id}"]`);
+                if (row) {
+                    var qtyInput = row.querySelector('.qty');
+                    qtyInput.value = lineItem.quantity;
+                    row.querySelector('.line-total').innerText = calculateLineTotal(lineItem).toFixed(2);
+                }
+            }
+        }
+
+        
+
+        // Calculate line total
+        function calculateLineTotal(lineItem) {
+            ////debugger
+            var subtotal = lineItem.item.salePrice * lineItem.quantity;
+            var discountAmount = subtotal * (lineItem.discountPercent / 100);
+            var taxableAmount = subtotal - discountAmount;
+            var taxAmount = taxableAmount * lineItem.taxRate;
+            return taxableAmount + taxAmount;
+        }
+
+        
+
+        // Attach events to line item inputs
+        function attachEvents(index) {
+            var row = document.querySelector(`tr[data-item-id="${transaction[index].item.Id}"]`);
+            if (!row) return;
+
+            var qtyInput = row.querySelector('.qty');
+            var discInput = row.querySelector('.disc');
+            var removeBtn = row.querySelector('.remove-item');
+            var lineTotal = row.querySelector('.line-total');
+
+            qtyInput.addEventListener('change', function() {
+                transaction[index].quantity = parseInt(this.value) || 1;
+                updateLineItem(index);
+            });
+
+            discInput.addEventListener('change', function() {
+                transaction[index].discountPercent = parseFloat(this.value) || 0;
+                updateLineItem(index);
+            });
+
+            removeBtn.addEventListener('click', function() {
+                transaction.splice(index, 1);
+                updateTransactionDisplay();
+            });
+        }
+
+        // Update line item display
+        function updateLineItem(index) {
+            if (index >= 0 && index < transaction.length) {
+                var lineItem = transaction[index];
+                var row = document.querySelector(`tr[data-item-id="${lineItem.item.Id}"]`);
+                if (row) {
+                    row.querySelector('.line-total').innerText = calculateLineTotal(lineItem).toFixed(2);
+                    updateSummary();
+                }
+            }
+        }
+
+        // Update entire transaction display
+        function updateTransactionDisplay() {
+            var tbody = document.getElementById('line-items');
+            //tbody.innerHTML = '';
+            
+            transaction.forEach((lineItem, index) => {
+                renderLineItem(lineItem, index);
+            });
+            
+            updateSummary();
+        }
+
+        function toCamelCase(str) {
+  return str[0].toLowerCase() + str.slice(1);
+}
+
+function convertKeysToCamelCase(obj) {
+  const result = {};
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      const camelKey = toCamelCase(key);
+      result[camelKey] = obj[key];
+    }
+  }
+  return result;
+}
+
+        // Update summary
+        function updateSummary() {
+            var subtotal = 0;
+            var totalDiscount = 0;
+            var totalTax = 0;
+            var total = 0;
+            var itemCount = 0;
+            //debugger
+            transaction.forEach(lineItem => {
+                var lineSubtotal = lineItem.item.salePrice * lineItem.quantity;
+                var lineDiscount = lineSubtotal * (lineItem.discountPercent / 100);
+                var lineTaxable = lineSubtotal - lineDiscount;
+                var lineTax = lineTaxable * lineItem.taxRate;
+                var lineTotal = lineTaxable + lineTax;
+
+                subtotal += lineSubtotal;
+                totalDiscount += lineDiscount;
+                totalTax += lineTax;
+                total += lineTotal;
+                itemCount = transaction.length;
+            });
+
+            // Update summary cards
+            document.getElementById('totalItems').innerText = itemCount;
+            document.getElementById('discount').innerText = totalDiscount.toFixed(2);
+            document.getElementById('tax').innerText = totalTax.toFixed(2);
+            document.getElementById('total').innerText = total.toFixed(2);
+
+            // Update transaction summary
+            document.getElementById('subtotal').innerText = subtotal.toFixed(2);
+            document.getElementById('tax').innerText = totalTax.toFixed(2);
+            document.getElementById('discount').innerText = totalDiscount.toFixed(2);
+            document.getElementById('total').innerText = total.toFixed(2);
+
+            // Update hidden form fields
+            document.getElementById('SubTotal').value = subtotal.toFixed(2);
+            document.getElementById('Tax').value = totalTax.toFixed(2);
+            document.getElementById('Discount').value = totalDiscount.toFixed(2);
+            document.getElementById('TotalDue').value = total.toFixed(2);
+
+            // Enable/disable process payment button
+            document.getElementById('processPaymentBtn').disabled = transaction.length === 0;
+        }
+// Invoice navigation functionality
+(function() {
+    let currentInvoiceIndex = -1;
+    let foundInvoices = [];
+    
+    // Search invoices on Enter key
+    document.getElementById('invoiceNo').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            searchInvoices(this.value.trim());
+        }
+    });
+    
+    // Previous invoice button
+    document.getElementById('prevInvoice').addEventListener('click', function() {
+        if (foundInvoices.length > 0) {
+            currentInvoiceIndex = Math.max(0, currentInvoiceIndex - 1);
+            loadInvoice(foundInvoices[currentInvoiceIndex]);
+        }
+    });
+    
+    // Next invoice button
+    document.getElementById('nextInvoice').addEventListener('click', function() {
+        if (foundInvoices.length > 0) {
+            currentInvoiceIndex = Math.min(foundInvoices.length - 1, currentInvoiceIndex + 1);
+            loadInvoice(foundInvoices[currentInvoiceIndex]);
+        }
+    });
+    
+    function searchInvoices(searchTerm) {
+        if (!searchTerm) return;
+        
+        // In a real application, this would be an AJAX call to your server
+        // For demo purposes, we'll simulate finding some invoices
+        console.log(`Searching for invoice: ${searchTerm}`);
+        
+        // Simulate API call
+        setTimeout(() => {
+            // This would come from your server in a real app
+            foundInvoices = [
+                { id: 1001, number: 'INV-20230001', date: '2023-01-15', total: 125.50 },
+                { id: 1002, number: 'INV-20230002', date: '2023-01-16', total: 89.99 },
+                { id: 1003, number: 'INV-20230003', date: '2023-01-17', total: 215.75 }
+            ].filter(inv => inv.number.includes(searchTerm));
+            
+            if (foundInvoices.length > 0) {
+                currentInvoiceIndex = 0;
+                loadInvoice(foundInvoices[0]);
+            } else {
+                alert('No invoices found matching your search');
+                document.getElementById('invoiceNo').value = '';
+            }
+        }, 300);
+    }
+    
+    function loadInvoice(invoice) {
+        document.getElementById('invoiceNo').value = invoice.number;
+        
+        // In a real app, you would load the invoice details here
+        console.log(`Loading invoice: ${invoice.number}`);
+        
+        // Example of what you might do:
+        // 1. Clear current transaction
+        transaction = [];
+        updateTransactionDisplay();
+        
+        // 2. Load invoice items (this would come from your server)
+        const invoiceItems = [
+            { itemId: 1, name: 'Sample Item 1', price: 25.99, quantity: 2 },
+            { itemId: 2, name: 'Sample Item 2', price: 19.99, quantity: 1 }
+        ];
+        
+        // 3. Add items to transaction
+        invoiceItems.forEach(item => {
+            const dbItem = items.find(x => x.Id == item.itemId) || {
+                Id: item.itemId,
+                ItemName: item.name,
+                salePrice: item.price,
+                taxRate: 0.10
+            };
+            addLineItem(dbItem);
+        });
+        
+        updateSummary();
+    }
+    
+        function addItemToCart(itemId) {
+        var items = @Html.Raw(itemsJson);
+            var item = items.find(x => x.Id == itemId);
+            if (item) {
+                addLineItem(item);
+                updateSummary();
+            }
+        }
+        
+        // Live clock
+        function updateTime() {
+            document.getElementById('liveTime').innerText = new Date().toLocaleString();
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Data setup
+        var invoiceNumber = 'INV-' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + '-' + Math.floor(1000 + Math.random() * 9000);
+        document.getElementById('invoiceNo').value = invoiceNumber;
+
+        // Category filter
+        document.getElementById('categoryFilter').addEventListener('change', function () {
+            var sel = this.value;
+            document.querySelectorAll('.item-card').forEach(card => {
+                card.style.display = (!sel || card.dataset.cat === sel) ? '' : 'none';
+            });
+        });
+
+
+        // Search functionality
+        const scanInput = document.getElementById('scanInput');
+        const searchResults = document.getElementById('searchResults');
+        
+        scanInput.addEventListener('input', function() {
+    const searchTerm = this.value.trim();
+    searchResults.innerHTML = '';
+    
+    if (searchTerm.length < 2) {
+        searchResults.style.display = 'none';
+        return;
+    }
+    
+    // AJAX call to server
+    fetch(`/Sales/SearchItems?term=${encodeURIComponent(searchTerm)}`)
+        .then(response => response.json())
+        .then(matchedItems => {
+            //debugger
+            if (matchedItems.length > 0) {
+                const resultsList = document.createElement('div');
+                resultsList.className = 'search-results-list';
+                
+                matchedItems.forEach(item => {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'search-result-item';
+                    resultItem.innerHTML = `
+                        <div class="search-item-code">${item.itemCode}</div>
+                        <div  style="flex-grow: 0;"class="search-item-name">${item.genericName}</div>
+                        <div class="search-item-quantity">${item.quantity}</div>
+                        <div style="width: 136px;" class="search-item-price">${item.salePrice.toFixed(2)}</div>
+                    `;
+                    resultItem.addEventListener('click', function() {
+                        //debugger
+                        addLineItem(item);
+                        scanInput.value = '';
+                        searchResults.innerHTML = '';
+                        searchResults.style.display = 'none';
+                        updateSummary();
+                    });
+                    resultsList.appendChild(resultItem);
+                });
+                
+                searchResults.appendChild(resultsList);
+                searchResults.style.display = 'block';
+            } else {
+                searchResults.style.display = 'none';
+            }
+        });
+        
+
+});
+        
+        // Close search results when clicking outside
+        // document.addEventListener('click', function(e)) {
+        //     if (!scanInput.contains(e.target) {
+        //         searchResults.style.display = 'none';
+        //     }
+        // });
+
+        // Add item by clicking
+
+        // Scan + Add
+        document.getElementById('addNewItem').addEventListener('click', function () {
+            var code = document.getElementById('scanInput').value.trim();
+            var it = items.find(x => x.itemCode === code);
+            //debugger
+            if (!it) { 
+                // If not found by exact code, try to find first match
+                it = items.find(x => 
+                    x.ItemCode.toLowerCase().includes(code.toLowerCase()) || 
+                    x.GenericName.toLowerCase().includes(code.toLowerCase())
+                );
+                if (!it) {
+                    alert('Item not found'); 
+                    return; 
+                }
+            }
+            addLineItem(it);
+            document.getElementById('scanInput').value = '';
+            searchResults.style.display = 'none';
+            updateSummary();
+        });
+
+
+        // Initialize
+        updateSummary();
+})();
+</script>
+}

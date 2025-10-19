@@ -1,0 +1,384 @@
+﻿@using System.Text.Json
+@model GSoftPosNew.Models.Purchase
+
+@* @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers *@
+@{
+    //ViewData["Title"] = "Add Purchase";
+    //Layout = "~/Views/Shared/_Layout.cshtml";
+    var items = ViewBag.Items as IEnumerable<ItemModel>;
+     var itemsJson = items != null ? JsonSerializer.Serialize(items) : "[]";
+    //var itemsJson = Model.ProductItems;
+    //var itemsJson = JsonSerializer.Serialize(safeModel);
+}
+
+<link rel="stylesheet" href="~/Content/purchase.css" />
+
+<div class="purchase-container">
+    <form asp-action="Create" asp-controller="Purchase" method="post">
+
+        <!-- Top card with purchase details -->
+        <div class="card purchase-top-card mb-4">
+            <div class="card-body">
+                <div class="row g-3 align-items-end">
+                    <!-- Supplier -->
+                    <div class="col-md-3">
+                        @Html.LabelFor(m => m.SupplierId, "Supplier:*", new { @class = "form-label" })
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-user"></i></span>
+                            @Html.DropDownListFor(
+                            m => m.SupplierId,
+                                                        ViewBag.Suppliers as SelectList ?? new SelectList(new List<SelectListItem>()),
+                                                        "Please Select",
+                                                        new { @class = "form-select", required = "required" }
+                                                        )
+                            <button type="button" class="btn btn-outline-success" id="addSupplierBtn">
+                                <i class="fa fa-plus"></i>
+                            </button>
+                        </div>
+                        @Html.ValidationMessageFor(m => m.SupplierId)
+                    </div>
+
+                    <!-- Reference No -->
+                    <div class="col-md-3">
+                        @Html.LabelFor(m => m.ReferenceNo, "Reference No:", new { @class = "form-label" })
+                        <div class="input-group">
+                            @Html.TextBoxFor(m => m.ReferenceNo, new { @class = "form-control", placeholder = "Enter ref no" })
+                            <span class="input-group-text text-info"><i class="fa fa-info-circle"></i></span>
+                        </div>
+                        @Html.ValidationMessageFor(m => m.ReferenceNo)
+                    </div>
+
+                    <!-- Purchase Date -->
+                    <div class="col-md-3">
+                        @Html.LabelFor(m => m.Date, "Purchase Date:*", new { @class = "form-label" })
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-calendar"></i></span>
+                            @Html.TextBoxFor(m => m.Date,
+                                                        "{0:MM/dd/yyyy HH:mm}",
+                                                        new { @class = "form-control", @readonly = "readonly" })
+                        </div>
+                        @Html.ValidationMessageFor(m => m.Date)
+                    </div>
+
+                    <!-- Status -->
+                    <div class="col-md-3">
+                        @Html.LabelFor(m => m.Status, "Purchase Status:*", new { @class = "form-label" })
+                        <div class="input-group">
+                            @Html.DropDownListFor(m => m.Status,
+                                                        new SelectList(new[] { "Pending", "Paid", "Cancelled" }),
+                                                        new { @class = "form-select", required = "required" })
+                            <span class="input-group-text text-info"><i class="fa fa-info-circle"></i></span>
+                        </div>
+                        @Html.ValidationMessageFor(m => m.Status)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Middle section: import/search/table/summary -->
+        <div class="purchase-mid-section mb-4">
+            <div class="d-flex align-items-center mb-2">
+                <div class="flex-grow-1 input-group me-3 search-input-group">
+                    <span class="input-group-text"><i class="fa fa-search"></i></span>
+                    <input type="text" id="productSearch" class="form-control"
+                           placeholder="Enter product name / SKU / barcode" autocomplete="off" />
+                    <div id="searchResults" class="search-results-dropdown"></div>
+                </div>
+                <a href="#" class="add-product-link">+ Add new product</a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table purchase-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Product Name</th>
+                            <th>Qty</th>
+                            <th>Unit Cost<br />(Before Discount)</th>
+                            <th>Discount %</th>
+                            <th>Unit Cost<br />(Before Tax)</th>
+                            <th>Line Total</th>
+                            <th>Profit %</th>
+                            <th>Sell Price<br />(Inc. Tax)</th>
+                            <th>Remove</th>
+                        </tr>
+                    </thead>
+                    <tbody id="purchaseItems">
+                        <!-- Items will be added here via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="purchase-summary mt-2 text-end">
+                Total Items: <strong id="total-items">0</strong>
+                <span class="ms-4">Net Total Amount: <strong id="net-total">$0.00</strong></span>
+            </div>
+        </div>
+
+        <!-- Bottom card: discount & tax & notes -->
+        <div class="card purchase-bottom-card">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        @Html.LabelFor(m => m.DiscountType, "Discount Type:", new { @class = "form-label" })
+                        @Html.DropDownListFor(m => m.DiscountType,
+                                                new SelectList(new[] { "None", "Percent", "Fixed" }),
+                                                new { @class = "form-select", id = "discountType" })
+                    </div>
+                    <div class="col-md-4">
+                        @Html.LabelFor(m => m.DiscountAmount, "Discount Amount:", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.DiscountAmount,
+                                                new { @class = "form-control", type = "number", min = "0", id = "discountAmount" })
+                    </div>
+                    <div class="col-md-4 text-end">
+                        Discount (–): <strong id="display-discount">$0.00</strong>
+                    </div>
+                    <div class="col-md-4">
+                        @Html.LabelFor(m => m.TaxType, "Purchase Tax:", new { @class = "form-label" })
+                        @Html.DropDownListFor(m => m.TaxType,
+                                                new SelectList(new[] { "None", "VAT", "GST" }),
+                                                new { @class = "form-select", id = "taxType" })
+                    </div>
+                    <div class="col-md-4 text-end">
+                        Purchase Tax (+): <strong id="display-tax">$0.00</strong>
+                    </div>
+                    <div class="col-12">
+                        @Html.LabelFor(m => m.Notes, "Additional Notes:", new { @class = "form-label" })
+                        @Html.TextAreaFor(m => m.Notes, new { @class = "form-control", rows = 3 })
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden fields for line items -->
+        <input type="hidden" id="purchaseItemsJson" name="ItemsJson" />
+
+        <!-- Submit button -->
+        <div class="mt-3 text-end">
+            <button type="submit" class="btn btn-primary">Add Purchase</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        // Global variables
+        var items = @Html.Raw(itemsJson);
+        var purchaseItems = [];
+
+        // Search functionality
+        document.getElementById('productSearch').addEventListener('input', function() {
+            const searchTerm = this.value.trim().toLowerCase();
+            const resultsContainer = document.getElementById('searchResults');
+            resultsContainer.innerHTML = '';
+
+            if (searchTerm.length < 2) {
+                resultsContainer.style.display = 'none';
+                return;
+            }
+            //debugger
+            const matchedItems = items.filter(item =>
+                item.ItemName.toLowerCase().includes(searchTerm) ||
+                item.ItemCode.toLowerCase().includes(searchTerm)
+            ).slice(0, 5);
+
+            if (matchedItems.length > 0) {
+                const resultsList = document.createElement('div');
+                resultsList.className = 'search-results-list';
+
+                matchedItems.forEach(item => {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'search-result-item';
+                    //debugger
+                    resultItem.innerHTML = `
+                                        <div class="search-item-code">${item.ItemCode}</div>
+                                        <div style="flex-grow: 0;" class="search-item-name">${item.ItemName}</div>
+                                        <div class="search-item-quantity">${item.Quantity}</div>
+                                        <div style="width: 136px;" class="search-item-price">$${item.PurchasePrice.toFixed(2)}</div>
+                                    `;
+
+                    resultItem.addEventListener('click', function() {
+                        addPurchaseItem(item);
+                        document.getElementById('productSearch').value = '';
+                        resultsContainer.style.display = 'none';
+                        updatePurchaseSummary();
+                    });
+                    resultsList.appendChild(resultItem);
+                });
+
+                resultsContainer.appendChild(resultsList);
+                resultsContainer.style.display = 'block';
+            } else {
+                resultsContainer.style.display = 'none';
+            }
+        });
+
+        // Add item to purchase
+        function addPurchaseItem(item) {
+            // Check if item already exists
+            const existingItem = purchaseItems.find(x => x.ItemId === item.Id);
+            if (existingItem) {
+                existingItem.Quantity += 1;
+                renderPurchaseItem(existingItem);
+            } else {
+                debugger
+                const newItem = {
+                    ItemId: item.Id,
+                    Item: item.GenericName,
+                    Quantity: 1,
+                    UnitCost: item.PurchasePrice,
+                    DiscountPercent: 0,
+                    TaxPercent: 10, // Default tax
+                    LineTotal: item.CostPrice
+                };
+                purchaseItems.push(newItem);
+                renderPurchaseItem(newItem);
+            }
+            updatePurchaseSummary();
+        }
+
+        // Render purchase item row
+        function renderPurchaseItem(item) {
+            const tbody = document.getElementById('purchaseItems');
+            const existingRow = document.querySelector(`tr[data-item-id="${item.ItemId}"]`);
+
+            if (existingRow) {
+                // Update existing row
+                existingRow.querySelector('.item-qty').value = item.Quantity;
+                existingRow.querySelector('.item-discount').value = item.DiscountPercent;
+                existingRow.querySelector('.line-total').textContent = `$${calculateLineTotal(item).toFixed(2)}`;
+            } else {
+                // Create new row
+                const row = document.createElement('tr');
+                row.dataset.itemId = item.ItemId;
+                row.innerHTML = `
+                    <td>${purchaseItems.length}</td>
+                    <td>${item.Item}</td>
+                    <td><input type="number" class="form-control form-control-sm item-qty"
+                               value="${item.Quantity}" min="1" data-item-id="${item.ItemId}"></td>
+                    <td>$${item.UnitCost.toFixed(2)}</td>
+                    <td><input type="number" class="form-control form-control-sm item-discount"
+                               value="${item.DiscountPercent}" min="0" max="100" data-item-id="${item.ItemId}"></td>
+                    <td>$${(item.UnitCost * (1 - item.DiscountPercent/100)).toFixed(2)}</td>
+                    <td class="line-total">$${calculateLineTotal(item).toFixed(2)}</td>
+                    <td>20%</td>
+                    <td>$${(item.UnitCost * 1.2).toFixed(2)}</td>
+                    <td><button class="btn btn-sm btn-danger remove-item" data-item-id="${item.ItemId}">
+                        <i class="fa fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+
+                // Add event listeners
+                row.querySelector('.item-qty').addEventListener('change', function() {
+                    const itemId = parseInt(this.dataset.itemId);
+                    const item = purchaseItems.find(x => x.ItemId === itemId);
+                    if (item) {
+                        item.Quantity = parseInt(this.value) || 1;
+                        item.LineTotal = calculateLineTotal(item);
+                        updatePurchaseSummary();
+                    }
+                });
+
+                row.querySelector('.item-discount').addEventListener('change', function() {
+                    const itemId = parseInt(this.dataset.itemId);
+                    const item = purchaseItems.find(x => x.ItemId === itemId);
+                    if (item) {
+                        item.DiscountPercent = parseFloat(this.value) || 0;
+                        item.LineTotal = calculateLineTotal(item);
+                        updatePurchaseSummary();
+                    }
+                });
+
+                row.querySelector('.remove-item').addEventListener('click', function() {
+                    const itemId = parseInt(this.dataset.itemId);
+                    purchaseItems = purchaseItems.filter(x => x.ItemId !== itemId);
+                    row.remove();
+                    updatePurchaseSummary();
+                });
+            }
+        }
+
+        // Calculate line total
+        function calculateLineTotal(item) {
+            const subtotal = item.UnitCost * item.Quantity;
+            const discountAmount = subtotal * (item.DiscountPercent / 100);
+            const taxableAmount = subtotal - discountAmount;
+            const taxAmount = taxableAmount * (item.TaxPercent / 100);
+            return taxableAmount + taxAmount;
+        }
+
+        // Update purchase summary
+        function updatePurchaseSummary() {
+            // Update items count
+            document.getElementById('total-items').textContent = purchaseItems.length;
+
+            // Calculate subtotal
+            const subtotal = purchaseItems.reduce((sum, item) => sum + (item.UnitCost * item.Quantity), 0);
+
+            // Calculate discount
+            const discountType = document.getElementById('discountType').value;
+            const discountAmount = parseFloat(document.getElementById('discountAmount').value) || 0;
+            let discount = 0;
+
+            if (discountType === 'Percent') {
+                discount = subtotal * (discountAmount / 100);
+            } else if (discountType === 'Fixed') {
+                discount = discountAmount;
+            }
+
+            // Calculate tax
+            const taxType = document.getElementById('taxType').value;
+            let tax = 0;
+
+            if (taxType === 'VAT') {
+                tax = (subtotal - discount) * 0.15; // 15% VAT
+            } else if (taxType === 'GST') {
+                tax = (subtotal - discount) * 0.10; // 10% GST
+            }
+
+            // Calculate total
+            const total = subtotal - discount + tax;
+
+            // Update display
+            document.getElementById('display-discount').textContent = `$${discount.toFixed(2)}`;
+            document.getElementById('display-tax').textContent = `$${tax.toFixed(2)}`;
+            document.getElementById('net-total').textContent = `$${total.toFixed(2)}`;
+
+            // Update line items
+            purchaseItems.forEach(item => {
+                const row = document.querySelector(`tr[data-item-id="${item.ItemId}"]`);
+                if (row) {
+                    row.querySelector('.line-total').textContent = `$${calculateLineTotal(item).toFixed(2)}`;
+                }
+            });
+
+            // Update hidden field with JSON data
+            document.getElementById('purchaseItemsJson').value = JSON.stringify(purchaseItems.map(item => ({
+                ItemId: item.ItemId,
+                Quantity: item.Quantity,
+                ItemName: item.Item,
+                GenericName: item.Item,
+                UnitCost: item.UnitCost,
+                DiscountPercent: item.DiscountPercent,
+                TaxPercent: item.TaxPercent,
+                LineTotal: calculateLineTotal(item)
+            })));
+        }
+
+        // Event listeners for discount and tax changes
+        document.getElementById('discountType').addEventListener('change', updatePurchaseSummary);
+        document.getElementById('discountAmount').addEventListener('input', updatePurchaseSummary);
+        document.getElementById('taxType').addEventListener('change', updatePurchaseSummary);
+
+        // Form submission
+        document.querySelector('form').addEventListener('submit', function(e) {
+            if (purchaseItems.length === 0) {
+                e.preventDefault();
+                alert('Please add at least one item to the purchase');
+                return false;
+            }
+            return true;
+        });
+    </script>
+}

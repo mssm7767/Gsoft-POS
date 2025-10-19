@@ -1,0 +1,356 @@
+﻿body {
+    background: #f4c1c1 !important;
+    font-family: 'Inter', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.gpos-stockadj-modal {
+    background: #fff;
+    border-radius: 1.2rem;
+    box-shadow: 0 6px 32px #10427425;
+    padding: 30px 30px 18px 30px;
+    max-width: 1100px;
+    margin: 30px auto;
+}
+
+.gpos-stockadj-header-v2 {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 18px;
+    margin-bottom: 18px;
+    padding-bottom: 7px;
+    border-bottom: 1.2px solid #e3eef8;
+}
+
+.stockadj-refnav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ref-label {
+    font-size: 1.01rem;
+    color: #1b62b7;
+    font-weight: 700;
+}
+
+.ref-value {
+    font-size: 1.11rem;
+    font-weight: 800;
+    color: #dc5710;
+    margin: 0 4px;
+    letter-spacing: 1px;
+}
+
+.ref-btn {
+    background: #f7fafd;
+    color: #2279c9;
+    border: 1px solid #cbe7fd;
+    border-radius: 0.7rem;
+    padding: 2px 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-left: 2px;
+    transition: background 0.12s, color 0.12s;
+}
+
+    .ref-btn:hover {
+        background: #d0eaff;
+        color: #1760b7;
+    }
+
+.stockadj-descwrap {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.gpos-stockadj-desc {
+    width: 320px;
+    padding: 4px 14px;
+    border-radius: 0.6rem;
+    border: 1.2px solid #cbe7fd;
+    background: #fafdff;
+    color: #134372;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.stockadj-userdatetime {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+}
+
+#stockAdjDateTime {
+    font-family: 'Consolas', monospace;
+    font-size: 1.02rem;
+    color: #1760b7;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+}
+
+.gpos-stockadj-user {
+    font-size: 1.03rem;
+    color: #146098;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.gpos-stockadj-entry {
+    display: flex;
+    gap: 9px;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.gpos-stockadj-barcode {
+    padding: 5px 12px;
+    font-size: 0.98rem;
+    border-radius: 0.6rem;
+    border: 1.1px solid #bedafc;
+    background: #f7fafd;
+    color: #134372;
+    min-width: 120px;
+}
+
+.gpos-stockadj-add-btn {
+    background: #2ea97f;
+    color: #fff;
+    border: none;
+    border-radius: 1.2rem;
+    padding: 6px 22px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 1px 7px #b7daff15;
+    margin-left: 6px;
+    transition: background 0.13s, transform 0.11s;
+}
+
+    .gpos-stockadj-add-btn:hover {
+        background: #168625;
+    }
+
+.gpos-stockadj-tablewrap {
+    margin: 12px 0 7px 0;
+}
+
+.gpos-stockadj-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    box-shadow: 0 3px 12px #b7daff11;
+    background: #fff;
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+    .gpos-stockadj-table th, .gpos-stockadj-table td {
+        padding: 10px 7px;
+        text-align: center;
+        font-size: 1.01rem;
+    }
+
+    .gpos-stockadj-table th {
+        color: #1760b7;
+        font-weight: 800;
+        border-bottom: 2px solid #b7daff;
+        background: #f7fafd;
+    }
+
+    .gpos-stockadj-table td {
+        color: #16528d;
+        font-weight: 520;
+    }
+
+    .gpos-stockadj-table input.gpos-stockadj-phy {
+        width: 64px;
+        border-radius: 0.5rem;
+        border: 1.1px solid #bedafc;
+        background: #fafdff;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #146098;
+        padding: 3px 6px;
+        text-align: center;
+    }
+
+.gpos-stockadj-del-btn {
+    background: none;
+    color: #e0524a;
+    border: none;
+    font-size: 1.1rem;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.12s, color 0.12s;
+}
+
+    .gpos-stockadj-del-btn:hover {
+        background: #ffe2e0;
+        color: #b31217;
+    }
+
+.gpos-stockadj-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 14px;
+}
+
+.gpos-stockadj-total {
+    font-size: 1.09rem;
+    font-weight: 800;
+    color: #e0491b;
+    background: #fbe7dd;
+    border-radius: 0.8rem;
+    padding: 6px 24px;
+}
+
+.gpos-stockadj-actions {
+    display: flex;
+    gap: 15px;
+}
+
+.gpos-stockadj-load-btn {
+    background: #e9f4ff;
+    color: #2279c9;
+    border: 1px solid #cbe7fd;
+    border-radius: 0.7rem;
+    padding: 6px 18px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.12s, color 0.12s;
+}
+
+    .gpos-stockadj-load-btn:hover {
+        background: #d0eaff;
+        color: #1760b7;
+    }
+.gpos-stockadj-entry-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: flex-end;
+    justify-content: flex-start;
+}
+
+.entry-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 110px;
+}
+
+    .entry-cell label {
+        font-size: 0.91rem;
+        color: #1760b7;
+        margin-bottom: 2px;
+        font-weight: 700;
+    }
+
+.blink {
+    border: 2px solid #29a4e0 !important;
+    box-shadow: 0 0 9px #80d1ff44;
+}
+
+.blink-active {
+    background: #e2f3ff !important;
+}
+
+.gpos-stockadj-remarks {
+    transition: border 0.13s;
+}
+
+    .gpos-stockadj-remarks:focus {
+        border: 1.6px solid #29a4e0;
+        background: #e9f7ff;
+    }
+
+<style >
+.blink {
+    animation: blinkfield 1s infinite;
+}
+
+@keyframes blinkfield {
+    0%,100% {
+        box-shadow: 0 0 5px #ffd6a0, 0 0 0 #fff;
+        border-color: #ff9100;
+    }
+
+    40% {
+        box-shadow: 0 0 15px #ff9100, 0 0 0 #fff;
+        border-color: #ff9100;
+    }
+
+    80% {
+        box-shadow: 0 0 5px #ffd6a0, 0 0 0 #fff;
+        border-color: #ff9100;
+    }
+}
+.blink {
+    animation: blinkfield 1s infinite;
+}
+
+@keyframes blinkfield {
+    0%,100% {
+        box-shadow: 0 0 5px #ffd6a0, 0 0 0 #fff;
+        border-color: #ff9100;
+    }
+
+    40% {
+        box-shadow: 0 0 15px #ff9100, 0 0 0 #fff;
+        border-color: #ff9100;
+    }
+
+    80% {
+        box-shadow: 0 0 5px #ffd6a0, 0 0 0 #fff;
+        border-color: #ff9100;
+    }
+}
+
+.blink::placeholder {
+    color: #ffb85e;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    opacity: 1;
+}
+
+.ref-label {
+    font-size: 1.05rem;
+    color: #1b62b7;
+    font-weight: 700;
+}
+
+.ref-value {
+    font-size: 1.12rem;
+    color: #dc5710;
+    font-weight: 800;
+    letter-spacing: 1.1px;
+}
+
+.ref-btn {
+    background: #f7fafd;
+    color: #2279c9;
+    border: 1px solid #cbe7fd;
+    border-radius: 0.7rem;
+    padding: 3px 9px;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-left: 2px;
+    transition: background 0.12s, color 0.12s;
+}
+
+    .ref-btn:hover {
+        background: #ffd6a0;
+        color: #c05200;
+    }
+
+.gpos-stockadj-barcode:focus {
+    outline: 2px solid #ffb85e;
+}

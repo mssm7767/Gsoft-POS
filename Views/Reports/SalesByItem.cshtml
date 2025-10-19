@@ -1,0 +1,79 @@
+﻿@model GSoftPosNew.ViewModels.SalesByItemReportVM
+
+@{
+    ViewData["Title"] = "Sales By Item Report";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="report-container">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                <i class="fas fa-shopping-basket me-2"></i>Sales By Item Report
+            </h4>
+        </div>
+        <div class="card-body">
+            <form method="post" class="mb-4">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label asp-for="StartDate" class="form-label">Start Date</label>
+                        <input asp-for="StartDate" type="date" class="form-control" />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="EndDate" class="form-label">End Date</label>
+                        <input asp-for="EndDate" type="date" class="form-control" />
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter me-2"></i>Filter
+                        </button>
+                        <a href="@Url.Action("ExportSalesByItemToExcel")" class="btn btn-success ms-2">
+                            <i class="fas fa-file-excel me-2"></i>Excel
+                        </a>
+                    </div>
+                </div>
+            </form>
+
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Item Code</th>
+                            <th>Item Name</th>
+                            <th>Category</th>
+                            <th class="text-end">Quantity Sold</th>
+                            <th class="text-end">Total Sales</th>
+                            <th class="text-end">Avg. Price</th>
+                            <th class="text-end">Profit</th>
+                            <th class="text-end">Margin</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            var itemSales = Model.ItemSales.FirstOrDefault(i => i.ItemId == item.ItemId);
+                            <tr>
+                                <td>@item.ItemCode</td>
+                                <td>@item.ItemName</td>
+                                <td>@item.Category</td>
+                                <td class="text-end">@item.QuantitySold</td>
+                                <td class="text-end">@item.TotalAmount.ToString("C")</td>
+                                <td class="text-end">@item.AveragePrice.ToString("C")</td>
+                                <td class="text-end @(itemSales?.Profit >= 0 ? "text-success" : "text-danger")">
+                                    @itemSales?.Profit.ToString("C")
+                                </td>
+                                <td class="text-end @(itemSales?.ProfitMargin >= 0 ? "text-success" : "text-danger")">
+                                    @itemSales?.ProfitMargin.ToString("0.00")%
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<link rel="stylesheet" href="~/css/reports.css" />
+@* @section Styles {
+    <link rel="stylesheet" href="~/css/reports.css" />
+} *@

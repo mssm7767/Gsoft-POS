@@ -1,0 +1,57 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+.payment-summary h6 {
+    font-size: 0.9rem;
+    margin-bottom: .75rem;
+}
+
+.payment-summary .small {
+    font-size: .75rem;
+}
+
+.payment-summary .fw-semibold {
+    font-weight: 600;
+}
+
+.payment-summary hr {
+    margin: 1rem 0;
+}
+
+.pos-header {
+    position: sticky;
+    top: 0;
+    z-index: 1040;
+}
+
+    .pos-header .btn-link {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .pos-header .input-group .form-control {
+        border-radius: .25rem 0 0 .25rem;
+    }
+
+    .pos-header .input-group .btn {
+        border-radius: 0 .25rem .25rem 0;
+    }

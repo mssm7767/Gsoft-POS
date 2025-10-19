@@ -1,0 +1,166 @@
+﻿body {
+    background-color: #f4f6f9;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.dash-card {
+    padding: 20px;
+    border-radius: 12px;
+    color: #fff;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease;
+}
+
+    .dash-card:hover {
+        transform: scale(1.03);
+    }
+
+.icon-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 22px;
+    margin-bottom: 12px;
+}
+
+.title {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.amount {
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+/* Background colors */
+.bg-sales {
+    background-color: #007bff;
+}
+
+.text-sales {
+    color: #007bff;
+}
+
+.bg-purchase {
+    background-color: #28a745;
+}
+
+.text-purchase {
+    color: #28a745;
+}
+
+.bg-reports {
+    background-color: #ffc107;
+}
+
+.text-reports {
+    color: #ffc107;
+}
+
+.bg-expiry {
+    background-color: #dc3545;
+}
+
+.text-expiry {
+    color: #dc3545;
+}
+
+/* Search Results Dropdown */
+.search-input-group {
+    position: relative;
+}
+
+.search-results-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    z-index: 1000;
+    display: none;
+}
+
+.search-results-list {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.search-result-item {
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+    .search-result-item:hover {
+        background-color: #f8f9fa;
+    }
+
+.search-item-code {
+    font-weight: bold;
+    width: 80px;
+}
+
+.search-item-quantity {
+    font-weight: bold;
+    width: 30px;
+}
+
+.search-item-name {
+    flex-grow: 1;
+    padding: 0 10px;
+}
+
+.search-item-price {
+    color: #28a745;
+    font-weight: bold;
+    width: 110px;
+    text-align: right;
+}
+
+/* Customer info */
+.customer-info {
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+/* Transaction table */
+.line-items-table {
+    font-size: 0.9rem;
+}
+
+    .line-items-table th {
+        white-space: nowrap;
+    }
+
+    .line-items-table tfoot td {
+        font-weight: bold;
+    }
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .search-results-dropdown {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        max-height: 50vh;
+        overflow-y: auto;
+    }
+}

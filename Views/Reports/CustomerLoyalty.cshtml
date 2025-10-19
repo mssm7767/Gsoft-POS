@@ -1,0 +1,71 @@
+﻿@model List<GSoftPosNew.ViewModels.CustomerLoyaltyData>
+
+<div class="report-container">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4><i class="fas fa-award me-2"></i>Customer Loyalty Report</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Customer</th>
+                            <th class="text-end">Member Since</th>
+                            <th class="text-end">Transactions</th>
+                            <th class="text-end">Total Spent</th>
+                            <th class="text-end">Avg. Days Between Purchases</th>
+                            <th>Loyalty Tier</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var customer in Model)
+                        {
+                            <tr>
+                                <td>@customer.CustomerName</td>
+                                <td class="text-end">@customer.JoinDate.ToString("MMM yyyy")</td>
+                                <td class="text-end">@customer.TransactionCount</td>
+                                <td class="text-end">@customer.TotalSpent.ToString("C")</td>
+                                <td class="text-end">
+                                    @if (customer.TransactionCount > 1)
+                                    {
+                                        @((customer.DaysSinceLastPurchase / (customer.TransactionCount - 1)).ToString("0"))
+                                    }
+                                    else
+                                    {
+                                        <text>N/A</text>
+                                    }
+                                </td>
+                                <td>
+                                    @{
+                                        var loyaltyLevel = customer.TotalSpent switch
+                                        {
+                                            > 5000 => "Platinum",
+                                            > 2000 => "Gold",
+                                            > 500 => "Silver",
+                                            _ => "Bronze"
+                                        };
+                                        var badgeClass = loyaltyLevel switch
+                                        {
+                                            "Platinum" => "bg-dark text-white",
+                                            "Gold" => "bg-warning text-dark",
+                                            "Silver" => "bg-secondary text-white",
+                                            _ => "bg-brown text-white"
+                                        };
+                                    }
+                                    <span class="badge @badgeClass">@loyaltyLevel</span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-brown {
+        background-color: #cd7f32;
+    }
+</style>

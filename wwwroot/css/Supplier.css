@@ -1,0 +1,64 @@
+﻿/* پورا ویو وسطِ سکرین سے ہٹ کر دو کالم میں تقسیم کرتا ہے */
+.container-fluid {
+    max-width: 1200px;
+}
+
+/* فارم والے کارڈ کا اسٹائل */
+.form-card {
+    background: #fff;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    padding: 1.5rem;
+}
+
+/* اوپر سبز پٹی */
+.form-card-header {
+    background-color: #28a745;
+    color: #fff;
+    padding: 0.75rem 1rem;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+}
+
+/* دائیں نصف کارڈ */
+.list-card {
+    background: #fff;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    padding: 1.5rem;
+}
+
+/* stretch down and scroll if needed */
+.stretch-list {
+    height: calc(100vh - 180px);
+    overflow-y: auto;
+}
+
+/* ہر سپلائر آیٹم */
+.supplier-item {
+    background: #f9f9f9;
+    border: 1px solid #e2e2e2;
+    border-radius: 6px;
+}
+
+/* لوگو تھمبنیل */
+.supplier-logo-thumb {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+/* موبائل ویو میں ایک کالم */
+@media (max-width: 768px) {
+    .row.g-4 > .col-md-6 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}

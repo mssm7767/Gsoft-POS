@@ -1,0 +1,49 @@
+﻿@model GSoftPosNew.Models.Role
+
+@{
+    ViewData["Title"] = "Edit Role";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fa fa-edit"></i> Edit Role
+            </h5>
+        </div>
+        <div class="card-body">
+            @if (TempData["Message"] != null)
+            {
+                <div class="alert alert-success">
+                    @TempData["Message"]
+                </div>
+            }
+
+            @using (Html.BeginForm("Edit", "Role", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.Id)
+
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.RoleName, new { @class = "form-label" })
+                    @Html.TextBoxFor(m => m.RoleName, new { @class = "form-control", placeholder = "Enter role name" })
+                    @Html.ValidationMessageFor(m => m.RoleName, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.Description, new { @class = "form-label" })
+                    @Html.TextAreaFor(m => m.Description, new { @class = "form-control", rows = 3, placeholder = "Optional description" })
+                    @Html.ValidationMessageFor(m => m.Description, "", new { @class = "text-danger" })
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa fa-save"></i> Update Role
+                </button>
+                <a asp-action="Index" class="btn btn-secondary ms-2">
+                    <i class="fa fa-arrow-left"></i> Cancel
+                </a>
+            }
+        </div>
+    </div>
+</div>

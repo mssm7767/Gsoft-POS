@@ -1,0 +1,73 @@
+﻿@model GSoftPosNew.Models.Sale
+
+@{
+    ViewData["Title"] = "Edit Sale";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2 class="mb-4">@ViewData["Title"]</h2>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">@TempData["Message"]</div>
+}
+
+@using (Html.BeginForm("Edit", "Sale", FormMethod.Post))
+{
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(m => m.Id)
+
+    <div class="mb-3">
+        @Html.LabelFor(m => m.InvoiceNumber)
+        @Html.TextBoxFor(m => m.InvoiceNumber, new { @class = "form-control" })
+    </div>
+
+    <div class="mb-3">
+        @Html.LabelFor(m => m.SaleDate)
+        @Html.TextBoxFor(m => m.SaleDate, "{0:yyyy-MM-ddTHH:mm}", new { @class = "form-control", type = "datetime-local" })
+    </div>
+
+    <div class="mb-3">
+        @Html.LabelFor(m => m.CashierId)
+        @Html.TextBoxFor(m => m.CashierId, new { @class = "form-control" })
+    </div>
+
+    <div class="mb-3">
+        @Html.LabelFor(m => m.SubTotal)
+        @Html.TextBoxFor(m => m.SubTotal, new { @class = "form-control", type = "number", step = "0.01" })
+    </div>
+
+    <div class="mb-3">
+        @Html.LabelFor(m => m.Tax)
+        @Html.TextBoxFor(m => m.Tax, new { @class = "form-control", type = "number", step = "0.01" })
+    </div>
+
+    <div class="mb-3">
+        @Html.LabelFor(m => m.Discount)
+        @Html.TextBoxFor(m => m.Discount, new { @class = "form-control", type = "number", step = "0.01" })
+    </div>
+
+    <div class="mb-3">
+        @Html.LabelFor(m => m.Total)
+        @Html.TextBoxFor(m => m.Total, new { @class = "form-control", type = "number", step = "0.01" })
+    </div>
+
+    @* Payment Section (Optional) *@
+   @*  @if (Model.Payment != null)
+    {
+        <h5 class="mt-4">Payment Info</h5>
+        <div class="mb-3">
+            @Html.Label("Payment Amount")
+            @Html.TextBox("Payment.AmountPaid", Model.Payment.AmountPaid, new { @class = "form-control", type = "number", step = "0.01" })
+        </div>
+        <div class="mb-3">
+            @Html.Label("Payment Method")
+            @Html.TextBox("Payment.Method", Model.Payment.Method, new { @class = "form-control" })
+        </div>
+    } *@
+
+    <div class="text-end">
+        <button type="submit" class="btn btn-success"><i class="fa fa-save"></i> Save Changes</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </div>
+}

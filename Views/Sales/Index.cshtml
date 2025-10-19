@@ -1,0 +1,128 @@
+﻿@model GSoftPosNew.ViewModels.SalesFilterViewModel
+
+@{
+    ViewData["Title"] = "Sales Report";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0 text-primary">
+            <i class="fa fa-chart-line me-2"></i> @ViewData["Title"]
+        </h2>
+        <a asp-action="POS" class="btn btn-primary shadow-sm px-4">
+            <i class="fa fa-plus me-1"></i> New Sale
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card shadow-sm mb-4 border-0 rounded-3">
+        <div class="card-body">
+            <form method="get" asp-action="Index" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">From Date</label>
+                    <input type="date" name="fromDate" class="form-control" value="@Model.FromDate?.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">To Date</label>
+                    <input type="date" name="toDate" class="form-control" value="@Model.ToDate?.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Search (Invoice / Cashier)</label>
+                    <input type="text" name="search" class="form-control" placeholder="Invoice # or Cashier" value="@Model.Search" />
+                </div>
+                <div class="col-md-3 text-end">
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="fa fa-search me-1"></i> Filter
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary px-3 ms-2">
+                        <i class="fa fa-sync"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Report Table -->
+    <div class="card shadow-lg border-0 rounded-3">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0 align-middle">
+                    <thead class="table-dark text-uppercase small">
+                        <tr>
+                            <th>#</th>
+                            <th>Invoice</th>
+                            <th>Date</th>
+                            <th>Cashier</th>
+                            <th class="text-end">Subtotal</th>
+                            <th class="text-end">Tax</th>
+                            <th class="text-end">Discount</th>
+                            <th class="text-end">Total</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Sales != null && Model.Sales.Any())
+                        {
+                            var grandSubtotal = 0m;
+                            var grandTax = 0m;
+                            var grandDiscount = 0m;
+                            var grandTotal = 0m;
+                            foreach (var sale in Model.Sales)
+                            {
+                                grandSubtotal += sale.SubTotal;
+                                grandTax += sale.Tax;
+                                grandDiscount += sale.Discount;
+                                grandTotal += sale.Total;
+
+                                <tr>
+                                    <td class="fw-semibold text-muted">@sale.Id</td>
+                                    <td class="fw-bold">@sale.InvoiceNumber</td>
+                                    <td>@sale.SaleDate.ToString("g")</td>
+                                    <td>@sale.CashierId</td>
+                                    <td class="text-end">@sale.SubTotal.ToString("N2")</td>
+                                    <td class="text-end">@sale.Tax.ToString("N2")</td>
+                                    <td class="text-end text-danger">-@sale.Discount.ToString("N2")</td>
+                                    <td class="text-end fw-bold text-success">@sale.Total.ToString("N2")</td>
+                                    <td class="text-center">
+                                        <a asp-action="Receipt" asp-route-id="@sale.Id" class="btn btn-sm btn-outline-secondary me-1" title="View Receipt">
+                                            <i class="fa fa-file-invoice"></i>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@sale.Id" class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                                            <i class="fa fa-edit"></i>
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@sale.Id"
+                                           class="btn btn-sm btn-outline-danger"
+                                           onclick="return confirm('Are you sure you want to delete this sale?');"
+                                           title="Delete">
+                                            <i class="fa fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+
+                            <!-- Totals Row -->
+                            <tr class="table-light fw-bold">
+                                <td colspan="4" class="text-end">Totals:</td>
+                                <td class="text-end">@grandSubtotal.ToString("N2")</td>
+                                <td class="text-end">@grandTax.ToString("N2")</td>
+                                <td class="text-end text-danger">-@grandDiscount.ToString("N2")</td>
+                                <td class="text-end text-success">@grandTotal.ToString("N2")</td>
+                                <td></td>
+                            </tr>
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="9" class="text-center text-muted py-4">
+                                    <i class="fa fa-info-circle me-1"></i> No sales records found.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

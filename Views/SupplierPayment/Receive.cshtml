@@ -1,0 +1,247 @@
+﻿@model GSoftPosNew.ViewModels.SupplierReceivePaymentViewModel
+@{
+    ViewBag.Title = "Supplier Payment";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- supplier specific CSS (wwwroot/css/supplier-payment.css) -->
+<link rel="stylesheet" href="~/css/supplier-payment.css" asp-append-version="true" />
+
+<div class="container-fluid py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-10">
+
+            <!-- DISTINCT SUPPLIER HEADER -->
+            <div class="sup-header mb-4">
+                <div class="sup-header-bar d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-truck-ramp-box fa-lg me-1"></i>
+                    <h4 class="mb-0 fw-bold">Supplier Payment</h4>
+                    <span class="ms-auto sup-chip">
+                        <i class="fa-regular fa-calendar"></i> @DateTime.Now.ToString("MMM dd, yyyy")
+                    </span>
+                    <span class="sup-ribbon"><i class="fa-solid fa-truck-fast me-1"></i>SUPPLIER</span>
+                </div>
+            </div>
+
+            <!-- FORM CARD WITH LEFT INFO RAIL -->
+            <div class="sup-card p-3">
+                <div class="row g-3">
+                    <!-- Left Rail -->
+                    <div class="col-lg-3 d-none d-lg-block sup-rail pe-3">
+                        <div class="mb-3">
+                            <div class="text-muted small mb-1">Context</div>
+                            <div class="balance-box">
+                                <i class="fa-solid fa-scale-unbalanced text-secondary"></i>
+                                <span class="text-muted">Previous Balance</span>
+                            </div>
+                            <div class="mt-1 balance-pill" id="OldBalanceDisplay">₨0.00</div>
+                        </div>
+                        <div class="mb-2">
+                            <div class="text-muted small mb-1">Mode</div>
+                            <div class="sup-chip"><i class="fa-solid fa-hand-holding-dollar"></i> Receive from Supplier</div>
+                        </div>
+                        <div class="text-muted small">Tip: Supplier page has violet theme; customer page can stay blue/green.</div>
+                    </div>
+
+                    <!-- Main Form -->
+                    <div class="col-lg-9">
+                        @if (TempData["PaymentSuccess"] != null)
+                        {
+                            <div class="alert alert-success shadow-sm" id="alert-success">
+                                @TempData["PaymentSuccess"]
+                            </div>
+                        }
+
+                        <form asp-action="Receive" method="post" autocomplete="off" class="row g-3">
+                            @Html.AntiForgeryToken()
+
+                            <!-- Supplier -->
+                            <div class="col-12 col-md-6">
+                                <label class="form-label fw-semibold">
+                                    <i class="fa-solid fa-user-tie text-primary me-1"></i> Supplier
+                                </label>
+                                <select id="SupplierId" asp-for="SupplierId" class="form-select"
+                                        asp-items="@(new SelectList(Model.SupplierList, "Id", "SupplierName"))" required>
+                                    <option value="">Select Supplier</option>
+                                </select>
+                            </div>
+
+                            <!-- Date & Old Balance -->
+                            <div class="col-6 col-md-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="fa-regular fa-calendar text-secondary me-1"></i> Date &amp; Time
+                                </label>
+                                <input asp-for="PaymentDate" class="form-control" type="datetime-local"
+                                       value="@Model.PaymentDate?.ToString("yyyy-MM-ddTHH:mm")" required />
+                            </div>
+
+                            <div class="col-6 col-md-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="fa-solid fa-scale-balanced text-info me-1"></i> Old Balance
+                                </label>
+                                <!-- Hidden raw value for postback -->
+                                <input type="hidden" id="OldBalance" asp-for="OldBalance" />
+                                <!-- Pretty read-only display -->
+                                <input id="OldBalanceDisplayInput" class="form-control text-danger fw-bold"
+                                       type="text" value="₨0.00" readonly />
+                            </div>
+
+                            <!-- Amount & Advance -->
+                            <div class="col-6 col-md-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="fa-solid fa-money-check-dollar text-success me-1"></i> Amount
+                                </label>
+                                <input asp-for="Amount" class="form-control" />
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="fa-solid fa-coins text-warning me-1"></i> Advance
+                                </label>
+                                <input asp-for="Advance" class="form-control" placeholder="0" />
+                            </div>
+
+                            <!-- Payment Method -->
+                            <div class="col-12 col-md-6">
+                                <label class="form-label fw-semibold">
+                                    <i class="fa-regular fa-credit-card text-primary me-1"></i> Payment Method
+                                </label>
+                                <select asp-for="PaymentMethod" class="form-select" required>
+                                    <option value="Cash">Cash</option>
+                                    <option value="Online">Online</option>
+                                    <option value="Cheque">Cheque</option>
+                                </select>
+                            </div>
+
+                            <!-- Narration -->
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">
+                                    <i class="fa-solid fa-align-left text-muted me-1"></i> Narration / Note
+                                </label>
+                                <input asp-for="Narration" class="form-control" maxlength="200" />
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="col-12 text-end mt-2" id="SupplierPaymentActions">
+                                <button type="submit" class="btn btn-sup-primary btn-lg rounded-pill me-2" title="Save Payment">
+                                    <i class="fa-solid fa-floppy-disk me-1"></i> Save
+                                </button>
+                                <button type="button" class="btn btn-sup-warning btn-lg rounded-pill me-2" title="Edit Payment" disabled>
+                                    <i class="fa-solid fa-pen-to-square me-1"></i> Edit
+                                </button>
+                                <button type="button" class="btn btn-sup-info btn-lg rounded-pill" title="Print Payment" onclick="window.print();">
+                                    <i class="fa-solid fa-print me-1"></i> Print
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HISTORY -->
+            <div class="sup-card mt-4">
+                <div class="px-3 py-2 border-bottom" style="background:#faf5ff; border-radius:18px 18px 0 0">
+                    <span class="fw-bold text-purple"><i class="fa-solid fa-list me-2"></i> Latest Payments</span>
+                </div>
+                <div class="p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="min-width:140px">Date</th>
+                                    <th>Supplier</th>
+                                    <th>Amount</th>
+                                    <th>Advance</th>
+                                    <th>Method</th>
+                                    <th>Narration</th>
+                                    <th>By</th>
+                                    <th>Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.PaymentHistory?.Count > 0)
+                                {
+                                    foreach (var p in Model.PaymentHistory)
+                                    {
+                                        <tr>
+                                            <td><i class="fa-solid fa-circle-dot dot-ok me-1"></i>@(p.PaymentDate?.ToString("yyyy-MM-dd HH:mm"))</td>
+                                            <td>@p.Supplier?.SupplierName</td>
+                                            <td class="text-success fw-bold">@p.Amount?.ToString("N2")</td>
+                                            <td class="text-warning">@p.Advance?.ToString("N2")</td>
+                                            <td>@p.PaymentMethod</td>
+                                            <td>@p.Narration</td>
+                                            <td><i class="fa-regular fa-user"></i> @(p.ReceivedBy ?? "Admin")</td>
+                                            <td>@p.Remaining</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="8" class="text-center text-muted py-4">No payment received yet.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- if jQuery is already in your _Layout, remove the next line -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        // dissolve success alert after 2s
+        setTimeout(() => {
+            const a = document.getElementById('alert-success');
+            if (a) a.style.display = 'none';
+        }, 2000);
+
+        // Format helper (PKR)
+        const fmtPKR = n => new Intl.NumberFormat('en-PK', { style: 'currency', currency: 'PKR' })
+                                        .format(Number(n || 0));
+
+        $(function () {
+            $('#SupplierId').on('change', function () {
+                const supplierId = $(this).val();
+                if (!supplierId) {
+                    $('#OldBalance').val(0);
+                    $('#OldBalanceDisplay').text('₨0.00');
+                    $('#OldBalanceDisplayInput').val('₨0.00');
+                    return;
+                }
+
+                $.ajax({
+                    url: '@Url.Action("GetSupplierBalance", "SupplierPayment")',
+                    type: 'GET',
+                    data: { supplierId },
+                    success: function (response) {
+                        const raw = parseFloat(response?.balance) || 0;
+
+                        // hidden for postback
+                        $('#OldBalance').val(raw);
+
+                        // pretty displays (rail pill + input box)
+                        $('#OldBalanceDisplay').text(fmtPKR(raw));
+                        $('#OldBalanceDisplayInput').val(fmtPKR(raw));
+                    },
+                    error: function () {
+                        alert('Failed to fetch supplier balance.');
+                        $('#OldBalance').val(0);
+                        $('#OldBalanceDisplay').text('₨0.00');
+                        $('#OldBalanceDisplayInput').val('₨0.00');
+                    }
+                });
+            });
+
+            // preselected supplier (edit mode)
+            if ($('#SupplierId').val()) {
+                $('#SupplierId').trigger('change');
+            }
+        });
+    </script>
+}

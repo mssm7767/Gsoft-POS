@@ -1,0 +1,51 @@
+﻿@model IEnumerable<GSoftPosNew.Models.User>
+
+@{
+    ViewData["Title"] = "User License Management";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-light">
+        <tr>
+            <th>#</th>
+            <th>Full Name</th>
+            <th>Username</th>
+            <th>License Expiry</th>
+            <th>Status</th>
+            <th style="width:100px;"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.Id</td>
+                <td>@user.FullName</td>
+                <td>@user.Username</td>
+                <td>@(user.LicenseExpiryDate?.ToString("yyyy-MM-dd") ?? "N/A")</td>
+                <td>
+                    @if (user.LicenseExpiryDate.HasValue && user.LicenseExpiryDate < DateTime.Today)
+                    {
+                        <span class="badge bg-danger">Expired</span>
+                    }
+                    else if (user.LicenseExpiryDate.HasValue && user.LicenseExpiryDate <= DateTime.Today.AddDays(7))
+                    {
+                        <span class="badge bg-warning text-dark">Expiring Soon</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success">Active</span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-outline-primary">
+                        <i class="fa fa-edit"></i> Edit
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

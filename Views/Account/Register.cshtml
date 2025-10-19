@@ -1,0 +1,102 @@
+﻿@using GSoftPosNew.ViewModels
+@model RegisterViewModel
+@{
+    ViewData["Title"] = "Register";
+    Layout = "_AuthLayout"; // Special layout for authentication pages
+}
+
+<div class="card shadow-lg" style="max-width: 660px;">
+    <div class="card-body p-5">
+        <div class="text-center mb-4">
+            <h2 class="fw-bold">Create Account</h2>
+            <p class="text-muted">Get started with our POS system</p>
+        </div>
+
+        <form asp-action="Register" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label asp-for="FullName" class="form-label"></label>
+                    <input asp-for="FullName" class="form-control form-control-lg" />
+                    <span asp-validation-for="FullName" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Username" class="form-label"></label>
+                    <input asp-for="Username" class="form-control form-control-lg" />
+                    <span asp-validation-for="Username" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control form-control-lg" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Password" class="form-label"></label>
+                    <input asp-for="Password" class="form-control form-control-lg" id="passwordInput" />
+                    <div class="password-strength mt-2">
+                        <div class="progress" style="height: 5px;">
+                            <div class="progress-bar" id="passwordStrengthBar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <small class="text-muted" id="passwordStrengthText">Password strength</small>
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label asp-for="ConfirmPassword" class="form-label"></label>
+                    <input asp-for="ConfirmPassword" class="form-control form-control-lg" />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                </div>
+                <div class="col-md-6"></div> <!-- Optional empty column for alignment -->
+            </div>
+
+            <div class="d-grid mb-3">
+                <button type="submit" class="btn btn-primary btn-lg">Create Account</button>
+            </div>
+
+            <div class="text-center mt-4">
+                <p class="mb-0">Already have an account? <a asp-action="Login">Sign in</a></p>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            $('#passwordInput').on('input', function () {
+                var password = $(this).val();
+                var strength = 0;
+                var text = '';
+
+                if (password.length >= 8) strength += 25;
+                if (/[A-Z]/.test(password)) strength += 25;
+                if (/[0-9]/.test(password)) strength += 25;
+                if (/[^A-Za-z0-9]/.test(password)) strength += 25;
+
+                $('#passwordStrengthBar').css('width', strength + '%');
+
+                if (strength < 50) {
+                    $('#passwordStrengthBar').removeClass('bg-success bg-warning').addClass('bg-danger');
+                    text = 'Weak password';
+                } else if (strength < 75) {
+                    $('#passwordStrengthBar').removeClass('bg-danger bg-success').addClass('bg-warning');
+                    text = 'Medium password';
+                } else {
+                    $('#passwordStrengthBar').removeClass('bg-danger bg-warning').addClass('bg-success');
+                    text = 'Strong password';
+                }
+
+                $('#passwordStrengthText').text(text);
+            });
+        });
+    </script>
+}

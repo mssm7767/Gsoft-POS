@@ -1,0 +1,300 @@
+﻿body {
+    font-family: 'Inter','Segoe UI',Arial,sans-serif;
+    background: #eaf3fa;
+    margin: 0;
+    padding: 0;
+}
+
+/* ===== HEADER SECTION ===== */
+.gpos-header-main {
+    width: 100%;
+    background: linear-gradient(90deg, #aaf0d1 60%, #f2f8fc 100%);
+    border-radius: 0 0 2rem 2rem;
+    box-shadow: 0 8px 36px #b7daff28;
+    padding: 20px 18px 14px 18px;
+    margin-bottom: 22px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0;
+}
+
+.gpos-header-leftonly {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 210px;
+    flex: 1 1 18%;
+    gap: 8px;
+}
+
+.gpos-shopname {
+    font-size: 1.22rem;
+    font-weight: 900;
+    color: #104274;
+    letter-spacing: 0.7px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+    .gpos-shopname i {
+        color: #2562a8;
+        font-size: 1.25rem;
+        background: #e3f1ff;
+        border-radius: 50%;
+        padding: 5px;
+    }
+
+.gpos-cust-select {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f7fafd;
+    border-radius: 0.8rem;
+    padding: 6px 9px 6px 8px;
+    min-width: 140px;
+    box-shadow: 0 1px 6px #d2ebfa24;
+    border: 1px solid #c1e4fa;
+    min-height: 32px;
+    margin-top: 2px;
+}
+
+.gpos-cust-radio {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.97rem;
+    font-weight: 600;
+    color: #2562a8;
+}
+
+    .gpos-cust-radio input[type="radio"] {
+        accent-color: #2562a8;
+        width: 13px;
+        height: 13px;
+        margin-right: 2px;
+        cursor: pointer;
+    }
+
+    .gpos-cust-radio label {
+        cursor: pointer;
+    }
+
+.gpos-cust-customer {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.97rem;
+    font-weight: 600;
+    color: #2562a8;
+}
+
+.gpos-cust-customer-btn {
+    background: #24be3a !important;
+    border: 2px solid #20a834 !important;
+    border-radius: 50%;
+    color: #fff !important;
+    width: 19px;
+    height: 19px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.97rem;
+    cursor: pointer;
+    font-weight: bold;
+    margin-left: 1px;
+    padding: 0;
+    transition: background 0.13s, border 0.12s, transform 0.11s;
+}
+
+    .gpos-cust-customer-btn:hover {
+        background: #168625 !important;
+        border-color: #168625 !important;
+        transform: scale(1.09) rotate(-5deg);
+    }
+
+    .gpos-cust-customer-btn:active {
+        transform: scale(0.93);
+    }
+
+.gpos-cust-selected-customer {
+    display: none;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-left: 1px;
+    margin-top: 0;
+}
+
+.gpos-cust-selected-name {
+    font-weight: 800;
+    color: #1760b7;
+    font-size: 0.97rem;
+    margin-bottom: 0;
+    margin-right: 8px;
+    letter-spacing: 0.2px;
+}
+
+.gpos-cust-selected-balance {
+    color: #2997d3;
+    font-size: 0.91rem;
+    font-weight: 600;
+    opacity: 0.92;
+    margin-left: 2px;
+}
+
+/* ===== BARCODE SCAN AREA (CENTER) ===== */
+.gpos-barcode-center-outer {
+    flex: 1 1 40%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-width: 230px;
+    margin-top: 0;
+    padding-top: 0;
+    background: none !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+}
+
+.gpos-barcode-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 220px;
+    max-width: 320px;
+    justify-content: center;
+    margin: 0 auto 7px auto;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    position: relative;
+}
+
+.gpos-barcode-icon {
+    font-size: 1.07rem;
+    padding: 2px 6px;
+    color: #1861a8;
+    background: #e3f1ff;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.gpos-barcode-input {
+    font-size: 1.08rem;
+    min-width: 310px;
+    padding: 7px 17px;
+    font-weight: 700;
+    color: #104274;
+    background: #fff;
+    border: 1.2px solid #b1d2fa;
+    border-radius: 0.6rem;
+    outline: none;
+}
+
+.gpos-barcode-btn {
+    background: #24be3a !important;
+    color: #fff !important;
+    border: 2px solid #20a834 !important;
+    border-radius: 50%;
+    width: 19px;
+    height: 19px;
+    font-size: 0.97rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin-left: 1px;
+    transition: background 0.13s, border 0.12s, transform 0.11s;
+}
+
+    .gpos-barcode-btn:hover {
+        background: #168625 !important;
+        border-color: #168625 !important;
+        transform: scale(1.08) rotate(-6deg);
+    }
+
+    .gpos-barcode-btn:active {
+        transform: scale(0.92);
+    }
+
+.item-search-box {
+    position: relative;
+    width: 320px;
+    margin-bottom: 20px;
+}
+
+#itemSuggestions {
+    position: absolute;
+    top: 44px;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    background: #fff;
+    border: 1.5px solid #e1ecfb;
+    border-radius: 0.7rem;
+    box-shadow: 0 4px 16px #b7daff28;
+    display: none;
+    max-height: 220px;
+    overflow-y: auto;
+    min-width: 250px;
+}
+
+.suggestions-list {
+    width: 100%;
+}
+
+.suggestion-item {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 7px 14px;
+    font-size: 1.06rem;
+    cursor: pointer;
+    border-bottom: 1px solid #f3f8ff;
+    transition: background 0.1s;
+    background: #f8fcff;
+    font-weight: 600;
+}
+
+    .suggestion-item:last-child {
+        border-bottom: none;
+    }
+
+    .suggestion-item.selected,
+    .suggestion-item:hover {
+        background: #fff8e2;
+    }
+
+.suggestion-code {
+    min-width: 70px;
+    color: #3472a3;
+    font-weight: 800;
+    text-align: left;
+}
+
+.suggestion-qty {
+    min-width: 72px;
+    text-align: center;
+    background: #f3f6fa;
+    border-radius: 0.8rem;
+    color: #dc8d15;
+    font-size: 1.05rem;
+    font-weight: 800;
+}
+
+.suggestion-name {
+    flex: 1 1;
+    color: #185187;
+    text-align: left;
+}
+/* ===== REST OF CSS — You can extend as needed ===== */
+
+/* Add your grid, totals, data table, hot items, etc. as in the previous CSS */

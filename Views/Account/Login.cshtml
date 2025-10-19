@@ -1,0 +1,379 @@
+﻿@model GSoftPosNew.ViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "Login";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - G-Soft Ultimate POS</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
+    <style>
+        :root {
+            --brand-1: #0ea5e9;
+            --brand-2: #6366f1;
+            --brand-3: #22c55e;
+            --ink: #0b1220;
+            --muted: #6b7280;
+        }
+
+        html, body {
+            height: 100%
+        }
+
+        body {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--ink);
+            font-family: system-ui,-apple-system,"Segoe UI",Roboto,Inter,"Helvetica Neue",Arial,"Noto Sans";
+            overflow-x: hidden;
+        }
+            /* FULLSCREEN BACKGROUND = your provided wallpaper */
+            body::before {
+                content: "";
+                position: fixed;
+                inset: 0;
+                background: url('@Url.Content("~/images/login/bg-login.jpg")') center/cover no-repeat fixed;
+                z-index: -2;
+            }
+            /* soft overlay for readability */
+            body::after {
+                content: "";
+                position: fixed;
+                inset: 0;
+                z-index: -1;
+                background: radial-gradient(60% 60% at 20% 0%, rgba(14,165,233,.22), transparent 60%), radial-gradient(60% 60% at 100% 0%, rgba(99,102,241,.16), transparent 60%), linear-gradient(135deg, rgba(248,250,252,.35), rgba(238,242,255,.20));
+                backdrop-filter: saturate(115%) blur(1.5px);
+            }
+
+        /* Top loading line */
+        .top-loader {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 3px;
+            width: 0;
+            opacity: 0;
+            z-index: 9999;
+            background: linear-gradient(90deg,var(--brand-1),var(--brand-2),var(--brand-3));
+            box-shadow: 0 0 12px rgba(99,102,241,.45), 0 0 6px rgba(14,165,233,.45);
+        }
+
+            .top-loader.running {
+                opacity: 1;
+                animation: loadbar 3s ease-in-out forwards;
+            }
+
+
+        {
+            width: 0%
+        }
+
+        20% {
+            width: 30%
+        }
+
+        45% {
+            width: 60%
+        }
+
+        75% {
+            width: 88%
+        }
+
+        100% {
+            width: 100%
+        }
+
+        }
+
+        .wrap {
+            width: min(96vw,520px);
+            padding: 16px;
+        }
+
+        .login-card {
+            position: relative;
+            background: rgba(255,255,255,.86);
+            border: 1px solid rgba(2,6,23,.08);
+            border-radius: 20px;
+            padding: 30px 26px;
+            box-shadow: 0 20px 60px rgba(2,6,23,.18), 0 2px 10px rgba(2,6,23,.08);
+            backdrop-filter: blur(10px);
+        }
+            /* faint watermark = your logo inside the card */
+            .login-card::after {
+                content: "";
+                position: absolute;
+                right: -20px;
+                bottom: -20px;
+                width: 200px;
+                height: 200px;
+                background: url('@Url.Content("~/images/login/logo-gsoft-store.jpg")') center/contain no-repeat;
+                opacity: .06;
+                pointer-events: none;
+                filter: saturate(120%);
+            }
+
+        .head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand-lockup {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+            .brand-lockup img {
+                width: 42px;
+                height: 42px;
+                object-fit: contain;
+                border-radius: 8px;
+                box-shadow: 0 4px 14px rgba(0,0,0,.08);
+            }
+
+        .brand-name {
+            font-weight: 900;
+            line-height: 1.05;
+            font-size: 1.75rem; /* bigger title */
+            background: linear-gradient(135deg,var(--brand-2),var(--brand-1) 50%,var(--brand-3));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: .2px;
+        }
+
+        .sub {
+            color: var(--muted);
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .form-label {
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .input-group-text {
+            background: #f8fafc;
+            border-color: #e5e7eb;
+            color: #475569;
+            font-weight: 700;
+        }
+
+        .form-control {
+            border-color: #e5e7eb;
+            padding: 12px 14px;
+            font-weight: 600;
+        }
+
+            .form-control:focus {
+                border-color: #93c5fd;
+                box-shadow: 0 0 0 .25rem rgba(99,102,241,.20);
+            }
+
+        .btn-login {
+            background: linear-gradient(135deg,var(--brand-2),var(--brand-3));
+            border: none;
+            color: #fff;
+            font-weight: 800;
+            padding: 12px 16px;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(34,197,94,.18);
+            transition: transform .12s ease, box-shadow .12s ease;
+        }
+
+            .btn-login:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 16px 28px rgba(34,197,94,.28);
+            }
+
+            .btn-login[disabled] {
+                opacity: .85;
+                cursor: not-allowed;
+            }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #6b7280;
+            margin: 14px 0 6px;
+            font-weight: 600;
+        }
+
+            .divider::before, .divider::after {
+                content: "";
+                flex: 1;
+                height: 1px;
+                background: #e5e7eb;
+            }
+
+        .links {
+            text-align: center;
+            margin-top: 14px;
+            font-weight: 600;
+        }
+
+            .links a {
+                color: #334155;
+                text-decoration: none;
+            }
+
+                .links a:hover {
+                    color: var(--brand-2);
+                    text-decoration: underline;
+                }
+
+        .alert {
+            border-radius: 12px;
+        }
+
+        .validation-summary-errors {
+            font-weight: 700;
+        }
+
+        .login-footer {
+            margin-top: 16px;
+            font-size: .92rem;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .clock {
+            font-variant-numeric: tabular-nums;
+            font-weight: 700;
+            color: #0f172a;
+        }
+    </style>
+</head>
+<body style="background-image: url('@Url.Content("~/images/loginbg.jpeg")');
+             background-size: cover;
+             background-position: center;
+             background-repeat: no-repeat;
+             min-height: 100vh;">
+
+    <div id="top-loader" class="top-loader"></div>
+
+    <div class="wrap">
+        <main class="login-card" >
+            <div class="head mb-2">
+                <div class="brand-lockup">
+                    <img src="@Url.Content("~/images/gsoftLogo.jpeg")" alt="G.Soft Store logo" />
+                    <div>
+                        <div class="brand-name">G-Soft Ultimate POS</div>
+                        <div class="sub">Sign in to continue</div>
+                    </div>
+                </div>
+                <i class="fa-solid fa-cash-register" style="opacity:.35; font-size:28px;"></i>
+            </div>
+
+            @if (TempData["ResetSuccess"] != null)
+            {
+                <div class="alert alert-success d-flex align-items-center">
+                    <i class="fa-solid fa-check-circle me-2"></i>
+                    <div>@TempData["ResetSuccess"]</div>
+                </div>
+            }
+
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger">
+                    @ViewBag.Error
+                </div>
+            }
+
+            <form id="loginForm" asp-action="Login" method="post" class="mt-2">
+                <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+                <div asp-validation-summary="ModelOnly" class="text-danger validation-summary-errors mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Username" class="form-label">Username</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fa-regular fa-user"></i></span>
+                        <input asp-for="Username" class="form-control" placeholder="e.g. cashier01" autocomplete="username" />
+                    </div>
+                    <span asp-validation-for="Username" class="text-danger"></span>
+                </div>
+
+                <div class="mb-2">
+                    <label asp-for="Password" class="form-label">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                        <input asp-for="Password" type="password" class="form-control" placeholder="Enter password" autocomplete="current-password" />
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="form-check">
+                        <input asp-for="RememberMe" class="form-check-input" id="rememberMeChk" />
+                        <label asp-for="RememberMe" class="form-check-label" for="rememberMeChk">Remember me</label>
+                    </div>
+                    <a asp-action="ForgotPassword" class="small fw-semibold text-decoration-none">Forgot password?</a>
+                </div>
+
+                <button id="loginBtn" type="submit" class="btn btn-login w-100">
+                    <i class="fa-solid fa-right-to-bracket me-2"></i>
+                    <span class="btn-text">Sign In</span>
+                </button>
+
+                <div class="divider mt-4 mb-2"><span>or</span></div>
+
+                @* <div class="links">
+                    Don’t have an account?
+                    <a asp-action="Register" class="fw-bold">Create one</a>
+                </div> *@
+
+                <div class="login-footer">
+                    <div class="clock"><i class="fa-regular fa-clock me-1"></i><span id="clock"></span></div>
+                    <div class="copy">&copy; @DateTime.Now.Year G-Soft Ultimate POS — All rights reserved.</div>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <script>
+        (function(){
+           const form = document.getElementById('loginForm');
+           const loader = document.getElementById('top-loader');
+           const btn = document.getElementById('loginBtn');
+
+           if(form){
+             form.addEventListener('submit', function(){
+               loader.classList.add('running');   // ~3s thin top bar
+               if(btn){
+                 btn.setAttribute('disabled','disabled');
+                 const t = btn.querySelector('.btn-text'); if(t) t.textContent='Signing in...';
+               }
+             });
+           }
+
+           function tick(){
+             const el = document.getElementById('clock'); if(!el) return;
+             const now = new Date();
+             const opts = { weekday:'short', year:'numeric', month:'short', day:'2-digit',
+                            hour:'2-digit', minute:'2-digit', second:'2-digit' };
+             el.textContent = now.toLocaleString(undefined, opts);
+           }
+           tick(); setInterval(tick, 1000);
+        })();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

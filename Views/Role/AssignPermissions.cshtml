@@ -1,0 +1,48 @@
+﻿@using GSoftPosNew.ViewModels
+@model AssignPermissionsViewModel
+
+@{
+    ViewData["Title"] = "Assign Permissions";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4" style="max-width:800px;">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fa fa-user-shield"></i> Assign Permissions</h5>
+        </div>
+        <div class="card-body">
+            @using (Html.BeginForm("SavePermissions", "Role", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+
+                <div class="mb-3">
+                    @Html.Label("RoleId", "Select Role", new { @class = "form-label" })
+                    @Html.DropDownList("RoleId", Model.RoleList, "-- Select Role --", new { @class = "form-select" })
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Modules Access</label>
+                    <div class="row">
+                        @foreach (var module in Model.Modules)
+                        {
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="SelectedModules" value="@module" id="@module" />
+                                    <label class="form-check-label" for="@module">@module</label>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-success">
+                    <i class="fa fa-save"></i> Save Permissions
+                </button>
+                <a asp-action="Index" class="btn btn-secondary ms-2">
+                    <i class="fa fa-arrow-left"></i> Back
+                </a>
+            }
+        </div>
+    </div>
+</div>

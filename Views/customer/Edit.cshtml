@@ -1,0 +1,87 @@
+﻿@model GSoftPosNew.Models.Customer
+
+@{
+    ViewData["Title"] = "Edit Customer";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4" style="max-width:1050px;">
+    <div class="card shadow-sm">
+        <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fa fa-edit"></i> Edit Customer</h5>
+            <a asp-action="Create" class="btn btn-outline-dark btn-sm">
+                <i class="fa fa-plus"></i> Add New Customer
+            </a>
+        </div>
+        <div class="card-body">
+            @using (Html.BeginForm("Edit", "Customer", FormMethod.Post, new { enctype = "multipart/form-data" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.Id)
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        @Html.LabelFor(m => m.CustomerName, "Customer Name *", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.CustomerName, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.CustomerName, "", new { @class = "text-danger" })
+                    </div>
+                    <div class="col-md-6">
+                        @Html.LabelFor(m => m.FatherName, "Father Name", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.FatherName, new { @class = "form-control" })
+                    </div>
+                    <div class="col-md-4">
+                        @Html.LabelFor(m => m.NIC, "NIC", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.NIC, new { @class = "form-control" })
+                    </div>
+                    <div class="col-md-4">
+                        @Html.LabelFor(m => m.ContactNumber, "Contact Number", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.ContactNumber, new { @class = "form-control" })
+                    </div>
+                    <div class="col-md-4">
+                        @Html.LabelFor(m => m.OpeningBalance, "Opening Balance", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.OpeningBalance, new { @class = "form-control", type = "number", step = "0.01" })
+                    </div>
+                    <div class="col-md-6">
+                        @Html.LabelFor(m => m.Address1, "Address Line 1", new { @class = "form-label" })
+                        @Html.TextAreaFor(m => m.Address1, new { @class = "form-control", rows = 2 })
+                    </div>
+                    <div class="col-md-6">
+                        @Html.LabelFor(m => m.Address2, "Address Line 2", new { @class = "form-label" })
+                        @Html.TextAreaFor(m => m.Address2, new { @class = "form-control", rows = 2 })
+                    </div>
+                    <div class="col-md-6">
+                        @Html.LabelFor(m => m.Email, "Email", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.Email, new { @class = "form-control", type = "email" })
+                    </div>
+                    <div class="col-md-6">
+                        @Html.LabelFor(m => m.Website, "Website", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.Website, new { @class = "form-control" })
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Profile Picture</label>
+                        <input type="file" name="PictureFile" class="form-control border-primary" accept=".jpg,.jpeg,.png" />
+                        @if (!string.IsNullOrEmpty(Model.PictureUrl))
+                        {
+                            <div class="mt-2">
+                                <img src="@Model.PictureUrl" alt="Profile" style="max-height:150px; border:1px solid #ddd;" />
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="mt-4 text-end">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fa fa-save"></i> Update Customer
+                    </button>
+                    <a asp-action="Create" class="btn btn-secondary ms-2">
+                        <i class="fa fa-arrow-left"></i> Back
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

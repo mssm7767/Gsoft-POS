@@ -1,0 +1,47 @@
+﻿@model IEnumerable<GSoftPosNew.Models.Location>
+
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fa fa-map-marker-alt"></i> Location List</h5>
+            <a asp-action="Create" class="btn btn-success btn-sm">
+                <i class="fa fa-plus"></i> Add New Location
+            </a>
+        </div>
+        <div class="card-body">
+            @if (TempData["Message"] != null)
+            {
+                <div class="alert alert-success">
+                    <i class="fa fa-check-circle"></i> @TempData["Message"]
+                </div>
+            }
+
+            <table class="table table-bordered table-striped">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 40%;">Name</th>
+                        <th style="width: 40%;">Description</th>
+                        <th style="width: 20%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var loc in Model)
+                    {
+                        <tr>
+                            <td>@loc.Name</td>
+                            <td>@loc.Description</td>
+                            <td>
+                                <a asp-action="Edit" asp-route-id="@loc.Id" class="btn btn-primary btn-sm">
+                                    <i class="fa fa-edit"></i> Edit
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@loc.Id" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this location?');">
+                                    <i class="fa fa-trash"></i> Delete
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

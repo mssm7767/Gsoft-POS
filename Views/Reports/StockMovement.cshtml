@@ -1,0 +1,87 @@
+﻿@model GSoftPosNew.ViewModels.StockMovementReportVM
+
+<div class="report-container">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4><i class="fas fa-exchange-alt me-2"></i>Stock Movement Report</h4>
+        </div>
+        <div class="card-body">
+            <form method="post" class="mb-4">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label asp-for="StartDate" class="form-label">Start Date</label>
+                        <input asp-for="StartDate" class="form-control" type="date" />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="EndDate" class="form-label">End Date</label>
+                        <input asp-for="EndDate" class="form-control" type="date" />
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter me-2"></i>Filter
+                        </button>
+                    </div>
+                    <div class="col-md-3 text-end">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-outline-secondary dropdown-toggle"
+                                    data-bs-toggle="dropdown">
+                                <i class="fas fa-download me-2"></i>Export
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#">Excel</a></li>
+                                <li><a class="dropdown-item" href="#">PDF</a></li>
+                                <li><a class="dropdown-item" href="#">CSV</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Reference</th>
+                            <th>Type</th>
+                            <th>Item</th>
+                            <th class="text-end">Qty Change</th>
+                            <th class="text-end">Unit Cost</th>
+                            <th class="text-end">Total Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var movement in Model.Movements)
+                        {
+                            <tr>
+                                <td>@movement.Date.ToString("MMM dd, yyyy")</td>
+                                <td>@movement.Reference</td>
+                                <td>
+                                    <span class="badge @(movement.Type == "Purchase" ? "bg-success" : "bg-danger")">
+                                        @movement.Type
+                                    </span>
+                                </td>
+                                <td>@movement.ItemName</td>
+                                <td class="text-end @(movement.QuantityChange > 0 ? "text-success" : "text-danger")">
+                                    @(movement.QuantityChange > 0 ? "+" : "")@movement.QuantityChange
+                                </td>
+                                <td class="text-end">@movement.UnitCost.ToString("C")</td>
+                                <td class="text-end">@movement.TotalValue.ToString("C")</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="table-active">
+                        <tr>
+                            <th colspan="4">Totals</th>
+                            <th class="text-end @(Model.Movements.Sum(m => m.QuantityChange) > 0 ? "text-success" : "text-danger")">
+                                @Model.Movements.Sum(m => m.QuantityChange)
+                            </th>
+                            <th></th>
+                            <th class="text-end">@Model.Movements.Sum(m => m.TotalValue).ToString("C")</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

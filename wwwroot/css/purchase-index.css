@@ -1,0 +1,77 @@
+﻿/* Purchase Index Styles */
+.purchase-index-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+    /* Card styling */
+    .purchase-index-container .card {
+        border: none;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+/* Table styling */
+#purchasesTable {
+    font-size: 0.9rem;
+}
+
+    #purchasesTable th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+        color: #6c757d;
+        white-space: nowrap;
+    }
+
+    #purchasesTable td {
+        vertical-align: middle;
+    }
+
+/* Status badges */
+.badge {
+    padding: 0.35em 0.65em;
+    font-size: 0.75em;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    border-radius: 4px;
+}
+
+/* Hover effects */
+#purchasesTable tbody tr {
+    transition: all 0.2s ease;
+}
+
+    #purchasesTable tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.05) !important;
+    }
+
+/* Action buttons */
+.btn-group .btn {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px !important;
+    margin-right: 2px;
+}
+
+    .btn-group .btn:last-child {
+        margin-right: 0;
+    }
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .purchase-index-container {
+        padding: 10px;
+    }
+
+    .d-flex {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .btn-group .btn {
+        padding: 0.2rem 0.4rem;
+        font-size: 0.8rem;
+    }
+}

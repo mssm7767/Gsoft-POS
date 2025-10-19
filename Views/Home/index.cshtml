@@ -1,0 +1,500 @@
+﻿@using GSoftPosNew.ViewModels
+@model DashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Font Awesome (icons) — remove if already included in _Layout -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
+<style>
+    :root {
+        --ink: #0f172a;
+        --muted: #64748b;
+        --bg: #f5faff; /* light blue-ish background */
+        --card: #ffffff;
+        --brand: #3b82f6; /* blue */
+        --brand-2: #60a5fa; /* light blue */
+        --green: #22c55e; /* green */
+        --green-2: #86efac; /* light green */
+        --amber: #f59e0b; /* yellow/amber */
+        --amber-2: #fde68a; /* light yellow */
+        --shadow: 0 10px 30px rgba(2,6,23,.06);
+    }
+
+    body {
+        background: radial-gradient(1200px 800px at -10% -10%, #eaf3ff 0%, transparent 50%), radial-gradient(1000px 700px at 110% -10%, #e8ffe6 0%, transparent 50%), radial-gradient(900px 600px at 50% 120%, #fff6db 0%, transparent 55%), var(--bg);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: var(--ink);
+    }
+
+    /* ===== Summary Cards ===== */
+    .dashboard-card {
+        border-radius: 16px;
+        background: var(--card);
+        box-shadow: var(--shadow);
+        padding: 1rem;
+        height: 100%;
+        border: 1px solid #e5e7eb;
+        transition: transform .15s ease, box-shadow .15s ease;
+    }
+
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 42px rgba(2,6,23,.09);
+        }
+
+    .card-icon {
+        font-size: 1.2rem;
+        padding: .9rem;
+        border-radius: 12px;
+        color: #0b1220;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        min-width: 52px;
+        min-height: 52px;
+        box-shadow: inset 0 0 0 2px rgba(255,255,255,.6);
+    }
+
+    .bg-blue {
+        background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    }
+
+    .bg-purple {
+        background: linear-gradient(135deg, #e9d5ff, #c4b5fd);
+    }
+
+    .bg-orange {
+        background: linear-gradient(135deg, #fef9c3, #fde68a);
+    }
+
+    .bg-green {
+        background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+    }
+
+    .title-small {
+        font-size: 0.82rem;
+        color: var(--muted);
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        font-weight: 700;
+    }
+
+    .main-number {
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: var(--ink);
+        letter-spacing: .02em;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--ink);
+        margin-bottom: 1rem;
+        letter-spacing: .02em;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+    }
+
+        .section-title i {
+            color: var(--brand);
+        }
+
+    /* ===== Chart Cards ===== */
+    .chart-card {
+        border-radius: 16px;
+        background: linear-gradient(180deg, #eff6ff, #ffffff 40%);
+        box-shadow: var(--shadow);
+        padding: 1rem;
+        border: 1px solid #e5e7eb;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .chart-container {
+        position: relative;
+        width: 100%;
+        height: 320px; /* ensure line chart visible */
+    }
+    /* Most Sales fixed height + wrapper for spin */
+    #mostSalesContainer {
+        position: relative;
+        width: 100%;
+        height: 260px; /* ensure doughnut visible */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #mostSalesWrap {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Spin animation for doughnut on load */
+    @@keyframes ms-spin-once {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+
+    }
+
+    .ms-spin-on-load {
+        animation: ms-spin-once 1.2s ease-out forwards;
+        transform-origin: center center;
+    }
+
+    /* ===== Quick Cards ===== */
+    .quick-card {
+        background: var(--card);
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+        padding: 1rem 1.25rem;
+        text-align: center;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        border: 1px solid #e5e7eb;
+        transition: transform .15s ease, box-shadow .15s ease;
+    }
+
+        .quick-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 42px rgba(2,6,23,.09);
+        }
+
+    .quick-icon {
+        font-size: 1.4rem;
+        margin-bottom: .6rem;
+        color: #0b1220;
+        width: 60px;
+        height: 60px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        box-shadow: inset 0 0 0 2px rgba(255,255,255,.6);
+    }
+
+    .text-primary {
+        color: var(--brand) !important;
+    }
+
+    .text-warning {
+        color: var(--amber) !important;
+    }
+
+    .text-danger {
+        color: #ef4444 !important;
+    }
+
+    .quick-title {
+        font-size: 1rem;
+        color: #333;
+        font-weight: 800;
+        margin-bottom: .3rem;
+    }
+
+    .quick-number {
+        font-size: 1.4rem;
+        font-weight: 900;
+        color: #222;
+    }
+
+    .quick-card .btn {
+        font-weight: 800;
+        font-size: 0.9rem;
+        border-radius: 10px;
+        padding: 0.5rem 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        border: none;
+    }
+
+    .quick-card .btn-primary {
+        background: linear-gradient(135deg, #60a5fa, #3b82f6);
+        color: #fff;
+        box-shadow: 0 10px 22px rgba(59,130,246,.35);
+    }
+
+    .quick-card .btn-success {
+        background: linear-gradient(135deg, #86efac, #22c55e);
+        color: #064e3b;
+        box-shadow: 0 10px 22px rgba(34,197,94,.25);
+    }
+
+    .quick-card .btn-warning {
+        background: linear-gradient(135deg, #fde68a, #f59e0b);
+        color: #7c2d12;
+        box-shadow: 0 10px 22px rgba(245,158,11,.25);
+    }
+
+    /* ===== Table Styling ===== */
+    .table-wrap {
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        overflow: hidden;
+        background: var(--card);
+        box-shadow: var(--shadow);
+    }
+
+    .table thead {
+        background: linear-gradient(135deg, #60a5fa, #86efac);
+        color: #0b1220;
+    }
+
+    .table th, .table td {
+        vertical-align: middle;
+        font-size: 0.95rem;
+        padding: 0.75rem 1rem;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #f0f9ff;
+    }
+</style>
+
+<div class="container-fluid p-4">
+    <!-- Summary Cards -->
+    <div class="row g-4">
+        <div class="col-sm-6 col-md-3">
+            <div class="dashboard-card d-flex align-items-center">
+                <div class="card-icon bg-blue"><i class="fa fa-shopping-cart"></i></div>
+                <div>
+                    <div class="title-small">Total Sales</div>
+                    <div class="main-number">@Model.TotalSales.ToString("N2")</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-md-3">
+            <div class="dashboard-card d-flex align-items-center">
+                <div class="card-icon bg-purple"><i class="fa fa-box-open"></i></div>
+                <div>
+                    <div class="title-small">Total Purchases</div>
+                    <div class="main-number">@Model.TotalPurchases.ToString("N2")</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-md-3">
+            <div class="dashboard-card d-flex align-items-center">
+                <div class="card-icon bg-orange"><i class="fa fa-credit-card"></i></div>
+                <div>
+                    <div class="title-small">Total Paid</div>
+                    <div class="main-number">@Model.TotalRevenuesOrPayments.ToString("N2")</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-md-3">
+            <div class="dashboard-card d-flex align-items-center">
+                <div class="card-icon bg-green"><i class="fa fa-rupee-sign"></i></div>
+                <div>
+                    <div class="title-small">Profits</div>
+                    <div class="main-number">@Model.TotalProfit.ToString("N2")</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Section -->
+    <div class="row g-4 mt-4">
+        <div class="col-lg-8">
+            <div class="chart-card">
+                <div class="section-title"><i class="fa fa-chart-line"></i> Sales Report</div>
+                <div class="chart-container">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="chart-card" style="background: linear-gradient(180deg, #ecfdf5, #ffffff 45%);">
+                <div class="section-title"><i class="fa fa-chart-pie"></i> Most Sales</div>
+
+                <!-- ✅ Fixed-height container + spin wrapper -->
+                <div id="mostSalesContainer">
+                    <div id="mostSalesWrap" class="ms-spin-on-load">
+                        <canvas id="mostSalesChart" width="280" height="280"></canvas>
+                    </div>
+                </div>
+
+                <div class="text-muted small mt-2">Top products share</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Row -->
+    <div class="row g-4 mt-4">
+        <div class="col-md-4">
+            <div class="quick-card d-flex flex-column justify-content-center align-items-center">
+                <div class="d-flex gap-2 justify-content-center w-100">
+                    <a href="@Url.Action("Add", "Item")" class="btn btn-sm btn-primary d-flex align-items-center gap-2">
+                        <i class="fa fa-box"></i> Add New
+                    </a>
+                    <a href="@Url.Action("POS", "Sales")" class="btn btn-sm btn-success d-flex align-items-center gap-2">
+                        <i class="fa fa-shopping-cart"></i> POS Sale
+                    </a>
+                    <a href="@Url.Action("Create", "Purchase")" class="btn btn-sm btn-warning d-flex align-items-center gap-2">
+                        <i class="fa fa-truck"></i> Purchase
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="quick-card d-flex flex-column justify-content-center align-items-center">
+                <div class="quick-icon" style="background: linear-gradient(135deg, #fef9c3, #fde68a);">
+                    <i class="fa fa-exclamation-triangle"></i>
+                </div>
+                <div class="quick-title">Expiry Items</div>
+                <div class="quick-number">@Model.TotalExpiryItems</div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="quick-card d-flex flex-column justify-content-center align-items-center">
+                <div class="quick-icon" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0);">
+                    <i class="fa fa-box-open"></i>
+                </div>
+                <div class="quick-title">Low Stock</div>
+                <div class="quick-number">@Model.TotalLowStockItems</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Sales Table -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center mb-2">
+                <h5 class="section-title mb-0"><i class="fa fa-table"></i> Product Sales</h5>
+            </div>
+            <div class="table-wrap">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Product ID</th>
+                            <th>Product Name</th>
+                            <th>Reference Code</th>
+                            <th>Price</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.ItemsList)
+                        {
+                            <tr>
+                                <td>@item.Id</td>
+                                <td>@item.ItemName</td>
+                                <td>@item.ItemCode</td>
+                                <td>@item.SalePrice.ToString("N2")</td>
+                                <td class="text-center">
+                                    <a asp-controller="Item" asp-action="Edit" title="Edit" asp-route-id="@item.Id" class="text-primary me-2">
+                                        <i class="fa fa-edit"></i>
+                                    </a>
+                                    <a asp-controller="Item" asp-action="Delete" title="Delete" asp-route-id="@item.Id" class="text-danger"
+                                       onclick="return confirm('Are you sure to delete this item?');">
+                                        <i class="fa fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                        @if (Model.ItemsList == null || !Model.ItemsList.Any())
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">No records found.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js — remove if already included globally -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- YOUR ORIGINAL JS (UNTOUCHED) -->
+<script>
+    // Sales Line Chart
+    const salesCtx = document.getElementById('salesChart').getContext('2d');
+    new Chart(salesCtx, {
+        type: 'line',
+        data: {
+            labels: @Html.Raw(Json.Serialize(Model.SalesMonths)),
+            datasets: [{
+                label: 'Sales',
+                data: @Html.Raw(Json.Serialize(Model.SalesData)),
+                borderColor: '#2cc786',
+                backgroundColor: 'rgba(44,199,134,0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false } },
+                y: { grid: { color: '#e0f3e7' }, beginAtZero: true }
+            }
+        }
+    });
+
+    // Most Sales Doughnut
+    const salesPieCtx = document.getElementById('mostSalesChart').getContext('2d');
+    new Chart(salesPieCtx, {
+        type: 'doughnut',
+        data: {
+            labels: @Html.Raw(Json.Serialize(Model.TopProducts)),
+            datasets: [{
+                data: @Html.Raw(Json.Serialize(Model.TopProductSales)),
+                backgroundColor: ['#6ee7b7', '#93c5fd', '#fde68a', '#f87171', '#c084fc'],
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '60%'
+        }
+    });
+</script>
+
+<!-- Tiny helper (independent) — re-trigger spin when you want -->
+<script>
+    function spinMostSales() {
+        const wrap = document.getElementById('mostSalesWrap');
+        if (!wrap) return;
+        wrap.classList.remove('ms-spin-on-load');
+        void wrap.offsetWidth; // reflow
+        wrap.classList.add('ms-spin-on-load');
+    }
+</script>

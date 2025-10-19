@@ -1,0 +1,129 @@
+﻿@model GSoftPosNew.Models.ExpenseCategory
+
+@{
+    ViewData["Title"] = "Add Expense Category";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var categories = ViewBag.Categories as List<GSoftPosNew.Models.ExpenseCategory>;
+}
+
+<div class="container mt-4" style="max-width:800px;">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fa fa-folder-plus me-2"></i> Add Expense Category
+            </h5>
+        </div>
+        <div class="card-body">
+
+            @if (TempData["Message"] != null)
+            {
+                <div id="successAlert"
+                     style="
+                         position: fixed;
+                         top: 50%;
+                         left: 50%;
+                         transform: translate(-50%, -50%);
+                         z-index: 9999;
+                         background-color: #d4edda;
+                         border: 1px solid #c3e6cb;
+                         color: #155724;
+                         padding: 15px 25px;
+                         border-radius: 8px;
+                         font-size: 1.2em;
+                         box-shadow: 0 0 10px rgba(0,0,0,0.2);
+                         text-align: center;
+                         max-width: 90%;
+                     ">
+                    <i class="fa fa-check-circle me-2"></i> @TempData["Message"]
+                </div>
+
+                <script>
+                    setTimeout(() => {
+                        const alert = document.getElementById('successAlert');
+                        if (alert) {
+                            alert.style.display = 'none';
+                        }
+                    }, 1500);
+                </script>
+            }
+
+            @using (Html.BeginForm("Create", "ExpenseCategory", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.CategoryName, new { @class = "form-label fw-semibold" })
+                    @Html.TextBoxFor(m => m.CategoryName, new { @class = "form-control", placeholder = "Enter category name" })
+                    @Html.ValidationMessageFor(m => m.CategoryName, "", new { @class = "text-danger" })
+                </div>
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.ExpenseFor, new { @class = "form-label fw-semibold" })
+                    @Html.TextBoxFor(m => m.ExpenseFor, new { @class = "form-control", placeholder = "Enter category name" })
+                    @Html.ValidationMessageFor(m => m.ExpenseFor, "", new { @class = "text-danger" })
+                </div>
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.Description, new { @class = "form-label fw-semibold" })
+                    @Html.TextAreaFor(m => m.Description, new { @class = "form-control", rows = 3, placeholder = "Description (optional)" })
+                </div>
+                <div class="text-end">
+                    <button type="submit" class="btn btn-success me-2">
+                        <i class="fa fa-save"></i> Save
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="clearForm()">
+                        <i class="fa fa-eraser"></i> Clear
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+
+    <hr class="my-4" />
+    <h5>All Expense Categories</h5>
+
+    @if (categories != null && categories.Any())
+    {
+        <table class="table table-bordered table-striped mt-3">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Category Name</th>
+                    <th>Description</th>
+                    <th style="width:120px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in categories)
+                {
+                    <tr>
+                        <td>@c.Id</td>
+                        <td>@c.CategoryName</td>
+                        <td>@c.Description</td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-warning">
+                                <i class="fa fa-edit"></i>
+                            </a>
+                            <a asp-action="Delete" asp-route-id="@c.Id" class="btn btn-sm btn-danger" onclick="return confirm('Delete this category?');">
+                                <i class="fa fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="alert alert-info mt-3">No categories found.</div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function clearForm() {
+            document.querySelectorAll('.form-control').forEach(el => {
+                if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                    el.value = '';
+                }
+            });
+        }
+    </script>
+}

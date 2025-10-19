@@ -1,0 +1,445 @@
+﻿/* -----------------------------------
+   1. Main Card & Top Info Bar
+------------------------------------- */
+.purchase-main-card {
+    background: linear-gradient(120deg, #f4f8fb 60%, #d0e6fa 100%);
+    padding: 28px 2vw 20px 2vw;
+    border-radius: 20px;
+    max-width: 99vw;
+    margin: 0 auto 36px auto;
+    box-shadow: 0 8px 40px 0 rgba(49,130,206,0.13);
+    position: relative;
+}
+
+.inner-info-bar {
+    width: 100%;
+    background: linear-gradient(90deg, #263f69 65%, #2db897 100%);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 34px;
+    border-radius: 14px 14px 0 0;
+    font-size: 1.09rem;
+    font-weight: 500;
+    margin-bottom: 18px;
+    gap: 22px;
+}
+
+/* -----------------------------------
+   2. Supplier & Invoice Bar (Header)
+------------------------------------- */
+.supplier-inv-bar {
+    margin-bottom: 12px;
+}
+
+    .supplier-inv-bar .input-group-supplier {
+        border-radius: 8px;
+        border: 1.5px solid #2196f3;
+        box-shadow: 0 2px 8px 0 rgba(38,63,105,0.09);
+        background: #f6fafd;
+    }
+
+    .supplier-inv-bar .input-group-text,
+    .supplier-inv-bar input.form-control {
+        border: none;
+        background: #f6fafd;
+    }
+
+    .supplier-inv-bar .btn-outline-primary,
+    .supplier-inv-bar .btn-success {
+        border-radius: 7px;
+    }
+
+.input-group-supplier {
+    border-radius: 8px;
+    border: 1.5px solid #2196f3;
+    background: #f6fafd;
+    box-shadow: 0 2px 8px 0 rgba(38,63,105,0.07);
+}
+
+    .input-group-supplier .input-group-text {
+        background: #f6fafd;
+        color: #2196f3;
+        border: none;
+        font-size: 1.12rem;
+    }
+
+    .input-group-supplier .form-select {
+        border: none;
+        background: transparent;
+        color: #264478;
+        font-size: 1.06rem;
+        font-weight: 600;
+    }
+
+    .input-group-supplier .btn-success {
+        border-radius: 7px;
+        margin-left: 6px;
+        padding: 4px 10px;
+    }
+
+/* Invoice bar */
+.invoice-bar {
+    border-radius: 8px;
+    border: 1.5px solid #b3d2ee;
+    background: #f7fbff;
+    box-shadow: 0 2px 8px 0 rgba(38,63,105,0.08);
+    margin-left: 8px;
+}
+
+    .invoice-bar .input-group-text {
+        border: none;
+        background: #f7fbff;
+        color: #2196f3;
+        font-size: 1.12rem;
+    }
+
+    .invoice-bar .form-control {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        color: #1256a8;
+        font-size: 1.07rem;
+        font-weight: 600;
+    }
+
+    .invoice-bar .btn-outline-secondary {
+        border-radius: 7px;
+        background: #eaf2fa;
+        border: none;
+        color: #497bbb;
+        transition: background 0.18s;
+    }
+
+        .invoice-bar .btn-outline-secondary:active,
+        .invoice-bar .btn-outline-secondary:focus {
+            background: #d8eafd;
+            color: #1976d2;
+        }
+
+/* Supplier input group width controls */
+.supplier-input-group .form-select-sm {
+    min-width: 80px;
+    max-width: 110px;
+}
+
+.supplier-input-group .btn-outline-success {
+    padding: 3px 10px;
+    border-radius: 7px;
+    margin-left: 2px;
+}
+
+.supplier-input-group .input-group-text {
+    padding: 3px 9px;
+    font-size: 1.07rem;
+}
+
+/* -----------------------------------
+   3. Products Row (Scan, Import, Add)
+------------------------------------- */
+.products-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 0.4rem;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+
+.scan-group.input-group {
+    background: #e9f3fd;
+    border-radius: 9px;
+    padding: 2px 13px 2px 9px;
+    box-shadow: 0 2px 6px 0 rgba(38,63,105,0.08);
+    align-items: center;
+    width: 370px;
+    max-width: 100%;
+    border: 2.2px solid #4db6e2;
+    transition: border 0.2s;
+}
+
+    .scan-group.input-group:focus-within {
+        border: 2.2px solid #2076c1;
+    }
+
+.scan-group .input-group-text {
+    background: transparent;
+    border: none;
+    color: #27a2d7;
+    font-size: 1.13rem;
+}
+
+.scan-group .form-control-compact {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    font-size: 0.99rem;
+    padding: 7px 5px;
+    color: #27374d;
+}
+
+    .scan-group .form-control-compact::placeholder {
+        color: #7da2be;
+        opacity: 1;
+    }
+
+.btn-import, .btn-new-item {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.99rem;
+    font-weight: 600;
+    padding: 5px 14px;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    margin-right: 0.18rem;
+    box-shadow: 0 1px 8px 0 rgba(35,152,239,0.09);
+    height: 32px;
+    min-width: 0;
+    transition: filter .12s;
+}
+
+.btn-import {
+    background: linear-gradient(90deg, #27a2d7, #6ed9e9);
+}
+
+.btn-new-item {
+    background: linear-gradient(90deg, #16b37c, #25d87b);
+}
+
+    .btn-import:active, .btn-new-item:active {
+        filter: brightness(0.95);
+    }
+
+    .btn-import i, .btn-new-item i {
+        margin-right: 6px;
+    }
+
+/* -----------------------------------
+   4. Purchase Table (Grid)
+------------------------------------- */
+.purchase-items .table {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px 0 rgba(49,130,206,0.05);
+}
+
+.purchase-table thead {
+    background: linear-gradient(90deg, #e8f8f5 0%, #c8e9eb 100%);
+}
+
+    .purchase-table thead th {
+        color: #226e5f;
+        font-weight: 600;
+        font-size: 1.02rem;
+        border: none;
+        border-bottom: 2px solid #c8e9d5;
+        background: none;
+    }
+
+.purchase-table th, .purchase-table td {
+    vertical-align: middle;
+    border-top: 1px solid #e4e4e4;
+    font-size: 1.02rem;
+    color: #223048;
+}
+
+.purchase-table tbody tr:hover {
+    background: #f4faff;
+}
+
+.purchase-table tfoot td {
+    font-weight: 700;
+    background: #ecf7ff;
+    color: #20656c;
+    border-top: 2px solid #8ee1ef;
+}
+
+/* -----------------------------------
+   5. Entry Row (Add/Edit line)
+------------------------------------- */
+.purchase-entry-row .form-control {
+    background: #f9fbfc;
+    border: 1.5px solid #cbe0f5;
+    border-radius: 8px;
+}
+
+.purchase-entry-row label {
+    font-weight: 500;
+    color: #2b4257;
+}
+
+/* -----------------------------------
+   6. File Attach Section
+------------------------------------- */
+.purchase-header [for="DocumentFile"] {
+    font-weight: 600;
+    color: #1e88e5;
+}
+
+.purchase-header input[type="file"] {
+    max-width: 140px;
+    background: #e3f2fd;
+    color: #1e88e5;
+    border: 1px solid #2196f3;
+    padding: 3px 6px;
+    border-radius: 8px;
+}
+
+.attach-info {
+    font-size: 0.80rem;
+    color: #2196f3;
+    margin-left: 6px;
+}
+
+/* -----------------------------------
+   7. Payment Summary Section (Total, Paid, Remaining)
+------------------------------------- */
+.payment-summary-box {
+    margin-top: 10px;
+    margin-bottom: 3px;
+    gap: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.summary-card {
+    min-width: 100px;
+    max-width: 130px;
+    border-radius: 8px;
+    padding: 8px 13px;
+    font-size: 1.01rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: #fff;
+    border: 1.1px solid #e5eaf3;
+    box-shadow: 0 2px 7px 0 rgba(49,130,206,0.04);
+}
+
+    .summary-card i {
+        font-size: 1.11em;
+        margin-right: 6px;
+        min-width: 1.05em;
+        text-align: center;
+        height: 1.12em;
+        line-height: 1.11em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .summary-card input[type="number"] {
+        width: 60px;
+        border-radius: 6px;
+        padding: 2px 6px;
+        border: 1px solid #e1eaf4;
+        background: #fff;
+        font-size: 0.97rem;
+        color: #234;
+        font-weight: 600;
+        margin-top: 0;
+    }
+
+/* Optional: Background color helpers */
+.bg-gradient-primary {
+    background: linear-gradient(90deg,#2196f3,#6ec6ff) !important;
+    color: #fff !important;
+}
+
+.bg-gradient-success {
+    background: linear-gradient(90deg,#43cea2,#185a9d) !important;
+    color: #fff !important;
+}
+
+.bg-gradient-warning {
+    background: linear-gradient(90deg,#ffe082,#ffd54f) !important;
+    color: #a87800 !important;
+}
+
+/* -----------------------------------
+   8. Responsive / Mobile
+------------------------------------- */
+@media (max-width: 900px) {
+    .payment-summary-box {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+    }
+
+    .summary-card {
+        width: 100%;
+        max-width: 98vw;
+        font-size: 0.98rem;
+    }
+
+    .products-row {
+        gap: 7px;
+    }
+
+    .inner-info-bar {
+        padding: 9px 7vw 9px 0;
+    }
+}
+
+@media (max-width: 700px) {
+    .payment-summary-box {
+        flex-direction: column;
+        gap: 7px;
+        align-items: flex-end;
+    }
+
+    .summary-card {
+        width: 100%;
+        max-width: 99vw;
+    }
+
+    .purchase-main-card, .card {
+        padding: 7px 1vw 7px 1vw;
+        border-radius: 9px;
+    }
+
+    .purchase-header, .purchase-items, .purchase-summary {
+        padding: 7px 2px 7px 2px;
+        border-radius: 9px;
+    }
+
+    .scan-group.input-group {
+        width: 99vw;
+        max-width: 100vw;
+    }
+
+    .inner-info-bar {
+        flex-direction: column;
+        text-align: center;
+        padding: 11px 12px;
+    }
+}
+.barcode-suggestion-box {
+    position: absolute;
+    top: 100%;
+    left: 35px;
+    right: 0;
+    background: white;
+    border: 1px solid #ccc;
+    z-index: 1000;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    display: none;
+    border-radius: 4px;
+}
+
+.barcode-suggestion-item {
+    padding: 8px 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+    .barcode-suggestion-item:hover {
+        background-color: #f0f0f0;
+    }

@@ -1,0 +1,207 @@
+﻿@using System.Text.Json
+@model GSoftPosNew.Models.Purchase
+
+@{
+    ViewData["Title"] = "Edit Purchase";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var itemsJson = JsonSerializer.Serialize(ViewBag.Items as IEnumerable<Item> ?? new List<Item>());
+}
+
+<div class="purchase-container">
+    <h2 class="mb-4">
+        <i class="fas fa-edit me-2"></i>Edit Purchase #@Model.Id
+    </h2>
+
+    @using (Html.BeginForm("Edit", "Purchase", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.Id)
+
+        <!-- Top card with purchase details -->
+        <div class="card purchase-top-card mb-4">
+            <div class="card-body">
+                <div class="row g-3 align-items-end">
+                    <!-- Supplier -->
+                    <div class="col-md-3">
+                        @Html.LabelFor(m => m.SupplierId, "Supplier:*", new { @class = "form-label" })
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-user"></i></span>
+                            @Html.DropDownListFor(m => m.SupplierId, 
+                                (SelectList)ViewBag.Suppliers, 
+                                new { @class = "form-select", required = "required" })
+                            <button type="button" class="btn btn-outline-success" id="addSupplierBtn">
+                                <i class="fa fa-plus"></i>
+                            </button>
+                        </div>
+                        @Html.ValidationMessageFor(m => m.SupplierId)
+                    </div>
+
+                    <!-- Reference No -->
+                    <div class="col-md-3">
+                        @Html.LabelFor(m => m.ReferenceNo, "Reference No:", new { @class = "form-label" })
+                        <div class="input-group">
+                            @Html.TextBoxFor(m => m.ReferenceNo, new { @class = "form-control", placeholder = "Enter ref no" })
+                            <span class="input-group-text text-info"><i class="fa fa-info-circle"></i></span>
+                        </div>
+                        @Html.ValidationMessageFor(m => m.ReferenceNo)
+                    </div>
+
+                    <!-- Purchase Date -->
+                    <div class="col-md-3">
+                        @Html.LabelFor(m => m.Date, "Purchase Date:*", new { @class = "form-label" })
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-calendar"></i></span>
+                            @Html.TextBoxFor(m => m.Date, 
+                                "{0:MM/dd/yyyy HH:mm}", 
+                                new { @class = "form-control", @readonly = "readonly" })
+                        </div>
+                        @Html.ValidationMessageFor(m => m.Date)
+                    </div>
+
+                    <!-- Status -->
+                    <div class="col-md-3">
+                        @Html.LabelFor(m => m.Status, "Purchase Status:*", new { @class = "form-label" })
+                        <div class="input-group">
+                            @Html.DropDownListFor(m => m.Status, 
+                                new SelectList(new[] { "Pending", "Paid", "Cancelled" }), 
+                                new { @class = "form-select", required = "required" })
+                            <span class="input-group-text text-info"><i class="fa fa-info-circle"></i></span>
+                        </div>
+                        @Html.ValidationMessageFor(m => m.Status)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Middle section: items table -->
+        <div class="purchase-mid-section mb-4">
+            <div class="d-flex align-items-center mb-2">
+                <div class="flex-grow-1 input-group me-3 search-input-group">
+                    <span class="input-group-text"><i class="fa fa-search"></i></span>
+                    <input type="text" id="productSearch" class="form-control" 
+                           placeholder="Enter product name / SKU / barcode" autocomplete="off" />
+                    <div id="searchResults" class="search-results-dropdown"></div>
+                </div>
+                <a href="#" class="add-product-link">+ Add new product</a>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table purchase-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Product Name</th>
+                            <th>Qty</th>
+                            <th>Unit Cost<br />(Before Discount)</th>
+                            <th>Discount %</th>
+                            <th>Unit Cost<br />(Before Tax)</th>
+                            <th>Line Total</th>
+                            <th>Remove</th>
+                        </tr>
+                    </thead>
+                    <tbody id="purchaseItems">
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr data-item-id="@item.ItemId">
+                                <td>@(Model.Items.IndexOf(item) + 1)</td>
+                                <td>@item.Item?.ItemName</td>
+                                <td>
+                                    <input type="number" class="form-control form-control-sm item-qty" 
+                                           value="@item.Quantity" min="1" data-item-id="@item.ItemId" />
+                                </td>
+                                <td>@item.UnitCost.ToString("C")</td>
+                                <td>
+                                    <input type="number" class="form-control form-control-sm item-discount" 
+                                           value="@item.DiscountPercent" min="0" max="100" data-item-id="@item.ItemId" />
+                                </td>
+                                <td>@((item.UnitCost * (1 - item.DiscountPercent/100)).ToString("C"))</td>
+                                <td class="line-total">@item.LineTotal.ToString("C")</td>
+                                <td>
+                                    <button class="btn btn-sm btn-danger remove-item" data-item-id="@item.ItemId">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="purchase-summary mt-2 text-end">
+                Total Items: <strong id="total-items">@Model.Items.Count</strong>
+                <span class="ms-4">Net Total Amount: <strong id="net-total">@Model.Items.Sum(i => i.LineTotal).ToString("C")</strong></span>
+            </div>
+        </div>
+
+        <!-- Bottom card: discount & tax & notes -->
+        <div class="card purchase-bottom-card">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        @Html.LabelFor(m => m.DiscountType, "Discount Type:", new { @class = "form-label" })
+                        @Html.DropDownListFor(m => m.DiscountType, 
+                            new SelectList(new[] { "None", "Percent", "Fixed" }), 
+                            new { @class = "form-select", id = "discountType" })
+                    </div>
+                    <div class="col-md-4">
+                        @Html.LabelFor(m => m.DiscountAmount, "Discount Amount:", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.DiscountAmount, 
+                            new { @class = "form-control", type = "number", min = "0", id = "discountAmount" })
+                    </div>
+                    <div class="col-md-4 text-end">
+                        Discount (–): <strong id="display-discount">$0.00</strong>
+                    </div>
+                    <div class="col-md-4">
+                        @Html.LabelFor(m => m.TaxType, "Purchase Tax:", new { @class = "form-label" })
+                        @Html.DropDownListFor(m => m.TaxType, 
+                            new SelectList(new[] { "None", "VAT", "GST" }), 
+                            new { @class = "form-select", id = "taxType" })
+                    </div>
+                    <div class="col-md-4 text-end">
+                        Purchase Tax (+): <strong id="display-tax">$0.00</strong>
+                    </div>
+                    <div class="col-12">
+                        @Html.LabelFor(m => m.Notes, "Additional Notes:", new { @class = "form-label" })
+                        @Html.TextAreaFor(m => m.Notes, new { @class = "form-control", rows = 3 })
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden fields for line items -->
+        <input type="hidden" id="purchaseItemsJson" name="ItemsJson" 
+               value="@JsonSerializer.Serialize(Model.Items.Select(i => new {
+                   ItemId = i.ItemId,
+                   Quantity = i.Quantity,
+                   UnitCost = i.UnitCost,
+                   DiscountPercent = i.DiscountPercent,
+                   TaxPercent = i.TaxPercent,
+                   LineTotal = i.LineTotal
+               }))" />
+
+        <!-- Submit button -->
+        <div class="mt-3 text-end">
+            <button type="submit" class="btn btn-primary me-2">Update Purchase</button>
+            <a href="@Url.Action("Details", new { id = Model.Id })" class="btn btn-secondary">Cancel</a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+<script>
+    // JavaScript from Create view should be reused here
+    // Initialize with existing items
+    var items = @Html.Raw(itemsJson);
+    var purchaseItems = @Html.Raw(JsonSerializer.Serialize(Model.Items.Select(i => new {
+        ItemId = i.ItemId,
+        Item = i.Item,
+        Quantity = i.Quantity,
+        UnitCost = i.UnitCost,
+        DiscountPercent = i.DiscountPercent,
+        TaxPercent = i.TaxPercent,
+        LineTotal = i.LineTotal
+    })));
+    
+    // Rest of your JavaScript functionality
+    // (Same as in Create view for handling items, calculations, etc.)
+</script>
+}

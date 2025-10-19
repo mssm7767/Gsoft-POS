@@ -1,0 +1,130 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<style>
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        background-color: #f0f2f5;
+    }
+
+    .dashboard-container {
+        margin-left: 250px;
+        padding: 40px;
+    }
+
+    .dashboard-title {
+        font-size: 28px;
+        font-weight: bold;
+        margin-bottom: 30px;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 25px;
+    }
+
+
+        }
+
+    .left-half, .right-half {
+        flex: 1;
+    }
+</style>
+
+<div class="dashboard-container">
+    <div class="dashboard-title">Welcome to GSoft POS Dashboard</div>
+
+    <div class="dashboard-grid">
+        <a href="/Sale/Add">
+            <button class="dashboard-button">
+                <div class="icon">🛒</div>
+                Sales
+            </button>
+        </a>
+
+        <a href="/Purchase/Add">
+            <button class="dashboard-button">
+                <div class="icon">📦</div>
+                Purchase
+            </button>
+        </a>
+
+        <a href="/Expense/Index">
+            <button class="dashboard-button">
+                <div class="icon">💰</div>
+                Expenses
+            </button>
+        </a>
+
+        <a href="/Reports/Index">
+            <button class="dashboard-button">
+                <div class="icon">📊</div>
+                Reports
+            </button>
+        </a>
+
+        <a href="/Expiry/Index">
+            <button class="dashboard-button">
+                <div class="icon">⏰</div>
+                Expiry
+            </button>
+        </a>
+    </div>
+
+    <div class="chart-section">
+        <div class="chart-title">Purchase & Sales Summary</div>
+        <canvas id="purchaseSalesChart" width="100%" height="40"></canvas>
+    </div>
+
+    <div class="middle-section">
+        <div class="left-half alert-section">
+            <div class="alert-title">Expired Items</div>
+            <ul class="alert-list">
+                <li>Item X - Expired on 10-June-2025</li>
+                <li>Item Y - Expired on 01-June-2025</li>
+            </ul>
+        </div>
+
+        <div class="right-half alert-section">
+            <div class="alert-title">Stock Alerts</div>
+            <ul class="alert-list">
+                <li>Item A - Low Stock</li>
+                <li>Item B - Running Out</li>
+                <li>Item C - Reorder Soon</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('purchaseSalesChart').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [
+                {
+                    label: 'Purchases',
+                    data: [10, 15, 8, 12, 18, 20, 9],
+                    backgroundColor: '#36a2eb'
+                },
+                {
+                    label: 'Sales',
+                    data: [14, 10, 13, 15, 22, 25, 11],
+                    backgroundColor: '#4bc0c0'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>

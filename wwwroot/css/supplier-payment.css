@@ -1,0 +1,141 @@
+﻿/* ===== SUPPLIER PAGE – COLORFUL HEADER ===== */
+
+/* Outer header container: deep gradient + soft glow */
+.sup-header {
+    position: relative;
+    border-radius: 18px;
+    overflow: hidden;
+    padding: 14px; /* inner padding for the bar */
+    
+    
+}
+
+    /* Decorative blur blobs (very subtle) */
+    .sup-header::before,
+    .sup-header::after {
+        content: "";
+        position: absolute;
+        width: 280px;
+        height: 280px;
+        border-radius: 50%;
+        filter: blur(40px);
+        opacity: .25;
+        pointer-events: none;
+    }
+
+    .sup-header::before {
+        background: #22d3ee;
+        top: -120px;
+        left: -60px;
+    }
+
+    .sup-header::after {
+        background: #a78bfa;
+        bottom: -140px;
+        right: -80px;
+    }
+
+/* ===== ONLY TOP STRIP TO LIGHT GREEN ===== */
+.sup-header-bar {
+    background: linear-gradient(135deg, #bbf7d0 0%, #86efac 50%, #34d399 100%) !important; /* light green */
+    border: 1px solid #a7f3d0 !important; /* pale green border */
+    color: #064e3b !important; /* dark green text for contrast */
+    border-radius: 12px;
+}
+
+/* Optional: date chip tint to match green (kept subtle) */
+.sup-chip {
+    background: rgba(209,250,229,.75) !important;
+    border: 1px solid #a7f3d0 !important;
+    color: #065f46 !important;
+    border-radius: 999px;
+    padding: .35rem .7rem;
+    font-weight: 700;
+}
+
+/* Diagonal ribbon with glossy gradient */
+.sup-ribbon {
+    margin-left: 12px;
+    padding: .38rem .75rem;
+    font-weight: 900;
+    letter-spacing: .08em;
+    border-radius: 999px;
+    color: #0b1220;
+    background: linear-gradient(135deg,#fef08a 0%, #fcd34d 50%, #f59e0b 100%);
+    box-shadow: 0 6px 16px rgba(245,158,11,.35);
+    border: 1px solid rgba(255,255,255,.4);
+}
+
+/* Title & icons inside the bar stay readable */
+.sup-header-bar h4,
+.sup-header-bar i {
+    color: #064e3b !important;
+}
+
+/* Left info rail: light violet tint to differentiate page */
+.sup-rail {
+    border-right: 1px dashed rgba(124,58,237,.25);
+}
+
+.balance-box {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    background: #faf5ff; /* light violet */
+    border: 1px solid #ede9fe;
+    border-radius: 12px;
+    padding: .5rem .7rem;
+}
+
+.balance-pill {
+    display: inline-block;
+    background: #eef2ff; /* indigo-50 */
+    color: #3730a3; /* indigo-800 */
+    border: 1px solid #c7d2fe; /* indigo-200 */
+    border-radius: 999px;
+    padding: .35rem .7rem;
+    font-weight: 800;
+}
+
+/* Cards get a subtle violet top border so page feels consistent */
+.sup-card {
+    background: #fff;
+    border-radius: 18px;
+    border: 1px solid #e9e9f5;
+    box-shadow: 0 8px 24px rgba(2,6,23,.06);
+}
+
+    .sup-card .border-bottom {
+        border-color: #ede9fe !important;
+    }
+
+/* Supplier-themed action buttons */
+.btn-sup-primary {
+    background: #7c3aed;
+    border: none;
+    color: #fff;
+}
+
+    .btn-sup-primary:hover {
+        background: #6d28d9;
+    }
+
+.btn-sup-warning {
+    background: #fde68a;
+    border: 1px solid #f59e0b;
+    color: #7c2d12;
+}
+
+    .btn-sup-warning:hover {
+        background: #fcd34d;
+    }
+
+.btn-sup-info {
+    background: #06b6d4;
+    border: none;
+    color: #08121c;
+}
+
+    .btn-sup-info:hover {
+        background: #0891b2;
+    }

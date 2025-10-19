@@ -1,0 +1,199 @@
+﻿@{
+    ViewBag.Title = "Stock Adjustment";
+    var userName = ViewBag.UserName as string ?? "Admin";
+}
+
+<link rel="stylesheet" href="~/css/stockadjustment.css" />
+
+<div class="stockadj-main">
+
+    <!-- Header Section -->
+    <div class="stockadj-header">
+        <div class="stockadj-header-row">
+            <div class="stockadj-ref">
+                <span class="ref-label">Ref#:</span>
+                <span class="ref-value" id="autoRefNo">AUTO1234</span>
+            </div>
+            <div class="stockadj-user">
+                <span>User: <b>@userName</b></span>
+            </div>
+            <div class="stockadj-datetime">
+                <span id="stockadj-date"></span>
+                <span id="stockadj-time"></span>
+            </div>
+        </div>
+        <div class="stockadj-header-row">
+            <input type="text" class="desc-input" id="descInput" placeholder="Description (e.g. audit, checking etc.)" />
+            <select class="ref-dropdown" id="recentRefs">
+                <option>Recent Reference #</option>
+                <option>AUTO1233</option>
+                <option>AUTO1232</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Scan/Barcode/Item Selection Section -->
+    <div class="stockadj-item-inputs">
+        <input type="text" id="barcodeInput" class="barcode-input" placeholder="Scan barcode or item code..." autocomplete="off" />
+        <button class="item-search-btn" onclick="openItemSearch()"><i class="fa fa-search"></i> Search Item</button>
+        <button class="add-item-btn" onclick="addItemRow()"><i class="fa fa-plus"></i> Add</button>
+    </div>
+
+    <!-- Item Details Entry Section -->
+    <div class="stockadj-details-row">
+        <input type="text" id="itemName" class="item-detail-input" placeholder="Item Name" readonly />
+        <input type="text" id="purchasePrice" class="item-detail-input" placeholder="Purchase Price" />
+        <input type="text" id="mrp" class="item-detail-input" placeholder="MRP/Sale Price" />
+        <input type="text" id="compStock" class="item-detail-input" placeholder="Computer Stock" readonly />
+        <input type="number" id="phyStock" class="item-detail-input" placeholder="Physical Stock" />
+        <input type="text" id="diffStock" class="item-detail-input" placeholder="Difference" readonly />
+        <button class="add-to-grid-btn" onclick="addToGrid()">Add to List</button>
+    </div>
+
+    <!-- Data Grid Section -->
+    <table class="stockadj-table" id="adjGrid">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Item Name</th>
+                <th>Purchase Price</th>
+                <th>MRP/Sale Price</th>
+                <th>Computer Stock</th>
+                <th>Physical Stock</th>
+                <th>Difference</th>
+                <th>Total Diff</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- JS se rows add hongi -->
+        </tbody>
+    </table>
+
+    <!-- Totals -->
+    <div class="stockadj-totals">
+        <span class="total-label">Total Diff Amount:</span>
+        <span class="total-value" id="totalDiffAmount">0.00</span>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="stockadj-actions">
+        <button class="save-btn" onclick="openSaveModal()">Save & Print</button>
+        <button class="saveonly-btn" onclick="saveOnly()">Save Only</button>
+    </div>
+</div>
+
+<!-- Save Modal -->
+<div id="saveModal" class="modal-backdrop">
+    <div class="modal-content">
+        <div class="modal-header">Stock Adjustment Saved!</div>
+        <div class="modal-body">
+            <div>Reference #: <b id="modalRef"></b></div>
+            <div>Total Diff Amount: <b id="modalTotalDiff"></b></div>
+        </div>
+        <div class="modal-actions">
+            <button onclick="closeModal()" class="close-modal-btn">OK (F12)</button>
+            <button onclick="window.print()" class="print-modal-btn">Print</button>
+        </div>
+    </div>
+</div>
+
+<!-- JS Scripts -->
+<script>
+    // Date/time update
+    function updateDateTime() {
+        var d = new Date();
+        document.getElementById('stockadj-date').innerText = d.toLocaleDateString();
+        document.getElementById('stockadj-time').innerText = d.toLocaleTimeString();
+    }
+    setInterval(updateDateTime, 1000); updateDateTime();
+
+    // Generate auto reference number (dummy)
+    document.getElementById('autoRefNo').innerText = "AUTO" + (1000 + Math.floor(Math.random() * 9000));
+
+    // Add item to grid
+    let rowCount = 0;
+    let totalDiff = 0;
+
+    function addToGrid() {
+        let table = document.getElementById("adjGrid").getElementsByTagName('tbody')[0];
+        let itemName = document.getElementById("itemName").value || "Sample Item";
+        let purPrice = parseFloat(document.getElementById("purchasePrice").value) || 0;
+        let mrp = parseFloat(document.getElementById("mrp").value) || 0;
+        let compStock = parseInt(document.getElementById("compStock").value) || 0;
+        let phyStock = parseInt(document.getElementById("phyStock").value) || 0;
+        let diff = phyStock - compStock;
+        let total = diff * purPrice;
+
+        let tr = document.createElement("tr");
+        tr.innerHTML = `<td>${++rowCount}</td>
+                        <td>${itemName}</td>
+                        <td>${purPrice.toFixed(2)}</td>
+                        <td>${mrp.toFixed(2)}</td>
+                        <td>${compStock}</td>
+                        <td>${phyStock}</td>
+                        <td>${diff}</td>
+                        <td>${total.toFixed(2)}</td>
+                        <td><button onclick="deleteRow(this)">🗑️</button></td>`;
+
+        table.appendChild(tr);
+
+        totalDiff += total;
+        document.getElementById('totalDiffAmount').innerText = totalDiff.toFixed(2);
+
+        // Reset fields
+        document.getElementById("itemName").value = "";
+        document.getElementById("purchasePrice").value = "";
+        document.getElementById("mrp").value = "";
+        document.getElementById("compStock").value = "";
+        document.getElementById("phyStock").value = "";
+        document.getElementById("diffStock").value = "";
+    }
+
+    function deleteRow(btn) {
+        let row = btn.parentNode.parentNode;
+        let totalCell = parseFloat(row.children[7].innerText) || 0;
+        totalDiff -= totalCell;
+        document.getElementById('totalDiffAmount').innerText = totalDiff.toFixed(2);
+        row.remove();
+        rowCount--;
+    }
+
+    // Demo: Calculate difference on physical stock input
+    document.getElementById("phyStock").addEventListener('input', function () {
+        let compStock = parseInt(document.getElementById("compStock").value) || 0;
+        let phyStock = parseInt(this.value) || 0;
+        let diff = phyStock - compStock;
+        document.getElementById("diffStock").value = diff;
+    });
+
+    // Save Modal logic
+    function openSaveModal() {
+        document.getElementById('modalRef').innerText = document.getElementById('autoRefNo').innerText;
+        document.getElementById('modalTotalDiff').innerText = document.getElementById('totalDiffAmount').innerText;
+        document.getElementById('saveModal').style.display = 'flex';
+    }
+    function closeModal() {
+        document.getElementById('saveModal').style.display = 'none';
+        location.reload();
+    }
+    function saveOnly() {
+        alert("Record saved (demo only)");
+        location.reload();
+    }
+
+    // Dummy function for item search (expand as needed)
+    function openItemSearch() {
+        alert("Open item search modal (not implemented)");
+    }
+
+    // Add item row for barcode scan (for demo only)
+    function addItemRow() {
+        document.getElementById("itemName").value = "Demo Item";
+        document.getElementById("purchasePrice").value = "120";
+        document.getElementById("mrp").value = "150";
+        document.getElementById("compStock").value = "20";
+        document.getElementById("phyStock").value = "";
+        document.getElementById("diffStock").value = "";
+    }
+</script>

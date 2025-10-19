@@ -1,0 +1,339 @@
+﻿@model List<GSoftPosNew.Models.ItemBarcodeModel>
+@{
+    ViewData["Title"] = "Print Barcode";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<style>
+    /* Quick pick cards */
+    .qp-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        padding: .6rem .7rem;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .6rem;
+        cursor: pointer
+    }
+
+        .qp-card:hover {
+            background: #f8fafc
+        }
+
+    .qp-name {
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.1
+    }
+
+    .qp-meta {
+        font-size: .8rem;
+        color: #64748b
+    }
+
+    .qp-badge {
+        font-size: .75rem;
+        border: 1px solid #dbeafe;
+        background: #eff6ff;
+        color: #1d4ed8;
+        border-radius: 6px;
+        padding: 1px 6px
+    }
+
+    .qp-qty {
+        width: 64px
+    }
+
+    .qp-add {
+        white-space: nowrap
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-primary"><i class="fas fa-barcode me-2"></i> Print Barcode</h2>
+        <div class="text-muted small">@DateTime.Now.ToString("dddd, MMMM dd yyyy - hh:mm tt")</div>
+    </div>
+
+    <div class="card shadow-lg border-0 p-4">
+        <!-- SEARCH -->
+        <div class="mb-4 position-relative">
+            <label class="form-label fw-semibold text-dark">🔍 Search Item</label>
+            <input type="text" class="form-control rounded-pill shadow-sm" id="itemSearch" placeholder="Type name, code, or barcode..." autocomplete="off" />
+            <div id="searchResults" class="list-group mt-2 shadow-sm" style="display:none; position:absolute; left:0; right:0; z-index:1050;"></div>
+        </div>
+
+        <!-- QUICK PICKS (sequenced auto/manual lists) -->
+        <div class="mb-4" style="display: none">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="fw-semibold text-secondary"><i class="fas fa-bolt me-1"></i> Quick Picks</div>
+                <div class="btn-group btn-group-sm" role="group">
+                    <button id="qpAutoBtn" type="button" class="btn btn-outline-primary active">Auto 0001/00001/001</button>
+                    <button id="qpManualBtn" type="button" class="btn btn-outline-secondary">Manual (DB)</button>
+                </div>
+            </div>
+            <div id="qpLoading" class="text-muted small"><i class="fas fa-circle-notch fa-spin me-1"></i>Loading quick picks…</div>
+            <div id="qpEmpty" class="text-muted small d-none">Nothing to show.</div>
+            <div id="qpAuto" class="row g-2"></div>
+            <div id="qpManual" class="row g-2 d-none"></div>
+            <div class="d-flex gap-2 mt-2">
+                <button id="qpAddAll" type="button" class="btn btn-sm btn-primary d-none"><i class="fa fa-plus-circle me-1"></i>Add All (1 each)</button>
+                <button id="qpClearTable" type="button" class="btn btn-sm btn-outline-secondary"><i class="fa fa-trash me-1"></i>Clear Table</button>
+            </div>
+        </div>
+
+        <!-- TABLE -->
+        <div class="table-responsive mb-4">
+            <table class="table table-striped align-middle" id="barcodeTable">
+                <thead class="table-light">
+                    <tr>
+                        <th style="min-width:120px">Item Code</th>
+                        <th>Name</th>
+                        <th style="width:110px">Qty</th>
+                        <th style="width:80px">Remove</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">🎯 Select Label Size</label>
+                <select class="form-select rounded shadow-sm" id="labelSize">
+                    <option value="28x38">28 x 38 mm</option>
+                    <option value="25x50">25 x 50 mm</option>
+                    <option value="40x30">40 x 30 mm</option>
+                    <option value="50x25">50 x 25 mm</option>
+                </select>
+            </div>
+            <div class="col-md-6 text-end align-self-end">
+                <button class="btn btn-success btn-lg rounded-pill px-4 shadow" id="btnPrint">
+                    <i class="fas fa-print me-2"></i>Print Barcodes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="barcodeContainer" style="display:none;"></div>
+</div>
+
+
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
+    <script>
+        // ===== CONFIG =====
+        const AUTO_PREFIXES = ["0001","00001","001"]; // auto-generated barcode prefixes
+        const MAX_QP = 50; // how many to show in quick picks
+
+        // ===== HELPERS =====
+        function rowHtml(item, qty){
+            return `
+            <tr data-id="${item.id}">
+                <td>${item.itemCode}<input type="hidden" name="ItemId" value="${item.itemCode}" /></td>
+                <td>${item.itemName}<input type="hidden" name="ItemName" value="${item.itemName}" /></td>
+                <td><input type="number" name="Quantity" value="${qty||1}" class="form-control form-control-sm qtyInput" min="1" /></td>
+                <td>
+                    <button class="btn btn-danger btn-sm rounded-circle" onclick="$(this).closest('tr').remove()" title="Remove">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>`;
+        }
+
+        function pushToTable(item, qty){
+            const $tbody = $('#barcodeTable tbody');
+            const $existing = $tbody.find(`tr[data-id="${item.id}"]`);
+            if($existing.length){
+                const $q = $existing.find('input[name="Quantity"]');
+                $q.val( (+$q.val()||0) + (+qty||1) );
+            } else {
+                $tbody.append(rowHtml(item, qty||1));
+            }
+        }
+
+        function collectRows(){
+            const barcodes = [];
+            $('#barcodeTable tbody tr').each(function(){
+                barcodes.push({
+                    ItemId: $(this).find('input[name="ItemId"]').val(),
+                    Quantity: $(this).find('input[name="Quantity"]').val(),
+                    LabelSize: $('#labelSize').val(),
+                    ItemName: $(this).find('input[name="ItemName"]').val()
+                });
+            });
+            return barcodes;
+        }
+
+        function clearTable(){ $('#barcodeTable tbody').empty(); }
+
+        // ===== SEARCH (live) =====
+        $('#itemSearch').on('input', function () {
+            const term = $(this).val();
+            if (!term || term.length < 2) { $('#searchResults').hide(); return; }
+            $.get('/Sales/SearchItems', { term }, function (data) {
+                if(!Array.isArray(data) || !data.length){ $('#searchResults').hide(); return; }
+                let html = '';
+                data.forEach(i => {
+                    html += `
+                        <button type='button' class='list-group-item list-group-item-action d-flex justify-content-between align-items-start' data-id='${i.id}'>
+                            <div>
+                                <strong>${i.itemName}</strong> <span class='text-muted'>(${i.itemCode})</span><br/>
+                                <small class='text-muted'>${i.barcode ?? ''} ${i.description ? ' - '+i.description : ''}</small>
+                            </div>
+                            <span class='badge bg-light text-dark'>Add</span>
+                        </button>`;
+                });
+                $('#searchResults').html(html).show();
+                $('#searchResults .list-group-item').off('click').on('click', function(){
+                    const id = $(this).data('id');
+                    const item = (data||[]).find(x=>x.id===id);
+                    if(!item) return;
+                    pushToTable(item, 1);
+                    $('#searchResults').hide();
+                    $('#itemSearch').val('').focus();
+                });
+            });
+        });
+        // close results on outside click
+        $(document).on('click', function(e){ if(!$(e.target).closest('#itemSearch,#searchResults').length){ $('#searchResults').hide(); } });
+
+        // ===== QUICK PICKS =====
+        function renderQuick(containerId, items){
+            const $c = $('#'+containerId); $c.empty();
+            if(!items || !items.length){ $('#qpEmpty').removeClass('d-none'); $('#qpAddAll').addClass('d-none'); return; }
+            $('#qpEmpty').addClass('d-none');
+
+            items.slice(0, MAX_QP).forEach(i=>{
+                const $col = $('<div/>', { class:'col-12 col-md-6 col-lg-4' });
+                const $card = $('<div/>', { class:'qp-card', tabindex:0 });
+                const left = $(`
+                    <div>
+                        <div class="qp-name">${i.itemName}</div>
+                        <div class="qp-meta">
+                            <span class="qp-badge">${i.barcode || '—'}</span>
+                            <span class="ms-2">${i.itemCode}</span>
+                        </div>
+                    </div>`);
+                const right = $(`
+                    <div class="d-flex align-items-center gap-1">
+                        <input type="number" value="1" min="1" class="form-control form-control-sm qp-qty"/>
+                        <button type="button" class="btn btn-sm btn-primary qp-add">Add</button>
+                    </div>`);
+
+                const addFn = ()=>{
+                    const qty = +$card.find('.qp-qty').val() || 1;
+                    pushToTable(i, qty);
+                };
+                // click anywhere on card except controls
+                $card.on('click', (e)=>{ if(!$(e.target).closest('.qp-qty,.qp-add').length) addFn(); });
+                right.find('.qp-add').on('click', addFn);
+
+                $card.append(left, right); $col.append($card); $c.append($col);
+            });
+            $('#qpAddAll').removeClass('d-none');
+        }
+
+        function loadAutoQuick(){
+            $('#qpLoading').show();
+            $.get('/Sales/QuickBarcodeItems', { prefixes: AUTO_PREFIXES.join(','), count: MAX_QP })
+              .done(function(data){ $('#qpLoading').hide(); renderQuick('qpAuto', Array.isArray(data)? data: []); })
+              .fail(function(){ $('#qpLoading').hide(); $('#qpEmpty').removeClass('d-none'); });
+        }
+
+        function loadManualQuick(){
+            $.get('/Sales/ListManualBarcodes')
+              .done(function(data){ renderQuick('qpManual', Array.isArray(data)? data: []); })
+              .fail(function(){ $('#qpManual').empty().append('<div class="text-muted small">(Manual list endpoint not available)</div>'); });
+        }
+
+        // tab toggles
+        $('#qpAutoBtn').on('click', function(){
+            $(this).addClass('active'); $('#qpManualBtn').removeClass('active');
+            $('#qpAuto').removeClass('d-none'); $('#qpManual').addClass('d-none');
+        });
+        $('#qpManualBtn').on('click', function(){
+            $(this).addClass('active'); $('#qpAutoBtn').removeClass('active');
+            $('#qpManual').removeClass('d-none'); $('#qpAuto').addClass('d-none');
+        });
+
+        // add-all
+        $('#qpAddAll').on('click', function(){
+            // pick visible tab
+            const $container = $('#qpManual').hasClass('d-none') ? $('#qpAuto') : $('#qpManual');
+            $container.find('.qp-card').each(function(){
+                const iName = $(this).find('.qp-name').text();
+                const code = $(this).find('.qp-meta').text();
+                // we need original payload; to keep simple, click the Add button which has closure
+                $(this).find('.qp-add').trigger('click');
+            });
+        });
+
+        // clear table button
+        $('#qpClearTable').on('click', clearTable);
+
+
+        // // ===== SUBMIT =====
+        $('#btnPrint').on('click', function(){
+            const barcodes = collectRows(); // e.g. [{ItemId:'10', Quantity:'2', LabelSize:'28x38'}]
+
+            if (!barcodes.length) { alert('⚠️ No items selected.'); return; }
+
+                // generate barcode labels
+            barcodes.forEach(b => {
+                for (let i = 0; i < parseInt(b.Quantity); i++) {
+                    const wrapper = document.createElement("div");
+                   /*  wrapper.style.pageBreakAfter = "always"; */ // each label on new page if printing
+
+                   const [w, h] = b.LabelSize.split("x").map(Number);
+
+                    wrapper.innerHTML = `
+                        <div style="width:300px; text-align:center; font-family:Arial; border:1px solid #ccc; padding:8px; margin:5px;">
+                            <div style="font-weight:bold;">@ViewBag.ShopName</div>
+                            <div>Asset ID ${b.ItemId.toString().padStart(4,'0')}</div>
+                            <svg class="barcode"></svg>
+                            <div>${b.ItemName}</div>
+                        </div>
+                    `;
+
+                    document.getElementById("barcodeContainer").appendChild(wrapper);
+
+                            // Split LabelSize (e.g., "28x38")
+                    
+
+                    // Generate barcode
+                    JsBarcode(wrapper.querySelector(".barcode"), b.ItemId, {
+                        format: "CODE128",
+                        displayValue: false,
+                        lineColor: "#000",
+                        width: w / 10,   // JsBarcode 'width' is bar thickness, not full label width
+                        height: h        // Use height directly
+                    });
+
+                }
+            });
+
+                const printWin = window.open('', '', 'width=600,height=400');
+                printWin.document.write(document.getElementById("barcodeContainer").innerHTML);
+                printWin.document.close();
+                printWin.print();
+               
+        });
+ 
+
+
+
+
+        // ===== BOOT =====
+        $(function(){ loadAutoQuick(); loadManualQuick(); });
+    </script>
+}
+
+

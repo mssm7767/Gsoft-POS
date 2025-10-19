@@ -1,0 +1,95 @@
+﻿@model GSoftPosNew.ViewModels.InventoryReportVM
+
+<div class="report-container">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4><i class="fas fa-warehouse me-2"></i>Inventory Report</h4>
+        </div>
+        <div class="card-body">
+            <form method="post" class="mb-4">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label asp-for="CategoryFilter" class="form-label"></label>
+                        <select asp-for="CategoryFilter" class="form-select">
+                            <option value="">All Categories</option>
+                            @foreach (var cat in Model.Items.Select(i => i.Category).Distinct())
+                            {
+                                <option value="@cat">@cat</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="SearchTerm" class="form-label"></label>
+                        <input asp-for="SearchTerm" class="form-control" />
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter me-2"></i>Filter
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="report-summary mb-4">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card summary-card">
+                            <div class="card-body text-center">
+                                <h6>Total Value</h6>
+                                <h3>@Model.TotalValue.ToString("C")</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Other summary cards -->
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Item Code</th>
+                            <th>Item Name</th>
+                            <th>Category</th>
+                            <th class="text-end">Quantity</th>
+                            <th class="text-end">Cost Price</th>
+                            <th class="text-end">Stock Value</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr class="@(item.Status == "Out of Stock" ? "table-danger" :
+                                                                      item.Status == "Low Stock" ? "table-warning" : "")">
+                            <td>@item.ItemCode</td>
+                            <td>@item.ItemName</td>
+                            <td>@item.Category</td>
+                            <td class="text-end">@item.Quantity</td>
+                            <td class="text-end">@item.CostPrice.ToString("C")</td>
+                            <td class="text-end">@item.StockValue.ToString("C")</td>
+                            <td>
+                                <span class="badge @GetStatusBadgeClass(item.Status)">
+                                    @item.Status
+                                </span>
+                            </td>
+                        </tr>
+                                                }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    public string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Out of Stock" => "bg-danger",
+            "Low Stock" => "bg-warning text-dark",
+            _ => "bg-success",
+        };
+    }
+}

@@ -1,0 +1,695 @@
+﻿@using System.Text.Json
+@model GSoftPosNew.Models.Purchase
+
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+    var items = ViewBag.Items;
+    var itemsJson = items != null ? JsonSerializer.Serialize(items) : "[]";
+    var suppliers = ViewBag.Suppliers;
+    var invoiceNo = ViewBag.InvoiceNo as string ?? "";
+    var prevBal = ViewBag.PreviousBalance as string ?? "0.00";
+}
+
+<link href="~/css/purchase-custom.css" rel="stylesheet" />
+
+<div class="purchase-main-card">
+
+    <!-- TOP BAR: Time, User, Date -->
+    <div class="d-flex justify-content-between align-items-center mb-2 inner-info-bar">
+        <div>
+            <span><i class="fa fa-user-circle"></i> @ViewBag.CurrentUser ?? "Admin"</span>
+        </div>
+        <div>
+            <span><i class="fa fa-clock"></i> <span id="currentTime"></span></span>
+            <span style="margin-left: 25px;"><i class="fa fa-calendar"></i> <span id="currentDate"></span></span>
+        </div>
+    </div>
+
+    @using (Html.BeginForm("Create", "Purchase", FormMethod.Post, new { enctype = "multipart/form-data" }))
+    {
+    @if (TempData["Message"] != null)
+    {
+        <div id="customNotification" class="sms-message show">
+            @TempData["Message"]
+        </div>
+    }
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.ItemsJson, new { id = "ItemsJson" })
+
+        <!-- HEADER BOX -->
+        <div class="purchase-header mb-4">
+            <div class="row g-3">
+
+                <!-- Supplier Invoice No -->
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label form-label-sm">Sup Inv #</label>
+                    <input type="text" class="form-control form-control-sm bg-light" value="@invoiceNo" />
+                </div>
+
+                <!-- Previous Balance -->
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label form-label-sm">Previous Balance</label>
+                    <input type="text" class="form-control form-control-sm bg-light" id="OldBalance" readonly />
+                </div>
+
+                <!-- Supplier -->
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label form-label-sm mb-1">Supplier</label>
+                    <div class="input-group input-group-sm shadow-sm rounded-2">
+                        <span class="input-group-text bg-light border-end-0">
+                            <i class="fa fa-truck text-secondary"></i>
+                        </span>
+                        @Html.DropDownListFor(
+                                 m => m.SupplierId,
+                                 (SelectList)ViewBag.SupplierList,
+                                 "— Select Supplier —",
+                                 new { @class = "form-select form-select-sm border-start-0", @id="SupplierId" }
+                                 )
+                        <button type="button"
+                                class="btn btn-success"
+                                title="Add Supplier"
+                                onclick="window.location.href='@Url.Action("Create", "Supplier")'">
+                            <i class="fa fa-plus"></i>
+                        </button>
+
+                    </div>
+                </div>
+
+                <div class="col-12 col-sm-6 col-md-3">
+                    @Html.LabelFor(m => m.ReferenceNo, "Reference No", new { @class = "form-label form-label-sm" })
+                    @Html.TextBoxFor(m => m.ReferenceNo, new { @class = "form-control form-control-sm", @readonly = "readonly", id = "ReferenceNo" })
+
+                </div>
+
+
+                <!-- Group Row -->
+                <div class="col-12">
+                    <div class="row g-3 align-items-center">
+
+                        <!-- Purchase Date -->
+                        <div class="col-12 col-sm-6 col-lg-3">
+                            @Html.LabelFor(m => m.Date, "Purchase Date", new { @class = "form-label form-label-sm" })
+                            @Html.TextBoxFor(m => m.Date, "{0:yyyy-MM-ddTHH:mm}", new { @type = "datetime-local", @class = "form-control form-control-sm" })
+                        </div>
+
+                        <!-- Business Location -->
+                        <div class="col-12 col-sm-6 col-lg-3">
+                            @Html.LabelFor(m => m.BusinessLocation, "Business Location", new { @class = "form-label form-label-sm" })
+                            @Html.TextBoxFor(m => m.BusinessLocation, new { @class = "form-control form-control-sm" })
+                        </div>
+
+                        <!-- Attach File -->
+                        <div class="col-12 col-sm-6 col-lg-4 d-flex flex-wrap align-items-center">
+                            <label for="DocumentFile" class="form-label form-label-sm mb-2 mb-lg-0 me-2 text-primary">
+                                <i class="fa fa-paperclip"></i> Attach
+                            </label>
+                            <input type="file" id="DocumentFile" name="DocumentFile"
+                                   class="form-control form-control-sm me-2"
+                                   style="max-width: 150px; background: #e3f2fd; color: #1e88e5; border: 1px solid #2196f3;"
+                                   accept=".jpeg,.jpg,.png,.pdf,.xls,.xlsx" />
+                            <span class="attach-info" style="font-size: 0.80rem; color: #64b5f6;">jpg, png, pdf, xls</span>
+                        </div>
+
+                        <!-- Type Selection -->
+                        <div class="col-12 col-sm-6 col-lg-2 d-flex align-items-center">
+                            <label class="form-label form-label-sm me-2 mb-0">Type:</label>
+                            <div class="form-check form-check-inline mb-0">
+                                <input class="form-check-input" type="radio" name="PurchaseType" id="typeNew" value="New" checked>
+                                <label class="form-check-label" for="typeNew">New</label>
+                            </div>
+                            <div class="form-check form-check-inline mb-0">
+                                <input class="form-check-input" type="radio" name="PurchaseType" id="typeReturn" value="Return">
+                                <label class="form-check-label" for="typeReturn">Return</label>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+       
+        <!-- PRODUCTS ROW: Compact, centered -->
+        <div class="d-flex align-items-center gap-2 flex-wrap products-row mb-3">
+
+            <!-- Import Button -->
+            <button type="button" class="btn btn-outline-primary btn-sm shadow-sm">
+                <i class="fa fa-file-import me-1"></i> Import
+            </button>
+
+            <!-- Barcode Scan Input -->
+            <div class="scan-group input-group input-group-compact shadow-sm rounded-2 position-relative" style="max-width: 350px;">
+                <span class="input-group-text bg-light">
+                    <i class="fa fa-barcode text-secondary"></i>
+                </span>
+                <input type="text"
+                       id="barcodeInput"
+                       class="form-control"
+                       placeholder="Scan or Enter Barcode / Item Code"
+                       autocomplete="off" />
+                <div id="barcodeSuggestions" class="barcode-suggestion-box"></div>
+            </div>
+
+            <!-- Add New Button -->
+            <button type="button"
+                    class="btn btn-success btn-sm shadow-sm"
+                    onclick="window.location.href='@Url.Action("add", "Item")'">
+                Add New <i class="fa fa-plus ms-1"></i>
+            </button>
+
+        </div>
+
+
+       
+        <!-- ENTRY ROW -->
+        <div class="purchase-entry-row row align-items-end mb-2">
+            <div class="col-md-1">
+                <label class="form-label-sm mb-1">Item Code</label>
+                <input type="text"  id="itemCode" class="form-control form-control-sm" placeholder="Barcode" readonly>
+                <input type="hidden" id="itemId" >
+            </div>
+            <div class="col-md-2">
+                <label class="form-label-sm mb-1">Item Name</label>
+                <input type="text" id="itemName" class="form-control form-control-sm" placeholder="Name" readonly>
+            </div>
+            <div class="col-md-1">
+                <label class="form-label-sm mb-1">Batch #</label>
+                <input type="text" id="batchNo" class="form-control form-control-sm" placeholder="Batch">
+            </div>
+            <div class="col-md-1">
+                <label class="form-label-sm mb-1">Expiry</label>
+                <input type="text" id="expiry" class="form-control form-control-sm" placeholder="MM/YYYY">
+            </div>
+            <div class="col-md-1">
+                <small id="qtyMessage" class="text-muted d-block mt-1"></small>
+                <label class="form-label-sm mb-1">Qty</label>
+                <input type="number"  id="qty" class="form-control form-control-sm" placeholder="Qty"> 
+            </div>
+            <div class="col-md-1">
+                <label class="form-label-sm mb-1">MRP</label>
+                <input type="number" id="mrp" class="form-control form-control-sm" placeholder="MRP">
+            </div>
+            <div class="col-md-1">
+                <label class="form-label-sm mb-1">Dis %</label>
+                <input type="number" id="disPct" class="form-control form-control-sm" placeholder="Discount %">
+            </div>
+            <div class="col-md-1">
+                <label class="form-label-sm mb-1">Cost</label>
+                <input type="number" id="cost" class="form-control form-control-sm" placeholder="Purchase Price">
+            </div>
+            <div class="col-md-1">
+                <label class="form-label-sm mb-1">Ex. Dis</label>
+                <input type="number" id="exDis" class="form-control form-control-sm" placeholder="Ex. Disc">
+            </div>
+            <div class="col-md-1">
+                <label class="form-label-sm mb-1">Tax %</label>
+                <input type="number" id="taxPercent" class="form-control form-control-sm" placeholder="Tax %">
+            </div>
+            <div class="col-md-1">
+                <label class="form-label-sm mb-1">Tax Amt</label>
+                <input type="number" id="taxAmt" class="form-control form-control-sm" placeholder="Tax Amount">
+            </div>
+          
+            <div class="col-md-1 d-flex align-items-end pt-2">
+                <button class="btn btn-success btn-sm w-100" onclick="addToGrid()" type="button">Add</button>
+            </div>
+        </div>
+
+        <!-- DATA GRID TABLE -->
+        <div class="purchase-items mb-4">
+            <table class="table purchase-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Item Code</th>
+                        <th>Name</th>
+                        <th>Batch #</th>
+                        <th>Expiry</th>
+                        <th>Qty</th>
+                        <th>MRP</th>
+                        <th>Dis %</th>
+                        <th>Ex. Dis</th>
+
+                        <th>Cost</th>
+                        <th>Tax %</th>
+                        <th>Tax Amt</th>
+                        
+                        <th>Total</th>
+                        <th>Edit</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody id="purchaseLines"></tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="5"><b>Totals</b></td>
+                        <td id="tQty"></td>
+
+                        <td id="tMRP"></td>
+                        <td id="tDisPct"></td>
+                        <td id="tExDis"></td>
+
+                        <td id="tCost"></td>
+                        <td id="tTaxPercent"></td>
+                        <td id="tTaxAmt"></td>
+                        <td id="tGrand"></td>
+                        <td colspan="2"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+    <!-- PAYMENT SUMMARY: right aligned, compact -->
+    <div class="d-flex justify-content-end mb-2" style="gap: 14px;">
+        <div>
+            <label style="font-weight:600;">Total Bill:</label>
+            <span id="sumTotal">0.00</span>
+            <input type="hidden" name="TotalAmount" id="hiddenTotalAmount" />
+        </div>
+        <div>
+            <label style="font-weight:600;">Paid:</label>
+            <input type="number" name="Paid" id="paidAmount" value="0" min="0" onchange="updatePaymentSummary()" style="width: 80px;" />
+        </div>
+        <div>
+            <label style="font-weight:600;">Remaining:</label>
+            <span id="remainingAmount">0.00</span>
+            <input type="hidden" name="Remaining" id="hiddenRemainingAmount" />
+        </div>
+    </div>
+
+
+
+   <!-- BOTTOM BUTTONS -->
+        <div class="d-flex justify-content-end gap-2 mt-3">
+            <button type="submit" class="btn btn-success" onclick="updateItemsJson()">
+                <i class="fa fa-save me-1"></i> Save Purchase
+            </button>
+            <button type="reset" class="btn btn-secondary">
+                <i class="fa fa-refresh me-1"></i> Clear
+            </button>
+            <a href="@Url.Action("Index", "Purchase")" class="btn btn-danger ms-2">
+                <i class="fa fa-arrow-left me-1"></i> Exit to Dashboard
+            </a>
+        </div>
+    }
+
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+        $(document).ready(function () {
+        $("#SupplierId").change(function () {
+            var supplierId = $(this).val();
+            if (supplierId) {
+                $.ajax({
+                    url: '@Url.Action("GetSupplierBalance", "SupplierPayment")',
+                    type: 'GET',
+                    data: { supplierId: supplierId },
+                    success: function (response) {
+                        var rawBalance = parseFloat(response.balance) || 0;
+
+                        // Assign raw value (for posting back to server)
+                        $("#OldBalance").val(rawBalance);
+
+                        // Assign formatted value (for user display)
+                        $("#OldBalanceDisplay").val(
+                            new Intl.NumberFormat('en-PK', {
+                                style: 'currency',
+                                currency: 'PKR'
+                            }).format(rawBalance)
+                        );
+                    },
+                    error: function () {
+                        alert("Failed to fetch supplier balance.");
+                        $("#OldBalance").val(0);
+                        $("#OldBalanceDisplay").val("₨0.00");
+                    }
+                });
+            } else {
+                $("#OldBalance").val(0);
+                $("#OldBalanceDisplay").val("₨0.00");
+            }
+        });
+
+        // Auto-load balance if supplier already selected (edit mode)
+        if ($("#SupplierId").val()) {
+            $("#SupplierId").trigger("change");
+        }
+    });
+</script>
+@section Scripts {
+
+    <script>
+                   function generateReferenceNo() {
+            // Get current date in yyyyMMdd format
+            let now = new Date();
+            let yyyy = now.getFullYear();
+            let mm = String(now.getMonth() + 1).padStart(2, '0'); // month is zero-based
+            let dd = String(now.getDate()).padStart(2, '0');
+
+            // Generate random number between 100 and 999
+            let randomNum = Math.floor(100 + Math.random() * 900);
+
+            // Combine into pattern: REF-YYYYMMDD-XXX
+            let referenceNo = `REF-${yyyy}${mm}${dd}-${randomNum}`;
+
+            // Assign to input
+            let refInput = document.getElementById("ReferenceNo");
+            if (refInput) {
+                refInput.value = referenceNo;
+            }
+        }
+
+        // Call once on page load
+        document.addEventListener("DOMContentLoaded", generateReferenceNo);
+
+    const itemsFromDb = @Html.Raw(itemsJson);
+    const barcodeInput = document.getElementById("barcodeInput");
+const suggestionBox = document.getElementById("barcodeSuggestions");
+
+
+barcodeInput.addEventListener("input", function () {
+    const query = this.value.trim().toLowerCase();
+    suggestionBox.innerHTML = "";
+    // if (!query) {
+    //     suggestionBox.style.display = "none";
+    //     return;
+    // }
+    
+    const matches = itemsFromDb.filter(item =>
+        item.ItemCode.toLowerCase().includes(query) ||
+        item.ItemName.toLowerCase().includes(query)
+    ).slice(0, 10); // Limit results to 10
+
+    if (matches.length === 0) {
+        suggestionBox.style.display = "none";
+        return;
+    }
+
+    matches.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "barcode-suggestion-item";
+        div.innerHTML = `<strong>${item.ItemCode}</strong> - ${item.ItemName}`;
+        div.addEventListener("click", () => {
+            barcodeInput.value = item.ItemCode;
+            fillItemDetails(item);
+            suggestionBox.style.display = "none";
+        });
+        suggestionBox.appendChild(div);
+    });
+
+    suggestionBox.style.display = "block";
+});
+
+document.addEventListener("click", function (e) {
+    if (!barcodeInput.contains(e.target) && !suggestionBox.contains(e.target)) {
+        suggestionBox.style.display = "none";
+    }
+});
+        function fillItemDetails(found) {
+            // Base values
+            const salePrice = found.SalePrice != null ? parseFloat(found.SalePrice) : 0;
+            const markupPct = found.MarkupPercentage != null ? parseFloat(found.MarkupPercentage) : 0;
+            const exDis = found.ExDis != null ? parseFloat(found.ExDis) : 0;
+
+            // Fill fields
+            document.getElementById('itemCode').value = found.ItemCode || "";
+            document.getElementById('itemName').value = found.ItemName || "";
+            document.getElementById('batchNo').value = found.BatchNo != null ? found.BatchNo : 0;
+            document.getElementById('itemId').value = found.Id || 0;
+            document.getElementById('expiry').value = found.Expiry || '';
+            document.getElementById('qty').value = found.Qty != null ? found.Qty : 1;
+
+                    // Set qty (default 1 if null)
+            document.getElementById('qty').value = found.Qty != null ? found.Qty : 1;
+
+            const qtyMessage = document.getElementById('qtyMessage');
+
+            if (found.PackSize) {
+                // Extract number from "2 pack size"
+                const packSizeMatch = found.PackSize.match(/\d+/);
+                if (packSizeMatch) {
+                    const packSize = parseInt(packSizeMatch[0], 10);
+
+                    // function to update message dynamically
+                    function updateMessage() {
+                        const qty = parseInt(document.getElementById('qty').value) || 1;
+                        qtyMessage.textContent = `Pack size ${packSize}. Qty ${qty} = ${packSize * qty} pcs.`;
+                    }
+
+                    // Run once
+                    updateMessage();
+
+                    // Update message when qty changes
+                    document.getElementById('qty').addEventListener('input', updateMessage);
+                }
+            } else {
+                qtyMessage.textContent = "";
+            }
+
+
+            document.getElementById('mrp').value = salePrice;
+            document.getElementById('disPct').value = markupPct;
+            document.getElementById('exDis').value = exDis;
+            document.getElementById('taxPercent').value = found.TaxPercent != null ? found.TaxPercent : 0;
+            document.getElementById('taxAmt').value = found.TaxAmt != null ? found.TaxAmt : 0;
+
+            // Initial calculation when item is loaded
+            calculatePurchasePrice();
+
+            // Add event listeners (to recalc whenever fields change)
+            ['mrp', 'disPct', 'exDis', 'qty', 'taxPercent'].forEach(id => {
+                let el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', calculatePurchasePrice);
+                    el.addEventListener('change', calculatePurchasePrice);
+                }
+            });
+
+            // Focus batch number
+            document.getElementById('batchNo').focus();
+        }
+
+         function calculatePurchasePrice() {
+            const salePrice = parseFloat(document.getElementById('mrp').value) || 0;
+            const markupPct = parseFloat(document.getElementById('disPct').value) || 0;
+            const exDisPct = parseFloat(document.getElementById('exDis').value) || 0;
+            const qty = parseFloat(document.getElementById('qty').value) || 1;
+            const taxPct = parseFloat(document.getElementById('taxPercent').value) || 0;
+
+            // Combine discount percentages
+            const totalDiscountPct = markupPct + exDisPct;
+
+            // Apply combined percentage on salePrice
+            let purchasePrice = salePrice - (salePrice * (totalDiscountPct / 100));
+
+                    document.getElementById('cost').value = purchasePrice.toFixed(2);
+
+            // Apply tax if available
+            let taxAmt = (purchasePrice * taxPct) / 100;
+            purchasePrice += taxAmt;
+
+            
+
+            // Multiply by quantity
+            purchasePrice = purchasePrice * qty;
+
+            if (purchasePrice < 0) purchasePrice = 0;
+
+            
+            document.getElementById('taxAmt').value = taxAmt.toFixed(2);
+        }
+
+
+    document.querySelector('.scan-group input').addEventListener('change', function () {
+        let val = this.value.trim().toLowerCase();
+        let found = itemsFromDb.find(x => x.ItemCode.toLowerCase() === val);
+
+        if (found) {
+            document.getElementById('itemCode').value = found.ItemCode;
+            document.getElementById('itemName').value = found.itemName;
+                    document.getElementById('cost').value = found.PurchasePrice || 0;
+        }
+    });
+        let gridRows = [];
+        let editIndex = -1;
+        function addToGrid() {
+            let itemCode = document.getElementById('itemCode').value.trim();
+            let itemName = document.getElementById('itemName').value.trim();
+            let batchNo = document.getElementById('batchNo').value.trim();
+            let expiry = document.getElementById('expiry').value.trim();
+            let qty = parseFloat(document.getElementById('qty').value) || 0;
+            let mrp = parseFloat(document.getElementById('mrp').value) || 0;
+            let disPct = parseFloat(document.getElementById('disPct').value) || 0;
+            let cost = parseFloat(document.getElementById('cost').value) || 0;
+            let exDis = parseFloat(document.getElementById('exDis').value) || 0;
+            let taxPercent = parseFloat(document.getElementById('taxPercent').value) || 0;
+            let taxAmt = parseFloat(document.getElementById('taxAmt').value) || 0;
+            let id = parseFloat(document.getElementById('itemId').value) || 0;
+
+            if (!itemCode || !itemName || qty <= 0) {
+                alert('Required fields are missing!');
+                return;
+            }
+
+            // Combine discount percentages
+            let totalDiscountPct = disPct + exDis;
+
+            // Apply discount on (mrp * qty)
+            let discount = (mrp * qty) * (totalDiscountPct / 100);
+
+            // Tax calculation
+            if (!taxAmt || taxAmt === 0) {
+                        taxAmt = ((mrp * qty - discount) * taxPercent / 100);
+            }
+
+            // Row total = MRP total - discount + tax
+                    let rowTotal = (mrp * qty) - discount + taxAmt;
+
+            const row = {
+                itemCode, itemName, batchNo, expiry, qty, mrp,
+                disPct, cost, exDis, taxPercent, taxAmt, rowTotal, id
+            };
+
+            if (editIndex === -1) {
+                gridRows.push(row);
+            } else {
+                gridRows[editIndex] = row;
+                editIndex = -1;
+            }
+
+            clearEntry();
+            renderGrid();
+            document.getElementById('itemCode').focus();
+        }
+               function clearEntry() {
+                    ['itemCode','itemName','batchNo','expiry','qty','mrp','disPct','exDis','cost','taxPercent','taxAmt','itemId']
+                .forEach(id=>document.getElementById(id).value='');
+        }
+
+        function renderGrid() {
+            let tQty=0, tMRP=0, tDisPct=0, tCost=0, tExDis=0, tTaxPercent=0, tTaxAmt=0, tGrand=0, itemId=0;
+            let html = '';
+            gridRows.forEach((r,i)=>{
+                tQty += r.qty;
+                itemId += r.itemId;
+                tMRP += r.mrp;
+                tDisPct += r.disPct;
+                tExDis += r.exDis;
+                tCost += r.cost;
+                tTaxPercent += r.taxPercent;
+                tTaxAmt += r.taxAmt;
+                tGrand += r.rowTotal;
+                html += `<tr>
+                    <td>${i+1}</td>
+                    <td>${r.itemCode}</td>
+                    <td>${r.itemName}</td>
+                    <td>${r.batchNo}</td>
+                    <td>${r.expiry}</td>
+                    <td>${r.qty}</td>
+                    <td>${r.mrp}</td>
+                    <td>${r.disPct}</td>
+                    <td>${r.exDis}</td>
+                    <td>${r.cost}</td>
+                    <td>${r.taxPercent}</td>
+                    <td>${r.taxAmt.toFixed(2)}</td>
+                    <td>${r.rowTotal.toFixed(2)}</td>
+                    <td><button class='btn btn-sm btn-warning' onclick="editRow(${i})"><i class='fa fa-edit'></i></button></td>
+                    <td><button class='btn btn-sm btn-danger' onclick="deleteRow(${i})"><i class='fa fa-trash'></i></button></td>
+                </tr>`;
+            });
+            document.getElementById('purchaseLines').innerHTML = html;
+            document.getElementById('tQty').innerText = tQty;
+            document.getElementById('tMRP').innerText = tMRP.toFixed(2);
+            document.getElementById('tDisPct').innerText = tDisPct;
+            document.getElementById('tExDis').innerText = tExDis;
+
+                    document.getElementById('tCost').innerText = tCost.toFixed(2);
+                    document.getElementById('tTaxPercent').innerText = tTaxPercent;
+            document.getElementById('tTaxAmt').innerText = tTaxAmt.toFixed(2);
+            document.getElementById('tGrand').innerText = tGrand.toFixed(2);
+
+            document.getElementById('sumTotal').innerText = tGrand.toFixed(2);
+            let paid = parseFloat(document.getElementById('paidAmount').value) || 0;
+            let remaining = tGrand - paid;
+            document.getElementById('remainingAmount').innerText = remaining.toFixed(2);
+
+                     // set hidden fields for backend
+            document.getElementById("hiddenTotalAmount").value = tGrand.toFixed(2);
+            document.getElementById("hiddenRemainingAmount").value = remaining.toFixed(2);
+        }
+
+function editRow(i) {
+    const r = gridRows[i];
+    document.getElementById('itemCode').value = r.itemCode;
+    document.getElementById('itemName').value = r.itemName;
+    document.getElementById('batchNo').value = r.batchNo;
+    document.getElementById('expiry').value = r.expiry;
+    document.getElementById('qty').value = r.qty;
+    document.getElementById('mrp').value = r.mrp;
+    document.getElementById('disPct').value = r.disPct;
+    document.getElementById('cost').value = r.cost;
+    document.getElementById('exDis').value = r.exDis;
+    document.getElementById('taxPercent').value = r.taxPercent;
+    document.getElementById('taxAmt').value = r.taxAmt;
+    document.getElementById('itemId').value = r.id;
+
+    editIndex = i; // Set for update
+}
+
+
+        function deleteRow(i) {
+            if(confirm('Delete this row?')) { gridRows.splice(i,1); renderGrid(); }
+        }
+
+        function updatePaymentSummary() {
+            let tGrand = 0;
+            gridRows.forEach((r) => {
+                tGrand += r.rowTotal;
+            });
+            document.getElementById('sumTotal').innerText = tGrand.toFixed(2);
+
+            let paid = parseFloat(document.getElementById('paidAmount').value) || 0;
+            let remaining = tGrand - paid;
+            document.getElementById('remainingAmount').innerText = remaining.toFixed(2);
+                    document.getElementById("hiddenTotalAmount").value = tGrand.toFixed(2);
+                    document.getElementById("hiddenRemainingAmount").value = remaining.toFixed(2);
+        }
+
+        function updateDateTime() {
+            const now = new Date();
+            document.getElementById("currentTime").innerText = now.toLocaleTimeString();
+            document.getElementById("currentDate").innerText = now.toLocaleDateString();
+        }
+        setInterval(updateDateTime, 1000); updateDateTime();
+        renderGrid();
+    
+        function updateDateTime() {
+            const now = new Date();
+            document.getElementById("currentTime").innerText = now.toLocaleTimeString();
+            document.getElementById("currentDate").innerText = now.toLocaleDateString();
+        }
+        setInterval(updateDateTime, 1000); updateDateTime();
+
+          function updateItemsJson() {
+            let jsonData = JSON.stringify(gridRows);
+
+            // set hidden field value
+            document.getElementById('ItemsJson').value = jsonData;
+
+        }
+
+           document.addEventListener("DOMContentLoaded", function () {
+                        const notification = document.getElementById("customNotification");
+                        if (notification) {
+                            setTimeout(() => {
+                                notification.classList.remove("show");
+                                setTimeout(() => notification.style.display = 'none', 500);
+                            }, 1500); // 1.5 second delay
+                        }
+                    });
+
+    </script>
+  } 

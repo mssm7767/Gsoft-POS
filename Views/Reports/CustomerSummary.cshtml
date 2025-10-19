@@ -1,0 +1,69 @@
+﻿@model GSoftPosNew.ViewModels.CustomerSummaryReportVM
+
+<div class="report-container">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4><i class="fas fa-users me-2"></i>Customer Summary Report</h4>
+        </div>
+        <div class="card-body">
+            <form method="post" class="mb-4">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label asp-for="StartDate" class="form-label">Start Date</label>
+                        <input asp-for="StartDate" class="form-control" type="date" />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="EndDate" class="form-label">End Date</label>
+                        <input asp-for="EndDate" class="form-control" type="date" />
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter me-2"></i>Filter
+                        </button>
+                        <a href="@Url.Action("ExportCustomerSummary")" class="btn btn-success ms-2">
+                            <i class="fas fa-file-excel me-2"></i>Export
+                        </a>
+                    </div>
+                </div>
+            </form>
+
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Customer</th>
+                            <th>Contact</th>
+                            <th class="text-end">Transactions</th>
+                            <th class="text-end">Total Spent</th>
+                            <th class="text-end">Avg. Spend</th>
+                            <th>Last Purchase</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var customer in Model.Customers)
+                        {
+                            <tr>
+                                <td>@customer.CustomerName</td>
+                                <td>
+                                    <div>@customer.Phone</div>
+                                    <small class="text-muted">@customer.Email</small>
+                                </td>
+                                <td class="text-end">@customer.TransactionCount</td>
+                                <td class="text-end">@customer.TotalSpent.ToString("C")</td>
+                                <td class="text-end">@customer.AverageSpend.ToString("C")</td>
+                                <td>@customer.LastPurchaseDate?.ToString("MMM dd, yyyy")</td>
+                                <td>
+                                    <a href="@Url.Action("CustomerPurchases", new { customerId = customer.CustomerId })"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-list"></i> Details
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

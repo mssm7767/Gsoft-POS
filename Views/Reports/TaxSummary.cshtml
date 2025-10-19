@@ -1,0 +1,129 @@
+﻿@model GSoftPosNew.ViewModels.TaxSummaryReportVM
+
+<div class="report-container">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4><i class="fas fa-receipt me-2"></i>Tax Summary Report</h4>
+        </div>
+        <div class="card-body">
+            <form method="post" class="mb-4">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label asp-for="StartDate" class="form-label">Start Date</label>
+                        <input asp-for="StartDate" class="form-control" type="date" />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="EndDate" class="form-label">End Date</label>
+                        <input asp-for="EndDate" class="form-control" type="date" />
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter me-2"></i>Filter
+                        </button>
+                    </div>
+                    <div class="col-md-3 text-end">
+                        <h5>Total Tax: <span class="text-danger">@Model.TotalTax.ToString("C")</span></h5>
+                    </div>
+                </div>
+            </form>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="taxTypeChart"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="taxTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Tax Name</th>
+                            <th class="text-end">Rate</th>
+                            <th class="text-end">Taxable Amount</th>
+                            <th class="text-end">Tax Collected</th>
+                            <th class="text-end">Transactions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var tax in Model.TaxData)
+                        {
+                            <tr>
+                                <td>@tax.TaxName</td>
+                                <td class="text-end">@tax.TaxRate.ToString("0.00%")</td>
+                                <td class="text-end">@tax.TaxableAmount.ToString("C")</td>
+                                <td class="text-end">@tax.TaxAmount.ToString("C")</td>
+                                <td class="text-end">@tax.TransactionCount</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Tax by Type Pie Chart
+        const taxTypeCtx = document.getElementById('taxTypeChart').getContext('2d');
+        new Chart(taxTypeCtx, {
+            type: 'pie',
+            data: {
+                labels: @Json.Serialize(Model.TaxData.Select(t => t.TaxName)),
+                datasets: [{
+                    data: @Json.Serialize(Model.TaxData.Select(t => t.TaxAmount)),
+                    backgroundColor: [
+                        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Tax by Type'
+                    }
+                }
+            }
+        });
+
+        // Tax Trend Chart (would need additional data)
+        const taxTrendCtx = document.getElementById('taxTrendChart').getContext('2d');
+        new Chart(taxTrendCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Monthly Tax',
+                    data: [1200, 1900, 1500, 2000, 1800, 2200],
+                    borderColor: '#36A2EB',
+                    backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Tax Trend'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+}

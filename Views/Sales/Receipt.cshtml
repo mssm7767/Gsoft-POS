@@ -1,0 +1,182 @@
+﻿@using GSoftPosNew.ViewModels
+@model SaleReceiptViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Receipt</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #fff;
+        }
+
+        #receiptContent {
+            width: 80mm; /* change to 58mm if your printer is 58mm */
+            margin: 0 auto;
+            padding: 4px;
+            font-size: 11px;
+        }
+
+        .dashed {
+            border-top: 1px dashed #444;
+        }
+
+        @@page {
+            size: 80mm 170mm; /* 285px wide × 600px long approx */
+            margin: 0;
+        }
+
+        @@media print {
+            body * {
+                visibility: hidden;
+            }
+
+            #receiptContent, #receiptContent * {
+                visibility: visible;
+            }
+
+            #receiptContent {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 80mm; /* match printer width */
+                height: 170mm; /* fixed length */
+            }
+
+            #printBtn {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="font-mono text-black text-xs">
+
+    <!-- (Optional) Hidden Print Button -->
+    <div class="text-center mb-2">
+        <button id="printBtn" onclick="printReceipt()" class="bg-blue-500 text-white px-3 py-1 rounded hidden">
+            🖨 Print
+        </button>
+    </div>
+
+    <!-- Receipt Content -->
+    <div id="receiptContent">
+        <!-- Header -->
+        <div class="text-center mb-2">
+            <img src="@(!string.IsNullOrEmpty(ViewBag.Setting.LogoPath)
+                        ? Url.Content(ViewBag.Setting.LogoPath)
+                        : Url.Content("~/images/gsoftLogo.jpeg"))"
+                 alt="Shop Logo"
+                 class="w-16 h-16 mx-auto rounded-full shadow-md object-cover border border-gray-300 mb-2">
+            <div class="text-base font-bold tracking-wide">
+                @(@ViewBag.Setting?.ShopName ?? "G-Soft")
+            </div>
+
+            <div class="text-gray-800 text-[12px]">@ViewBag.Setting.Address</div>
+            <div class="text-gray-800 text-[12px]">Phone: @ViewBag.Setting.Contact1, @ViewBag.Setting.Contact2</div>
+        </div>
+
+        <!-- Invoice Info -->
+        <div class="dashed py-1 text-[11px] mb-1">
+            <div><b>Invoice #:</b> @Model.InvoiceNumber</div>
+            <div><b>Date:</b> @Model.SaleDate.ToString("dd MMM yyyy hh:mm tt")</div>
+            <div><b>Customer:</b> @Model.CustomerName (Bal: @ViewBag.Balance)</div>
+            <div><b>Cashier:</b> @Model.CashierName</div>
+        </div>
+
+        <!-- Items -->
+        <table class="w-full text-[11px] mb-1">
+            <thead>
+                <tr class="border-b border-gray-300">
+                    <th class="text-left w-5">#</th>
+                    <th class="text-left">Item</th>
+                    <th class="text-right w-12">Price</th>
+                    <th class="text-right w-8">Qty</th>
+                    <th class="text-right w-14">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Items != null && Model.Items.Any())
+                {
+                    foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@item.SrNo</td>
+                            <td class="max-w-[100px] break-words">@item.ItemName</td>
+                            <td class="text-right">@item.UnitPrice.ToString("N0")</td>
+                            <td class="text-right">@item.Quantity</td>
+                            <td class="text-right">@item.LineTotal.ToString("N0")</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="5" class="text-center text-red-500">No items found</td></tr>
+                }
+            </tbody>
+        </table>
+
+        <!-- Totals -->
+        <div class="dashed"></div>
+        <table class="w-full text-[11px] mt-1">
+            <tr>
+                <td class="text-right pr-2">SubTotal:</td>
+                <td class="text-right font-semibold">@Model.SubTotal.ToString("N0")</td>
+            </tr>
+            <tr>
+                <td class="text-right pr-2">Tax:</td>
+                <td class="text-right font-semibold">@Model.Tax.ToString("N0")</td>
+            </tr>
+            <tr>
+                <td class="text-right pr-2">Discount:</td>
+                <td class="text-right font-semibold">-@Model.Discount.ToString("N0")</td>
+            </tr>
+            <tr class="border-t border-black text-sm font-bold">
+                <td class="text-right pr-2">TOTAL:</td>
+                <td class="text-right">@Model.Total.ToString("N0")</td>
+            </tr>
+        </table>
+
+        <!-- Payment -->
+        <div class="mt-2 text-[11px]">
+            <div class="flex justify-between"><b>Method:</b><span>@Model.PaymentMethod</span></div>
+            <div class="flex justify-between"><b>Paid:</b><span>@Model.Total.ToString("N0")</span></div>
+            <div class="flex justify-between"><b>Change:</b><span>0</span></div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-[11px] mt-2 dashed pt-1">
+            <div class="mb-1">@ViewBag.Setting.Message</div>
+            <div class="text-gray-600">Powered by <b>GSoftPos</b></div>
+        </div>
+
+        <!-- QR Code -->
+        <div class="text-center mt-2">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=@Model.InvoiceNumber"
+                 alt="QR Code" class="mx-auto border border-gray-300 p-1 rounded" />
+            <div class="text-[10px] text-gray-600">Scan for Invoice</div>
+        </div>
+    </div>
+
+    <script>
+        function printReceipt() {
+            window.print();
+        }
+
+        // Auto trigger print on page load
+        window.onload = function () {
+            window.print();
+        };
+
+        // (Optional) Close window after printing
+        window.onafterprint = function () {
+            window.close();
+        };
+    </script>
+</body>
+</html>

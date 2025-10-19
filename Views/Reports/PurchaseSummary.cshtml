@@ -1,0 +1,172 @@
+﻿@using System.Text.Json
+@model GSoftPosNew.ViewModels.PurchaseSummaryReportVM
+
+@{
+    ViewData["Title"] = "Purchase Summary Report";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/Content/reports.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<div class="report-container">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">
+                <i class="fas fa-file-invoice-dollar me-2"></i>Purchase Summary Report
+            </h3>
+        </div>
+        <div class="card-body">
+            <!-- Report Filters -->
+            <form method="post" class="mb-4">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label asp-for="StartDate" class="form-label">Start Date</label>
+                        <input asp-for="StartDate" class="form-control datepicker" />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="EndDate" class="form-label">End Date</label>
+                        <input asp-for="EndDate" class="form-control datepicker" />
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter me-2"></i>Apply Filters
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Summary Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card summary-card">
+                        <div class="card-body text-center">
+                            <h6 class="card-title text-muted">Total Purchases</h6>
+                            <h3 class="card-text text-primary">@Model.TotalPurchases.ToString("C")</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card summary-card">
+                        <div class="card-body text-center">
+                            <h6 class="card-title text-muted">Total Transactions</h6>
+                            <h3 class="card-text text-success">@Model.TotalTransactions</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card summary-card">
+                        <div class="card-body text-center">
+                            <h6 class="card-title text-muted">Average Purchase</h6>
+                            <h3 class="card-text text-info">@Model.AveragePurchase.ToString("C")</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card summary-card">
+                        <div class="card-body text-center">
+                            <h6 class="card-title text-muted">Total Tax</h6>
+                            <h3 class="card-text text-warning">@Model.TotalTax.ToString("C")</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Supplier Breakdown -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-truck me-2"></i>Supplier Breakdown
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Supplier</th>
+                                    <th class="text-end">Total Purchases</th>
+                                    <th class="text-end">Transactions</th>
+                                    <th class="text-end">Average</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var supplier in Model.SupplierSummaries)
+                                {
+                                    <tr>
+                                        <td>@supplier.SupplierName</td>
+                                        <td class="text-end">@supplier.TotalAmount.ToString("C")</td>
+                                        <td class="text-end">@supplier.TransactionCount</td>
+                                        <td class="text-end">@((supplier.TotalAmount / (supplier.TransactionCount > 0 ? supplier.TransactionCount : 1))).ToString("C")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart Section -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Purchase Trends
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="purchaseChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Initialize date pickers
+        flatpickr('.datepicker', {
+            dateFormat: "Y-m-d",
+            allowInput: true
+        });
+
+        // Initialize chart
+        const ctx = document.getElementById('purchaseChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(JsonSerializer.Serialize(Model.SupplierSummaries.Select(s => s.SupplierName))),
+                datasets: [{
+                    label: 'Total Purchases',
+                    data: @Html.Raw(JsonSerializer.Serialize(Model.SupplierSummaries.Select(s => s.TotalAmount))),
+                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return '$' + context.raw.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+}

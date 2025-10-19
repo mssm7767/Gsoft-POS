@@ -1,0 +1,58 @@
+﻿@model IEnumerable<GSoftPosNew.Models.Role>
+
+@{
+    ViewData["Title"] = "User Roles";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fa fa-user-shield"></i> User Roles</h5>
+        </div>
+        <div class="card-body">
+            @if (TempData["Message"] != null)
+            {
+                <div class="alert alert-success">@TempData["Message"]</div>
+            }
+
+            <div class="mb-3 text-end">
+                <a asp-action="Create" class="btn btn-success">
+                    <i class="fa fa-plus"></i> Add New Role
+                </a>
+                <a asp-action="AssignPermissions" class="btn btn-primary ms-2">
+                    <i class="fa fa-shield-alt"></i> Assign Permissions
+                </a>
+            </div>
+
+            <table class="table table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:10%;">#</th>
+                        <th>Role Name</th>
+                        <th>Description</th>
+                        <th style="width:20%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model)
+                    {
+                        <tr>
+                            <td>@r.Id</td>
+                            <td>@r.RoleName</td>
+                            <td>@r.Description</td>
+                            <td>
+                                <a asp-action="Edit" asp-route-id="@r.Id" class="btn btn-sm btn-warning">
+                                    <i class="fa fa-edit"></i>
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@r.Id" class="btn btn-sm btn-danger ms-1" onclick="return confirm('Are you sure to delete?');">
+                                    <i class="fa fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

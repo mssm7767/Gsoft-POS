@@ -1,0 +1,126 @@
+﻿@model GSoftPosNew.ViewModels.DailySalesReportVM
+
+<div class="report-container">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4><i class="fas fa-calendar-day me-2"></i>Daily Sales Report</h4>
+        </div>
+        <div class="card-body">
+            <form method="post" class="mb-4">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label asp-for="ReportDate" class="form-label">Date</label>
+                        <input asp-for="ReportDate" class="form-control" type="date" />
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter me-2"></i>Filter
+                        </button>
+                        <a href="@Url.Action("PrintDailySales", new { date = Model.ReportDate })"
+                           class="btn btn-secondary ms-2" target="_blank">
+                            <i class="fas fa-print me-2"></i>Print
+                        </a>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <div class="daily-totals">
+                            <span class="me-3"><strong>Sales:</strong> @Model.TotalSales.ToString("C")</span>
+                            <span class="me-3"><strong>Tax:</strong> @Model.TotalTax.ToString("C")</span>
+                            <span><strong>Transactions:</strong> @Model.Sales.Count</span>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Time</th>
+                            <th>Invoice #</th>
+                            <th>Cashier</th>
+                            <th class="text-end">Subtotal</th>
+                            <th class="text-end">Tax</th>
+                            <th class="text-end">Discount</th>
+                            <th class="text-end">Total</th>
+                            <th>Payment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var sale in Model.Sales)
+                        {
+                            <tr>
+                                <td>@sale.SaleDate.ToString("h:mm tt")</td>
+                                <td>@sale.InvoiceNumber</td>
+                                <td>@sale.CashierId</td>
+                                <td class="text-end">@sale.SubTotal.ToString("C")</td>
+                                <td class="text-end">@sale.Tax.ToString("C")</td>
+                                <td class="text-end">@sale.Discount.ToString("C")</td>
+                                <td class="text-end">@sale.Total.ToString("C")</td>
+                                <td>@sale.Payment.PaymentMethod</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="table-active">
+                        <tr>
+                            <th colspan="3" class="text-end">Totals:</th>
+                            <th class="text-end">@Model.Sales.Sum(s => s.SubTotal).ToString("C")</th>
+                            <th class="text-end">@Model.Sales.Sum(s => s.Tax).ToString("C")</th>
+                            <th class="text-end">@Model.Sales.Sum(s => s.Discount).ToString("C")</th>
+                            <th class="text-end">@Model.Sales.Sum(s => s.Total).ToString("C")</th>
+                            <th></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="hourly-sales mt-4">
+                <h5 class="mb-3">Hourly Sales Breakdown</h5>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="hourlySalesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Hourly Sales Chart
+        const hourlyCtx = document.getElementById('hourlySalesChart').getContext('2d');
+        const hourlySales = @Json.Serialize(Enumerable.Range(9, 10).Select(h =>
+                    Model.Sales.Where(s => s.SaleDate.Hour == h).Sum(s => s.Total)));
+
+    new Chart(hourlyCtx, {
+        type: 'bar',
+        data: {
+            labels: ['9 AM', '10 AM', '11 AM', '12 PM', '1 PM', '2 PM', '3 PM', '4 PM', '5 PM', '6 PM'],
+            datasets: [{
+                label: 'Sales by Hour',
+                data: hourlySales,
+                backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Amount ($)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Time of Day'
+                    }
+                }
+            }
+        }
+    });
+</script>
+}

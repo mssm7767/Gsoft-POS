@@ -1,0 +1,131 @@
+﻿/* Purchase container */
+.purchase-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Cards */
+.purchase-top-card, .purchase-bottom-card {
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+    .purchase-top-card .card-body {
+        padding: 20px;
+    }
+
+/* Search box */
+.search-input-group {
+    position: relative;
+}
+
+.search-results-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    z-index: 1000;
+    display: none;
+}
+
+.search-results-list {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.search-result-item {
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+    .search-result-item:hover {
+        background-color: #f8f9fa;
+    }
+
+.search-item-code {
+    font-weight: bold;
+    width: 80px;
+}
+
+.search-item-name {
+    flex-grow: 1;
+    padding: 0 10px;
+}
+
+.search-item-price {
+    color: #28a745;
+    font-weight: bold;
+    width: 60px;
+    text-align: right;
+}
+
+/* Table styles */
+.purchase-table {
+    font-size: 0.9rem;
+}
+
+    .purchase-table th {
+        white-space: nowrap;
+        background-color: #f8f9fa;
+    }
+
+    .purchase-table td {
+        vertical-align: middle;
+    }
+
+    .purchase-table .form-control-sm {
+        padding: 0.25rem 0.5rem;
+        height: calc(1.5em + 0.5rem + 2px);
+    }
+
+/* Summary section */
+.purchase-summary {
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+    .purchase-summary strong {
+        color: #28a745;
+        font-size: 1.1em;
+    }
+
+/* Add product link */
+.add-product-link {
+    color: #0d6efd;
+    text-decoration: none;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+    .add-product-link:hover {
+        text-decoration: underline;
+    }
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .purchase-container {
+        padding: 10px;
+    }
+
+    .search-results-dropdown {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        max-height: 50vh;
+        overflow-y: auto;
+    }
+}

@@ -1,0 +1,246 @@
+﻿@model GSoftPosNew.Models.User
+@using System.Collections.Generic
+
+@{
+    ViewData["Title"] = "Add New User";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var userList = ViewBag.UserList as List<GSoftPosNew.Models.User>;
+}
+
+@if (TempData["Success"] != null)
+{
+    <div id="customNotification" class="alert alert-success sms-message show">
+        @TempData["Success"]
+    </div>
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-9 col-md-11">
+
+            <!-- Add User Card -->
+            <div class="card shadow-lg border-0 rounded-4 mb-5">
+                <div class="card-header text-white d-flex align-items-center rounded-top-4"
+                     style="background: linear-gradient(93deg, #00244d 65%, #f46b45 100%);">
+                    <i class="fa fa-user-plus fa-lg me-2"></i>
+                    <h4 class="mb-0 flex-grow-1">Add New User</h4>
+                    <span class="badge bg-light text-dark ms-2 border">
+                        <i class="fa fa-key me-1 text-warning"></i>
+                        Role shortcuts: <span class="ms-1">Admin / Manager / Cashier / Sales / SS</span>
+                    </span>
+                </div>
+
+                <div class="card-body bg-light rounded-bottom-4">
+                    @using (Html.BeginForm("Create", "User", FormMethod.Post, new { enctype = "multipart/form-data" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        <div class="row g-4">
+                            <!-- Full Name -->
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="fa fa-user text-primary me-1"></i>Full Name
+                                </label>
+                                @Html.TextBoxFor(m => m.FullName, new { @class = "form-control", autocomplete = "off" })
+                                @Html.ValidationMessageFor(m => m.FullName, "", new { @class = "text-danger" })
+                            </div>
+
+                            <!-- Username -->
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="fa fa-user-circle text-success me-1"></i>Username
+                                </label>
+                                @Html.TextBoxFor(m => m.Username, new { @class = "form-control", autocomplete = "off" })
+                                @Html.ValidationMessageFor(m => m.Username, "", new { @class = "text-danger" })
+                            </div>
+
+                            <!-- Password -->
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="fa fa-lock text-warning me-1"></i>Password
+                                </label>
+                                @Html.PasswordFor(m => m.Password, new { @class = "form-control", autocomplete = "off" })
+                                @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+                            </div>
+
+                            <!-- Contact Number -->
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="fa fa-phone text-info me-1"></i>Contact Number
+                                </label>
+                                @Html.TextBoxFor(m => m.ContactNumber, new { @class = "form-control", autocomplete = "off" })
+                            </div>
+
+                            <!-- Email -->
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="fa fa-envelope text-secondary me-1"></i>Email
+                                </label>
+                                @Html.TextBoxFor(m => m.Email, new { @class = "form-control", type = "email", autocomplete = "off" })
+                            </div>
+
+                            <!-- Role -->
+                            <div class="col-md-6">
+                                <label class="form-label d-flex align-items-center">
+                                    <i class="fa fa-user-shield text-primary me-1"></i>
+                                    Role
+                                    <span class="ms-2 d-flex gap-2">
+                                        @{
+                                            var roleShortcuts = new[] { "Admin", "Manager", "Cashier", "Sales", "SS" };
+                                            foreach (var role in roleShortcuts)
+                                            {
+                                                <span class="badge bg-warning text-dark" style="cursor:pointer;"
+                                                      onclick="document.getElementById('RoleText').value='@role'">@role</span>
+                                            }
+                                        }
+                                    </span>
+                                </label>
+                                @Html.TextBoxFor(m => m.Role, new { @class = "form-control", id = "RoleText", autocomplete = "off", placeholder = "Type or pick a role" })
+                            </div>
+
+                            <!-- Address -->
+                            <div class="col-12">
+                                <label class="form-label">
+                                    <i class="fa fa-map-marker-alt text-danger me-1"></i>Address
+                                </label>
+                                @Html.TextAreaFor(m => m.Address, new { @class = "form-control", rows = 2, autocomplete = "off" })
+                            </div>
+
+                            <!-- Profile Picture -->
+                            <div class="col-12">
+                                <label class="form-label">
+                                    <i class="fa fa-image me-1"></i>Profile Picture
+                                </label>
+                                <input type="file" name="ProfilePic" class="form-control" accept=".jpg,.jpeg,.png" onchange="previewImage(event)" />
+                                <div class="text-center mt-3">
+                                    <img id="imgPreview" src="~/images/no-image.png" class="img-thumbnail rounded-circle shadow-sm"
+                                         style="width:120px;height:120px;object-fit:cover;" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="mt-4 text-end">
+                            <button type="submit" class="btn btn-success btn-lg rounded-pill me-2 shadow">
+                                <i class="fa fa-save me-1"></i> Save User
+                            </button>
+                            <button type="button" class="btn btn-warning btn-lg rounded-pill me-2 shadow" disabled>
+                                <i class="fa fa-edit me-1"></i> Edit
+                            </button>
+                            <button type="button" class="btn btn-info btn-lg rounded-pill shadow" onclick="window.print();">
+                                <i class="fa fa-print me-1"></i> Print
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Users List -->
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header d-flex align-items-center text-white rounded-top-4"
+                     style="background: linear-gradient(92deg, #4b6cb7 60%, #f7971e 100%);">
+                    <i class="fa fa-list fa-lg me-2"></i>
+                    <span class="fw-bold">All Users</span>
+                </div>
+                <div class="card-body bg-white rounded-bottom-4 p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Username</th>
+                                    <th>Role</th>
+                                    <th>Contact</th>
+                                    <th>Email</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (userList != null && userList.Any())
+                                {
+                                    foreach (var u in userList)
+                                    {
+                                        <tr>
+                                            <td>@u.FullName</td>
+                                            <td>@u.Username</td>
+                                            <td>@u.Role</td>
+                                            <td>@u.ContactNumber</td>
+                                            <td>@u.Email</td>
+                                            <td class="text-end">
+                                                <a asp-action="Edit" asp-route-id="@u.Id" class="btn btn-sm btn-outline-success rounded-pill me-1">
+                                                    <i class="fa fa-edit"></i>
+                                                </a>
+                                                <a asp-action="Delete" asp-route-id="@u.Id" class="btn btn-sm btn-outline-danger rounded-pill">
+                                                    <i class="fa fa-trash"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">No users found.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function previewImage(event) {
+            const reader = new FileReader();
+            reader.onload = function () {
+                document.getElementById('imgPreview').src = reader.result;
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const notification = document.getElementById("customNotification");
+            if (notification) {
+                setTimeout(() => {
+                    notification.classList.add("hide");
+                    setTimeout(() => notification.style.display = 'none', 500);
+                }, 1500);
+            }
+        });
+    </script>
+}
+
+<style>
+    .sms-message {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #28a745;
+        color: white;
+        padding: 15px 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        font-size: 1.25rem;
+        font-weight: 600;
+        z-index: 1050;
+        opacity: 1;
+        transition: opacity 0.5s ease-in-out;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 250px;
+    }
+
+        .sms-message.show {
+            opacity: 1;
+        }
+
+        .sms-message.hide {
+            opacity: 0;
+        }
+</style>
