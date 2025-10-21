@@ -71,6 +71,34 @@ namespace GSoftPosNew.Controllers
 
             return View(items);
         }
+
+        public IActionResult POSTouch()
+        {
+            return View();
+        }
+        
+        public IActionResult POSTouchNew()
+        {
+            var items = _context.Items.ToList();
+            var categories = items.Select(i => i.GenericName).Distinct().ToList();
+            ViewBag.CustomerList = _context.Customers.ToList();
+            ViewBag.CustomerPayments = _context.CustomerPayments.ToList();
+
+            ViewBag.Categories = categories;
+            ViewBag.CashierId = User.Identity?.Name ?? "Unknown";
+
+            var saleInvNo = _context.Sales.OrderByDescending(s => s.Id).Select(s => s.InvoiceNumber).FirstOrDefault();
+
+            ViewBag.InvoiceLastDigit = !string.IsNullOrEmpty(saleInvNo)
+                                            ? int.Parse(saleInvNo[saleInvNo.Length - 1].ToString())
+                                            : 0;
+
+
+            ViewBag.ShopName = _context.ShopSettings.OrderByDescending(s => s.Id).Select(s => s.ShopName).FirstOrDefault();
+
+            return View(items);
+        }
+
         [HttpPost]
         public async Task<IActionResult> SaveSale([FromBody] Sale sale)
         {

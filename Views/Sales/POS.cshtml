@@ -12,19 +12,16 @@
     var shopName = ViewBag.ShopName as string ?? "GSoft POS";
 
     var invoiceNo = ViewBag.InvoiceLastDigit;
-
-    var customerPayments = ViewBag.CustomerPayments as List<CustomerPayment>;
+    var customerPayments = ViewBag.CustomerPayments as List<CustomerPayment> ?? new List<CustomerPayment>();
 }
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
-<!-- Bootstrap 5 JS Bundle (includes Popper) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
 
 <style>
     :root {
-        --brand: #60a5fa; /* sky-400 */
-        --brand-2: #93c5fd; /* sky-300 */
+        --brand: #60a5fa;
+        --brand-2: #93c5fd;
         --ink: #0f172a;
         --muted: #64748b;
         --card: #ffffff;
@@ -39,7 +36,6 @@
         background: var(--bg);
     }
 
-    /* ==== LIGHT HEADER ==== */
     .pos-header {
         background: linear-gradient(135deg,var(--brand) 0%, var(--brand-2) 100%);
         border-radius: 16px;
@@ -85,7 +81,6 @@
             color: #2563eb;
         }
 
-    /* Search group (smaller width) */
     .inv-group {
         max-width: 260px;
     }
@@ -138,7 +133,6 @@
         font-weight: 700;
     }
 
-    /* POS Body */
     .pos-card {
         background: var(--card);
         border-radius: 16px;
@@ -152,7 +146,6 @@
         margin-bottom: 10px;
     }
 
-    /* Barcode input + blinking */
     .barcode-input {
         height: 52px;
         font-size: 1rem;
@@ -168,20 +161,20 @@
         .barcode-input.blinking {
             animation: blink-glow 1.5s infinite;
         }
-    /* NOTE: in Razor views, use @@keyframes */
+
     @@keyframes blink-glow {
         0% {
-            box-shadow: 0 0 0px rgba(37,99,235,0.0);
+            box-shadow: 0 0 0 rgba(37,99,235,0);
             border-color: #e2e8f0;
         }
 
         50% {
-            box-shadow: 0 0 12px rgba(37,99,235,0.45);
+            box-shadow: 0 0 12px rgba(37,99,235,.45);
             border-color: #3b82f6;
         }
 
         100% {
-            box-shadow: 0 0 0px rgba(37,99,235,0.0);
+            box-shadow: 0 0 0 rgba(37,99,235,0);
             border-color: #e2e8f0;
         }
     }
@@ -193,7 +186,7 @@
         top: 0;
     }
 
-    .qty-input, .disc-input, .tax-input {
+    .qty-input {
         width: 76px;
         border-radius: 8px;
         border: 1px solid #e2e8f0;
@@ -201,16 +194,16 @@
         padding: .25rem .4rem;
     }
 
-    .remove-btn {
-        border: none;
-        background: #fee2e2;
+    .delete-row-btn {
+        border: 1px solid #fecaca;
+        background: #fff1f2;
         color: #b91c1c;
-        border-radius: 8px;
+        border-radius: 10px;
         padding: .35rem .55rem;
     }
 
-        .remove-btn:hover {
-            background: #fecaca;
+        .delete-row-btn:hover {
+            background: #ffe4e6;
         }
 
     .customer-chip {
@@ -231,7 +224,6 @@
         font-weight: 700;
     }
 
-    /* ===== Sticky totals (refined, light) ===== */
     .totals-bar {
         position: sticky;
         bottom: 0;
@@ -267,9 +259,7 @@
         font-size: 1.05rem;
         font-weight: 600;
     }
-    /* semi-bold */
 
-    /* Top controls row */
     .top-controls .btn {
         border-radius: 10px;
         font-weight: 600;
@@ -309,7 +299,6 @@
         color: #334155;
     }
 
-    /* Sale/Return radios */
     .sale-return .form-check-input {
         cursor: pointer;
     }
@@ -320,7 +309,6 @@
         margin-right: 8px;
     }
 
-    /* Payment method card */
     .method-pill {
         display: inline-flex;
         align-items: center;
@@ -341,88 +329,8 @@
             background: #e0f2fe;
         }
 
-    /* Payment modal (small window) */
-    .pay-modal-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(15,23,42,.5);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 1050;
-    }
-
-    .pay-modal {
-        width: 420px;
-        max-width: 92vw;
-        background: #fff;
-        border-radius: 16px;
-        box-shadow: 0 20px 50px rgba(2,6,23,.35);
-        padding: 16px;
-        border: 1px solid #e5e7eb;
-    }
-
-        .pay-modal .title {
-            font-weight: 800;
-            color: #0f172a;
-            font-size: 1.1rem;
-        }
-
-        .pay-modal .closex {
-            border: none;
-            background: #f1f5f9;
-            border-radius: 8px;
-            padding: .25rem .5rem;
-        }
-
-        .pay-modal .form-control {
-            height: 44px;
-            border-radius: 10px;
-            border: 1px solid #e2e8f0;
-        }
-
-    .pill-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: .4rem;
-        padding: .35rem .7rem;
-        border-radius: 999px;
-        background: #e0f2fe;
-        border: 1px solid #bae6fd;
-        color: #075985;
-        font-weight: 700;
-    }
-
-    .status-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .status-chip {
-        border-radius: 12px;
-        padding: .45rem .7rem;
-        font-weight: 800;
-        display: inline-flex;
-        align-items: center;
-        gap: .45rem;
-    }
-
-    .status-ok {
-        background: #ecfdf5;
-        color: #065f46;
-        border: 1px solid #a7f3d0;
-    }
-
-    .status-warn {
-        background: #fffbeb;
-        color: #92400e;
-        border: 1px solid #fcd34d;
-    }
-
-    /* ===== Bottom Actions: semi-bold + soft palettes ===== */
     .actions .btn {
-        font-weight: 600; /* semi-bold */
+        font-weight: 600;
         border-radius: 12px;
         padding: .55rem .9rem;
         display: flex;
@@ -430,7 +338,7 @@
         gap: .45rem;
         border: 1px solid transparent;
         position: relative;
-        overflow: visible; /* for halo */
+        overflow: visible;
     }
 
     .actions i {
@@ -438,7 +346,6 @@
         line-height: 1;
     }
 
-    /* Soft color buttons (professional, light) */
     .btn-soft-green {
         background: #ecfdf5;
         color: #065f46;
@@ -499,78 +406,16 @@
             background: #eef2f7;
         }
 
-    /* (still available) older solid button variants used elsewhere (e.g. modal cancel) */
-    .btn-hold {
-        background: #fbbf24;
-        border: none;
-        color: #111827;
-    }
-
-        .btn-hold:hover {
-            background: #f59e0b;
-        }
-
-    .btn-print {
-        background: #475569;
-        border: none;
-        color: #fff;
-    }
-
-        .btn-print:hover {
-            background: #334155;
-        }
-
-    .btn-save {
-        background: #3b82f6;
-        border: none;
-        color: #fff;
-    }
-
-        .btn-save:hover {
-            background: #2563eb;
-        }
-
-    .btn-pay {
-        background: #22c55e;
-        border: none;
-        color: #fff;
-    }
-
-        .btn-pay:hover {
-            background: #16a34a;
-        }
-
-    .btn-newinv {
-        background: #0ea5e9;
-        border: none;
-        color: #fff;
-    }
-
-        .btn-newinv:hover {
-            background: #0284c7;
-        }
-
-    .actions .btn-outline-secondary {
-        background: #f8fafc;
-        border: 1px solid #cbd5e1;
-        color: #334155;
-    }
-
-        .actions .btn-outline-secondary:hover {
-            background: #eef2f7;
-        }
-
-    /* ===== Button halo underline (subtle, professional) ===== */
     .actions .btn::after {
         content: "";
         position: absolute;
         left: 10%;
         right: 10%;
-        bottom: -6px; /* how far below the button */
-        height: 10px; /* thickness of the glow */
+        bottom: -6px;
+        height: 10px;
         background: radial-gradient(50% 120% at 50% 0%, var(--btn-halo, rgba(2,6,23,.15)) 0%, rgba(0,0,0,0) 70%);
         filter: blur(6px);
-        opacity: .45; /* subtle by default */
+        opacity: .45;
         pointer-events: none;
         transition: opacity .2s ease, transform .2s ease;
     }
@@ -585,87 +430,67 @@
         transform: translateY(0);
     }
 
-    /* per-button halo colors (match soft palettes) */
     .btn-soft-green {
         --btn-halo: rgba(16,185,129,.60);
     }
-    /* emerald */
+
     .btn-soft-blue {
         --btn-halo: rgba(59,130,246,.55);
     }
-    /* blue */
+
     .btn-soft-sky {
         --btn-halo: rgba(14,165,233,.55);
     }
-    /* sky */
+
     .btn-soft-slate {
         --btn-halo: rgba(51,65,85,.40);
     }
-    /* slate */
+
     .btn-soft-amber {
         --btn-halo: rgba(245,158,11,.55);
     }
-    /* amber */
+
     .btn-soft-gray {
         --btn-halo: rgba(148,163,184,.45);
     }
-    /* gray */
-
-
-    .method-pill {
-        display: inline-block;
-        padding: 6px 12px;
-        border: 1px solid #ccc;
-        border-radius: 20px;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-        .method-pill:hover {
-            background: #f0f0f0;
-        }
-
-        .method-pill.active {
-            background: #83BBFC;
-            color: #fff;
-            border-color: #007bff;
-        }
 
     .suggestion-item {
-        padding: 6px 10px;
+        padding: 8px 12px;
         cursor: pointer;
         display: flex;
-        gap: 3px;
+        gap: 8px;
         align-items: center;
         border-bottom: 1px solid #eee;
-        transition: background 0.2s ease, color 0.2s ease;
+        transition: background .2s,color .2s;
         border-radius: 6px;
-        margin: 2px 2px;
+        margin: 2px 0;
     }
 
-        .suggestion-item:hover,
-        .suggestion-item.active {
-            background-color: #FFEB99;
-            color: #fff;
+        .suggestion-item:hover, .suggestion-item.active {
+            background-color: #FFEB99 !important;
+            color: #333 !important;
         }
 
     .suggestion-code {
         font-weight: 600;
         color: #444;
-        min-width: 60px; /* reduced width */
-        font-size: 16px;
+        min-width: 70px;
+        font-size: 14px;
     }
 
     .suggestion-qty {
         color: #666;
-        font-size: 15px;
-        min-width: 55px; /* reduced width */
+        font-size: 13px;
+        min-width: 60px;
+        background: #f0f0f0;
+        padding: 2px 6px;
+        border-radius: 4px;
     }
 
     .suggestion-name {
         flex: 1;
         color: #222;
-        font-size: 15px;
+        font-size: 14px;
         font-weight: 600;
         white-space: nowrap;
         overflow: hidden;
@@ -673,46 +498,52 @@
     }
 
     .suggestions-list {
-        max-width: 320px; /* control overall width */
+        position: absolute;
+        max-width: 400px;
         width: 100%;
-        background: #DFF2FE;
+        background: #fff;
         border: 1px solid #ddd;
         border-radius: 8px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         margin-top: 4px;
         overflow: hidden;
-        font-family: Arial, sans-serif;
+        z-index: 1000;
+        max-height: 300px;
+        overflow-y: auto;
     }
 
-    /* Fullscreen shell (header + content) */
+    .item-search-box {
+        position: relative;
+    }
+
     #posShell:fullscreen, :-webkit-full-screen #posShell {
         background: var(--bg);
         padding: 8px;
+        width: 100vw;
+        height: 100vh;
     }
 
-    /* RED blink for Return mode */
     @@keyframes blink-glow-red {
         0% {
-            box-shadow: 0 0 0px rgba(239,68,68,0.0);
+            box-shadow: 0 0 0 rgba(239,68,68,0);
             border-color: #e2e8f0;
         }
 
         50% {
-            box-shadow: 0 0 12px rgba(239,68,68,0.45);
+            box-shadow: 0 0 12px rgba(239,68,68,.45);
             border-color: #ef4444;
         }
 
         100% {
-            box-shadow: 0 0 0px rgba(239,68,68,0.0);
+            box-shadow: 0 0 0 rgba(239,68,68,0);
             border-color: #e2e8f0;
         }
     }
 
     body.return-mode .barcode-input.blinking {
-        animation: blink-glow-red 1.5s infinite;
+        animation: blink-glow-red 1.5s infinite !important;
     }
 
-    /* Qty controls – professional buttons */
     .qty-btns {
         display: inline-flex;
         align-items: center;
@@ -743,35 +574,76 @@
             font-size: 1rem;
         }
 
-    .delete-row-btn {
-        border: 1px solid #fecaca;
-        background: #fff1f2;
-        color: #b91c1c;
-        border-radius: 10px;
-        padding: .35rem .55rem;
+    .focus-mode-qty .barcode-input {
+        border-left: 4px solid #22c55e;
     }
 
-        .delete-row-btn:hover {
-            background: #ffe4e6;
-        }
+    .focus-mode-price .barcode-input {
+        border-left: 4px solid #3b82f6;
+    }
 
-    .customer-chip {
-        background: #eff6ff;
-        color: #1d4ed8;
-        border: 1px solid #bfdbfe;
-        padding: .35rem .7rem;
-        border-radius: 999px;
+    .focus-mode-indicator {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: #ef4444;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+
+    .price-highlight {
+        background-color: #fff7ed !important;
+        border: 2px solid #f59e0b !important;
+        border-radius: 6px;
+        transition: all .3s;
+    }
+
+    .qty-highlight {
+        background-color: #f0fdf4 !important;
+        border: 2px solid #22c55e !important;
+        border-radius: 6px;
+        transition: all .3s;
+    }
+
+    .focus-mode-text {
         font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 4px;
     }
 
-    .balance-badge {
-        background: #ecfdf5;
-        color: #065f46;
-        border: 1px solid #a7f3d0;
-        border-radius: 10px;
-        padding: .3rem .6rem;
-        font-weight: 700;
+    .focus-mode-qty .focus-mode-text {
+        background: #22c55e;
+        color: #fff;
     }
+
+    .focus-mode-price .focus-mode-text {
+        background: #3b82f6;
+        color: #fff;
+    }
+
+    /* price cell editable look */
+    .editable-price {
+        background: #fff7ed !important;
+        border: 2px solid #f59e0b !important;
+        border-radius: 6px;
+        padding: 4px 8px;
+        font-weight: 600;
+        cursor: text;
+        outline: none;
+    }
+
+        .editable-price:focus {
+            background: #fff !important;
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 2px rgba(59,130,246,.25);
+        }
 </style>
 
 <div id="posShell">
@@ -794,7 +666,7 @@
                 </span>
             </div>
 
-            <!-- CENTER: Shop -->
+            <!-- CENTER -->
             <div class="text-center flex-grow-1 d-none d-md-block">
                 <span class="brand-chip"><i class="bi bi-shop"></i>@shopName</span>
             </div>
@@ -803,8 +675,6 @@
             <div class="d-flex align-items-center gap-2">
                 <span class="chip"><i class="bi bi-person-badge"></i> <span id="chipCashier">@cashierId</span></span>
                 <span class="chip"><i class="bi bi-calendar3-event"></i> <span id="liveClock">—</span></span>
-
-                <!-- Fullscreen Toggle Button -->
                 <button id="btnFullscreen" class="icon-btn" title="Expand (Alt+Enter)">
                     <i class="bi bi-arrows-fullscreen"></i>
                 </button>
@@ -816,8 +686,6 @@
         <div class="row g-4">
             <!-- LEFT -->
             <div class="col-lg-8">
-
-                <!-- Top controls: Items List + Sale/Return -->
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 top-controls mb-2">
                     <button id="btnItemsList" class="btn btn-items" title="Open items list (Alt+I)">
                         <i class="bi bi-list-ul me-1"></i> Items List <span class="kbd">Alt+I</span>
@@ -834,25 +702,23 @@
                         </div>
                         <span class="text-muted small">(Shortcuts: <span class="kbd">Alt+S</span>/<span class="kbd">Alt+R</span>)</span>
                     </div>
-
                 </div>
 
                 <!-- Barcode line -->
                 <div class="pos-card p-3 mb-3">
                     <div class="d-flex align-items-center gap-2">
                         <input id="itemSearchInput" class="form-control barcode-input blinking"
-                               placeholder="Focus here and scan… (Alt + B)" onkeyup="showItemSuggestions(this.value)" />
+                               placeholder="Focus here and scan… (Alt + B)"
+                               onkeyup="showItemSuggestions(this.value)"
+                               onfocus="showItemSuggestions(this.value)" />
                         <a asp-action="Add" asp-controller="Item" id="btnNewItem" class="btn btn-new" title="Add new item (Alt+N)">
                             <i class="bi bi-plus-lg"></i> New Item <span class="kbd">Alt+N</span>
                         </a>
-
                     </div>
-                    <div class="item-search-box">
-
-                        <div id="itemSuggestions" class="suggestions-list"></div>
-                    </div>
+                    <div class="item-search-box"><div id="itemSuggestions" class="suggestions-list" style="display:none;"></div></div>
                     <div class="small text-muted mt-2">
-                        Tip: <span class="kbd">Enter</span> will add by barcode or name. Use <span class="kbd">Alt+B</span> to focus barcode.
+                        Scanner se item auto-add hota hai. Keyboard se type → suggestion → <span class="kbd">Enter</span>.
+                        <span class="kbd">F3</span> toggles focus (Qty/Price) | Current: <span id="currentFocusMode" class="focus-mode-text">Quantity</span>
                     </div>
                 </div>
 
@@ -867,7 +733,6 @@
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    @* <th>Item Code</th> *@
                                     <th>Item Name</th>
                                     <th>Price</th>
                                     <th>Qty</th>
@@ -879,7 +744,7 @@
                             </thead>
                             <tbody>
                                 <tr id="noDataRow">
-                                    <td colspan="9" class="text-center text-muted py-4"><i class="bi bi-bag-x fs-4 d-block mb-2"></i>No items added yet</td>
+                                    <td colspan="8" class="text-center text-muted py-4"><i class="bi bi-bag-x fs-4 d-block mb-2"></i>No items added yet</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -887,7 +752,7 @@
                 </div>
             </div>
 
-            <!-- RIGHT: Customer + Payment Method + Bill Summary -->
+            <!-- RIGHT -->
             <div class="col-lg-4">
                 <!-- CUSTOMER -->
                 <div class="pos-card p-3 mb-3">
@@ -902,32 +767,27 @@
                         <strong>Walk-in Customer</strong>
                     </div>
                     <div id="customerBlock" style="display:none;">
-
                         <div class="input-group mb-2">
                             <select id="customerDropdown" class="form-control" onchange="setSelectedCustomer(this)">
                                 <option value="">-- Select Customer --</option>
                                 @foreach (var cust in ViewBag.CustomerList)
                                 {
-                                    <option value="@cust.Id" data-id="@cust.Id">
-                                        @cust.CustomerName
-                                    </option>
+                                    <option value="@cust.Id" data-id="@cust.Id">@cust.CustomerName</option>
                                 }
                             </select>
-
-                            <!-- Hidden field OUTSIDE select -->
                             <input name="CustomerId" type="hidden" id="selectedCustomerId" />
-                            <a class="btn btn-outline-primary" href="/Customer/Create"><i class="bi bi-plus-lg"></i></a>
+                            <a class="btn btn-outline-primary" href="/Customer/Create" title="Add New Customer">
+                                <i class="bi bi-plus-lg"></i>
+                            </a>
                         </div>
                         <div class="d-flex justify-content-between mt-2" id="selectedCustomerBlock" style="display:none;">
                             <div class="text-muted">Balance</div>
                             <div class="balance-badge" id="customerBalance"></div>
                         </div>
                     </div>
-
                 </div>
 
                 <!-- PAYMENT METHOD -->
-                <!-- Hidden real select -->
                 <select id="paymentMethod" style="display:none;">
                     <option value="credit">Credit</option>
                     <option value="cash">Cash</option>
@@ -935,8 +795,6 @@
                     <option value="bank">Bank</option>
                     <option value="online">Online</option>
                 </select>
-
-                <!-- Pretty UI -->
                 <div class="pos-card p-3 mb-3">
                     <div class="section-title"><i class="bi bi-cash-coin"></i> Payment Method</div>
                     <div class="d-flex flex-wrap gap-2" id="paymentPills">
@@ -951,17 +809,26 @@
                     </div>
                 </div>
 
-
                 <!-- BILL SUMMARY -->
                 <div class="pos-card p-3">
                     <div class="section-title"><i class="bi bi-cash-stack"></i> Bill Summary</div>
-                    <div class="d-flex justify-content-between py-1"><span class="text-muted">Sub-Total</span><strong class="gpos-total" id="subTotal">0.00</strong></div>
-                    <div class="d-flex justify-content-between py-1"><span class="text-muted">Discount %</span><strong class="invoiceDiscountPercent" id="invoiceDiscountPercent">0</strong></div>
-                    <div class="d-flex justify-content-between py-1"><span class="text-muted">Total Discount</span><strong class="invoiceDiscountAmount" id="invoiceDiscountAmount">0.00</strong></div>
-                    <div class="d-flex justify-content-between py-1"><span class="text-muted">Total Tax</span><strong class="gpos-tax" id="sumTax">0.00</strong></div>
+                    <div class="d-flex justify-content-between py-1"><span class="text-muted">Sub-Total</span><strong class="gpos-total" id="subTotal">₨0.00</strong></div>
+
+                    <!-- Discount controls -->
+                    <div class="d-flex justify-content-between align-items-center py-1">
+                        <span class="text-muted">Discount</span>
+                        <div class="d-flex gap-2 align-items-center">
+                            <input id="invoiceDiscountPercent" type="number" class="qty-input" placeholder="%" min="0" max="100" step="0.01" value="0" title="Discount Percentage (Ctrl+D)" />
+                            <span class="text-muted">%</span>
+                            <input id="invoiceDiscountAmount" type="number" class="qty-input" placeholder="Less (PKR)" min="0" step="0.01" value="0" title="Discount Less (PKR)" />
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between py-1"><span class="text-muted">Total Discount</span><strong id="invoiceDiscountComputed">₨0.00</strong></div>
+                    <div class="d-flex justify-content-between py-1"><span class="text-muted">Total Tax</span><strong class="gpos-tax" id="sumTax">₨0.00</strong></div>
                     <hr class="my-2">
-                    <div class="d-flex justify-content-between py-1 fs-5"><span>Grand Total</span><span class="fw-bold gpos-grand-value" id="grandTotal">0.00</span></div>
-                    <div class="small text-muted mt-1">Pay (F4) par Amount Received window open hogi.</div>
+                    <div class="d-flex justify-content-between py-1 fs-5"><span>Grand Total</span><span class="fw-bold gpos-grand-value" id="grandTotal">₨0.00</span></div>
+                    <div class="small text-muted mt-1">Shortcuts: <span class="kbd">Ctrl + D</span> discount focus • <span class="kbd">F4</span>/<span class="kbd">F5</span> to pay.</div>
                 </div>
             </div>
         </div>
@@ -978,19 +845,15 @@
                     <button class="btn btn-soft-green saveprint-btn" id="saveprint-btn" title="F4">
                         <i class="bi bi-receipt"></i> Save & Print (F4)
                     </button>
-
                     <button class="btn btn-soft-blue saveonly-btn" id="saveonly-btn" title="F5">
                         <i class="bi bi-floppy"></i> Save (F5)
                     </button>
-
                     <button class="btn btn-soft-sky new-btn" id="new-btn" title="F12" onclick="window.location.href='/sales/pos'">
                         <i class="bi bi-file-earmark-plus"></i> New Invoice (F12)
                     </button>
-
                     <button class="btn btn-soft-slate print-btn" id="print-btn" title="F8">
                         <i class="bi bi-printer"></i> Print (F8)
                     </button>
-
                     <div class="btn-group">
                         <button class="btn btn-soft-amber" id="btnHold" title="Hold current">
                             <i class="bi bi-pause-circle"></i> Hold
@@ -1004,1205 +867,697 @@
                                 <li><a class="dropdown-item text-danger" href="#" id="btnRemoveHeld">Remove</a></li>
                             </ul>
                         </div>
-
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
 
+    <!-- Payment Modal -->
+    <div id="paymentModalOverlay" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); align-items:center; justify-content:center; z-index:9999;">
+        <div class="payment-modal" style="background:#fff; border-radius:16px; box-shadow:0 30px 80px rgba(0,0,0,.3); width:520px; max-width:92vw; max-height:96vh; overflow-y:auto; border:1px solid #e5e7eb;">
+            <div class="d-flex justify-content-between align-items-center p-3 border-bottom" style="background:linear-gradient(180deg,#ffffff,#f9fafb); border-radius:16px 16px 0 0;">
+                <div class="fw-bold" style="display:flex; gap:.6rem; align-items:center;"><i class="bi bi-wallet2" style="color:#f59e0b;"></i> Take Payment</div>
+                <button class="btn btn-soft-slate" onclick="closePaymentModal()" title="Close (Esc)"><i class="bi bi-x-lg"></i></button>
+            </div>
 
-                <!-- Payment Modal -->
-                <div id="tenderModal"
-                     style="position:fixed;
-                        top:50%;
-                        left:50%;
-                        transform:translate(-50%, -50%);
-                        display:none;
-                        padding:1rem;
-                        width:320px;"
-                     aria-hidden="true">
-                    <div tenderModal class="pay-modal" role="dialog" aria-modal="true" aria-labelledby="payTitle">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <div class="title" id="payTitle"><i class="bi bi-wallet2"></i> Take Payment</div>
-                            @* <button class="closex" id="btnPayClose" title="Close (Esc)"><i class="bi bi-x-lg"></i></button> *@
-                        </div>
+            <div class="p-3">
+                <div class="rowline d-flex justify-content-between align-items-center p-2 mb-2 border rounded">
+                    <div class="l d-flex align-items-center gap-2"><i class="bi bi-credit-card-2-front"></i><span>Method</span></div>
+                    <div class="r" id="modalMethod"><i class="bi bi-cash"></i> Cash</div>
+                </div>
 
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-muted">Method</span>
-                            <span id="modalMethod" class="pill-badge"><i class="bi bi-cash"></i> Cash</span>
-                        </div>
+                <div class="rowline d-flex justify-content-between align-items-center p-2 mb-2 border rounded">
+                    <div class="l d-flex align-items-center gap-2"><i class="bi bi-cash-stack"></i><span>Grand Total</span></div>
+                    <div class="r" id="tenderGrandTotal">0.00</div>
+                </div>
+                <div class="rowline d-flex justify-content-between align-items-center p-2 mb-2 border rounded" id="rowDiscount" style="display:none;">
+                    <div class="l d-flex align-items-center gap-2"><i class="bi bi-patch-minus"></i><span>Discount</span></div>
+                    <div class="r" id="tenderDiscount">0.00</div>
+                </div>
+                <div class="rowline d-flex justify-content-between align-items-center p-2 mb-3 border rounded" id="rowTax" style="display:none;">
+                    <div class="l d-flex align-items-center gap-2"><i class="bi bi-receipt"></i><span>Tax</span></div>
+                    <div class="r" id="tenderTax">0.00</div>
+                </div>
 
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-muted">Grand Total</span>
-                            <strong id="tenderGrandTotal">0.00</strong>
-                        </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted"><i class="bi bi-pencil-square"></i> Enter Payment Amount</label>
+                    <input id="tenderInput" type="number" class="form-control" placeholder="Amount" min="0" step="0.01" />
+                </div>
 
-                        <div class="mb-2">
-                            <label class="form-label text-muted">Enter Payment Amount</label>
-                            <input id="tenderInput" type="number" class="form-control" placeholder="Amount" min="0" step="0.01" />
-                        </div>
+                <div class="rowline d-flex justify-content-between align-items-center p-2 mb-2 border rounded">
+                    <div class="l d-flex align-items-center gap-2"><i class="bi bi-hourglass-split"></i><span>Remaining Due</span></div>
+                    <div class="r" id="modalRemaining">0.00</div>
+                </div>
+                <div class="rowline d-flex justify-content-between align-items-center p-2 mb-3 border rounded">
+                    <div class="l d-flex align-items-center gap-2"><i class="bi bi-arrow-repeat"></i><span>Change</span></div>
+                    <div class="r" id="tenderChangeText">0.00</div>
+                </div>
 
-                        <div class="status-row mb-2">
-                            <span class="text-muted">Remaining Due</span>
-                            <span id="modalRemainingChip" class="status-chip status-warn">
-                                <i class="bi bi-exclamation-triangle"></i> <span id="modalRemaining">0.00</span>
-                            </span>
-                        </div>
-                        <div class="status-row mb-3">
-                            <span class="text-muted">Change</span>
-                            <span id="modalChangeChip" class="status-chip status-ok">
-                                <i class="bi bi-cash-stack"></i> <span id="tenderChangeText">0.00</span>
-                            </span>
-                        </div>
-
-                        <div class="d-flex justify-content-end gap-2">
-                            <button class="btn btn-hold" id="tenderCancelBtn"><i class="bi bi-x-circle"></i> Cancel</button>
-                            <button class="btn btn-pay" id="tenderOkBtn">
-                                <i class="bi bi-check2-circle"></i> <span id="btnPayConfirm">Confirm & Print (F4)</span>
-                            </button>
-                        </div>
-                    </div>
+                <div class="d-flex justify-content-end gap-2">
+                    <button class="btn btn-soft-gray" onclick="closePaymentModal()"><i class="bi bi-x-circle"></i> Cancel</button>
+                    <button class="btn btn-soft-green" id="tenderOkBtn"><i class="bi bi-check2-circle"></i> <span id="btnPayConfirm">Confirm & Print (F4)</span></button>
                 </div>
             </div>
         </div>
     </div>
 </div> <!-- /#posShell -->
 
-
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    /* =========================
+       GLOBAL STATE / HELPERS
+    ========================= */
+    let filtered = []; let selectedIdx = -1;
+    let focusMode = 'qty'; // 'qty' or 'price'
+    let currentEditingPrice = null;
+    const items = @Html.Raw(itemsJson);
+    const TAX_PERCENT = 0;
+    let invoiceCounter = @((invoiceNo ?? 0));
+    let pendingAction = null;
 
-        // Helpers
-        function saveToLocalStorage(key, data) {
-            localStorage.setItem(key, JSON.stringify(data));
+    function toast(msg,icon='info',ms=1500){
+        Swal.fire({ toast:true, icon, title:msg, position:'top-end', showConfirmButton:false, timer:ms, timerProgressBar:true });
+    }
+    function selectAllContent(el){
+        const range = document.createRange(); range.selectNodeContents(el);
+        const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+    }
+    function highlightField(element, type){
+        document.querySelectorAll('.price-highlight,.qty-highlight').forEach(el=>el.classList.remove('price-highlight','qty-highlight'));
+        if(type==='price') element.classList.add('price-highlight'); else element.classList.add('qty-highlight');
+        setTimeout(()=>element.classList.remove('price-highlight','qty-highlight'), 1500);
+    }
+
+    /* =========================
+       FOCUS MODE CORE
+    ========================= */
+    function initializeFocusMode(){
+        document.body.classList.add('focus-mode-qty');
+        updateFocusModeIndicator();
+    }
+    function updateFocusModeIndicator(){
+        let indicator = document.getElementById('focusModeIndicator');
+        if(!indicator){
+            indicator = document.createElement('div');
+            indicator.id='focusModeIndicator'; indicator.className='focus-mode-indicator';
+            const parent = document.getElementById('itemSearchInput').parentNode;
+            parent.style.position='relative'; parent.appendChild(indicator);
         }
-
-        function getFromLocalStorage(key) {
-            const data = localStorage.getItem(key);
-            return data ? JSON.parse(data) : null;
+        indicator.textContent = (focusMode==='qty'?'Q':'P');
+        indicator.style.background = (focusMode==='qty'?'#22c55e':'#3b82f6');
+    }
+    function focusLastPriceCell(){
+        const lastRow = document.querySelector('#salesTable tbody tr:last-child');
+        if(!lastRow || lastRow.id==='noDataRow') return;
+        const priceCell = lastRow.querySelector('.price-cell');
+        if(!priceCell) return;
+        makePriceEditable(priceCell); // makes it editable + styles
+        selectAllContent(priceCell);
+        highlightField(priceCell,'price');
+        priceCell.focus();
+    }
+    function focusLastQtyInput(){
+        const lastRow = document.querySelector('#salesTable tbody tr:last-child');
+        if(!lastRow || lastRow.id==='noDataRow') return;
+        const qty = lastRow.querySelector('.qty-input');
+        if(!qty) return;
+        qty.focus(); qty.select();
+        highlightField(qty,'qty');
+    }
+    function toggleFocusMode(){
+        if(focusMode==='qty'){
+            focusMode='price';
+            document.body.classList.remove('focus-mode-qty');
+            document.body.classList.add('focus-mode-price');
+            document.getElementById('currentFocusMode').textContent='Price';
+            focusLastPriceCell();
+        }else{
+            focusMode='qty';
+            document.body.classList.remove('focus-mode-price');
+            document.body.classList.add('focus-mode-qty');
+            document.getElementById('currentFocusMode').textContent='Quantity';
+            focusLastQtyInput();
         }
+        updateFocusModeIndicator();
+        toast(`Focus Mode: ${focusMode.toUpperCase()}`);
+    }
 
-        function clearLocalStorage(key) {
-            localStorage.removeItem(key);
-        }
+    /* =========================
+       SALE/RETURN VISUAL
+    ========================= */
+    function applySaleTypeVisual(){
+        const isReturn = document.getElementById('rbReturn')?.checked;
+        document.body.classList.toggle('return-mode', !!isReturn);
+        const barcodeInput = document.getElementById('itemSearchInput');
+        if(barcodeInput) barcodeInput.placeholder = isReturn ? "Return item scan karein… (Alt + B)" : "Sale item scan karein… (Alt + B)";
+    }
 
-        // 🟢 HOLD BUTTON
-        document.getElementById("btnHold").addEventListener("click", function () {
-            const items = [];
-            const rows = document.querySelectorAll("#salesTable tbody tr:not(#noDataRow)");
+    /* =========================
+       SUGGESTIONS (keyboard)
+    ========================= */
+    function showItemSuggestions(term){
+        term = (term||'').trim();
+        const listDiv = document.getElementById('itemSuggestions');
+        if(!term){ listDiv.style.display='none'; filtered=[]; selectedIdx=-1; return; }
+        filtered = items.filter(x => (x.ItemCode||'').toLowerCase().includes(term.toLowerCase()) || (x.ItemName||'').toLowerCase().includes(term.toLowerCase()));
+        listDiv.innerHTML = filtered.length ? filtered.map((item,i)=>`
+            <div class="suggestion-item ${i===selectedIdx?'active':''}" data-idx="${i}" onclick="selectItemSuggestion(${i})">
+                <span class="suggestion-code">${item.ItemCode}</span>
+                <span class="suggestion-qty">Qty: ${item.Quantity}</span>
+                <span class="suggestion-name">${item.ItemName}</span>
+            </div>`).join('') : `<div class="suggestion-item"><span class="suggestion-name text-muted">No items found</span></div>`;
+        listDiv.style.display='block'; selectedIdx=-1;
+    }
+    function updateHighlight(){ document.querySelectorAll('#itemSuggestions .suggestion-item').forEach((el,i)=>el.classList.toggle('active', i===selectedIdx)); }
+    function selectItemSuggestion(idx){
+        if(idx<0 || idx>=filtered.length) return;
+        const item = filtered[idx];
+        if(!item.Quantity || item.Quantity<=0){ Swal.fire({icon:'error',title:'Out of Stock',text:`${item.ItemName||'This item'} is out of stock!`}); return; }
+        addToSalesTable(item);
+        document.getElementById('itemSuggestions').style.display='none';
+        const bi=document.getElementById('itemSearchInput'); bi.value=''; bi.focus();
+        if(focusMode==='price') focusLastPriceCell(); else focusLastQtyInput();
+    }
 
-            rows.forEach(row => {
-                const item = {
-                    itemId: row.dataset.itemId,
-                    itemName: row.querySelector("td:nth-child(2)")?.innerText || "",
-                    price: row.querySelector("td:nth-child(3)")?.innerText || "0",
-                    qty: row.querySelector("td:nth-child(4) input")?.value || "0",
-                    discount: row.querySelector("td:nth-child(5) input")?.value || "0",
-                    tax: row.querySelector("td:nth-child(6) input")?.value || "0",
-                    total: row.querySelector("td:nth-child(7)")?.innerText || "0"
-                };
-                items.push(item);
-            });
-
-            // Determine customer type
-            const isRegistered = document.getElementById("customerRadio").checked;
-            const customerType = isRegistered ? "Registered" : "Walk-in";
-            const customerId = isRegistered ? (document.getElementById("selectedCustomerId")?.value || "") : "";
-            const customerName = isRegistered
-                ? document.querySelector("#customerDropdown option:checked")?.text || ""
-                : "Walk-in Customer";
-
-            const heldInvoice = {
-                invoiceNo: document.getElementById("invoiceNoValue")?.innerText || "",
-                saleType: document.querySelector("input[name='SaleType']:checked")?.value || "Sale",
-                customerType: customerType,
-                customerId: customerId,
-                customerName: customerName,
-                paymentMethod: document.querySelector("#paymentMethod")?.value || "credit",
-                items: items,
-                totals: {
-                    subTotal: document.getElementById("subTotal")?.innerText || "0",
-                    discountPercent: document.getElementById("invoiceDiscountPercent")?.innerText || "0",
-                    discountAmount: document.getElementById("invoiceDiscountAmount")?.innerText || "0",
-                    tax: document.getElementById("sumTax")?.innerText || "0",
-                    grandTotal: document.getElementById("grandTotal")?.innerText || "0"
-                }
-            };
-
-            // ✅ Save to local storage
-            saveToLocalStorage("heldInvoice", heldInvoice);
-
-            // ✅ After hold, clear table, fields, and regenerate invoice
-            clearAfterHold();
-        });
-
-        // ✅ Clear fields and reset after Hold
-        function clearAfterHold() {
-            // Clear sales table
-            const tbody = document.querySelector("#salesTable tbody");
-            tbody.innerHTML = `
-                <tr id="noDataRow">
-                    <td colspan="8" class="text-center text-muted">No items added.</td>
-                </tr>
-            `;
-
-            // Reset totals
-            document.getElementById("subTotal").innerText = "0";
-            document.getElementById("invoiceDiscountPercent").innerText = "0";
-            document.getElementById("invoiceDiscountAmount").innerText = "0";
-            document.getElementById("sumTax").innerText = "0";
-            document.getElementById("grandTotal").innerText = "0";
-
-            // Reset customer fields
-            document.getElementById("selectedCustomerId").value = "";
-            const customerDropdown = document.getElementById("customerDropdown");
-            if (customerDropdown) customerDropdown.selectedIndex = 0;
-            document.getElementById("customerRadio").checked = false;
-
-            // Reset payment method
-            const paymentMethod = document.getElementById("paymentMethod");
-            if (paymentMethod) paymentMethod.selectedIndex = 0;
-
-            // Clear all input fields
-            document.querySelectorAll("input[type='text'], input[type='number']").forEach(input => input.value = "");
-
-            // ✅ Generate new invoice number
-            document.getElementById("invoiceNoValue").innerText = generateInvoiceNumber();
-        }
-
-        // 🟢 RETRIEVE BUTTON
-        document.getElementById("btnRetrieve").addEventListener("click", function () {
-            const heldInvoice = getFromLocalStorage("heldInvoice");
-
-            if (!heldInvoice) {
-                Swal.fire({
-                    icon: 'info',
-                    title: 'No Held Invoice Found',
-                    text: 'There is no held invoice to retrieve.',
-                });
-
-                return;
-            }
-
-            // Restore Invoice No
-            document.getElementById("invoiceNoValue").innerText = heldInvoice.invoiceNo;
-
-            // Restore Sale Type
-            document.querySelector(`input[name='SaleType'][value='${heldInvoice.saleType}']`).checked = true;
-
-            // Restore Customer
-            if (heldInvoice.customerType === "Registered") {
-                document.getElementById("customerRadio").checked = true;
-                toggleCustomerType();
-                document.getElementById("customerDropdown").value = heldInvoice.customerId;
-                document.getElementById("selectedCustomerId").value = heldInvoice.customerId;
-            } else {
-                document.getElementById("walkinRadio").checked = true;
-                toggleCustomerType();
-            }
-
-            // Restore Payment Method
-            document.getElementById("paymentMethod").value = heldInvoice.paymentMethod;
-            document.querySelectorAll("#paymentPills .method-pill").forEach(pill => {
-                pill.classList.toggle("active", pill.dataset.value === heldInvoice.paymentMethod);
-            });
-
-            // Restore Items
-            const table = document.getElementById('salesTable').querySelector('tbody');
-
-            if (heldInvoice.items.length > 0) {
-                heldInvoice.items.forEach((item, index) => {
-
-                    // Remove "No items" row if present
-                    const noDataRow = document.getElementById('noDataRow');
-                    if (noDataRow) noDataRow.remove();
-
-
-                    // New row
-                    const row = document.createElement('tr');
-                    row.dataset.itemId = item.itemId;
-
-                    row.innerHTML = `
-                        <td>${index + 1}</td>
-                        <td>${item.itemName}</td>
-                        <td>${item.price}</td>
-                        <td>
-                            <div class="qty-btns">
-                                <button class="qty-btn" onclick="changeQty(this, -1)"><i class="bi bi-dash-lg"></i></button>
-                                <input type="number" class="qty-input" value="1" min="1"
-                                       onchange="qtyInputChanged(this)" data-item='${item.qty}' />
-                                <button class="qty-btn" onclick="changeQty(this, 1)"><i class="bi bi-plus-lg"></i</button>
-                            </div>
-                        </td>
-                        <td>${item.discount}</td>
-                        <td>${item.tax}</td>
-                        <td id="salePrice-${item.ItemCode}">${item.total}</td>
-                        <td>
-                            <button class="delete-row-btn" onclick="deleteRow(this)" title="Delete"><i class="bi bi-trash3"></i></button>
-                        </td>
-                    `;
-
-                    table.appendChild(row);
-                });
-            } else {
-                tbody.innerHTML = `
-                    <tr id="noDataRow">
-                        <td colspan="9" class="text-center text-muted py-4">
-                            <i class="bi bi-bag-x fs-4 d-block mb-2"></i>No items added yet
-                        </td>
-                    </tr>
-                `;
-            }
-
-            // Restore Totals
-            document.getElementById("subTotal").innerText = heldInvoice.totals.subTotal;
-            document.getElementById("invoiceDiscountPercent").innerText = heldInvoice.totals.discountPercent;
-            document.getElementById("invoiceDiscountAmount").innerText = heldInvoice.totals.discountAmount;
-            document.getElementById("sumTax").innerText = heldInvoice.totals.tax;
-            document.getElementById("grandTotal").innerText = heldInvoice.totals.grandTotal;
-
-            localStorage.removeItem("heldInvoice");
-        });
-
-        document.getElementById("btnRemoveHeld").addEventListener("click", function (e) {
-            e.preventDefault();
-
-            const heldInvoice = getFromLocalStorage("heldInvoice");
-            if (!heldInvoice) {
-                Swal.fire({
-                    icon: 'info',
-                    title: 'No Held Invoice Found',
-                    text: 'There is no held invoice to retrieve.',
-                });
-
-                return;
-            }
-
-            localStorage.removeItem("heldInvoice");
-            Swal.fire({
-                icon: 'success',
-                title: 'Removed',
-                text: 'Held invoice has been removed successfully.',
-            });
-        });
-    });
-</script>
-
-<script>
-    document.addEventListener("keydown", function (e) {
-        if (e.altKey && e.key.toLowerCase() === "n") {
-            e.preventDefault(); // prevent default browser behavior
-            document.getElementById("btnNewItem").click();
+    /* close suggestions on outside click */
+    document.addEventListener('click', function(e) {
+        const suggestions = document.getElementById('itemSuggestions');
+        const searchInput = document.getElementById('itemSearchInput');
+        if (suggestions && searchInput && !suggestions.contains(e.target) && e.target!==searchInput) {
+            suggestions.style.display='none'; filtered=[]; selectedIdx=-1;
         }
     });
-</script>
-<script>
-     document.querySelectorAll('#paymentPills .method-pill').forEach(pill => {
-       pill.addEventListener('click', () => {
-         // remove active from all
-         document.querySelectorAll('#paymentPills .method-pill')
-           .forEach(p => p.classList.remove('active'));
 
-         // set active to clicked pill
-         pill.classList.add('active');
+    /* =========================
+       PRICE EDIT HELPERS
+    ========================= */
+    function makePriceEditable(priceCell){
+        // only when price mode OR caller explicitly set
+        priceCell.contentEditable = true;
+        priceCell.classList.add('editable-price');
+        currentEditingPrice = priceCell;
+    }
+    function savePrice(priceCell){
+        priceCell.contentEditable = false;
+        priceCell.classList.remove('editable-price');
+        let newPrice = priceCell.textContent.replace('₨','').trim();
+        newPrice = parseFloat(newPrice);
+        if(isNaN(newPrice) || newPrice<0){
+            const original = priceCell.dataset.originalPrice;
+            priceCell.textContent = `₨${parseFloat(original||0).toFixed(2)}`;
+        } else {
+            priceCell.textContent = `₨${newPrice.toFixed(2)}`;
+            updateRowTotal(priceCell.closest('tr'));
+        }
+        currentEditingPrice = null;
+        recalculateTotals();
+    }
 
-         // update hidden select
-         const method = pill.getAttribute('data-value');
-         document.getElementById('paymentMethod').value = method;
+    /* =========================
+       ADD ROW / UPDATE ROW
+    ========================= */
+    function addToSalesTable(item){
+        const table = document.getElementById('salesTable').querySelector('tbody');
+        document.getElementById('noDataRow')?.remove();
 
-       });
-     });
-
-     const items = @Html.Raw(itemsJson);
-     const TAX_PERCENT = 0; // You can make this dynamic later
-     let invoiceCounter = @invoiceNo;
-     function generateInvoiceNumber() {
-         const date = new Date().toISOString().slice(0,10).replace(/-/g, '');
-         invoiceCounter++;
-         // pad number with leading zeros (4 digits: 0001, 0002, ...)
-         const counterStr = String(invoiceCounter).padStart(4, '0');
-         return `INV-${date}-${counterStr}`;
-     }
-     document.getElementById('invoiceNoValue').innerText = generateInvoiceNumber();
-
-    function getSelectedSaleType() {
-         let selected = document.querySelector('input[name="SaleType"]:checked');
-         if (selected) {
-             return selected.value;
-         }
-         return null;
-     }
-
-     // --- LIVE CLOCK ---
-         function updateLiveClock() {
-                     const now = new Date();
-                     const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
-                     const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                     document.getElementById('liveClock').innerText = dateStr + " | " + timeStr;
-                 }
-         setInterval(updateLiveClock, 1000); updateLiveClock();
-
-         document.addEventListener('DOMContentLoaded', () => {
-
-                          // ✅ Show modal for Save actions
-                     document.querySelector('.saveprint-btn')
-                           .addEventListener('click', (e) => openTenderModal(e, handleSavePrint));
-
-                     document.querySelector('.saveonly-btn')
-                       .addEventListener('click', (e) => openTenderModal(e, handleSaveOnly));
-
-                     // 🚫 Skip modal for Print & New
-                     document.querySelector('.print-btn')
-                        .addEventListener('click', (e) => openTenderModal(e, handleSavePrint));
-
-                     document.querySelector('.new-btn')
-
-                     // ✅ Modal buttons
-                     document.getElementById('tenderOkBtn').addEventListener('click', handleTenderOk);
-                     document.getElementById('tenderCancelBtn').addEventListener('click', closeTenderModal);
-
-                   // 2. Keyboard shortcuts
-                   document.addEventListener('keydown', handleGlobalShortcuts);
-
-                   // 3. Discount fields listener
-                   document.getElementById('invoiceDiscountPercent').addEventListener('input', recalculateTotals);
-                   document.getElementById('invoiceDiscountAmount').addEventListener('input', recalculateTotals);
-
-                   // 4. Tender input listener for change calculation
-                   document.getElementById('tenderInput').addEventListener('input', updateChange);
-
-                   // Initial total calculation (in case form was preloaded differently)
-                   recalculateTotals();
-             });
-         async function handleSavePrint(tenderedAmount = null) {
-             const grandTotal = parseFloat(document.querySelector('.gpos-grand-value')?.textContent.replace(/[₨,]/g, '') || 0);
-
-             // ✅ Fix: Parse properly
-                 let cust = parseInt(document.getElementById("selectedCustomerId")?.value) || 0;
-                     let tender = parseInt(document.getElementById("tenderInput")?.value) || 0;
-
-
-
-             let saleData = {
-                 InvoiceNumber: document.getElementById('invoiceNoValue').textContent,
-                 SubTotal: parseFloat(document.querySelector('.gpos-total')?.textContent.replace(/[₨,]/g, '') || 0),
-                 Tax: parseFloat(document.querySelector('.gpos-tax')?.textContent.replace(/[₨,]/g, '') || 0),
-                 Discount: parseFloat(document.getElementById('invoiceDiscountAmount')?.value || 0),
-                  SaleType: getSelectedSaleType(),
-                 Total: grandTotal,
-                     custId: cust,   // ✅ Always correct now
-
-                     tender_amount: tender,
-                 Payment: {
-                     Amount: tenderedAmount ?? grandTotal,
-                     PaymentMethod: document.getElementById('paymentMethod')?.value,
-                     Change: tenderedAmount ? (tenderedAmount - grandTotal) : 0,
-                 },
-                 SaleItems: getSaleItemsFromTable()
-             };
-
-            // 🧾 Check if SaleItems is empty or null
-            if (!saleData.SaleItems || saleData.SaleItems.length === 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'No Items Selected',
-                    text: 'Please select at least one item before proceeding!',
-                    confirmButtonText: 'OK',
-                    confirmButtonColor: '#3085d6',
-                    background: '#fff',
-                    color: '#333',
-                    backdrop: `
-                        rgba(0,0,0,0.4)
-                        left top
-                        no-repeat
-                    `
-                });
-                return; // 🚫 Stop execution here
+        // if already exists → increment qty
+        const existingRow = table.querySelector(`tr[data-item-id="${item.Id}"]`);
+        if(existingRow){
+            const qtyInput = existingRow.querySelector(".qty-input");
+            if(focusMode==='qty'){
+                qtyInput.value = (parseInt(qtyInput.value)||0) + 1;
+                qtyInput.focus(); qtyInput.select(); highlightField(qtyInput,'qty');
+            } else {
+                const priceCell = existingRow.querySelector(".price-cell");
+                makePriceEditable(priceCell); selectAllContent(priceCell); highlightField(priceCell,'price');
             }
+            qtyInputChanged(qtyInput); recalculateTotals(); return;
+        }
 
-             saleData = cleanSaleData(saleData);
+        // new row
+        const row = document.createElement('tr');
+        row.dataset.itemId = item.Id;
+        const originalPrice = item.PackSize ? item.UnitPrice : item.SalePrice;
 
-             try {
-                     const response = await fetch('/Sales/SaveSale', {
-                     method: 'POST',
-                     headers: { 'Content-Type': 'application/json' },
-                     body: JSON.stringify(saleData)
-                 });
+        row.innerHTML = `
+            <td>${table.rows.length + 1}</td>
+            <td>${item.ItemName}</td>
+            <td>
+                <span tabindex="0" class="price-cell" data-original-price="${Number(originalPrice).toFixed(2)}">₨${Number(originalPrice).toFixed(2)}</span>
+            </td>
+            <td>
+                <div class="qty-btns">
+                    <button class="qty-btn" onclick="changeQty(this,-1)"><i class="bi bi-dash-lg"></i></button>
+                    <input type="number" class="qty-input" value="1" min="1" onchange="qtyInputChanged(this)" data-item='${JSON.stringify(item)}' />
+                    <button class="qty-btn" onclick="changeQty(this,1)"><i class="bi bi-plus-lg"></i></button>
+                </div>
+            </td>
+            <td>0%</td>
+            <td>₨0</td>
+            <td id="salePrice-${item.ItemCode}">₨${(originalPrice * 1).toFixed(2)}</td>
+            <td><button class="delete-row-btn" onclick="deleteRow(this)" title="Delete"><i class="bi bi-trash3"></i></button></td>
+        `;
+        table.appendChild(row);
 
-                 if (response.ok) {
-                     const result = await response.json();
+        const priceCell = row.querySelector('.price-cell');
+        const qtyInput  = row.querySelector('.qty-input');
 
-                     Swal.fire({
-                         toast: true,
-                         icon: 'success',
-                         title: result.Message,
-                         position: 'top-end',
-                         showConfirmButton: false,
-                         timer: 100,
-                         timerProgressBar: true
-                     });
-                     window.open(`/Sales/Receipt/${result.id}`, '_blank');
-                     handleNew();
-                 } else {
-                     const error = await response.json();
-
-                     Swal.fire({
-                         toast: true,
-                         icon: 'error',
-                         title: error.Message || "Failed to save sale",
-                         position: 'top-end',
-                         showConfirmButton: false,
-                         timer: 4000,
-                         timerProgressBar: true
-                     });
-                 }
-             } catch (err) {
-                 console.error("Error saving sale:", err);
-                 Swal.fire({
-                     toast: true,
-                     icon: 'error',
-                     title: 'Something went wrong while saving.',
-                     position: 'top-end',
-                     showConfirmButton: false,
-                     timer: 4000,
-                     timerProgressBar: true
-                 });
-             }
-         }
-
-         async function handleSaveOnly(tenderedAmount = null) {
-             const grandTotal = parseFloat(document.querySelector('.gpos-grand-value').textContent.replace(/[₨,]/g, '')) || 0;
-
-             // ✅ Fix: Parse properly
-             let cust = parseInt(document.getElementById("selectedCustomerId")?.value) || 0;
-                 let tender = parseInt(document.getElementById("tenderInput")?.value) || 0;
-
-             let saleData = {
-                 InvoiceNumber: document.getElementById('invoiceNoValue').textContent,
-                 SubTotal: parseFloat(document.querySelector('.gpos-total')?.textContent.replace(/[₨,]/g, '') || 0),
-                 Tax: parseFloat(document.querySelector('.gpos-tax')?.textContent.replace(/[₨,]/g, '') || 0),
-                 Discount: parseFloat(document.getElementById('invoiceDiscountAmount')?.value || 0),
-                  SaleType: getSelectedSaleType(),
-                 Total: grandTotal,
-                     custId: cust,   // ✅ Always correct now
-                         tender_amount: tender,
-                 Payment: {
-                     Amount: tenderedAmount ?? grandTotal,
-                     PaymentMethod: document.getElementById('paymentMethod')?.value,
-                      Change: tenderedAmount ? (tenderedAmount - grandTotal) : 0,
-                 },
-                 SaleItems: getSaleItemsFromTable()
-             };
-
-             // 🧾 Check if SaleItems is empty or null
-            if (!saleData.SaleItems || saleData.SaleItems.length === 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'No Items Selected',
-                    text: 'Please select at least one item before proceeding!',
-                    confirmButtonText: 'OK',
-                    confirmButtonColor: '#3085d6',
-                    background: '#fff',
-                    color: '#333',
-                    backdrop: `
-                        rgba(0,0,0,0.4)
-                        left top
-                        no-repeat
-                    `
-                });
-                return; // 🚫 Stop execution here
+        // KEY HANDLERS on price-cell
+        priceCell.addEventListener('keydown', function(e){
+            if(e.key==='Enter'){
+                e.preventDefault();
+                savePrice(priceCell);
+                qtyInput?.focus(); qtyInput?.select();
+            }else if(e.key==='Escape'){
+                e.preventDefault();
+                const original = priceCell.dataset.originalPrice;
+                priceCell.textContent = `₨${parseFloat(original||0).toFixed(2)}`;
+                savePrice(priceCell);
             }
-
-             saleData = cleanSaleData(saleData);
-
-             console.log(saleData);
-
-             try {
-                 const response = await fetch('/Sales/SaveOnly', {
-                     method: 'POST',
-                     headers: { 'Content-Type': 'application/json' },
-                     body: JSON.stringify(saleData)
-                     });
-
-                 if (response.ok) {
-                     const result = await response.json();
-
-                     Swal.fire({
-                         toast: true,
-                         icon: 'success',
-                         title: result.Message,
-                         position: 'top-end',
-                         showConfirmButton: false,
-                         timer: 100,
-                         timerProgressBar: true
-                     }).then(() => {
-                         window.location.reload();
-                     });
-                 } else {
-                     const error = await response.json();
-                     Swal.fire({
-                         toast: true,
-                         icon: 'error',
-                         title: error.Message || "Failed to save sale",
-                         position: 'top-end',
-                         showConfirmButton: false,
-                         timer: 4000,
-                         timerProgressBar: true
-                     });
-                 }
-             } catch (err) {
-                 console.error("Error saving sale:", err);
-                 Swal.fire({
-                     icon: 'error',
-                     title: 'Error',
-                     text: 'Something went wrong while saving the sale.'
-                 });
-             }
-         }
-         let pendingAction = null;
-         let tenderCompleted = true; // ✅ track if modal has already been confirmed
-
-         function openTenderModal(e, actionFn) {
-           pendingAction = actionFn;
-           const modal = document.getElementById('tenderModal');
-
-           const rect = e.target.getBoundingClientRect();
-
-           modal.style.left = rect.left + window.scrollX + "px";
-
-           modal.style.display = 'block';
-
-           const tenderInput = document.getElementById('tenderInput');
-           tenderInput.value = '';
-           tenderInput.focus();
-
-           updateChange();
-         }
-
-         function closeTenderModal() {
-           document.getElementById('tenderModal').style.display = 'none';
-           pendingAction = null;
-         }
-
-         function updateChange() {
-           const tendered = parseFloat(document.getElementById('tenderInput').value) || 0;
-           const grandTotal = parseFloat(document.getElementById('tenderGrandTotal').innerText) || 0;
-           const change = tendered - grandTotal;
-
-           document.getElementById('tenderChange').innerText =
-             tendered >= 0 ? tendered.toFixed(2) : "0.00";
-
-          document.getElementById('modalRemaining').innerText =
-             change >= 0 ? change.toFixed(2) : "0.00";
-         }
-          function handleTenderOk() {
-           const tendered = parseFloat(document.getElementById('tenderInput').value) || 0;
-           const grandTotal = parseFloat(document.getElementById('tenderGrandTotal').innerText) || 0;
-
-           if (tendered < 0) {
-             Swal.fire({
-               icon: 'warning',
-               title: 'Invalid Amount',
-               text: 'Tendered amount cannot be negative!'
-             });
-             return;
-           }
-
-
-           tenderCompleted = true; // ✅ mark as completed for this transaction
-
-           if (typeof pendingAction === "function") {
-             pendingAction();  // 👉 run whichever function was passed
-             pendingAction = null; // pass tendered amount (even 0) to save function
-           }
-            closeTenderModal();
-         }
-
-         function cleanSaleData(saleData) {
-           // Whenever we clean data, it means a new sale is starting
-           tenderCompleted = false;  // ✅ Reset modal so it can show again for the next sale
-
-           // Remove Id from Payment
-           if (saleData.Payment) {
-             delete saleData.Payment.Id;
-           }
-
-           // Remove Ids from SaleItems
-           saleData.SaleItems.forEach(item => {
-             delete item.Id;
-           });
-           clearCustomer();
-           delete saleData.Id; // also drop Sale Id if frontend somehow added it
-           return saleData;
-
-         }
-         function getSaleItemsFromTable() {
-           const rows = document.querySelectorAll('#salesTable tbody tr');
-           const items = [];
-
-           rows.forEach(row => {
-             if (row.id === 'noDataRow') return;
-
-             const cols = row.querySelectorAll('td');
-
-             items.push({
-               ItemId: parseInt(row.dataset.itemId),   // ✅ must be set in addToSalesTable
-               Quantity: parseFloat(cols[3].querySelector('.qty-input')?.value || 0),
-               UnitPrice: parseFloat(cols[2].textContent.replace(/[₨,]/g, '')) || 0,
-               DiscountPercent: parseFloat(cols[4].textContent.replace('%','')) || 0,
-               TaxAmount: parseFloat(cols[5].textContent.replace(/[₨,]/g, '')) || 0,
-               LineTotal: parseFloat(cols[6].textContent.replace(/[₨,]/g, '')) || 0
-             });
-           });
-
-           return items;
-         }
-
-         async function handlePrint() {
-           let saleData = {
-             InvoiceNumber: document.getElementById('invoiceNoValue').textContent,
-             SubTotal: parseFloat(document.querySelector('.gpos-total')?.textContent.replace(/[₨,]/g, '') || 0),
-             Tax: parseFloat(document.querySelector('.gpos-tax')?.textContent.replace(/[₨,]/g, '') || 0),
-             Discount: parseFloat(document.getElementById('invoiceDiscountAmount')?.value || 0),
-             Total: parseFloat(document.querySelector('.gpos-grand-value')?.textContent.replace(/[₨,]/g, '') || 0),
-
-             Payment: {
-               Amount: parseFloat(document.querySelector('.gpos-grand-value')?.textContent.replace(/[₨,]/g, '') || 0),
-               PaymentMethod: document.getElementById('paymentMethod')?.value || 'Cash'
-             },
-
-             SaleItems: getSaleItemsFromTable()
-           };
-
-           saleData = cleanSaleData(saleData); // ✅ remove unwanted IDs etc.
-
-           try {
-             const response = await fetch('/Sales/SaveOnly', {
-               method: 'POST',
-               headers: { 'Content-Type': 'application/json' },
-               body: JSON.stringify(saleData)
-             });
-
-             if (response.ok) {
-               const result = await response.json();
-               alert('Sale saved successfully! Invoice: ' + result.invoiceNumber);
-
-               // open receipt if server sends back a URL
-               if (result.receiptUrl) window.open(result.receiptUrl, '_blank');
-
-               handleNew(); // clear/reset UI
-             } else {
-               const errorText = await response.text();
-               alert('Failed to save sale: ' + errorText);
-             }
-           } catch (err) {
-             console.error("Error saving sale:", err);
-             alert('Error saving sale.');
-           }
-         }
-
-         function handleNew() {
-           // Clear table rows (except header)
-           const tableBody = document.querySelector('#salesTable tbody');
-           tableBody.innerHTML = `
-             <tr id="noDataRow">
-                 <td colspan="8" style="text-align: center; color: #999;">No items added yet</td>
-             </tr>
-           `;
-
-           // Reset discount inputs
-           document.getElementById('invoiceDiscountPercent').value = '';
-           document.getElementById('invoiceDiscountAmount').value = '';
-
-           // Reset totals
-           document.querySelector('.gpos-total').innerText = '0.00';
-           document.querySelector('.gpos-items').innerText = '0.00';
-           document.querySelector('.gpos-quantity').innerText = '0.00';
-           document.querySelector('.gpos-tax').innerText = '0.00';
-           document.querySelector('.gpos-grand-value').innerText = '0.00';
-           // document.getElementById('changePayment').innerText = '0.00';
-
-           // Reset tender modal values
-           document.getElementById('tenderGrandTotal').innerText = '0.00';
-           document.getElementById('tenderDiscount').innerText = '0.00';
-           // document.getElementById('tenderTax').innerText = '0.00';
-           document.getElementById('tenderInput').value = '';
-           document.getElementById('tenderChangeText').innerText = 'Change: 0.00';
-
-           // Reset payment method to default
-           document.getElementById('paymentMethod').value = 'cash';
-
-           // Hide tender modal (if open)
-           document.getElementById('tenderModal').style.display = 'none';
-
-           // Reset any focus or inputs
-           document.getElementById('itemSearchInput')?.focus();
-               tenderCompleted = false;
-         }
-
-
-     document.querySelector('.new-btn').addEventListener('click', handleNew);
-
-         document.addEventListener('keydown', (e) => {
-           if (e.key === 'F12') {
-             e.preventDefault();
-             handleNew();
-           }
-         });
-
-     function handleGlobalShortcuts(e) {
-           const active = document.activeElement.tagName;
-           if (["INPUT", "TEXTAREA", "SELECT"].includes(active)) return;
-
-           switch (e.key) {
-             case "F4":
-               e.preventDefault();
-               handleSavePrint();
-               break;
-             case "F5":
-               e.preventDefault();
-               handleSaveOnly();
-               break;
-             case "F8":
-               e.preventDefault();
-               handlePrint();
-               break;
-             case "F12":
-               e.preventDefault();
-               handleNew();
-               break;
-           }
-             } function toggleCustomerType() {
-             const walkin = document.getElementById("walkinRadio").checked;
-             document.getElementById("walkinBlock").style.display = walkin ? "block" : "none";
-             document.getElementById("customerBlock").style.display = walkin ? "none" : "block";
-
-             if (walkin) clearCustomer();
-         }
-
-             function setSelectedCustomer(select) {
-             let option = select.options[select.selectedIndex];
-
-             if (!option.value) {
-                 clearCustomer();
-                 return;
-             }
-
-             // ✅ Extract values
-             let customerId = parseInt(option.value) || 0;
-             let name = option.text;
-             let id = option.getAttribute("data-id") || "0";
-             id = parseInt(id, 10); // convert to number
-
-             let customerPaymentsList = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(customerPayments));
-
-             let paymentsForCustomer = customerPaymentsList.filter(p => p.CustomerId === id);
-
-             // ✅ Update UI
-             document.getElementById("selectedCustomerBlock").style.display = "block";
-             // document.getElementById("customerName").innerText = name;
-             document.getElementById("customerBalance").innerText = "₨" + paymentsForCustomer[0].Remaining;
-
-             document.getElementById("selectedCustomerId").value = customerId;
-         }
-
-
-         function clearCustomer() {
-             document.getElementById("customerDropdown").selectedIndex = 0;
-             document.getElementById("selectedCustomerBlock").style.display = "none";
-         }
-
-         const listDiv = document.getElementById('itemSuggestions');
-          let filtered = [];
-          let selectedIdx = -1;
-     function showItemSuggestions(term) {
-         term = term.trim().toLowerCase();
-
-         if (!term) {
-             listDiv.style.display = 'none';
-             filtered = [];
-             selectedIdx = -1;
-             return;
-         }
-
-         filtered = items.filter(
-             x => x.ItemCode.toLowerCase().includes(term) || x.ItemName.toLowerCase().includes(term)
-         );
-
-         listDiv.innerHTML = filtered.map((item, i) => `
-             <div class="suggestion-item ${i === selectedIdx ? 'active' : ''}"
-                  data-idx="${i}" onclick="selectItemSuggestion(${i})">
-                 <span class="suggestion-code">${item.ItemCode}</span>
-                 <span class="suggestion-qty">[Qty:${item.Quantity}]</span>
-                 <span class="suggestion-name">${item.ItemName}</span>
-             </div>
-         `).join('');
-
-         listDiv.style.display = filtered.length ? 'block' : 'none';
-     }
-
-     // ✅ Keyboard navigation
-     document.addEventListener("keydown", function (e) {
-         if (!filtered.length || listDiv.style.display === 'none') return;
-
-         if (e.key === "ArrowDown") {
-             e.preventDefault();
-             selectedIdx = (selectedIdx + 1) % filtered.length;
-             updateHighlight();
-         }
-         else if (e.key === "ArrowUp") {
-             e.preventDefault();
-             selectedIdx = (selectedIdx - 1 + filtered.length) % filtered.length;
-             updateHighlight();
-         }
-         else if (e.key === "Enter") {
-             if (selectedIdx >= 0 && selectedIdx < filtered.length) {
-                 e.preventDefault();
-                 selectItemSuggestion(selectedIdx);
-             }
-         }
-     });
-
-     function updateHighlight() {
-         const children = listDiv.querySelectorAll(".suggestion-item");
-         children.forEach((el, i) => {
-             el.classList.toggle("active", i === selectedIdx);
-         });
-     }
-                 function selectItemSuggestion(idx) {
-                     const term = document.getElementById('itemSearchInput').value.trim().toLowerCase();
-                     const filtered = items.filter(
-                         x => x.ItemCode.toLowerCase().includes(term) || x.ItemName.toLowerCase().includes(term)
-                     );
-                     const item = filtered[idx];
-
-                     // 🧾 Check if item quantity is 0, null, or undefined
-                    if (!item.Quantity || item.Quantity <= 0) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Out of Stock',
-                            text: `${item.ItemName || 'This item'} is out of stock!`,
-                            confirmButtonText: 'OK',
-                            confirmButtonColor: '#d33',
-                            background: '#fff',
-                            color: '#333',
-                            backdrop: `
-                                rgba(0,0,0,0.4)
-                                left top
-                                no-repeat
-                            `
-                        });
-                        return; // 🚫 Stop further execution
-                    }
-
-                     addToSalesTable(item);
-                     document.getElementById('itemSuggestions').style.display = 'none';
-                     document.getElementById('itemSearchInput').value = '';
-                     selectedIdx = -1;
-                 }
-
-     function addToSalesTable(item) {
-         const table = document.getElementById('salesTable').querySelector('tbody');
-
-         // Remove "No items" row if present
-         const noDataRow = document.getElementById('noDataRow');
-         if (noDataRow) noDataRow.remove();
-
-         // ✅ Check if row with same item already exists
-         const existingRow = table.querySelector(`tr[data-item-id="${item.Id}"]`);
-         if (existingRow) {
-             const qtyInput = existingRow.querySelector(".qty-input");
-             qtyInput.value = parseInt(qtyInput.value) + 1; // increase by 1
-             qtyInput.focus();
-             qtyInput.select();
-
-             // update totals for that row if needed
-             qtyInputChanged(qtyInput);
-
-             recalculateTotals();
-             return; // ✅ stop, don’t add a new row
-         }
-
-         // New row
-         const row = document.createElement('tr');
-         row.dataset.itemId = item.Id;
-
-         row.innerHTML = `
-             <td>${table.rows.length + 1}</td>
-             <td>${item.ItemName}</td>
-             <td>₨${item.PackSize ? item.UnitPrice : item.SalePrice}</td>
-             <td>
-                 <div class="qty-btns">
-                     <button class="qty-btn" onclick="changeQty(this, -1)"><i class="fa fa-minus"></i></button>
-                     <input type="number" class="qty-input" value="1" min="1"
-                            onchange="qtyInputChanged(this)" data-item='${JSON.stringify(item)}' />
-                     <button class="qty-btn" onclick="changeQty(this, 1)"><i class="fa fa-plus"></i></button>
-                 </div>
-             </td>
-             <td>0%</td>
-             <td>₨0</td>
-             <td id="salePrice-${item.ItemCode}">₨${(item.PackSize ? item.UnitPrice * 1 : item.SalePrice * 1).toFixed(2)}</td>
-             <td>
-                 <button class="delete-row-btn" onclick="deleteRow(this)" title="Delete"><i class="fa fa-trash"></i></button>
-             </td>
-         `;
-
-         table.appendChild(row);
-
-         // Focus the qty-input of the new row
-         const input = row.querySelector(".qty-input");
-         if (input) {
-             input.focus();
-             input.select();
-
-             input.addEventListener("keydown", function (e) {
-              if (e.key === "Enter") {
-                  e.preventDefault(); // stop form submit if inside a form
-                  const itemSearchInput = document.getElementById("itemSearchInput");
-                  if (itemSearchInput) {
-                      itemSearchInput.focus();
-                      itemSearchInput.select();
-                  }
-               }
+        });
+        priceCell.addEventListener('blur', function(){ if(priceCell.isContentEditable) savePrice(priceCell); });
+
+        // qty ENTER → back to barcode
+        qtyInput.addEventListener('keydown', function(e){
+            if(e.key==='Enter'){
+                e.preventDefault();
+                const bi=document.getElementById('itemSearchInput');
+                bi?.focus(); bi?.select();
+            }
+        });
+
+        // initial focus per mode
+        if(focusMode==='price'){ makePriceEditable(priceCell); selectAllContent(priceCell); }
+        else { qtyInput.focus(); qtyInput.select(); }
+
+        recalculateTotals();
+    }
+
+    function updateRowTotal(row){
+        const priceCell = row.querySelector('.price-cell');
+        const qtyInput  = row.querySelector('.qty-input');
+        const totalCell = row.querySelector('td:nth-child(7)');
+        const price = parseFloat(priceCell.textContent.replace('₨',''))||0;
+        const qty   = parseInt(qtyInput.value)||0;
+        totalCell.textContent = `₨${(price*qty).toFixed(2)}`;
+    }
+    function qtyInputChanged(input){
+        if(input.value<1) input.value=1;
+        const item = JSON.parse(input.dataset.item);
+        const price = parseFloat(input.closest('tr').querySelector('.price-cell').textContent.replace('₨',''))||0;
+        const totalCell = document.getElementById(`salePrice-${item.ItemCode}`);
+        totalCell.textContent = `₨${(price * parseInt(input.value)).toFixed(2)}`;
+        recalculateTotals();
+    }
+    function changeQty(btn,diff){
+        const input = btn.parentNode.querySelector('.qty-input');
+        let val = parseInt(input.value)||1; val=Math.max(1,val+diff);
+        input.value=val; qtyInputChanged(input);
+    }
+    function deleteRow(btn){
+        const row=btn.closest('tr'); row.remove();
+        const table=document.getElementById('salesTable').querySelector('tbody');
+        if(table.rows.length===0){
+            const noDataRow=document.createElement('tr'); noDataRow.id='noDataRow';
+            noDataRow.innerHTML=`<td colspan="8" class="text-center text-muted py-4">No items added yet</td>`;
+            table.appendChild(noDataRow);
+        }
+        recalculateTotals();
+    }
+
+    /* =========================
+       BARCODE / SCANNER LOGIC
+    ========================= */
+    let scanState = { start:0, last:0, count:0, timer:null };
+    const SCAN_MIN_LEN=6, SCAN_AVG_MS=35, SCAN_END_DELAY=60;
+
+    const itemInputEl = document.getElementById('itemSearchInput');
+    const suggDiv = document.getElementById('itemSuggestions');
+
+    itemInputEl.addEventListener('keydown', (e)=>{
+        const now=performance.now();
+        if(scanState.count===0) scanState.start=now;
+        scanState.count++; scanState.last=now;
+
+        if(filtered.length && suggDiv.style.display==='block'){
+            if(e.key==='ArrowDown'){ e.preventDefault(); selectedIdx=(selectedIdx+1)%filtered.length; updateHighlight(); return; }
+            if(e.key==='ArrowUp'){ e.preventDefault(); selectedIdx=(selectedIdx-1+filtered.length)%filtered.length; updateHighlight(); return; }
+            if(e.key==='Enter'){ e.preventDefault(); if(selectedIdx>=0){ selectItemSuggestion(selectedIdx); } return; }
+        } else {
+            if(e.key==='Enter'){ e.preventDefault(); manualTryAdd(itemInputEl.value.trim()); return; }
+        }
+
+        clearTimeout(scanState.timer);
+        scanState.timer = setTimeout(()=>{
+            const term=itemInputEl.value.trim();
+            const duration=scanState.last - scanState.start;
+            const avg = duration / Math.max(1, scanState.count);
+            const isScanner = term.length>=SCAN_MIN_LEN && avg<=SCAN_AVG_MS;
+
+            if(isScanner){ scannerAutoAdd(term); }
+            else { showItemSuggestions(term); }
+
+            scanState = { start:0, last:0, count:0, timer:null };
+        }, SCAN_END_DELAY);
+    });
+
+    itemInputEl.addEventListener('input', ()=>{
+        if(scanState.count===0){ showItemSuggestions(itemInputEl.value.trim()); }
+    });
+
+    function scannerAutoAdd(term){
+        const lc=term.toLowerCase();
+        let match = items.find(x => (x.ItemCode||'').toLowerCase()===lc) || items.find(x => (x.ItemName||'').toLowerCase()===lc);
+        if(!match){
+            const poss=items.filter(x => (x.ItemCode||'').toLowerCase().includes(lc) || (x.ItemName||'').toLowerCase().includes(lc));
+            if(poss.length===1) match=poss[0];
+        }
+        if(!match){ toast('Item not found','warning'); showItemSuggestions(term); return; }
+        if(!match.Quantity || match.Quantity<=0){ Swal.fire({icon:'error',title:'Out of Stock',text:`${match.ItemName||'This item'} is out of stock!`}); return; }
+
+        addToSalesTable(match);
+        suggDiv.style.display='none'; itemInputEl.value=''; itemInputEl.focus();
+
+        if(focusMode==='price') focusLastPriceCell(); else focusLastQtyInput();
+    }
+    function manualTryAdd(term){
+        const lc=(term||'').toLowerCase(); if(!lc) return;
+        let match = items.find(x => (x.ItemCode||'').toLowerCase()===lc) || items.find(x => (x.ItemName||'').toLowerCase()===lc);
+        if(!match){ if(selectedIdx>=0 && filtered[selectedIdx]) match=filtered[selectedIdx]; }
+        if(match){
+            if(!match.Quantity || match.Quantity<=0){ Swal.fire({icon:'error',title:'Out of Stock',text:`${match.ItemName||'This item'} is out of stock!`}); return; }
+            addToSalesTable(match); suggDiv.style.display='none'; itemInputEl.value=''; itemInputEl.focus();
+            if(focusMode==='price') focusLastPriceCell(); else focusLastQtyInput();
+            return;
+        }
+        showItemSuggestions(term);
+    }
+
+    /* =========================
+       TOTALS & DISCOUNT
+    ========================= */
+    function recalculateTotals(){
+        const rows=[...document.querySelectorAll('#salesTable tbody tr')].filter(r=>r.id!=='noDataRow');
+        if(!rows.length){
+            document.querySelector('.gpos-total').innerText='₨0.00';
+            document.querySelector('.gpos-items').innerText='0';
+            document.querySelector('.gpos-quantity').innerText='0';
+            document.querySelector('.gpos-tax').innerText='₨0.00';
+            document.querySelector('.gpos-grand-value').innerText='₨0.00';
+            document.getElementById('invoiceDiscountComputed').innerText='₨0.00';
+            document.getElementById('countItems').innerText='0';
+            document.getElementById('sumPayable').innerText='0.00';
+            return;
+        }
+
+        let subtotal=0, itemCount=0;
+        rows.forEach(r=>{
+            const price=parseFloat(r.querySelector('.price-cell').textContent.replace('₨',''))||0;
+            const qty=parseInt(r.querySelector('.qty-input').value)||0;
+            subtotal += price*qty; itemCount += qty;
+        });
+
+        const discountPercent = Math.max(parseFloat(document.getElementById('invoiceDiscountPercent')?.value||0),0);
+        const discountAmount  = Math.max(parseFloat(document.getElementById('invoiceDiscountAmount')?.value||0),0);
+        const discountFromPercent = subtotal * (discountPercent/100);
+        let totalDiscount = Math.min(discountFromPercent + discountAmount, subtotal);
+
+        let taxableAmount = Math.max(subtotal - totalDiscount, 0);
+        const taxAmount = TAX_PERCENT>0 ? (taxableAmount * TAX_PERCENT/100) : 0;
+        const grandTotal = taxableAmount + taxAmount;
+
+        document.querySelector('.gpos-total').innerText=`₨${subtotal.toFixed(2)}`;
+        document.querySelector('.gpos-items').innerText=itemCount;
+        document.querySelector('.gpos-quantity').innerText=rows.length;
+        document.querySelector('.gpos-tax').innerText=`₨${taxAmount.toFixed(2)}`;
+        document.getElementById('invoiceDiscountComputed').innerText=`₨${totalDiscount.toFixed(2)}`;
+        document.querySelector('.gpos-grand-value').innerText=`₨${grandTotal.toFixed(2)}`;
+        document.getElementById('sumPayable').innerText=grandTotal.toFixed(2);
+    }
+
+    /* =========================
+       CUSTOMER
+    ========================= */
+    function toggleCustomerType(){
+        const walkin=document.getElementById("walkinRadio").checked;
+        document.getElementById("walkinBlock").style.display = walkin ? "block" : "none";
+        document.getElementById("customerBlock").style.display = walkin ? "none" : "block";
+        if(walkin) clearCustomer();
+    }
+    function setSelectedCustomer(select){
+        let option = select.options[select.selectedIndex];
+        if(!option.value){ clearCustomer(); return; }
+        let customerId = parseInt(option.value) || 0;
+        let id = parseInt(option.getAttribute("data-id") || "0", 10);
+        let custPays = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(customerPayments));
+        let paymentsForCustomer = custPays.filter(p=>p.CustomerId===id);
+        document.getElementById("selectedCustomerBlock").style.display="block";
+        document.getElementById("customerBalance").innerText = "₨" + (paymentsForCustomer[0]?.Remaining || "0");
+        document.getElementById("selectedCustomerId").value = customerId;
+    }
+    function clearCustomer(){
+        document.getElementById("customerDropdown").selectedIndex=0;
+        document.getElementById("selectedCustomerBlock").style.display="none";
+    }
+
+    /* =========================
+       PAYMENT MODAL
+    ========================= */
+    function openTenderModal(e, actionFn){
+        pendingAction = actionFn;
+        const overlay = document.getElementById('paymentModalOverlay');
+        overlay.style.display='flex';
+        document.getElementById('btnPayConfirm').textContent = (actionFn===handleSaveOnly? 'Confirm (Save)' : 'Confirm & Print');
+        const tenderInput = document.getElementById('tenderInput');
+        tenderInput.value=''; tenderInput.focus();
+        // update breakdown
+        const method=document.getElementById('paymentMethod')?.value || 'cash';
+        const iconMap={cash:'bi-cash',credit:'bi-journal-text',credit_card:'bi-credit-card',bank:'bi-bank',online:'bi-wifi'};
+        const labelMap={cash:'Cash',credit:'Credit',credit_card:'Card',bank:'Bank',online:'Online'};
+        document.getElementById('modalMethod').innerHTML=`<i class="bi ${iconMap[method]||'bi-cash'}"></i> ${labelMap[method]||method}`;
+
+        const grand=parseFloat(document.querySelector('.gpos-grand-value').textContent.replace(/[₨,]/g,''))||0;
+        const tax=parseFloat(document.getElementById('sumTax').textContent.replace(/[₨,]/g,''))||0;
+        const disc=parseFloat(document.getElementById('invoiceDiscountComputed').textContent.replace(/[₨,]/g,''))||0;
+        document.getElementById('tenderGrandTotal').innerText = grand.toFixed(2);
+        if(disc>0){ document.getElementById('rowDiscount').style.display='flex'; document.getElementById('tenderDiscount').innerText=disc.toFixed(2); }
+        else { document.getElementById('rowDiscount').style.display='none'; document.getElementById('tenderDiscount').innerText='0.00'; }
+        if(tax>0){ document.getElementById('rowTax').style.display='flex'; document.getElementById('tenderTax').innerText=tax.toFixed(2); }
+        else { document.getElementById('rowTax').style.display='none'; document.getElementById('tenderTax').innerText='0.00'; }
+
+        updateChange();
+    }
+    function closePaymentModal(){
+        document.getElementById('paymentModalOverlay').style.display='none';
+        pendingAction=null;
+        const bi=document.getElementById('itemSearchInput'); bi?.classList.add('blinking'); bi?.focus();
+    }
+    function updateChange(){
+        const tendered = parseFloat(document.getElementById('tenderInput').value)||0;
+        const grandTotal = parseFloat(document.getElementById('tenderGrandTotal').innerText)||0;
+        const change = tendered - grandTotal;
+        document.getElementById('modalRemaining').innerText = (change<0? Math.abs(change):0).toFixed(2);
+        document.getElementById('tenderChangeText').innerText = (change>0? change:0).toFixed(2);
+    }
+    function handleTenderOk(){
+        const tendered = parseFloat(document.getElementById('tenderInput').value)||0;
+        if(tendered<0){ Swal.fire({icon:'warning',title:'Invalid Amount',text:'Tendered amount cannot be negative!'}); return; }
+        if(typeof pendingAction==="function"){ pendingAction(); pendingAction=null; }
+        closePaymentModal();
+    }
+    document.getElementById('tenderInput')?.addEventListener('input', updateChange);
+
+    /* =========================
+       SAVE / PRINT
+    ========================= */
+    async function handleSavePrint(){ await saveSaleCommon(true); }
+    async function handleSaveOnly(){ await saveSaleCommon(false); }
+    async function saveSaleCommon(printAfter){
+        const grandTotal = parseFloat(document.querySelector('.gpos-grand-value')?.textContent.replace(/[₨,]/g,'')||0);
+        let cust = parseInt(document.getElementById("selectedCustomerId")?.value)||0;
+        let tender = parseFloat(document.getElementById("tenderInput")?.value)||0;
+
+        const subtotal = parseFloat(document.querySelector('.gpos-total')?.textContent.replace(/[₨,]/g,'')||0);
+        const percent  = Math.max(parseFloat(document.getElementById('invoiceDiscountPercent')?.value||0),0);
+        const lessPKR  = Math.max(parseFloat(document.getElementById('invoiceDiscountAmount')?.value||0),0);
+        const discountFromPercent = subtotal * (percent/100);
+        let totalDiscount = Math.min(discountFromPercent + lessPKR, subtotal);
+
+        let saleData = {
+            InvoiceNumber: document.getElementById('invoiceNoValue').textContent,
+            SubTotal: subtotal,
+            Tax: parseFloat(document.querySelector('.gpos-tax')?.textContent.replace(/[₨,]/g,'')||0),
+            Discount: totalDiscount,
+            DiscountPercent: percent,
+            DiscountLessAmount: lessPKR,
+            SaleType: getSelectedSaleType(),
+            Total: grandTotal,
+            custId: cust,
+            tender_amount: tender,
+            Payment: {
+                Amount: tender,
+                PaymentMethod: document.getElementById('paymentMethod')?.value,
+                Change: Math.max(tender - grandTotal, 0),
+            },
+            SaleItems: getSaleItemsFromTable()
+        };
+
+        if(!saleData.SaleItems || saleData.SaleItems.length===0){
+            Swal.fire({icon:'warning',title:'No Items Selected',text:'Please select at least one item before proceeding!'}); return;
+        }
+
+        saleData = cleanSaleData(saleData);
+
+        try{
+            const endpoint = printAfter ? '/Sales/SaveSale' : '/Sales/SaveOnly';
+            const response = await fetch(endpoint, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(saleData) });
+            if(response.ok){
+                const result = await response.json();
+                toast(result.Message,'success',1200);
+                if(printAfter){ window.open(`/Sales/Receipt/${result.id}`,'_blank'); }
+                handleNew();
+            }else{
+                const error = await response.json();
+                toast(error.Message || "Failed to save sale",'error',3000);
+            }
+        }catch(err){
+            console.error("Error saving sale:", err);
+            Swal.fire({icon:'error',title:'Error',text:'Something went wrong while saving the sale.'});
+        }
+    }
+
+    function getSelectedSaleType(){ let s=document.querySelector('input[name="SaleType"]:checked'); return s? s.value:null; }
+    function getSaleItemsFromTable(){
+        const rows=document.querySelectorAll('#salesTable tbody tr'); const items=[];
+        rows.forEach(row=>{
+            if(row.id==='noDataRow') return;
+            const cols=row.querySelectorAll('td'); const priceCell=row.querySelector('.price-cell');
+            items.push({
+                ItemId: parseInt(row.dataset.itemId),
+                Quantity: parseFloat(cols[3].querySelector('.qty-input')?.value || 0),
+                UnitPrice: parseFloat(priceCell.textContent.replace(/[₨,]/g,'')) || 0,
+                DiscountPercent: parseFloat(cols[4].textContent.replace('%','')) || 0,
+                TaxAmount: parseFloat(cols[5].textContent.replace(/[₨,]/g,'')) || 0,
+                LineTotal: parseFloat(cols[6].textContent.replace(/[₨,]/g,'')) || 0
             });
-         }
+        });
+        return items;
+    }
+    function cleanSaleData(sd){ if(sd.Payment) delete sd.Payment.Id; (sd.SaleItems||[]).forEach(i=>delete i.Id); clearCustomer(); delete sd.Id; return sd; }
 
-         recalculateTotals();
-     }
+    /* =========================
+       NEW / PRINT / INVOICE / CLOCK
+    ========================= */
+    function handleNew(){
+        const tableBody=document.querySelector('#salesTable tbody');
+        tableBody.innerHTML=`<tr id="noDataRow"><td colspan="8" class="text-center text-muted py-4">No items added yet</td></tr>`;
+        document.getElementById('invoiceDiscountPercent').value='0';
+        document.getElementById('invoiceDiscountAmount').value='0';
+        document.querySelector('.gpos-total').innerText='₨0.00';
+        document.querySelector('.gpos-items').innerText='0';
+        document.querySelector('.gpos-quantity').innerText='0';
+        document.querySelector('.gpos-tax').innerText='₨0.00';
+        document.querySelector('.gpos-grand-value').innerText='₨0.00';
+        document.getElementById('invoiceDiscountComputed').innerText='₨0.00';
+        document.getElementById('countItems').innerText='0';
+        document.getElementById('sumPayable').innerText='0.00';
+        document.getElementById('paymentModalOverlay').style.display='none';
+        const bi=document.getElementById('itemSearchInput'); bi?.classList.add('blinking'); bi?.focus();
+        document.getElementById('paymentMethod').value='cash';
+        document.getElementById('invoiceNoValue').innerText=generateInvoiceNumber();
+    }
+    function handlePrint(){ console.log("Print..."); }
+    function generateInvoiceNumber(){
+        const date=new Date().toISOString().slice(0,10).replace(/-/g,'');
+        invoiceCounter=(parseInt(invoiceCounter)||0)+1; const counterStr=String(invoiceCounter).padStart(4,'0');
+        return `INV-${date}-${counterStr}`;
+    }
+    function updateLiveClock(){
+        const now=new Date();
+        const dateStr=now.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'2-digit'});
+        const timeStr=now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+        document.getElementById('liveClock').innerText = dateStr+" | "+timeStr;
+    }
 
+    /* =========================
+       KEYBOARD SHORTCUTS
+    ========================= */
+    document.addEventListener('keydown', function(e){
+        // Suggestions navigation
+        const listDiv=document.getElementById('itemSuggestions');
+        if(filtered.length && listDiv.style.display==='block'){
+            if(e.key==='ArrowDown'){ e.preventDefault(); selectedIdx=(selectedIdx+1)%filtered.length; updateHighlight(); return; }
+            if(e.key==='ArrowUp'){ e.preventDefault(); selectedIdx=(selectedIdx-1+filtered.length)%filtered.length; updateHighlight(); return; }
+            if(e.key==='Enter'){ if(selectedIdx>=0){ e.preventDefault(); selectItemSuggestion(selectedIdx); } return; }
+            if(e.key==='Escape'){ listDiv.style.display='none'; filtered=[]; selectedIdx=-1; }
+        }
 
+        if(e.key==='F3'){ e.preventDefault(); toggleFocusMode(); return; }
+        if(e.key==='F4'){ e.preventDefault(); return hasLineItems()? openTenderModal(null,handleSavePrint):toast('Please add at least one item','warning'); }
+        if(e.key==='F5'){ e.preventDefault(); return hasLineItems()? openTenderModal(null,handleSaveOnly):toast('Please add at least one item','warning'); }
+        if(e.key==='F8'){ e.preventDefault(); handlePrint(); return; }
 
-                 // Recalculate totals whenever items or values change
-                 function recalculateTotals() {
-                     const rows = document.querySelectorAll('#salesTable tbody tr');
+        if(e.altKey && e.key.toLowerCase()==='enter'){ e.preventDefault(); toggleFullscreen(); return; }
+        if(e.altKey && e.key.toLowerCase()==='b'){ e.preventDefault(); document.getElementById('itemSearchInput')?.focus(); return; }
+        if(e.altKey && e.key.toLowerCase()==='n'){ e.preventDefault(); document.getElementById('btnNewItem')?.click(); return; }
+        if(e.altKey && e.key.toLowerCase()==='s'){ e.preventDefault(); document.getElementById('rbSale').checked=true; applySaleTypeVisual(); return; }
+        if(e.altKey && e.key.toLowerCase()==='r'){ e.preventDefault(); document.getElementById('rbReturn').checked=true; applySaleTypeVisual(); return; }
+        if(e.ctrlKey && e.key.toLowerCase()==='d'){ e.preventDefault(); if(!hasLineItems()) return toast('No items. Add items first.','warning'); const p=document.getElementById('invoiceDiscountPercent'); p.focus(); p.select(); }
+    });
+    function hasLineItems(){ return Array.from(document.querySelectorAll('#salesTable tbody tr')).some(r=>r.querySelector('.qty-input')); }
 
-                     // If no valid item rows exist (or only "noDataRow" is present)
-                     if (rows === null || rows.length === 0 || (rows.length === 1 && rows[0].id === 'noDataRow')) {
-                         // Reset all totals to default
-                         document.querySelector('.gpos-total').innerText = '₨0.00';
-                         document.querySelector('.gpos-items').innerText = '0';
-                         document.querySelector('.gpos-quantity').innerText = rows.length;
-                         document.querySelector('.gpos-tax').innerText = '₨0.00';
-                         document.querySelector('.gpos-grand-value').innerText = '₨0.00';
+    /* =========================
+       FULLSCREEN
+    ========================= */
+    const posShell=document.getElementById('posShell'); const btnFullscreen=document.getElementById('btnFullscreen');
+    function isFullscreen(){ return document.fullscreenElement===posShell || document.webkitFullscreenElement===posShell; }
+    function enterFullscreen(){ if(posShell.requestFullscreen) posShell.requestFullscreen(); else if(posShell.webkitRequestFullscreen) posShell.webkitRequestFullscreen(); }
+    function exitFullscreen(){ if(document.exitFullscreen) document.exitFullscreen(); else if(document.webkitExitFullscreen) document.webkitExitFullscreen(); }
+    function toggleFullscreen(){ isFullscreen()?exitFullscreen():enterFullscreen(); }
+    btnFullscreen?.addEventListener('click', toggleFullscreen);
+    document.addEventListener('fullscreenchange', handleFsChange);
+    document.addEventListener('webkitfullscreenchange', handleFsChange);
+    function handleFsChange(){
+        const icon=btnFullscreen?.querySelector('i');
+        if(!icon) return;
+        if(isFullscreen()){ icon.classList.remove('bi-arrows-fullscreen'); icon.classList.add('bi-fullscreen-exit'); btnFullscreen.title="Exit Fullscreen (Alt+Enter)"; }
+        else{ icon.classList.remove('bi-fullscreen-exit'); icon.classList.add('bi-arrows-fullscreen'); btnFullscreen.title="Expand (Alt+Enter)"; }
+    }
 
-                         document.getElementById('tenderGrandTotal').innerText = '0.00';
-                         // document.getElementById('tenderDiscount').innerText = '0.00';
-                         // document.getElementById('tenderTax').innerText = '0.00';
-                         // document.getElementById('changePayment').innerText = '₨0.00';
-                         document.getElementById('tenderChangeText').innerText = 'Change: ₨0.00';
+    /* =========================
+       INIT
+    ========================= */
+    document.addEventListener('DOMContentLoaded', function(){
+        initializeFocusMode();
+        applySaleTypeVisual();
 
-                         return; // Exit early
-                     }
+        // payment method pills
+        document.querySelectorAll('#paymentPills .method-pill').forEach(p=>{
+            p.addEventListener('click',()=>{
+                document.querySelectorAll('#paymentPills .method-pill').forEach(x=>x.classList.remove('active'));
+                p.classList.add('active');
+                document.getElementById('paymentMethod').value = p.getAttribute('data-value');
+            });
+        });
 
-                     let subtotal = 0;
-                     let itemCount = 0;
+        document.getElementById('invoiceNoValue').innerText = generateInvoiceNumber();
+        updateLiveClock(); setInterval(updateLiveClock, 1000);
 
-                     rows.forEach(row => {
-                         const qtyInput = row.querySelector('.qty-input');
-                         if (!qtyInput) return; // Skip rows without input (like placeholder)
+        // pay buttons
+        document.querySelector('.saveprint-btn').addEventListener('click',()=> hasLineItems()? openTenderModal(null,handleSavePrint):toast('Please add at least one item','warning'));
+        document.querySelector('.saveonly-btn').addEventListener('click',()=> hasLineItems()? openTenderModal(null,handleSaveOnly):toast('Please add at least one item','warning'));
+        document.getElementById('tenderOkBtn').addEventListener('click', handleTenderOk);
 
-                         const itemData = JSON.parse(qtyInput.dataset.item);
-                         const qty = parseInt(qtyInput.value);
-                         const pricePerUnit = itemData.PackSize ? itemData.UnitPrice : itemData.SalePrice;
-                         const itemTotal = pricePerUnit * qty;
-                         subtotal += itemTotal;
-                         itemCount += qty;
-                     });
-                         // Discounts
-                         const discountPercent = parseFloat(document.getElementById('invoiceDiscountPercent')?.value) || 0;
-                         const discountAmount = parseFloat(document.getElementById('invoiceDiscountAmount')?.value) || 0;
+        // discount inputs
+        document.getElementById('invoiceDiscountPercent').addEventListener('input', ()=>{ let v=parseFloat(invoiceDiscountPercent.value)||0; if(v<0) v=0; if(v>100) v=100; invoiceDiscountPercent.value=v; recalculateTotals(); });
+        document.getElementById('invoiceDiscountAmount').addEventListener('input', ()=>{ let v=parseFloat(invoiceDiscountAmount.value)||0; if(v<0) v=0; invoiceDiscountAmount.value=v; recalculateTotals(); });
 
-                         const discountFromPercent = subtotal * (discountPercent / 100);
+        // initial totals
+        recalculateTotals();
+    });
 
-                         // Ensure totalDiscount doesn’t exceed subtotal
-                         let totalDiscount = discountFromPercent + discountAmount;
-                         if (totalDiscount > subtotal) {
-                             totalDiscount = subtotal;
-                         } else if (totalDiscount < 0) {
-                             totalDiscount = 0;
-                         }
-
-                         // Tax
-                         let taxableAmount = subtotal - totalDiscount;
-                         if (taxableAmount < 0) taxableAmount = 0;
-
-                         const taxAmount = TAX_PERCENT > 0 ? (taxableAmount * TAX_PERCENT / 100) : 0;
-
-                         // Final total
-                         const grandTotal = taxableAmount + taxAmount;
-
-                         // Fallback: never negative
-                         const safeGrandTotal = grandTotal > 0 ? grandTotal : 0;
-
-
-                 // Update UI
-                 document.querySelector('.gpos-total').innerText = `₨${subtotal.toFixed(2)}`;
-                 document.querySelector('.gpos-items').innerText = itemCount;
-                 document.querySelector('.gpos-quantity').innerText = rows.length;
-                 document.querySelector('.gpos-tax').innerText = `₨${taxAmount.toFixed(2)}`;
-                 document.querySelector('.gpos-grand-value').innerText = `₨${grandTotal.toFixed(2)}`;
-
-                 // Update Tender Modal
-                 document.getElementById('tenderGrandTotal').innerText = grandTotal.toFixed(2);
-                 // document.getElementById('tenderDiscount').innerText = totalDiscount.toFixed(2);
-                 // document.getElementById('tenderTax').innerText = taxAmount.toFixed(2);
-
-                     updateChange();
-                 }
-
-
-                 // Recalculate change based on amount tendered
-                 function updateChange() {
-                     const tendered = parseFloat(document.getElementById('tenderInput').value) || 0;
-                     const grandTotal = parseFloat(document.getElementById('tenderGrandTotal').innerText);
-                     const change = tendered - grandTotal;
-
-                     const changeText = document.getElementById('tenderChangeText');
-                     const changePayment = document.getElementById('changePayment');
-
-                     changeText.innerText = `Change: ₨${(change > 0 ? change : 0).toFixed(2)}`;
-                     changePayment.innerText = `₨${(change > 0 ? change : 0).toFixed(2)}`;
-
-                     // document.getElementById('changePayment').innerText = `₨${(change > 0 ? change : 0).toFixed(2)}`;
-                     document.getElementById('tenderChangeText').innerText = `Change: ₨${(tendered > 0 ? tendered : 0).toFixed(2)}`;
-                     document.getElementById('modalRemaining').innerText = `Change: ₨${change .toFixed(2)}`;
-                 }
-
-                 function updateChange() {
-                     const tendered = parseFloat(document.getElementById('tenderInput').value) || 0;
-                     const grandTotal = parseFloat(document.getElementById('tenderGrandTotal').innerText) || 0;
-                     const change = tendered - grandTotal;
-
-                     // document.getElementById('changePayment').innerText = `₨${(change > 0 ? change : 0).toFixed(2)}`;
-                     document.getElementById('tenderChangeText').innerText = `Change: ₨${(tendered > 0 ? tendered : 0).toFixed(2)}`;
-                     document.getElementById('modalRemaining').innerText = `Change: ₨${change.toFixed(2)}`;
-                 }
-
-
-                 // Hook recalc to qty changes
-                 function qtyInputChanged(input) {
-                     if (input.value < 1) input.value = 1;
-                     const item = JSON.parse(input.dataset.item);
-                     const quantity = parseInt(input.value);
-                     const pricePerUnit = item.PackSize ? item.UnitPrice : item.SalePrice;
-                     const totalPrice = (quantity * pricePerUnit).toFixed(2);
-                     const priceCell = document.getElementById(`salePrice-${item.ItemCode}`);
-                     if (priceCell) {
-                         priceCell.textContent = `₨${totalPrice}`;
-                     }
-                     recalculateTotals();
-                 }
-
-                 // Hook recalc to + / - buttons
-                 function changeQty(btn, diff) {
-                     const input = btn.parentNode.querySelector('.qty-input');
-                     let val = parseInt(input.value) || 1;
-                     val = Math.max(1, val + diff);
-                     input.value = val;
-                     qtyInputChanged(input);
-                 }
-
-                 // // Hook recalc to discount fields
-                 // document.getElementById('invoiceDiscountPercent').addEventListener('input', recalculateTotals);
-                 // document.getElementById('invoiceDiscountAmount').addEventListener('input', recalculateTotals);
-
-                 // Hook tender input
-                 document.getElementById('tenderInput').addEventListener('input', updateChange);
-
-
-
-                 function deleteRow(btn) {
-                     const row = btn.closest('tr');
-                     row.remove();
-                     const table = document.getElementById('salesTable').querySelector('tbody');
-                     if (table.rows.length === 0) {
-                         const noDataRow = document.createElement('tr');
-                         noDataRow.id = 'noDataRow';
-                         noDataRow.innerHTML = `<td colspan="8" style="text-align: center; color: #999;">No items added yet</td>`;
-                         table.appendChild(noDataRow);
-                     }
-                     recalculateTotals();
-                 }
-
-
-                 // --- CUSTOMER UI LOGIC ---
-                 const walkinRadio = document.getElementById('walkinRadio');
-                 const customerRadio = document.getElementById('customerRadio');
-                 const walkinBlock = document.getElementById('walkinBlock');
-                 const selectedCustomerBlock = document.getElementById('selectedCustomerBlock');
-                 function updateCustomerUI() {
-                     if (customerRadio.checked) {
-                         walkinBlock.style.display = "none";
-                         selectedCustomerBlock.style.display = "flex";
-                     } else {
-                         walkinBlock.style.display = "flex";
-                         selectedCustomerBlock.style.display = "none";
-                     }
-                 }
-                 walkinRadio.addEventListener('change', updateCustomerUI);
-                 customerRadio.addEventListener('change', updateCustomerUI);
-                 updateCustomerUI();
-
-                 /* ---- Return visual toggle ---- */
-                function applySaleTypeVisual() {
-                    const isReturn = document.getElementById('rbReturn')?.checked;
-                    document.body.classList.toggle('return-mode', !!isReturn);
-                }
-                document.getElementById('rbSale')?.addEventListener('change', applySaleTypeVisual);
-                document.getElementById('rbReturn')?.addEventListener('change', applySaleTypeVisual);
-
-
-                 // --- INVOICE NUMBER (DEMO) ---
-
-                 // --- HOT ITEMS BY KEY ---
-                 document.addEventListener('keydown', function(e) {
-                     if (document.activeElement.tagName !== 'INPUT') {
-                         if (e.key >= "1" && e.key <= "9") {
-                             var btn = document.querySelector(`.gpos-hotitem-btn[data-shortcut="${e.key}"]`);
-                             if (btn) { btn.click(); }
-                         }
-                     }
-                 });
-
-                 function addQuickItem(itemName) {
-                     alert("Add: " + itemName + " (backend logic)");
-                 }
-
-     /* ===================== Fullscreen Toggle ===================== */
-      const posShell = document.getElementById('posShell');
-      const btnFullscreen = document.getElementById('btnFullscreen');
-
-      function isFullscreen() {
-          return document.fullscreenElement === posShell || document.webkitFullscreenElement === posShell;
-      }
-      function enterFullscreen() {
-          if (posShell.requestFullscreen) posShell.requestFullscreen();
-          else if (posShell.webkitRequestFullscreen) posShell.webkitRequestFullscreen();
-      }
-      function exitFullscreen() {
-          if (document.exitFullscreen) document.exitFullscreen();
-          else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-      }
-      function toggleFullscreen() { isFullscreen() ? exitFullscreen() : enterFullscreen(); }
-
-      btnFullscreen?.addEventListener('click', toggleFullscreen);
-      document.addEventListener('fullscreenchange', handleFsChange);
-      document.addEventListener('webkitfullscreenchange', handleFsChange);
-
-      function handleFsChange() {
-          const icon = btnFullscreen?.querySelector('i');
-          if (!icon) return;
-          if (isFullscreen()) {
-              icon.classList.remove('bi-arrows-fullscreen');
-              icon.classList.add('bi-fullscreen-exit');
-              btnFullscreen.title = "Exit Fullscreen (Alt+Enter)";
-          } else {
-              icon.classList.remove('bi-fullscreen-exit');
-              icon.classList.add('bi-arrows-fullscreen');
-              btnFullscreen.title = "Expand (Alt+Enter)";
-          }
-      }
-
+    /* small helpers used above */
+    function getSelectedSaleType(){ const s=document.querySelector('input[name="SaleType"]:checked'); return s? s.value:null; }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
