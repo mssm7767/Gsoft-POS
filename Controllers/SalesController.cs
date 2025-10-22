@@ -72,8 +72,55 @@ namespace GSoftPosNew.Controllers
             return View(items);
         }
 
-        public IActionResult POSTouch()
+        public async Task <IActionResult> POSTouch()
         {
+            ViewBag.Customer = await _context.Customers.ToListAsync();
+            var categoriesForJs = _context.Categories
+                        .Select(c => new
+                        {
+                            c.Id,
+                            c.Name,
+                            c.ImagePath,
+                            c.Description,
+                            c.Discount,
+                            Items = c.Items.Select(i => new
+                            {
+                                i.Id,
+                                i.ItemCode,
+                                i.ReferenceCode,
+                                i.ItemName,
+                                i.Flavour,
+                                i.GenericName,
+                                i.SupplierId,
+                                SupplierName = i.Supplier != null ? i.Supplier.SupplierName : "",
+                                i.Unit,
+                                i.UnitPrice,
+                                i.LocationId,
+                                i.SalePrice,
+                                i.PurchasePrice,
+                                i.PackPrice,
+                                i.PackSize,
+                                i.Quantity,
+                                i.MarkupPercentage,
+                                i.CostPrice,
+                                i.TaxRate,
+                                i.StockQuantity,
+                                i.LowStockThreshold,
+                                i.ExpiryDate,
+                                i.ImagePath
+                            }).ToList()
+                        })
+                        .OrderBy(c => c.Name)
+                        .ToList();
+
+            ViewBag.CategoriesForJs = categoriesForJs;
+
+            var saleInvNo = _context.Sales.OrderByDescending(s => s.Id).Select(s => s.InvoiceNumber).FirstOrDefault();
+            ViewBag.InvoiceLastDigit = !string.IsNullOrEmpty(saleInvNo)
+                                            ? int.Parse(saleInvNo[saleInvNo.Length - 1].ToString())
+                                            : 0;
+
+
             return View();
         }
         

@@ -1,872 +1,784 @@
 ﻿@{
     ViewData["Title"] = "Touch POS – Restaurant Fast Food";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var invoiceNo = ViewBag.InvoiceLastDigit;
 }
 
-<!-- ===== STYLES ===== -->
-<style>
-    :root {
-        --bg: #f6f8fb;
-        --panel: #ffffff;
-        --line: #e7ecf3;
-        --ink: #0f172a;
-        --muted: #667085;
-        --shadow: 0 10px 28px rgba(2,6,23,.06);
-        --hdrA: #f8e8ec;
-        --hdrB: #e8f8ee;
-        --hdrC: #fff7e6; /* light maroon, green, yellow */
+@Html.AntiForgeryToken()
 
-        --primary-700: #6e162f;
-        --primary-600: #8b1e3f;
-        --primary-400: #c05a6f;
-        --primary-50: #fdebee;
-        --success-600: #16a34a;
-        --success-50: #ecfdf5;
-        --yellow-500: #f59e0b;
-        --yellow-50: #fffbeb;
-        --rose-600: #b91c1c;
-        --rose-50: #fef2f2;
-    }
-
-    * {
-        box-sizing: border-box
-    }
-
-    body {
-        background: var(--bg)
-    }
-
-    /* Top Nav */
-    .top-nav {
-        background: linear-gradient(90deg,var(--hdrA),var(--hdrB),var(--hdrC));
-        border-bottom: 1px solid var(--line);
-        box-shadow: var(--shadow);
-        position: sticky;
-        top: 0;
-        z-index: 50
-    }
-
-    .main-menu {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 6px 12px
-    }
-
-    .nav-row {
-        display: flex;
-        gap: 18px;
-        justify-content: space-between;
-        padding: 4px 0;
-        flex-wrap: wrap
-    }
-
-    .nav-item {
-        list-style: none;
-        color: #3a0d16;
-        font-weight: 800;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 6px;
-        cursor: pointer
-    }
-
-        .nav-item i {
-            font-size: 18px
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        :root {
+            --bg: #f6f8fb;
+            --panel: #fff;
+            --line: #e7ecf3;
+            --ink: #0f172a;
+            --muted: #667085;
+            --shadow: 0 10px 28px rgba(2,6,23,.06);
+            --hdrBlue1: #0ea5e9;
+            --hdrBlue2: #3b82f6;
+            --hdrBlue3: #60a5fa;
+            --yellow-50: #fffbeb;
+            --rose-600: #b91c1c;
+            --rose-50: #fef2f2;
         }
 
-        .nav-item:hover {
-            color: var(--primary-600)
+        * {
+            box-sizing: border-box
         }
 
-    .has-sub::after {
-        content: "";
-        width: 6px;
-        height: 6px;
-        border-right: 2px solid currentColor;
-        border-bottom: 2px solid currentColor;
-        transform: rotate(45deg);
-        margin-top: 2px
-    }
-
-    .mega-panel {
-        border-top: 1px dashed var(--line);
-        background: #fff
-    }
-
-    .mega-grid {
-        display: grid;
-        grid-template-columns: repeat(8,1fr);
-        gap: 10px;
-        padding: 10px 12px
-    }
-
-    .mega-tile {
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        background: #fff;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
-        padding: 12px;
-        cursor: pointer;
-        font-weight: 800;
-        color: #3a0d16
-    }
-
-        .mega-tile:hover {
-            box-shadow: 0 0 0 2px var(--primary-400) inset
+        body {
+            background: var(--bg);
+            color: var(--ink)
         }
 
-    /* Layout */
-    .pos-root {
-        display: grid;
-        grid-template-columns: 1.25fr 1fr;
-        gap: 16px;
-        height: calc(100vh - 120px);
-        padding: 16px
-    }
-
-    .pos-left, .pos-right {
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 16px;
-        box-shadow: var(--shadow);
-        display: flex;
-        flex-direction: column;
-        min-height: 0
-    }
-
-    .pos-left {
-        overflow: auto
-    }
-    /* independent scroll */
-    .pos-right {
-        display: grid;
-        grid-template-columns: 1fr 68px;
-        gap: 0
-    }
-
-    .pos-main {
-        display: flex;
-        flex-direction: column;
-        min-height: 0;
-        overflow: auto
-    }
-    /* independent scroll */
-
-    /* LEFT */
-    .pos-left-header {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        padding: 12px 14px;
-        background: linear-gradient(135deg,var(--hdrA) 0%,var(--hdrB) 55%,var(--hdrC) 100%);
-        border-bottom: 1px solid #f3dfe5;
-        color: #3a0d16;
-        position: relative
-    }
-
-        .pos-left-header::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            height: 5px;
-            background: linear-gradient(90deg,var(--hdrA),var(--hdrB),var(--hdrC));
-            opacity: .9
-        }
-
-    .brand {
-        display: flex;
-        align-items: center;
-        gap: .45rem;
-        font-weight: 900;
-        letter-spacing: .2px
-    }
-
-    .left-search {
-        margin-left: auto;
-        display: flex;
-        align-items: center;
-        gap: .4rem;
-        background: #fff;
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        padding: .25rem .6rem;
-        min-width: 260px;
-        color: #0b1220
-    }
-
-        .left-search input {
-            border: none;
-            outline: none;
-            height: 36px;
-            background: transparent;
-            flex: 1
-        }
-
-    .chips {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        padding: 10px 14px;
-        border-bottom: 1px dashed var(--line)
-    }
-
-    .chip {
-        display: inline-flex;
-        align-items: center;
-        gap: .4rem;
-        padding: .4rem .75rem;
-        border-radius: 999px;
-        border: 1px solid var(--line);
-        background: #fff;
-        font-weight: 800;
-        cursor: pointer;
-        transition: box-shadow .15s,transform .04s
-    }
-
-        .chip.active {
-            box-shadow: 0 0 0 2px var(--primary-400) inset
-        }
-
-        .chip:active {
-            transform: translateY(1px)
-        }
-
-    .cat-grid {
-        display: grid;
-        grid-template-columns: repeat(4,1fr);
-        gap: 10px;
-        padding: 12px 14px
-    }
-
-    .cat-card {
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        overflow: hidden;
-        background: #fff;
-        cursor: pointer;
-        transition: transform .05s,box-shadow .2s;
-        box-shadow: 0 6px 14px rgba(0,0,0,.04)
-    }
-
-        .cat-card:hover {
-            transform: translateY(-2px)
-        }
-
-    .cat-img {
-        aspect-ratio: 4/3;
-        width: 100%;
-        object-fit: cover
-    }
-
-    .cat-title {
-        padding: .55rem .7rem;
-        font-weight: 800;
-        color: #3a0d16
-    }
-
-    .items-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 8px 14px 4px;
-        border-top: 1px dashed var(--line)
-    }
-
-        .items-header h4 {
-            margin: 0;
-            font-weight: 900;
-            color: #3a0d16;
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            min-height: 0;
             display: flex;
-            align-items: center;
-            gap: .5rem
+            flex-direction: column
         }
 
-    .items-sort {
-        display: flex;
-        align-items: center;
-        gap: 8px
-    }
-
-        .items-sort select {
-            height: 34px;
-            border-radius: 10px;
+        .soft-input {
+            height: 38px;
             border: 1px solid var(--line);
-            padding: 0 .5rem;
-            background: #fff
-        }
-
-    .item-grid {
-        padding: 10px 14px;
-        display: grid;
-        grid-template-columns: repeat(4,1fr);
-        gap: 10px;
-        overflow: auto
-    }
-
-    .item-card {
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        padding: 10px;
-        background: #fff;
-        cursor: pointer;
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        transition: transform .05s,box-shadow .2s
-    }
-
-        .item-card:hover {
-            transform: translateY(-2px)
-        }
-
-    .item-thumb {
-        width: 54px;
-        height: 54px;
-        border-radius: 12px;
-        object-fit: cover;
-        border: 1px solid var(--line)
-    }
-
-    .item-info {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        min-width: 0
-    }
-
-    .item-name {
-        font-weight: 800;
-        color: #3a0d16;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis
-    }
-
-    .item-meta {
-        display: flex;
-        gap: 8px;
-        color: var(--muted);
-        font-size: .9rem
-    }
-
-    .price-badge {
-        background: var(--yellow-50);
-        color: #7c2d12;
-        border: 1px solid #fde68a;
-        border-radius: 999px;
-        padding: .1rem .45rem;
-        font-weight: 800
-    }
-
-    /* RIGHT content */
-    .topbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        padding: 10px 12px;
-        border-bottom: 1px dashed var(--line)
-    }
-
-    .order-meta {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        flex-wrap: wrap
-    }
-
-    .sync-wrap {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-weight: 800;
-        color: #334155
-    }
-
-    .cart {
-        display: flex;
-        flex-direction: column;
-        min-height: 0;
-        padding: 10px 12px 0
-    }
-
-    .cart-head {
-        display: grid;
-        grid-template-columns: 1fr 120px 120px 120px 40px;
-        gap: 8px;
-        position: sticky;
-        top: 0;
-        background: #fff7f9;
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        padding: .55rem .6rem;
-        font-weight: 800
-    }
-
-    .cart-body {
-        overflow: auto;
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        margin-top: 8px;
-        padding: 4px;
-        background: #fff;
-        min-height: 180px;
-        max-height: 32vh
-    }
-
-    .cart-row {
-        display: grid;
-        grid-template-columns: 1fr 120px 120px 120px 40px;
-        gap: 8px;
-        align-items: center;
-        border-bottom: 1px dashed #eef2f7;
-        padding: .5rem .4rem
-    }
-
-    .cart-name {
-        font-weight: 800;
-        color: #3a0d16
-    }
-
-    .qty-wrap {
-        display: flex;
-        align-items: center;
-        gap: 6px
-    }
-
-    .qty-btn {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
-        border: 1px solid var(--line);
-        background: #fff;
-        font-weight: 900
-    }
-
-    .qty-input {
-        width: 50px;
-        text-align: center
-    }
-
-    .price-input, .line-total {
-        height: 36px;
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        padding: 0 .5rem;
-        text-align: right;
-        background: #fff
-    }
-
-    .remove-btn {
-        width: 34px;
-        height: 34px;
-        border-radius: 10px;
-        border: 1px solid var(--line);
-        background: #fff;
-        color: var(--rose-600)
-    }
-
-        .remove-btn:hover {
-            background: var(--rose-50)
-        }
-
-    .totals {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-        padding: 10px 12px
-    }
-
-    .t-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        background: #fff;
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        padding: .55rem .6rem
-    }
-
-    .t-inline {
-        display: flex;
-        gap: 6px;
-        align-items: center
-    }
-
-    .t-input {
-        height: 36px;
-        min-width: 90px
-    }
-
-    .t-val {
-        font-weight: 900;
-        color: #3a0d16
-    }
-
-    .big {
-        font-size: 1.25rem
-    }
-
-    .grand {
-        background: linear-gradient(90deg,var(--hdrC),var(--hdrB));
-        border-color: #fde68a
-    }
-
-    .keypad {
-        padding: 2px 12px 10px
-    }
-
-    .pad-grid {
-        display: grid;
-        grid-template-columns: repeat(4,1fr);
-        gap: 8px
-    }
-
-        .pad-grid button {
-            height: 42px;
-            border: 1px solid var(--line);
+            border-radius: 12px;
             background: #fff;
-            border-radius: 10px;
-            font-weight: 800;
-            font-size: 1.05rem
+            padding: 0 .65rem;
+            outline: none
         }
 
-            .pad-grid button.accent {
-                background: #fffaf0;
-                border-color: #fde68a
+            .soft-input:focus {
+                box-shadow: 0 0 0 3px #bfdbfe55;
+                border-color: #bfdbfe
             }
 
-    .pad-targets {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 8px 0 0 2px;
-        color: #64748b;
-        font-weight: 700
-    }
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer
+        }
 
-        .pad-targets label {
+        /* Layout: 40% left | 60% right */
+        .pos-root {
+            display: grid;
+            grid-template-columns: 40% 60%;
+            gap: 16px;
+            min-height: calc(100vh - 80px)
+        }
+
+        .left-col {
+            display: grid;
+            grid-template-rows: 1fr 1fr;
+            gap: 10px
+        }
+
+        /* Blue header strip with inner white line */
+        .pos-left-header {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 12px 14px;
+            color: #fff;
+            background: linear-gradient(135deg,var(--hdrBlue1),var(--hdrBlue2) 60%,var(--hdrBlue3));
+            border-bottom: 1px solid #dbeafe;
+        }
+
+            .pos-left-header::after {
+                content: "";
+                position: absolute;
+                left: 12px;
+                right: 12px;
+                bottom: -1px;
+                height: 6px;
+                background: #fff;
+                border-radius: 6px 6px 0 0;
+                opacity: .9;
+            }
+
+        .brand {
             display: flex;
             align-items: center;
-            gap: 6px
+            gap: .5rem;
+            font-weight: 900
         }
 
-    .actions {
-        display: flex;
-        gap: 8px;
-        padding: 10px 12px 14px;
-        border-top: 1px dashed var(--line);
-        position: sticky;
-        bottom: 0;
-        background: var(--panel)
-    }
-
-    .btn {
-        height: 40px;
-        border-radius: 12px;
-        padding: 0 .9rem;
-        font-weight: 800;
-        border: 1px solid transparent;
-        display: inline-flex;
-        align-items: center;
-        gap: .5rem
-    }
-
-        .btn.primary {
-            background: linear-gradient(90deg,var(--primary-600),#b45309);
-            color: #fff
-        }
-
-        .btn.info {
-            background: #f0fdf4;
-            color: #14532d;
-            border-color: #bbf7d0
-        }
-
-        .btn.warn {
-            background: #fffbeb;
-            color: #92400e;
-            border-color: #fde68a
-        }
-
-        .btn.danger {
-            background: #ffeef0;
-            color: var(--rose-600);
-            border-color: #fecdd3
-        }
-
-        .btn.ghost {
+        .left-search {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: .4rem;
             background: #fff;
-            border-color: var(--line);
-            color: #3a0d16
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: .25rem .6rem;
+            min-width: 240px;
+            color: #0b1220
         }
 
-    /* Right rail */
-    .right-rail {
-        border-left: 1px dashed var(--line);
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        align-items: center;
-        padding: 10px 8px;
-        background: #fff;
-        border-top-right-radius: 16px;
-        border-bottom-right-radius: 16px
-    }
+            .left-search input {
+                border: none;
+                outline: none;
+                height: 36px;
+                background: transparent;
+                flex: 1
+            }
 
-    .rail-btn {
-        width: 48px;
-        height: 48px;
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        background: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-        cursor: pointer;
-        color: #3a0d16
-    }
-
-        .rail-btn:hover {
-            box-shadow: 0 0 0 2px var(--primary-400) inset
+        /* Categories (top-left) */
+        .cat-pane.card {
+            overflow: auto
         }
 
-        .rail-btn.primary {
-            background: var(--primary-600);
-            color: #fff;
-            border-color: transparent
+        .cat-grid {
+            padding: 10px 12px;
+            display: grid;
+            grid-template-columns: repeat(4,1fr);
+            gap: 10px
         }
 
-        .rail-btn.danger {
-            color: var(--rose-600)
+        .cat-btn {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            padding: .55rem .7rem;
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 800;
+            color: #0f172a;
+            transition: box-shadow .15s,transform .04s
         }
 
-    /* FAB (fixed print + kot) */
-    .fab-wrap {
-        position: fixed;
-        right: 20px;
-        bottom: 20px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        z-index: 9999
-    }
+            .cat-btn:hover {
+                box-shadow: 0 0 0 2px #bfdbfe inset
+            }
 
-    .fab {
-        width: 52px;
-        height: 52px;
-        border-radius: 16px;
-        border: none;
-        box-shadow: 0 4px 12px rgba(0,0,0,.2);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-        cursor: pointer
-    }
-
-        .fab.primary {
-            background: var(--primary-600);
-            color: #fff
+        .cat-thumb {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 1px solid var(--line)
         }
 
-        .fab.secondary {
-            background: #fffbeb;
-            color: #92400e;
-            border: 1px solid #fde68a
+        .cat-title {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis
         }
 
-    /* Modal */
-    .modal[hidden] {
-        display: none
-    }
+        .cat-count {
+            font-size: .75rem;
+            padding: .1rem .45rem;
+            border-radius: 999px;
+            background: #eef2ff;
+            border: 1px solid #dbeafe;
+            color: #1e40af
+        }
 
-    .modal {
-        position: fixed;
-        inset: 0;
-        z-index: 10000
-    }
+        /* Items (bottom-left) */
+        .left-items.card {
+            overflow: auto
+        }
 
-    .modal-backdrop {
-        position: absolute;
-        inset: 0;
-        background: rgba(2,6,23,.35)
-    }
+        .left-items-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: space-between;
+            padding: 10px 12px;
+            border-bottom: 1px dashed var(--line);
+            flex-wrap: wrap
+        }
 
-    .modal-card {
-        position: relative;
-        margin: 8vh auto 0;
-        max-width: 520px;
-        background: #fff;
-        border: 1px solid var(--line);
-        border-radius: 16px;
-        box-shadow: var(--shadow)
-    }
+            .left-items-head h4 {
+                margin: 0;
+                font-weight: 900;
+                color: #0f172a
+            }
 
-    .modal-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 12px 14px;
-        border-bottom: 1px solid var(--line)
-    }
-
-        .modal-head h3 {
-            margin: 0;
-            font-weight: 900;
-            color: #3a0d16;
+        .left-items-controls {
             display: flex;
             gap: 8px;
             align-items: center
         }
 
-    .modal-close {
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
-        border: 1px solid var(--line);
-        background: #fff;
-        font-size: 20px;
-        cursor: pointer
-    }
+        .left-items-grid {
+            padding: 10px 12px;
+            display: grid;
+            grid-template-columns: repeat(2,1fr);
+            gap: 10px
+        }
 
-    .modal-body {
-        padding: 14px
-    }
+        .li-card {
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 10px;
+            background: #fff;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            cursor: pointer;
+            transition: transform .05s,box-shadow .15s
+        }
 
-        .modal-body label {
-            display: block;
-            margin-bottom: 6px;
+            .li-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 0 0 2px #bfdbfe inset
+            }
+
+        .li-thumb {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 1px solid var(--line)
+        }
+
+        .li-name {
             font-weight: 800;
-            color: #334155
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis
         }
 
-    .modal-actions {
-        display: flex;
-        gap: 8px;
-        justify-content: flex-end;
-        padding: 12px 14px;
-        border-top: 1px solid var(--line)
-    }
-
-    /* Responsive */
-    @@media (max-width:1280px) {
-        .pos-root {
-            grid-template-columns: 1fr;
-            grid-template-rows: auto 1fr;
-            height: auto
+        .li-meta {
+            display: flex;
+            gap: 8px;
+            color: var(--muted);
+            font-size: .9rem
         }
 
-        .cat-grid {
-            grid-template-columns: repeat(3,1fr)
+        .price-badge {
+            background: var(--yellow-50);
+            color: #7c2d12;
+            border: 1px solid #fde68a;
+            border-radius: 999px;
+            padding: .05rem .45rem;
+            font-weight: 800
         }
 
-        .item-grid {
-            grid-template-columns: repeat(3,1fr)
-        }
-    }
-
-    @@media (max-width:900px) {
-        .cat-grid {
-            grid-template-columns: repeat(2,1fr)
+        /* Right: cart & totals */
+        .pos-right.card {
+            display: flex
         }
 
-        .item-grid {
-            grid-template-columns: repeat(2,1fr)
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 10px 12px;
+            border-bottom: 1px dashed var(--line);
+            flex-wrap: wrap
         }
 
-        .cart-head, .cart-row {
-            grid-template-columns: 1fr 90px 100px 100px 40px
+        .order-meta {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap
         }
 
-        .mega-grid {
-            grid-template-columns: repeat(4,1fr)
+        .order-no {
+            font-weight: 900;
+            color: #111827;
+            border: 1px dashed #cbd5e1;
+            border-radius: 10px;
+            padding: .35rem .6rem;
+            background: #f8fafc
         }
-    }
 
-    @@media (max-width:600px) {
-        .left-search {
-            min-width: unset
+        .fs-btn {
+            height: 38px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            background: #fff;
+            padding: 0 .65rem;
+            font-weight: 800;
+            cursor: pointer
         }
 
-        .mega-grid {
-            grid-template-columns: repeat(3,1fr)
+        .cart {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            padding: 10px 12px 0
         }
-    }
-</style>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
+        .cart-head {
+            display: grid;
+            grid-template-columns: 1fr 110px 120px 120px 40px;
+            gap: 8px;
+            position: sticky;
+            top: 0;
+            background: #eff6ff;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: .55rem .6rem;
+            font-weight: 800
+        }
 
+        .cart-body {
+            overflow: auto;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            margin-top: 8px;
+            padding: 4px;
+            background: #fff;
+            min-height: 220px;
+            max-height: 38vh
+        }
 
-<!-- ===== MAIN LAYOUT ===== -->
-<div class="pos-root">
-    <!-- LEFT: Categories + Items -->
-    <aside id="leftPane" class="pos-left">
-        <div class="pos-left-header">
-            <div class="brand">
-                <i class="fa-solid fa-utensils"></i>
-                <span>POS – Fast Food</span>
+        .cart-row {
+            display: grid;
+            grid-template-columns: 1fr 110px 120px 120px 40px;
+            gap: 8px;
+            align-items: center;
+            border-bottom: 1px dashed #eef2f7;
+            padding: .5rem .4rem
+        }
+
+        .cart-name {
+            font-weight: 800;
+            color: #0f172a
+        }
+
+        .qty-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px
+        }
+
+        .qty-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            background: #fff;
+            font-weight: 900
+        }
+
+        .qty-input {
+            width: 50px;
+            text-align: center
+        }
+
+        .price-input, .line-total {
+            height: 36px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 0 .5rem;
+            text-align: right;
+            background: #fff
+        }
+
+        .remove-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+            background: #fff;
+            color: #b91c1c
+        }
+
+            .remove-btn:hover {
+                background: #fef2f2
+            }
+
+        /* Totals */
+        .totals {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 10px 12px
+        }
+
+        .t-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: .55rem .6rem
+        }
+
+        .t-inline {
+            display: flex;
+            gap: 6px;
+            align-items: center
+        }
+
+        .t-input {
+            height: 36px;
+            min-width: 90px
+        }
+
+        .t-val {
+            font-weight: 900;
+            color: #0f172a
+        }
+
+        .grand {
+            background: linear-gradient(90deg,#e0f2fe,#dbeafe);
+            border-color: #bfdbfe
+        }
+
+        /* Keypad + targets */
+        .keypad {
+            padding: 2px 12px 10px
+        }
+
+        .keypad-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 0 10px
+        }
+
+        .keypad-title {
+            font-weight: 800;
+            color: #0f172a
+        }
+
+        .pad-targets {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #64748b;
+            font-weight: 700
+        }
+
+            .pad-targets label {
+                display: flex;
+                align-items: center;
+                gap: 6px
+            }
+
+        .pad-grid {
+            display: grid;
+            grid-template-columns: repeat(4,1fr);
+            gap: 8px
+        }
+
+            .pad-grid button {
+                height: 42px;
+                border: 1px solid var(--line);
+                background: #fff;
+                border-radius: 10px;
+                font-weight: 800;
+                font-size: 1.05rem
+            }
+
+                .pad-grid button.accent {
+                    background: #fffaf0;
+                    border-color: #fde68a
+                }
+
+        /* Action cards */
+        .actions-cards {
+            display: grid;
+            grid-template-columns: repeat(6,1fr);
+            gap: 10px;
+            padding: 12px;
+            border-top: 1px dashed var(--line);
+            position: sticky;
+            bottom: 0;
+            background: var(--panel)
+        }
+
+        .act-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: #fff;
+            cursor: pointer;
+            font-weight: 800;
+            color: #0f172a;
+            text-align: center;
+            transition: transform .06s, box-shadow .15s
+        }
+
+            .act-card i {
+                font-size: 18px
+            }
+
+            .act-card:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 0 0 2px #e2e8f0 inset
+            }
+
+            .act-card.primary {
+                background: #eff6ff;
+                border-color: #bfdbfe
+            }
+
+            .act-card.warn {
+                background: #fffbeb;
+                border-color: #fde68a
+            }
+
+            .act-card.danger {
+                background: #ffeef0;
+                border-color: #fecdd3
+            }
+
+            .act-card.info {
+                background: #f0fdf4;
+                border-color: #bbf7d0
+            }
+
+        /* Modals */
+        .modal[hidden] {
+            display: none
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            z-index: 10000
+        }
+
+        .modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(2,6,23,.35)
+        }
+
+        .modal-card {
+            position: relative;
+            margin: 8vh auto 0;
+            max-width: 900px;
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            box-shadow: var(--shadow)
+        }
+
+        .modal-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--line)
+        }
+
+            .modal-head h3 {
+                margin: 0;
+                font-weight: 900;
+                color: #0f172a;
+                display: flex;
+                gap: 8px;
+                align-items: center
+            }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+            background: #fff;
+            font-size: 20px;
+            cursor: pointer
+        }
+
+        .modal-body {
+            padding: 14px;
+            max-height: 60vh;
+            overflow: auto
+        }
+
+        .hold-list {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px
+        }
+
+            .hold-list th {
+                font-weight: 800;
+                color: #334155;
+                text-align: left;
+                padding: 6px 8px
+            }
+
+        .hold-row {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 12px
+        }
+
+            .hold-row td {
+                padding: 8px
+            }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: .1rem .5rem;
+            border-radius: 999px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            font-weight: 700
+        }
+
+        /* Fullscreen styling */
+        #posApp:fullscreen {
+            background: #f8fafc;
+            padding: 12px;
+        }
+
+            #posApp:fullscreen .card {
+                border: 1px solid #e5e7eb;
+                box-shadow: none;
+            }
+
+        /* Print only invoice area */
+        @@media print {
+            body * {
+                visibility: hidden !important;
+            }
+
+            #printArea, #printArea * {
+                visibility: visible !important;
+            }
+
+            #printArea {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                padding: 16px;
+            }
+        }
+
+        /* Responsive */
+        @@media (max-width:1280px) {
+            .cat-grid {
+                grid-template-columns: repeat(3,1fr)
+            }
+        }
+
+        @@media (max-width:980px) {
+            .pos-root {
+                grid-template-columns: 1fr
+            }
+
+            .cat-grid {
+                grid-template-columns: repeat(2,1fr)
+            }
+
+            .cart-head, .cart-row {
+                grid-template-columns: 1fr 90px 100px 100px 40px
+            }
+
+            .actions-cards {
+                grid-template-columns: repeat(3,1fr)
+            }
+        }
+
+    </style>
+}
+
+<div id="posApp" class="pos-root">
+    <!-- LEFT -->
+    <div class="left-col">
+        <div class="card">
+            <div class="pos-left-header">
+                <div class="brand"><i class="fa-solid fa-burger"></i><span>POS – Fast Food</span></div>
+                <div class="left-search" title="Search by name or code">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input id="itemSearchTop" type="text" placeholder="Search name or code…" autocomplete="off">
+                </div>
             </div>
-            <div class="left-search">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input id="itemSearch" type="text" placeholder="Search items..." autocomplete="off">
-            </div>
+            <div class="cat-pane card"><div id="catGrid" class="cat-grid"></div></div>
         </div>
 
-        <!-- Sub-category chips -->
-        <div id="subChips" class="chips"></div>
-
-        <!-- Categories (with image) -->
-        <div id="catGrid" class="cat-grid"></div>
-
-        <!-- Items for selected category -->
-        <div class="items-header">
-            <h4 id="itemsTitle"><i class="fa-regular fa-square"></i> Items</h4>
-            <div class="items-sort">
-                <label>Sort:</label>
-                <select id="sortSel">
-                    <option value="name">Name (A–Z)</option>
-                    <option value="price_asc">Price (Low → High)</option>
-                    <option value="price_desc">Price (High → Low)</option>
-                </select>
+        <div class="left-items card">
+            <div class="left-items-head">
+                <h4 id="leftItemsTitle">Items</h4>
+                <div class="left-items-controls">
+                    <div class="left-search" title="Search by name or code">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input id="itemSearchBottom" type="text" placeholder="Search name or code…" autocomplete="off">
+                    </div>
+                    <label>Sort:</label>
+                    <select id="sortSel" class="soft-input" style="height:34px">
+                        <option value="name">Name (A–Z)</option>
+                        <option value="price_asc">Price (Low → High)</option>
+                        <option value="price_desc">Price (High → Low)</option>
+                    </select>
+                </div>
             </div>
+            <div id="leftItemsGrid" class="left-items-grid"></div>
         </div>
-        <div id="itemGrid" class="item-grid"></div>
-    </aside>
+    </div>
 
-    <!-- RIGHT: Content + Vertical Right Rail -->
-    <main class="pos-right">
+    <!-- RIGHT -->
+    <main class="pos-right card">
         <section id="rightPane" class="pos-main">
-            <!-- Top bar -->
             <div class="topbar">
                 <div class="order-meta">
+                    <span class="order-no">Order # <span id="orderNo">0001</span></span>
+
                     <select id="orderType" class="soft-input">
                         <option value="dinein">Dine-In</option>
                         <option value="takeaway">Takeaway</option>
                         <option value="delivery">Delivery</option>
                     </select>
+
                     <input id="tableNo" class="soft-input" placeholder="Table # / Token">
-                    <input id="customer" class="soft-input" placeholder="Customer / Phone">
-                    <label class="sync-wrap">
-                        <input id="syncScroll" type="checkbox"> <span>Sync Scroll</span>
-                    </label>
+                    <select id="customer" class="soft-input">
+                        <option value="">Customer / Phone"</option>
+                        @if (ViewBag.Customer != null)
+                        {
+                            @foreach (var c in ViewBag.Customer)
+                            {
+                                <option value="@c.Id" data-id="@c.Id">@c.CustomerName</option>
+                            }
+                        }
+                        
+                    </select>
+                   
+                    <button id="addCustomerBtn" class="icon-btn" title="Add/Quick customer"><i class="fa-solid fa-user-plus"></i></button>
+
+                    <select id="waiterSel" class="soft-input">
+                        <option value="">Select Waiter</option>
+                    </select>
+                    <button id="addWaiterBtn" class="icon-btn" title="Add new waiter"><i class="fa-solid fa-plus"></i></button>
                 </div>
-                <div class="now">
-                    <span id="nowTime"></span>
-                    <span class="sep">•</span>
-                    <span id="nowDate"></span>
+                <div class="now" style="display:flex;align-items:center;gap:8px">
+                    <button id="fsBtn" class="fs-btn" title="Full Screen"><i class="fa-solid fa-up-right-and-down-left-from-center"></i></button>
+                    <span id="nowTime"></span><span class="sep">•</span><span id="nowDate"></span>
                 </div>
             </div>
 
-            <!-- Cart grid -->
             <div class="cart">
                 <div class="cart-head">
                     <div class="h-item">Item</div>
@@ -878,11 +790,16 @@
                 <div id="cartBody" class="cart-body"></div>
             </div>
 
-            <!-- Totals Panel -->
             <div class="totals">
                 <div class="t-row">
-                    <label>Subtotal</label>
-                    <div id="tSub" class="t-val">0.00</div>
+                    <label>Tax</label>
+                    <div class="t-inline">
+                        <input id="tTax" class="soft-input t-input" type="number" step="0.01" value="0">
+                        <select id="tTaxType" class="soft-input t-input">
+                            <option value="percent">%</option>
+                            <option value="flat">PKR</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="t-row">
                     <label>Discount</label>
@@ -894,23 +811,21 @@
                         </select>
                     </div>
                 </div>
-                <div class="t-row">
-                    <label>Tax</label>
-                    <div class="t-inline">
-                        <input id="tTax" class="soft-input t-input" type="number" step="0.01" value="0">
-                        <select id="tTaxType" class="soft-input t-input">
-                            <option value="percent">%</option>
-                            <option value="flat">PKR</option>
-                        </select>
-                    </div>
-                </div>
                 <div class="t-row grand">
                     <label>Grand Total</label>
-                    <div id="tGrand" class="t-val big">0.00</div>
+                    <div id="tGrand" class="t-val">0.00</div>
                 </div>
                 <div class="t-row">
                     <label>Cash</label>
-                    <input id="tCash" class="soft-input t-input" type="number" step="0.01" placeholder="0.00">
+                    <div class="t-inline">
+                        <input id="tCash" class="soft-input t-input" type="number" step="0.01" placeholder="0.00">
+                        <select id="payMode" class="soft-input t-input" title="Mode of Payment">
+                            <option value="cash">Cash</option>
+                            <option value="card">Card</option>
+                            <option value="credit">Credit</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="t-row">
                     <label>Change</label>
@@ -918,268 +833,290 @@
                 </div>
             </div>
 
-            <!-- Keypad -->
             <div class="keypad">
-                <div class="pad-grid">
-                    <button data-key="7">7</button><button data-key="8">8</button><button data-key="9">9</button>
-                    <button data-key="C" class="accent">C</button>
-
-                    <button data-key="4">4</button><button data-key="5">5</button><button data-key="6">6</button>
-                    <button data-key="⌫" class="accent">⌫</button>
-
-                    <button data-key="1">1</button><button data-key="2">2</button><button data-key="3">3</button>
-                    <button data-key="00">00</button>
-
-                    <button data-key="0">0</button><button data-key=".">.</button>
-                    <button data-key="100">100</button><button data-key="200">200</button>
+                <div class="keypad-head">
+                    <div class="keypad-title">Keypad</div>
+                    <div class="pad-targets">
+                        <span>Target:</span>
+                        <label><input type="radio" name="padTarget" value="qty" checked> Qty</label>
+                        <label><input type="radio" name="padTarget" value="price"> Price</label>
+                        <label><input type="radio" name="padTarget" value="disc"> Discount</label>
+                        <label><input type="radio" name="padTarget" value="cash"> Cash</label>
+                    </div>
                 </div>
-
-                <div class="pad-targets">
-                    <span>Target:</span>
-                    <label><input type="radio" name="padTarget" value="qty" checked> Qty</label>
-                    <label><input type="radio" name="padTarget" value="price"> Price</label>
-                    <label><input type="radio" name="padTarget" value="disc"> Discount</label>
-                    <label><input type="radio" name="padTarget" value="cash"> Cash</label>
+                <div class="pad-grid">
+                    <button data-key="7">7</button><button data-key="8">8</button><button data-key="9">9</button><button data-key="C" class="accent">C</button>
+                    <button data-key="4">4</button><button data-key="5">5</button><button data-key="6">6</button><button data-key="⌫" class="accent">⌫</button>
+                    <button data-key="1">1</button><button data-key="2">2</button><button data-key="3">3</button><button data-key="00">00</button>
+                    <button data-key="0">0</button><button data-key=".">.</button><button data-key="100">100</button><button data-key="200">200</button>
                 </div>
             </div>
 
-            <!-- Actions row -->
-            <div class="actions">
-                <button id="btnNew" class="btn ghost"><i class="fa-regular fa-file"></i> New</button>
-                <button id="btnHold" class="btn ghost"><i class="fa-regular fa-bookmark"></i> Hold</button>
-                <button id="btnModify" class="btn info"><i class="fa-regular fa-pen-to-square"></i> Modify Order</button>
-                <button id="btnDelete" class="btn danger"><i class="fa-regular fa-trash-can"></i> Delete Order</button>
-                <button id="btnKOT" class="btn warn"><i class="fa-solid fa-utensils"></i> KOT Print</button>
-                <button id="btnPrint" class="btn primary"><i class="fa-solid fa-print"></i> Print</button>
+            <div class="actions-cards">
+                <div id="acModify" class="act-card info" title="Modify Order"><i class="fa-regular fa-pen-to-square"></i><div>Modify</div></div>
+                <div id="acDelete" class="act-card danger" title="Delete Order"><i class="fa-regular fa-trash-can"></i><div>Delete</div></div>
+                <div id="acKOT" class="act-card warn" title="KOT Print"><i class="fa-solid fa-utensils"></i><div>KOT</div></div>
+                <div id="acPrint" class="act-card primary" title="Print Bill"><i class="fa-solid fa-print"></i><div>Print</div></div>
+                <div id="acHold" class="act-card" title="Hold Invoice"><i class="fa-regular fa-bookmark"></i><div>Hold</div></div>
+                <div id="acRetrieve" class="act-card" title="Retrieve Held"><i class="fa-regular fa-folder-open"></i><div>Retrieve</div></div>
             </div>
         </section>
-
-        <!-- RIGHT VERTICAL RAIL -->
-        <aside class="right-rail">
-            <button id="rNew" class="rail-btn" title="New"><i class="fa-regular fa-file"></i></button>
-            <button id="rHold" class="rail-btn" title="Hold"><i class="fa-regular fa-bookmark"></i></button>
-            <button id="rModify" class="rail-btn" title="Modify"><i class="fa-regular fa-pen-to-square"></i></button>
-            <button id="rDelete" class="rail-btn danger" title="Delete"><i class="fa-regular fa-trash-can"></i></button>
-            <button id="rKOT" class="rail-btn" title="KOT Print"><i class="fa-solid fa-utensils"></i></button>
-            <button id="rPrint" class="rail-btn primary" title="Print"><i class="fa-solid fa-print"></i></button>
-        </aside>
     </main>
 </div>
 
-<!-- FIXED FAB: PRINT + KOT -->
-<div class="fab-wrap">
-    <button id="btnFabKOT" class="fab secondary" title="KOT Print"><i class="fa-solid fa-utensils"></i></button>
-    <button id="btnFabPrint" class="fab primary" title="Print"><i class="fa-solid fa-print"></i></button>
-</div>
+<!-- Hidden print container -->
+<div id="printArea" style="display:none"></div>
 
-<!-- MODIFY ORDER MODAL -->
-<div id="modifyModal" class="modal" hidden>
+<!-- Hold choice modal -->
+<div id="holdModal" class="modal" hidden>
     <div class="modal-backdrop"></div>
     <div class="modal-card">
         <div class="modal-head">
-            <h3><i class="fa-regular fa-pen-to-square"></i> Modify Existing Order</h3>
-            <button class="modal-close" aria-label="Close">&times;</button>
+            <h3><i class="fa-regular fa-bookmark"></i> Hold Invoice</h3>
+            <button class="modal-close" data-close="hold">&times;</button>
         </div>
         <div class="modal-body">
-            <label>Invoice #</label>
-            <input id="modInvoice" class="soft-input" placeholder="e.g. INV-1024">
-            <small class="muted">Demo: koi bhi number likhein — sample items load ho jayenge.</small>
-        </div>
-        <div class="modal-actions">
-            <button id="modLoad" class="btn info"><i class="fa-solid fa-magnifying-glass"></i> Load</button>
-            <button class="btn ghost modal-close">Cancel</button>
+            <p>Choose an option for current order:</p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <button id="btnHoldOnly" class="act-card" style="min-width:160px"><i class="fa-regular fa-bookmark"></i><div>Hold Only</div></button>
+                <button id="btnHoldPrint" class="act-card primary" style="min-width:160px"><i class="fa-solid fa-print"></i><div>Hold &amp; Print</div></button>
+            </div>
         </div>
     </div>
 </div>
 
+<!-- Retrieve modal -->
+<div id="retrieveModal" class="modal" hidden>
+    <div class="modal-backdrop"></div>
+    <div class="modal-card">
+        <div class="modal-head">
+            <h3><i class="fa-regular fa-folder-open"></i> Retrieve Held Invoices</h3>
+            <button class="modal-close" data-close="retrieve">&times;</button>
+        </div>
+        <div class="modal-body">
+            <table class="hold-list">
+                <thead>
+                    <tr>
+                        <th>Invoice #</th>
+                        <th>Order #</th>
+                        <th>Waiter</th>
+                        <th>When</th>
+                        <th>Items</th>
+                        <th>Total</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="holdListBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 @section Scripts {
     <script>
+        let invoiceCounter = @((invoiceNo ?? 0));
+        document.getElementById('orderNo').innerText=generateInvoiceNumber();
+        function generateInvoiceNumber(){
+            invoiceCounter=(parseInt(invoiceCounter)||0)+1; 
+            const counterStr=String(invoiceCounter).padStart(4,'0');
+            return `${counterStr}`;
+        }
+
         (function(){
-          // ===== Demo Data =====
-          const CATS = [
-            {id:'burgers', title:'Burgers', img:'https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=800&auto=format&fit=crop'},
-            {id:'pizzas',  title:'Pizzas',  img:'https://images.unsplash.com/photo-1548365328-9f547fb09550?q=80&w=800&auto=format&fit=crop'},
-            {id:'sides',   title:'Sides',   img:'https://images.unsplash.com/photo-1511690656952-34342bb7c2f2?q=80&w=800&auto=format&fit=crop'},
-            {id:'drinks',  title:'Drinks',  img:'https://images.unsplash.com/photo-1511920170033-f8396924c348?q=80&w=800&auto=format&fit=crop'},
-            {id:'dessert', title:'Dessert', img:'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?q=80&w=800&auto=format&fit=crop'},
-            {id:'wraps',   title:'Wraps',   img:'https://images.unsplash.com/photo-1604908176997-43162fdf4b36?q=80&w=800&auto=format&fit=crop'},
-            {id:'salads',  title:'Salads',  img:'https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?q=80&w=800&auto=format&fit=crop'},
-            {id:'special', title:'Specials',img:'https://images.unsplash.com/photo-1512058564366-18510be2db19?q=80&w=800&auto=format&fit=crop'}
-          ];
-          const SUBS = ['All','Spicy','Cheesy','Combo','Large','Medium','Small'];
-          const ITEMS = [
-            {id:1, cat:'burgers', name:'Zinger Burger', price:550, img:'https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=400&auto=format&fit=crop'},
-            {id:2, cat:'burgers', name:'Beef Burger', price:620, img:'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=400&auto=format&fit=crop'},
-            {id:3, cat:'burgers', name:'Cheese Burger', price:580, img:'https://images.unsplash.com/photo-1553979081-13eab165c24b?q=80&w=400&auto=format&fit=crop'},
-            {id:4, cat:'pizzas',  name:'Pepperoni Pizza', price:1200, img:'https://images.unsplash.com/photo-1548365328-9f547fb09550?q=80&w=400&auto=format&fit=crop'},
-            {id:5, cat:'pizzas',  name:'Fajita Pizza', price:1300, img:'https://images.unsplash.com/photo-1460306855393-0410f61241c7?q=80&w=400&auto=format&fit=crop'},
-            {id:6, cat:'sides',   name:'Fries', price:250, img:'https://images.unsplash.com/photo-1511690656952-34342bb7c2f2?q=80&w=400&auto=format&fit=crop'},
-            {id:7, cat:'drinks',  name:'Cola 500ml', price:120, img:'https://images.unsplash.com/photo-1511920170033-f8396924c348?q=80&w=400&auto=format&fit=crop'},
-            {id:8, cat:'dessert', name:'Chocolate Lava', price:480, img:'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?q=80&w=400&auto=format&fit=crop'}
-          ];
-
-          // ===== DOM =====
-          const leftPane = document.getElementById('leftPane');
-          const rightPane = document.getElementById('rightPane');
-          const syncScroll = document.getElementById('syncScroll');
-
-          const catGrid = document.getElementById('catGrid');
-          const itemGrid = document.getElementById('itemGrid');
-          const itemsTitle = document.getElementById('itemsTitle');
-          const subChips = document.getElementById('subChips');
-          const sortSel = document.getElementById('sortSel');
-          const itemSearch = document.getElementById('itemSearch');
-          const cartBody = document.getElementById('cartBody');
-
-          const tSub = document.getElementById('tSub');
-          const tDisc = document.getElementById('tDisc');
-          const tDiscType = document.getElementById('tDiscType');
-          const tTax = document.getElementById('tTax');
-          const tTaxType = document.getElementById('tTaxType');
-          const tGrand = document.getElementById('tGrand');
-          const tCash = document.getElementById('tCash');
-          const tChange = document.getElementById('tChange');
-
-          const btnNew = document.getElementById('btnNew');
-          const btnHold = document.getElementById('btnHold');
-          const btnModify = document.getElementById('btnModify');
-          const btnDelete = document.getElementById('btnDelete');
-          const btnKOT = document.getElementById('btnKOT');
-          const btnPrint = document.getElementById('btnPrint');
-
-          const btnFabKOT = document.getElementById('btnFabKOT');
-          const btnFabPrint = document.getElementById('btnFabPrint');
-
-          const rNew = document.getElementById('rNew');
-          const rHold = document.getElementById('rHold');
-          const rModify = document.getElementById('rModify');
-          const rDelete = document.getElementById('rDelete');
-          const rKOT = document.getElementById('rKOT');
-          const rPrint = document.getElementById('rPrint');
-
-          const megaPanel = document.getElementById('megaPanel');
-
-          // Modify modal
-          const modifyModal = document.getElementById('modifyModal');
-          const modInvoice = document.getElementById('modInvoice');
-          const modLoad = document.getElementById('modLoad');
-          const modalCloseBtns = modifyModal.querySelectorAll('.modal-close');
-
-          let currentCat = 'burgers';
-          let currentSub = 'All';
-          let cart = []; // {id,name,price,qty}
-          let syncing = false;
-
-          // Time/Date live
-          function tick(){
-            const n = new Date();
-            document.getElementById('nowTime').textContent = n.toLocaleTimeString();
-            document.getElementById('nowDate').textContent = n.toLocaleDateString();
+          /* Anti-forgery + fetch helper */
+          function antiforgery(){ const el=document.querySelector('input[name="__RequestVerificationToken"]'); return el?el.value:''; }
+          async function req(url, data=null, method='POST'){
+            const res = await fetch(url, {
+              method,
+              headers:{
+                'Content-Type':'application/json',
+                'RequestVerificationToken': antiforgery()
+              },
+              body: (method==='GET'||method==='DELETE')? null : JSON.stringify(data)
+            });
+            if(!res.ok){ throw new Error(await res.text() || ('HTTP '+res.status)); }
+            const ct = res.headers.get('content-type')||'';
+            return ct.includes('application/json')? res.json():{};
           }
-          setInterval(tick, 1000); tick();
 
-          // Build chips
-          const SUBS = ['All','Spicy','Cheesy','Combo','Large','Medium','Small'];
-          function renderChips(){
-            subChips.innerHTML = SUBS.map(s => `<div class="chip ${s===currentSub?'active':''}" data-sub="${s}">${s}</div>`).join('');
-          }
-          renderChips();
-          subChips.addEventListener('click', e=>{
-            const chip = e.target.closest('.chip'); if(!chip) return;
-            currentSub = chip.dataset.sub; renderChips(); renderItems();
+          /* Demo data */
+          const CATS=[{id:'burgers',title:'Burgers',count:8,img:'https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=300&auto=format&fit=crop'},
+                      {id:'pizzas',title:'Pizzas',count:6,img:'https://images.unsplash.com/photo-1548365328-9f547fb09550?q=80&w=300&auto=format&fit=crop'},
+                      {id:'sides',title:'Sides',count:7,img:'https://images.unsplash.com/photo-1511690656952-34342bb7c2f2?q=80&w=300&auto=format&fit=crop'},
+                      {id:'drinks',title:'Drinks',count:9,img:'https://images.unsplash.com/photo-1511920170033-f8396924c348?q=80&w=300&auto=format&fit=crop'},
+                      {id:'dessert',title:'Dessert',count:5,img:'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?q=80&w=300&auto=format&fit=crop'},
+                      {id:'wraps',title:'Wraps',count:4,img:'https://images.unsplash.com/photo-1604908176997-43162fdf4b36?q=80&w=300&auto=format&fit=crop'},
+                      {id:'salads',title:'Salads',count:4,img:'https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?q=80&w=300&auto=format&fit=crop'},
+                      {id:'special',title:'Specials',count:3,img:'https://images.unsplash.com/photo-1512058564366-18510be2db19?q=80&w=300&auto=format&fit=crop'}];
+          const ITEMS=[{id:1,cat:'burgers',code:'BZ-101',name:'Zinger Burger',price:550,img:'https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=400&auto=format&fit=crop'},
+                       {id:2,cat:'burgers',code:'BB-102',name:'Beef Burger',price:620,img:'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=400&auto=format&fit=crop'},
+                       {id:3,cat:'burgers',code:'CB-103',name:'Cheese Burger',price:580,img:'https://images.unsplash.com/photo-1553979081-13eab165c24b?q=80&w=400&auto=format&fit=crop'},
+                       {id:4,cat:'pizzas',code:'PP-201',name:'Pepperoni Pizza',price:1200,img:'https://images.unsplash.com/photo-1548365328-9f547fb09550?q=80&w=400&auto=format&fit=crop'},
+                       {id:5,cat:'pizzas',code:'FP-202',name:'Fajita Pizza',price:1300,img:'https://images.unsplash.com/photo-1460306855393-0410f61241c7?q=80&w=400&auto=format&fit=crop'},
+                       {id:6,cat:'sides',code:'FR-301',name:'Fries',price:250,img:'https://images.unsplash.com/photo-1511690656952-34342bb7c2f2?q=80&w=400&auto=format&fit=crop'},
+                       {id:7,cat:'drinks',code:'CL-401',name:'Cola 500ml',price:120,img:'https://images.unsplash.com/photo-1511920170033-f8396924c348?q=80&w=400&auto=format&fit=crop'},
+                       {id:8,cat:'dessert',code:'DL-501',name:'Chocolate Lava',price:480,img:'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?q=80&w=400&auto=format&fit=crop'}];
+          const WAITERS=['Ali','Bilal','Hamza','Imran','Sara','Waqas'];
+
+          /* DOM refs */
+          const catGrid=document.getElementById('catGrid');
+          const leftItemsTitle=document.getElementById('leftItemsTitle');
+          const leftItemsGrid=document.getElementById('leftItemsGrid');
+          const sortSel=document.getElementById('sortSel');
+          const itemSearchTop=document.getElementById('itemSearchTop');
+          const itemSearchBottom=document.getElementById('itemSearchBottom');
+          const cartBody=document.getElementById('cartBody');
+          const tDisc=document.getElementById('tDisc');
+          const tDiscType=document.getElementById('tDiscType');
+          const tTax=document.getElementById('tTax');
+          const tTaxType=document.getElementById('tTaxType');
+          const tGrand=document.getElementById('tGrand');
+          const tCash=document.getElementById('tCash');
+          const tChange=document.getElementById('tChange');
+          const payMode=document.getElementById('payMode');
+          const waiterSel=document.getElementById('waiterSel');
+          const addWaiterBtn=document.getElementById('addWaiterBtn');
+          const addCustomerBtn=document.getElementById('addCustomerBtn');
+          const customer=document.getElementById('customer');
+          const fsBtn=document.getElementById('fsBtn');
+          const posApp=document.getElementById('posApp');
+          const acModify=document.getElementById('acModify');
+          const acDelete=document.getElementById('acDelete');
+          const acKOT=document.getElementById('acKOT');
+          const acPrint=document.getElementById('acPrint');
+          const acHold=document.getElementById('acHold');
+          const acRetrieve=document.getElementById('acRetrieve');
+          const holdModal=document.getElementById('holdModal');
+          const retrieveModal=document.getElementById('retrieveModal');
+          const holdListBody=document.getElementById('holdListBody');
+          const btnHoldOnly=document.getElementById('btnHoldOnly');
+          const btnHoldPrint=document.getElementById('btnHoldPrint');
+          const orderNoEl=document.getElementById('orderNo');
+
+          /* Clock */
+          function tick(){ const n=new Date(); document.getElementById('nowTime').textContent=n.toLocaleTimeString(); document.getElementById('nowDate').textContent=n.toLocaleDateString(); }
+          setInterval(tick,1000); tick();
+
+          /* Waiters */
+          function refreshWaiters(){ waiterSel.innerHTML='<option value="">Select Waiter</option>'+WAITERS.map(w=>`<option value="${w}">${w}</option>`).join('');}
+          refreshWaiters();
+          addWaiterBtn.addEventListener('click',()=>{ const name=prompt('New waiter name?'); if(!name) return; WAITERS.push(name); refreshWaiters(); waiterSel.value=name; });
+          addCustomerBtn.addEventListener('click',()=>{ const name=prompt('Customer name?'); if(!name) return; customer.value=name; });
+
+          /* Fullscreen */
+          fsBtn.addEventListener('click',async ()=>{
+            try{
+              if(!document.fullscreenElement){ await posApp.requestFullscreen(); fsBtn.innerHTML='<i class="fa-solid fa-down-left-and-up-right-to-center"></i>'; fsBtn.title='Exit Full Screen'; }
+              else{ await document.exitFullscreen(); fsBtn.innerHTML='<i class="fa-solid fa-up-right-and-down-left-from-center"></i>'; fsBtn.title='Full Screen'; }
+            }catch(e){}
           });
 
-          // Build categories
-          const CATS = [
-            {id:'burgers', title:'Burgers', img:'https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=800&auto=format&fit=crop'},
-            {id:'pizzas',  title:'Pizzas',  img:'https://images.unsplash.com/photo-1548365328-9f547fb09550?q=80&w=800&auto=format&fit=crop'},
-            {id:'sides',   title:'Sides',   img:'https://images.unsplash.com/photo-1511690656952-34342bb7c2f2?q=80&w=800&auto=format&fit=crop'},
-            {id:'drinks',  title:'Drinks',  img:'https://images.unsplash.com/photo-1511920170033-f8396924c348?q=80&w=800&auto=format&fit=crop'},
-            {id:'dessert', title:'Dessert', img:'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?q=80&w=800&auto=format&fit=crop'},
-            {id:'wraps',   title:'Wraps',   img:'https://images.unsplash.com/photo-1604908176997-43162fdf4b36?q=80&w=800&auto=format&fit=crop'},
-            {id:'salads',  title:'Salads',  img:'https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?q=80&w=800&auto=format&fit=crop'},
-            {id:'special', title:'Specials',img:'https://images.unsplash.com/photo-1512058564366-18510be2db19?q=80&w=800&auto=format&fit=crop'}
-          ];
-          function renderCats(){
-            catGrid.innerHTML = CATS.map(c => `
-              <div class="cat-card" data-id="${c.id}">
-                <img class="cat-img" src="${c.img}" alt="">
-                <div class="cat-title">${c.title}</div>
-              </div>`).join('');
-          }
-          renderCats();
+        const categories = @Html.Raw(Json.Serialize(ViewBag.CategoriesForJs));
+        const basePath = '@Url.Content("~")';
 
-          catGrid.addEventListener('click', e=>{
-            const card = e.target.closest('.cat-card'); if(!card) return;
-            currentCat = card.dataset.id;
-            itemsTitle.innerHTML = `<i class="fa-regular fa-square"></i> ${CATS.find(x=>x.id===currentCat)?.title || 'Items'}`;
-            renderItems();
-          });
+        function renderCats() {
+            catGrid.innerHTML = categories.map(c => `
+                <button class="cat-btn" data-id="${c.id}">
+                    <img class="cat-thumb" src="${c.imagePath ? basePath + c.imagePath : '/images/default.png'}" alt="${c.name}">
+                    <span class="cat-title">${c.name}</span>
+                    <span class="cat-count">${c.items.length || 0}</span>
+                </button>
+            `).join('');
+        }
+        renderCats();
 
-          // Items list
-          const ITEMS = [
-            {id:1, cat:'burgers', name:'Zinger Burger', price:550, img:'https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=400&auto=format&fit=crop'},
-            {id:2, cat:'burgers', name:'Beef Burger', price:620, img:'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=400&auto=format&fit=crop'},
-            {id:3, cat:'burgers', name:'Cheese Burger', price:580, img:'https://images.unsplash.com/photo-1553979081-13eab165c24b?q=80&w=400&auto=format&fit=crop'},
-            {id:4, cat:'pizzas',  name:'Pepperoni Pizza', price:1200, img:'https://images.unsplash.com/photo-1548365328-9f547fb09550?q=80&w=400&auto=format&fit=crop'},
-            {id:5, cat:'pizzas',  name:'Fajita Pizza', price:1300, img:'https://images.unsplash.com/photo-1460306855393-0410f61241c7?q=80&w=400&auto=format&fit=crop'},
-            {id:6, cat:'sides',   name:'Fries', price:250, img:'https://images.unsplash.com/photo-1511690656952-34342bb7c2f2?q=80&w=400&auto=format&fit=crop'},
-            {id:7, cat:'drinks',  name:'Cola 500ml', price:120, img:'https://images.unsplash.com/photo-1511920170033-f8396924c348?q=80&w=400&auto=format&fit=crop'},
-            {id:8, cat:'dessert', name:'Chocolate Lava', price:480, img:'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?q=80&w=400&auto=format&fit=crop'}
-          ];
+        let currentCat = categories[0]?.id || ''; // start with first category
+        renderLeftItems();
 
-          function filterSortItems(){
-            const q = (itemSearch.value||'').toLowerCase().trim();
-            let list = ITEMS.filter(it => it.cat===currentCat && (q ? it.name.toLowerCase().includes(q) : true));
-            if(currentSub!=='All'){
-              if(currentSub==='Large') list = list.filter((_,i)=> i%2===0);
-              if(currentSub==='Small') list = list.filter((_,i)=> i%2===1);
+        catGrid.addEventListener('click', e => {
+            const b = e.target.closest('.cat-btn');
+            if (!b) return;
+            currentCat = parseInt(b.dataset.id);
+            renderLeftItems();
+        });
+
+        function renderLeftItems() {
+            const selectedCategory = categories.find(c => c.id === currentCat);
+
+            if (!selectedCategory) {
+                leftItemsTitle.textContent = 'Items';
+                leftItemsGrid.innerHTML = '';
+                return;
             }
-            const s = sortSel.value;
-            if(s==='name') list.sort((a,b)=> a.name.localeCompare(b.name));
-            if(s==='price_asc') list.sort((a,b)=> a.price-b.price);
-            if(s==='price_desc') list.sort((a,b)=> b.price-a.price);
+
+            leftItemsTitle.textContent = selectedCategory.name;
+
+            leftItemsGrid.innerHTML = (selectedCategory.items || []).map(it => `
+                <div class="li-card" data-id="${it.id}">
+                    <img class="li-thumb" src="${it.imagePath ? basePath + it.imagePath : '/images/default.png'}" alt="${it.itemName}">
+                    <div style="min-width:0">
+                        <div class="li-name">${it.itemName} <small style="color:#64748b">(${it.itemCode})</small></div>
+                        <div class="li-meta">
+                            <span class="price-badge"><i class="fa-solid fa-sack-dollar"></i> ${it.salePrice.toFixed(0)}</span>
+                            <span class="muted">#${it.quantity}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+          /* Items + search name/code */
+          function currentQuery(){ return (itemSearchTop.value||itemSearchBottom.value||'').toLowerCase().trim(); }
+          function syncSearch(fromTop){ const v=fromTop?itemSearchTop.value:itemSearchBottom.value; (fromTop?itemSearchBottom:itemSearchTop).value=v; }
+          itemSearchTop.addEventListener('input',()=>{ syncSearch(true); renderLeftItems(); });
+          itemSearchBottom.addEventListener('input',()=>{ syncSearch(false); renderLeftItems(); });
+
+          function filteredSortedLeft(){
+            const q=currentQuery();
+            let list=ITEMS.filter(it=>it.cat===currentCat && (!q || it.name.toLowerCase().includes(q) || (it.code||'').toLowerCase().includes(q)));
+            const s=sortSel.value;
+            if(s==='name') list.sort((a,b)=>a.name.localeCompare(b.name));
+            if(s==='price_asc') list.sort((a,b)=>a.price-b.price);
+            if(s==='price_desc') list.sort((a,b)=>b.price-a.price);
             return list;
           }
-          function renderItems(){
-            const list = filterSortItems();
-            itemGrid.innerHTML = list.map(it => `
-              <div class="item-card" data-id="${it.id}">
-                <img class="item-thumb" src="${it.img}" alt="">
-                <div class="item-info">
-                  <div class="item-name">${it.name}</div>
-                  <div class="item-meta">
-                    <span class="price-badge"><i class="fa-solid fa-sack-dollar"></i> ${it.price.toFixed(0)}</span>
-                    <span class="muted">#${it.id}</span>
-                  </div>
-                </div>
-              </div>
-            `).join('');
-          }
-          renderItems();
-          sortSel.addEventListener('change', renderItems);
-          itemSearch.addEventListener('input', renderItems);
 
-          // Add to cart
-          itemGrid.addEventListener('click', e=>{
-            const card = e.target.closest('.item-card'); if(!card) return;
-            const id = +card.dataset.id;
-            const it = ITEMS.find(x=>x.id===id); if(!it) return;
-            const exists = cart.find(x=>x.id===id);
-            if(exists){ exists.qty += 1; }
-            else { cart.push({id:it.id, name:it.name, price:it.price, qty:1}); }
-            renderCart(); recalc();
-          });
 
-          // Cart rendering
-          function renderCart(){
-            if(!cart.length){
-              cartBody.innerHTML = `<div class="muted" style="padding:.6rem;">No items yet. Tap menu on left to add.</div>`;
-              return;
+          /* Cart */
+                  let cart = [];
+
+        leftItemsGrid.addEventListener('click', e => {
+            const card = e.target.closest('.li-card');
+            if (!card) return;
+
+            const itemId = +card.dataset.id;
+
+            // Find the item from the selected category
+            const selectedCategory = categories.find(c => c.id === currentCat);
+            if (!selectedCategory) return;
+
+            const it = selectedCategory.items.find(x => x.id === itemId);
+            if (!it) return;
+
+            // Check if item is already in the cart
+            const ex = cart.find(x => x.id === itemId);
+            if (ex) {
+                ex.qty += 1;
+            } else {
+                cart.push({
+                    id: itemId,
+                    code: it.itemCode,
+                    name: it.itemName,
+                    price: it.salePrice,
+                    qty: 1
+                });
             }
-            cartBody.innerHTML = cart.map((l,idx)=>`
-              <div class="cart-row" data-idx="${idx}">
+
+            renderCart();
+            recalc();
+        });
+
+          function renderCart(){
+            if(!cart.length){ cartBody.innerHTML=`<div class="muted" style="padding:.6rem;">No items yet. Select from left to add.</div>`; return; }
+            cartBody.innerHTML=cart.map((l,idx)=>`
+              <div class="cart-row" data-idx="${idx}" data-item-id="${l.id}" data-code="${l.code||''}">
                 <div class="cart-name">${l.name}</div>
                 <div class="qty-wrap">
                   <button class="qty-btn" data-op="dec">−</button>
@@ -1188,198 +1125,296 @@
                 </div>
                 <input class="price-input" type="number" step="0.01" value="${l.price.toFixed(2)}">
                 <div class="line-total">${(l.qty*l.price).toFixed(2)}</div>
-                <button class="remove-btn"><i class="fa-regular fa-trash-can"></i></button>
-              </div>
-            `).join('');
+                <button class="remove-btn" title="Remove line"><i class="fa-regular fa-trash-can"></i></button>
+              </div>`).join('');
           }
-          renderCart();
-
-          // Cart interactions
-          cartBody.addEventListener('click', e=>{
-            const row = e.target.closest('.cart-row'); if(!row) return;
-            const idx = +row.dataset.idx;
-            if(e.target.matches('.remove-btn, .remove-btn *')){
-              cart.splice(idx,1); renderCart(); recalc(); return;
-            }
-            if(e.target.matches('.qty-btn')){
-              const op = e.target.dataset.op;
-              if(op==='inc') cart[idx].qty += 1;
-              if(op==='dec') cart[idx].qty = Math.max(1, cart[idx].qty-1);
-              renderCart(); recalc(); return;
-            }
+          cartBody.addEventListener('click',e=>{
+            const row=e.target.closest('.cart-row'); if(!row) return; const idx=+row.dataset.idx;
+            if(e.target.matches('.remove-btn, .remove-btn *')){ cart.splice(idx,1); renderCart(); recalc(); return; }
+            if(e.target.matches('.qty-btn')){ const op=e.target.dataset.op; if(op==='inc') cart[idx].qty+=1; if(op==='dec') cart[idx].qty=Math.max(1,cart[idx].qty-1); renderCart(); recalc(); }
           });
-          cartBody.addEventListener('input', e=>{
-            const row = e.target.closest('.cart-row'); if(!row) return;
-            const idx = +row.dataset.idx;
-            if(e.target.matches('.qty-input')){
-              cart[idx].qty = Math.max(1, parseInt(e.target.value||'1',10));
-              row.querySelector('.line-total').textContent = (cart[idx].qty*cart[idx].price).toFixed(2);
-              recalc();
-            }
-            if(e.target.matches('.price-input')){
-              cart[idx].price = Math.max(0, parseFloat(e.target.value||'0'));
-              row.querySelector('.line-total').textContent = (cart[idx].qty*cart[idx].price).toFixed(2);
-              recalc();
-            }
+          cartBody.addEventListener('input',e=>{
+            const row=e.target.closest('.cart-row'); if(!row) return; const idx=+row.dataset.idx;
+            if(e.target.matches('.qty-input')){ cart[idx].qty=Math.max(1, parseInt(e.target.value||'1',10)); row.querySelector('.line-total').textContent=(cart[idx].qty*cart[idx].price).toFixed(2); recalc(); }
+            if(e.target.matches('.price-input')){ cart[idx].price=Math.max(0, parseFloat(e.target.value||'0')); row.querySelector('.line-total').textContent=(cart[idx].qty*cart[idx].price).toFixed(2); recalc(); }
           });
 
-          // Totals calc
+          /* Totals */
           function recalc(){
-            const sub = cart.reduce((a,b)=> a + (b.qty*b.price), 0);
-            tSub.textContent = sub.toFixed(2);
+            const sub=cart.reduce((a,b)=>a+(b.qty*b.price),0);
+            const d=parseFloat(tDisc.value||'0')||0;
+            const dType=tDiscType.value;
+            const dAmt=(dType==='percent')?(sub*d/100):d;
 
-            const d = parseFloat(tDisc.value||'0')||0;
-            const dType = tDiscType.value;
-            const dAmt = dType==='percent' ? (sub * d / 100) : d;
+            const tx=parseFloat(tTax.value||'0')||0;
+            const txType=tTaxType.value;
+            const txBase=Math.max(0, sub - dAmt);
+            const txAmt=(txType==='percent')?(txBase*tx/100):tx;
 
-            const tx = parseFloat(tTax.value||'0')||0;
-            const txType = tTaxType.value;
-            const txBase = Math.max(0, sub - dAmt);
-            const txAmt = txType==='percent' ? (txBase * tx / 100) : tx;
+            const grand=Math.max(0, txBase + txAmt);
+            tGrand.textContent=grand.toFixed(2);
 
-            const grand = Math.max(0, txBase + txAmt);
-            tGrand.textContent = grand.toFixed(2);
-
-            const cash = parseFloat(tCash.value||'0')||0;
-            tChange.textContent = Math.max(0, cash - grand).toFixed(2);
+            const cash=parseFloat(tCash.value||'0')||0;
+            tChange.textContent=Math.max(0, cash - grand).toFixed(2);
           }
-          [tDisc, tDiscType, tTax, tTaxType, tCash].forEach(el=> el.addEventListener('input', recalc));
+          [tDisc,tCash].forEach(el=> el.addEventListener('input', recalc));
+          [tDiscType,tTax,tTaxType,payMode].forEach(el=>{ el.addEventListener('input',recalc); el.addEventListener('change',recalc); });
 
-          // Keypad
+          /* Keypad */
           function padTarget(){
-            const v = document.querySelector('input[name="padTarget"]:checked').value;
-            if(v==='qty'){
-              const lastRow = cartBody.querySelector('.cart-row:last-child .qty-input');
-              if(lastRow) return lastRow;
-            }
-            if(v==='price'){
-              const lastRow = cartBody.querySelector('.cart-row:last-child .price-input');
-              if(lastRow) return lastRow;
-            }
-            if(v==='disc'){ return tDisc; }
-            if(v==='cash'){ return tCash; }
+            const v=document.querySelector('input[name="padTarget"]:checked').value;
+            if(v==='qty'){ const x=cartBody.querySelector('.cart-row:last-child .qty-input'); if(x) return x; }
+            if(v==='price'){ const x=cartBody.querySelector('.cart-row:last-child .price-input'); if(x) return x; }
+            if(v==='disc') return tDisc;
+            if(v==='cash') return tCash;
             return tCash;
           }
-          document.querySelector('.pad-grid').addEventListener('click', e=>{
-            const b = e.target.closest('button'); if(!b) return;
-            const key = b.dataset.key;
-            const input = padTarget(); if(!input){ return; }
+          document.querySelector('.pad-grid').addEventListener('click',e=>{
+            const b=e.target.closest('button'); if(!b) return; const key=b.dataset.key; const input=padTarget(); if(!input) return;
             if(key==='C'){ input.value=''; input.dispatchEvent(new Event('input')); return; }
-            if(key==='⌫'){
-              input.value = (input.value||'').slice(0,-1);
-              input.dispatchEvent(new Event('input')); return;
-            }
-            input.value = (input.value||'') + key;
-            input.dispatchEvent(new Event('input'));
+            if(key==='⌫'){ input.value=(input.value||'').slice(0,-1); input.dispatchEvent(new Event('input')); return; }
+            input.value=(input.value||'')+key; input.dispatchEvent(new Event('input'));
           });
 
-          // ===== Buttons wiring (row) =====
-          btnNew.addEventListener('click', newOrder);
-          btnHold.addEventListener('click', ()=> alert('Order held (demo). Connect to backend to persist.'));
-          btnModify.addEventListener('click', openModify);
-          btnDelete.addEventListener('click', deleteOrder);
-          btnKOT.addEventListener('click', kotPrint);
-          btnPrint.addEventListener('click', doPrint);
+          /* Order sequence */
+          // let orderSeq=1001; function setNextOrderNo(){ orderNoEl.textContent=orderSeq; } setNextOrderNo();
 
-          // FAB
-          btnFabKOT.addEventListener('click', kotPrint);
-          btnFabPrint.addEventListener('click', doPrint);
+          /* Print invoice-only */
+          function buildInvoiceHTML(){
+            const ordNo=orderNoEl.textContent;
+            const waiter=waiterSel.value||'-';
+            const cust=customer.value||'-';
+            const tbl=document.getElementById('tableNo').value||'-';
+            const mode=payMode.value||'-';
+            const now=new Date().toLocaleString();
+            const rows=Array.from(document.querySelectorAll('#cartBody .cart-row')).map(r=>{
+              const name=r.querySelector('.cart-name')?.textContent||''; const qty=r.querySelector('.qty-input')?.value||'1';
+              const price=r.querySelector('.price-input')?.value||'0.00'; const total=r.querySelector('.line-total')?.textContent||'0.00';
+              return `<tr><td>${name}</td><td style="text-align:right">${qty}</td><td style="text-align:right">${Number(price).toFixed(2)}</td><td style="text-align:right">${Number(total).toFixed(2)}</td></tr>`;
+            }).join('');
+            const grand=tGrand.textContent||'0.00';
+            return `
+            <div style="font-family:ui-sans-serif,system-ui;max-width:720px">
+              <h2 style="margin:0 0 8px 0">Invoice</h2>
+              <div style="font-size:12px;color:#334155;margin-bottom:10px">${now}</div>
+              <table style="width:100%;font-size:14px;margin-bottom:10px">
+                <tr><td><b>Order #</b></td><td>${ordNo}</td><td><b>Table</b></td><td>${tbl}</td></tr>
+                <tr><td><b>Waiter</b></td><td>${waiter}</td><td><b>Customer</b></td><td>${cust}</td></tr>
+                <tr><td><b>Payment</b></td><td>${mode}</td><td></td><td></td></tr>
+              </table>
+              <table style="width:100%;border-collapse:collapse">
+                <thead>
+                  <tr>
+                    <th style="text-align:left;border-bottom:1px solid #e5e7eb;padding:6px 0">Item</th>
+                    <th style="text-align:right;border-bottom:1px solid #e5e7eb;padding:6px 0">Qty</th>
+                    <th style="text-align:right;border-bottom:1px solid #e5e7eb;padding:6px 0">Price</th>
+                    <th style="text-align:right;border-bottom:1px solid #e5e7eb;padding:6px 0">Total</th>
+                  </tr>
+                </thead>
+                <tbody>${rows || `<tr><td colspan="4" style="padding:8px 0;color:#64748b">No items</td></tr>`}</tbody>
+                <tfoot>
+                  <tr>
+                    <td colspan="3" style="text-align:right;padding-top:8px"><b>Grand Total</b></td>
+                    <td style="text-align:right;padding-top:8px"><b>${Number(grand).toFixed(2)}</b></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>`;
+          }
 
-          // Right rail mirrors
-          rNew.addEventListener('click', newOrder);
-          rHold.addEventListener('click', ()=> btnHold.click());
-          rModify.addEventListener('click', openModify);
-          rDelete.addEventListener('click', deleteOrder);
-          rKOT.addEventListener('click', kotPrint);
-          rPrint.addEventListener('click', doPrint);
+          async function savePOS(printAfter = false) {
+            // --- Totals ---
+            const grandTotal = parseFloat(document.getElementById('tGrand')?.textContent.replace(/,/g,'') || 0);
+            const tax = parseFloat(document.getElementById('tTax')?.value || 0);
+            const taxType = document.getElementById('tTaxType')?.value || 'flat';
+            const discount = parseFloat(document.getElementById('tDisc')?.value || 0);
+            const discountType = document.getElementById('tDiscType')?.value || 'flat';
+            const cash = parseFloat(document.getElementById('tCash')?.value || 0);
+            const change = parseFloat(document.getElementById('tChange')?.value || 0);
+            const payMode = document.getElementById('payMode')?.value || 'cash';
 
-          function newOrder(){
-            if(confirm('Start a new order?')){
-              cart=[]; renderCart(); tDisc.value=''; tTax.value=''; tCash.value=''; recalc();
-            }
-          }
-          function deleteOrder(){
-            if(confirm('Delete this order? This cannot be undone.')){
-              cart=[]; renderCart(); tDisc.value=''; tTax.value=''; tCash.value=''; recalc();
-              alert('Order deleted (demo). Connect backend to remove from DB.');
-            }
-          }
-          function doPrint(){
-            // Normal invoice print
-            window.print();
-          }
-          function kotPrint(){
-            // KOT: here you can switch to a KOT-specific print layout via a CSS class or separate route
-            console.log('KOT Print (demo)');
-            window.print();
-          }
+            // --- Customer ---
+            const custId = parseInt(document.getElementById('customer')?.value || 0);
 
-          // ===== Modify Modal =====
-          function openModify(){
-            modifyModal.hidden = false;
-            modInvoice.focus();
-          }
-          modalCloseBtns.forEach(b=> b.addEventListener('click', ()=> modifyModal.hidden = true));
-          modifyModal.querySelector('.modal-backdrop').addEventListener('click', ()=> modifyModal.hidden = true);
-          modLoad.addEventListener('click', ()=>{
-            const inv = (modInvoice.value||'').trim();
-            if(!inv){ alert('Please enter Invoice #'); return; }
-            // Demo: load some items
-            cart = [
-              {id:2, name:'Beef Burger', price:620, qty:1},
-              {id:6, name:'Fries', price:250, qty:2},
-              {id:7, name:'Cola 500ml', price:120, qty:2},
-            ];
-            renderCart(); recalc();
-            modifyModal.hidden = true;
-            alert('Invoice '+inv+' loaded (demo). Wire to backend to fetch real data.');
-          });
+            // --- Order Meta ---
+            const orderType = document.getElementById('orderType')?.value || 'dinein';
+            const tableNo = document.getElementById('tableNo')?.value || '';
+            const waiterId = document.getElementById('waiterSel')?.value || null;
+            const orderNo = document.getElementById('orderNo')?.textContent || '';
 
-          // ===== Top menu: show mega panel =====
-          document.querySelectorAll('.nav-item').forEach(it=>{
-            it.addEventListener('click', ()=>{
-              const m = it.dataset.menu;
-              const hasSub = it.classList.contains('has-sub');
-              if(!hasSub){ hideMega(); return; }
-              showMega(m);
+            // --- Sale Items from cart rows ---
+            const saleItems = Array.from(document.querySelectorAll('.cart-row')).map(row => {
+                const qtyInput = row.querySelector('.qty-input');
+                const priceInput = row.querySelector('.price-input');
+                const qty = parseInt(qtyInput?.value || 0);
+                const price = parseFloat(priceInput?.value || 0);
+                return {
+                    ItemId: parseInt(row.dataset.itemId),
+                    Quantity: qty,
+                    UnitPrice: price,
+                    DiscountPercent: discount,
+                    TaxAmount: tax,
+                    LineTotal: +(qty*price).toFixed(2)
+                };
             });
-          });
 
-          function showMega(menuKey){
-            megaPanel.hidden = false;
-            megaPanel.querySelectorAll('.mega-grid').forEach(g=>{
-              g.hidden = g.getAttribute('data-for') !== menuKey;
+            if(!saleItems.length){
+                Swal.fire({ icon:'warning', title:'No Items', text:'Please add at least one item to the cart!' });
+                return;
+            }
+
+            // --- Prepare payload ---
+            let payload = {
+                InvoiceNumber: orderNo,
+                SubTotal: grandTotal,
+                Tax: parseFloat(document.querySelector('.gpos-tax')?.textContent.replace(/[₨,]/g,'')||0),
+                Discount: discount,
+                DiscountPercent: discount,
+                DiscountLessAmount: discount,
+                SaleType: "Sale",
+                Total: grandTotal,
+                custId: custId,
+                tender_amount: cash,
+                Payment: {
+                    Amount: cash,
+                    PaymentMethod: payMode,
+                    Change: Math.max(cash - grandTotal, 0),
+                },
+                SaleItems: saleItems
+            };
+
+            try {
+                const endpoint = printAfter ? '/Sales/SaveSale' : '/Sales/SaveOnly';
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if(response.ok){
+                    const result = await response.json();
+                    if(printAfter){ window.open(`/Sales/Receipt/${result.id}`,'_blank'); }
+                } else {
+                    const error = await response.json();
+                    toast(error.Message || "Failed to save order", 'error', 3000);
+                }
+            } catch(err) {
+                console.error("Error saving POS order:", err);
+                Swal.fire({ icon:'error', title:'Error', text:'Something went wrong while saving the order.' });
+            }
+        }
+
+          
+          
+          
+          
+          // function printInvoiceOnly(){
+          //   const area=document.getElementById('printArea');
+          //   area.innerHTML=buildInvoiceHTML(); area.style.display='block'; window.print();
+          //   setTimeout(()=>{ area.style.display='none'; area.innerHTML=''; },50);
+          // }
+
+          /* Hold/Retrieve helpers */
+          function openHoldModal(){ holdModal.hidden=false; }
+          function openRetrieveModal(){ retrieveModal.hidden=false; }
+          document.querySelectorAll('.modal-close').forEach(b=>b.addEventListener('click',e=>{
+            const t=e.currentTarget.dataset.close; if(t==='hold') holdModal.hidden=true; if(t==='retrieve') retrieveModal.hidden=true;
+          }));
+          holdModal.querySelector('.modal-backdrop').addEventListener('click',()=>holdModal.hidden=true);
+          retrieveModal.querySelector('.modal-backdrop').addEventListener('click',()=>retrieveModal.hidden=true);
+
+          function buildHoldPayload(printAlso){
+            const waiter=waiterSel.value||''; const cust=customer.value||''; const pmode=payMode.value; const tbl=document.getElementById('tableNo').value||'';
+            const ordNo=Number(orderNoEl.textContent||'0')||0;
+            const taxVal=parseFloat(tTax.value||'0')||0; const taxType=tTaxType.value;
+            const discVal=parseFloat(tDisc.value||'0')||0; const discType=tDiscType.value;
+
+            const items=Array.from(document.querySelectorAll('#cartBody .cart-row')).map((row,idx)=>{
+              const name=row.querySelector('.cart-name')?.textContent?.trim()||'';
+              const qty=parseFloat(row.querySelector('.qty-input')?.value||'1')||1;
+              const price=parseFloat(row.querySelector('.price-input')?.value||'0')||0;
+              const line=parseFloat(row.querySelector('.line-total')?.textContent||(qty*price))||(qty*price);
+              const itemId=Number(row.dataset.itemId||0); const code=row.dataset.code||'';
+              return {id:idx+1,itemId,code,name,qty,price,lineTotal:line};
             });
+
+            const sub=items.reduce((a,b)=>a+(b.qty*b.price),0);
+            const dAmt=(discType==='percent')?(sub*discVal/100):discVal;
+            const txBase=Math.max(0, sub - dAmt);
+            const txAmt=(taxType==='percent')?(txBase*taxVal/100):taxVal;
+            const grand=Math.max(0, txBase + txAmt);
+
+            return { orderNo:ordNo, waiter, customer:cust, tableNo:tbl, payMode:pmode,
+                     taxValue:taxVal, taxType, discountValue:discVal, discountType:discType,
+                     grandTotal:grand, items, printAlso };
           }
-          function hideMega(){ megaPanel.hidden = true; }
-          document.addEventListener('click', (e)=>{
-            const hitNav = e.target.closest('.top-nav');
-            if(!hitNav) hideMega();
-          });
-          megaPanel.addEventListener('click', (e)=>{
-            const tile = e.target.closest('.mega-tile'); if(!tile) return;
-            const jump = tile.getAttribute('data-jump');
-            if(jump){
-              hideMega();
-              const el = document.querySelector(jump);
-              if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); }
+
+          async function doHoldBackend(printAlso){
+            if(!document.querySelector('#cartBody .cart-row')){ alert('Nothing to hold. Please add items.'); return; }
+            const payload=buildHoldPayload(printAlso);
+            try{
+              const data=await req('/Sales/Hold',payload,'POST');
+              holdModal.hidden=true;
+              cart=[]; renderCart(); tDisc.value=''; tTax.value=''; tCash.value=''; recalc();
+              orderSeq+=1; setNextOrderNo();
+              if(payload.printAlso) printInvoiceOnly();
+              alert(`Held: ${data.invoiceId} (Order #${data.orderNo})`);
+            }catch(e){ alert('Hold failed: '+e.message); }
+          }
+
+          async function loadHeldList(){
+            try{
+              const list=await req('/Sales/Hold/List',null,'GET');
+              if(!Array.isArray(list)||!list.length){ holdListBody.innerHTML=`<tr class="hold-row"><td colspan="7" style="text-align:center;padding:16px;color:#64748b">No held invoices.</td></tr>`; return; }
+              holdListBody.innerHTML=list.slice().reverse().map(h=>{
+                const prv=(h.items||[]).slice(0,2).map(i=>`${i.name}×${i.qty}`).join(', ')+((h.items||[]).length>2?` +${(h.items||[]).length-2} more`:``);
+                return `<tr class="hold-row" data-id="${h.invoiceId}">
+                  <td><span class="pill">${h.invoiceId}</span></td>
+                  <td>${h.orderNo}</td><td>${h.waiter||'-'}</td><td>${h.dateTime}</td>
+                  <td title="${(h.items||[]).map(i=>i.name+'×'+i.qty).join(', ')}">${prv}</td>
+                  <td><b>${Number(h.total||0).toFixed(2)}</b></td>
+                  <td style="display:flex;gap:6px">
+                    <button class="icon-btn btn-load" title="Load"><i class="fa-regular fa-pen-to-square"></i></button>
+                    <button class="icon-btn btn-delete" title="Delete"><i class="fa-regular fa-trash-can"></i></button>
+                  </td></tr>`;
+              }).join('');
+            }catch(e){ holdListBody.innerHTML=`<tr class="hold-row"><td colspan="7" style="text-align:center;padding:16px;color:#ef4444">Failed to load: ${e.message}</td></tr>`; }
+          }
+
+          /* Actions */
+          acModify.addEventListener('click',()=> alert('Modify dialog (wire backend).'));
+          acDelete.addEventListener('click',()=>{ if(confirm('Delete this order?')){ cart=[]; renderCart(); tDisc.value=''; tTax.value=''; tCash.value=''; recalc(); } });
+          acKOT.addEventListener('click',()=>{ printInvoiceOnly(); }); // can swap to KOT template if needed
+          acPrint.addEventListener('click', function() { savePOS(true); });
+          acHold.addEventListener('click', ()=> openHoldModal());
+          acRetrieve.addEventListener('click', ()=>{ openRetrieveModal(); loadHeldList(); });
+
+          btnHoldOnly.addEventListener('click', ()=> doHoldBackend(false));
+          btnHoldPrint.addEventListener('click', ()=> doHoldBackend(true));
+
+          holdListBody.addEventListener('click',async e=>{
+            const row=e.target.closest('tr.hold-row'); if(!row) return; const id=row.dataset.id;
+            if(e.target.closest('.btn-load')){
+              try{
+                const data=await req(`/Sales/Hold/${encodeURIComponent(id)}`,null,'GET');
+                cart=(data.items||[]).map((it,i)=>({id:it.itemId||i+1,code:it.code||'',name:it.name,price:it.price,qty:it.qty}));
+                renderCart(); recalc();
+                waiterSel.value=data.waiter||''; customer.value=data.customer||''; document.getElementById('tableNo').value=data.tableNo||'';
+                orderSeq=data.orderNo||orderSeq; setNextOrderNo();
+                retrieveModal.hidden=true;
+              }catch(err){ alert('Load failed: '+err.message); }
+              return;
+            }
+            if(e.target.closest('.btn-delete')){
+              if(!confirm(`Delete hold ${id}?`)) return;
+              try{ await req(`/Sales/Hold/${encodeURIComponent(id)}`,null,'DELETE'); row.remove();
+                if(!holdListBody.querySelector('tr')) holdListBody.innerHTML=`<tr class="hold-row"><td colspan="7" style="text-align:center;padding:16px;color:#64748b">No held invoices.</td></tr>`;
+              }catch(err){ alert('Delete failed: '+err.message); }
             }
           });
 
-          // ===== Scroll Sync (optional) =====
-          leftPane.addEventListener('scroll', ()=>{
-            if(!syncScroll.checked || syncing) return;
-            syncing = true;
-            rightPane.scrollTop = leftPane.scrollTop;
-            syncing = false;
-          });
-          rightPane.addEventListener('scroll', ()=>{
-            if(!syncScroll.checked || syncing) return;
-            syncing = true;
-            leftPane.scrollTop = rightPane.scrollTop;
-            syncing = false;
-          });
-
+          /* Init */
+          renderCart(); recalc();
         })();
     </script>
 }

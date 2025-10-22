@@ -57,5 +57,7 @@ namespace GSoftPosNew.Models
         [Display(Name = "Expiry Date")]
         public DateTime? ExpiryDate { get; set; }
 
+        public string? ImagePath { get; set; }
+
     }
 }

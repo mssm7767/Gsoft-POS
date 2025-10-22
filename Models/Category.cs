@@ -14,6 +14,10 @@ namespace GSoftPosNew.Models
         public string? Description { get; set; }
 
         public decimal Discount { get; set; } = 0;
+
+        public string? ImagePath { get; set; }
+
+        public ICollection<ItemModel> Items { get; set; } = new List<ItemModel>();
     }
 }
 

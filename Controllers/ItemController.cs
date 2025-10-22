@@ -52,8 +52,26 @@ namespace GSoftPosNew.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Add(AddItemViewModel vm)
+        public async Task<IActionResult> Add(AddItemViewModel vm, IFormFile? ImageFile)
         {
+            if (ImageFile != null && ImageFile.Length > 0)
+            {
+                // Generate unique file name
+                var fileName = Guid.NewGuid() + Path.GetExtension(ImageFile.FileName);
+
+                // Path to save in wwwroot/images
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images", fileName);
+
+                // Save file
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await ImageFile.CopyToAsync(stream);
+                }
+
+                // Save relative path to DB (so Razor can render it with Url.Content)
+                vm.ItemData.ImagePath = "/images/" + fileName;
+            }
+
             if (string.IsNullOrWhiteSpace(vm.ItemData.ItemCode))
             {
                 var numericCodes = _context.Items
@@ -135,10 +153,50 @@ namespace GSoftPosNew.Controllers
         }
 
         [HttpPost]
-        public IActionResult Edit(AddItemViewModel vm)
+        public async Task<IActionResult> Edit(AddItemViewModel vm, IFormFile? ImageFile)
         {
+            var tracked = _context.Items.FirstOrDefault(x => x.Id == vm.ItemData.Id);
+            // Handle image upload
+            if (ImageFile != null && ImageFile.Length > 0)
+            {
+                // Optional: delete old image file if exists
+                if (!string.IsNullOrEmpty(tracked.ImagePath))
+                {
+                    var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", tracked.ImagePath.TrimStart('/'));
+                    if (System.IO.File.Exists(oldFilePath))
+                    {
+                        System.IO.File.Delete(oldFilePath);
+                    }
+                }
 
-            _context.Items.Update(vm.ItemData);
+                // Save new image
+                var fileName = Guid.NewGuid() + Path.GetExtension(ImageFile.FileName);
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images", fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await ImageFile.CopyToAsync(stream);
+                }
+
+                vm.ItemData.ImagePath = "/images/" + fileName;
+            }
+            else
+            {
+                vm.ItemData.ImagePath = tracked.ImagePath;
+            }
+
+            
+            if (tracked != null)
+            {
+                // Update the tracked entity instead of attaching a new one
+                _context.Entry(tracked).CurrentValues.SetValues(vm.ItemData);
+            }
+            else
+            {
+                // Attach and mark as modified
+                _context.Items.Update(vm.ItemData);
+            }
+
             _context.SaveChanges();
             TempData["Success"] = "Item updated successfully!";
             return RedirectToAction("Add");

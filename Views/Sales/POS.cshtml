@@ -1408,6 +1408,8 @@
             Swal.fire({icon:'warning',title:'No Items Selected',text:'Please select at least one item before proceeding!'}); return;
         }
 
+        console.log(saleData);
+
         saleData = cleanSaleData(saleData);
 
         try{
@@ -1471,7 +1473,8 @@
     function handlePrint(){ console.log("Print..."); }
     function generateInvoiceNumber(){
         const date=new Date().toISOString().slice(0,10).replace(/-/g,'');
-        invoiceCounter=(parseInt(invoiceCounter)||0)+1; const counterStr=String(invoiceCounter).padStart(4,'0');
+        invoiceCounter=(parseInt(invoiceCounter)||0)+1; 
+        const counterStr=String(invoiceCounter).padStart(4,'0');
         return `INV-${date}-${counterStr}`;
     }
     function updateLiveClock(){
