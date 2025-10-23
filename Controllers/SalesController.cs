@@ -419,6 +419,281 @@ namespace GSoftPosNew.Controllers
                 return StatusCode(500, "Error saving sale: " + errorMessage);
             }
         }
+        
+        
+        [HttpPost]
+        public async Task<IActionResult> KOTSale([FromBody] Sale sale)
+        {
+            if (sale == null || sale.SaleItems == null || !sale.SaleItems.Any())
+            {
+                using var reader = new StreamReader(Request.Body);
+                var rawBody = await reader.ReadToEndAsync();
+                return BadRequest("Invalid sale data. Raw request: " + rawBody);
+            }
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                if (string.IsNullOrEmpty(sale.InvoiceNumber))
+                    sale.InvoiceNumber = GenerateInvoiceNumber();
+
+                sale.SaleDate = DateTime.Now;
+                sale.CashierId = User.Identity?.Name ?? "Unknown";
+                sale.Id = 0;
+                sale.CustomerId = sale.custId;
+
+                if (sale.SaleType == "Return")
+                {
+                    if (sale.Payment != null)
+                        sale.Payment.Id = 0;
+
+                    foreach (var item in sale.SaleItems)
+                        item.Id = 0;
+
+                    // Save Sale
+                    _context.Sales.Add(sale);
+                    await _context.SaveChangesAsync();
+
+                    foreach (var item in sale.SaleItems)
+                        item.SaleId = sale.Id;
+
+                    if (sale.Payment != null)
+                        sale.Payment.SaleId = sale.Id;
+
+                    await _context.SaveChangesAsync();
+                    if (sale.Payment?.PaymentMethod?.ToLower() == "credit")
+                    {
+                        var customer = await _context.Customers.FindAsync(sale.custId);
+                        if (customer != null)
+                        {
+                            decimal paidAmount = sale.tender_amount;
+                            decimal totalAmount = sale.Total;
+                            decimal balance = totalAmount + paidAmount; // +ve = Remaining, -ve = Advance
+
+                            var existingPayment = await _context.CustomerPayments
+                                .FirstOrDefaultAsync(p => p.CustomerId == sale.custId);
+
+                            if (existingPayment != null)
+                            {
+                                existingPayment.PaymentDate = DateTime.Now;
+                                existingPayment.Narration = $"Return Invoice {sale.InvoiceNumber}";
+
+                                if (balance > 0)
+                                {
+                                    existingPayment.Remaining += balance;
+                                    existingPayment.Sale = (existingPayment.Sale ?? 0) - totalAmount;
+                                }
+                                else if (balance < 0)
+                                {
+                                    // Customer overpaid → Advance
+                                    decimal extraAdvance = Math.Abs(balance);
+
+                                    if (existingPayment.Remaining > 0)
+                                    {
+                                        // Use remaining to offset advance first
+                                        if (existingPayment.Remaining >= extraAdvance)
+                                        {
+                                            existingPayment.Remaining += extraAdvance;
+                                            extraAdvance = 0; // fully covered
+                                        }
+                                        else
+                                        {
+                                            extraAdvance += existingPayment.Remaining;
+                                            existingPayment.Remaining = 0;
+                                        }
+                                    }
+
+                                    existingPayment.Advance += extraAdvance;
+                                    existingPayment.Sale = (existingPayment.Sale ?? 0) + totalAmount;
+                                }
+                                else
+                                {
+                                    existingPayment.Sale = (existingPayment.Sale ?? 0) - totalAmount;
+                                }
+
+                                _context.CustomerPayments.Update(existingPayment);
+                            }
+                            else
+                            {
+                                // First-time payment
+                                var paymentEntry = new CustomerPayment
+                                {
+                                    CustomerId = sale.custId,
+                                    ReceivedBy = sale.CashierId,
+                                    Amount = paidAmount,
+                                    PaymentMethod = "Credit",
+                                    Narration = $"Credit Sale Invoice {sale.InvoiceNumber}",
+                                    PaymentDate = DateTime.Now,
+                                    Advance = balance < 0 ? Math.Abs(balance) : 0,
+                                    Remaining = balance > 0 ? balance : 0
+                                };
+
+                                _context.CustomerPayments.Add(paymentEntry);
+                            }
+
+                            // Update customer's balance → store only Remaining (what customer owes)
+                            customer.OpeningBalance = (existingPayment?.Remaining ?? (balance > 0 ? balance : 0));
+
+                            await _context.SaveChangesAsync();
+                        }
+                    }
+
+                    foreach (var item in sale.SaleItems)
+                    {
+                        var dbItem = await _context.Items.FindAsync(item.ItemId);
+                        if (dbItem != null)
+                        {
+                            if (dbItem.Quantity < item.Quantity)
+                                throw new Exception($"Not enough stock for item {dbItem.ItemName}");
+
+                            dbItem.Quantity += item.Quantity;
+                            _context.Items.Update(dbItem);
+                        }
+                    }
+                    await _context.SaveChangesAsync();
+
+                    await transaction.CommitAsync();
+
+                    return Ok(new
+                    {
+                        sale.Id,
+                        sale.InvoiceNumber,
+                        ReceiptUrl = Url.Action("KOTReceipt", "Sales", new { id = sale.Id }),
+                        Message = "Sale saved successfully"
+                    });
+                }
+                else
+                {
+                    if (sale.Payment != null)
+                        sale.Payment.Id = 0;
+
+                    foreach (var item in sale.SaleItems)
+                        item.Id = 0;
+
+                    // Save Sale
+                    _context.Sales.Add(sale);
+                    await _context.SaveChangesAsync();
+
+                    foreach (var item in sale.SaleItems)
+                        item.SaleId = sale.Id;
+
+                    if (sale.Payment != null)
+                        sale.Payment.SaleId = sale.Id;
+
+                    await _context.SaveChangesAsync();
+                    if (sale.Payment?.PaymentMethod?.ToLower() == "credit")
+                    {
+                        var customer = await _context.Customers.FindAsync(sale.custId);
+                        if (customer != null)
+                        {
+                            decimal paidAmount = sale.tender_amount;
+                            decimal totalAmount = sale.Total;
+                            decimal balance = totalAmount - paidAmount; // +ve = Remaining, -ve = Advance
+
+                            var existingPayment = await _context.CustomerPayments
+                                .FirstOrDefaultAsync(p => p.CustomerId == sale.custId);
+
+                            if (existingPayment != null)
+                            {
+                                existingPayment.Amount += paidAmount;
+                                existingPayment.PaymentDate = DateTime.Now;
+                                existingPayment.Narration = $"Credit Sale Invoice {sale.InvoiceNumber}";
+
+                                if (balance > 0)
+                                {
+
+                                    existingPayment.Remaining -= balance;
+                                    existingPayment.Sale = (existingPayment.Sale ?? 0) + totalAmount;
+                                }
+                                else if (balance < 0)
+                                {
+                                    // Customer overpaid → Advance
+                                    decimal extraAdvance = Math.Abs(balance);
+
+                                    if (existingPayment.Remaining > 0)
+                                    {
+                                        // Use remaining to offset advance first
+                                        if (existingPayment.Remaining >= extraAdvance)
+                                        {
+                                            existingPayment.Remaining += extraAdvance;
+                                            extraAdvance = 0; // fully covered
+                                        }
+                                        else
+                                        {
+                                            extraAdvance += existingPayment.Remaining;
+                                            existingPayment.Remaining = 0;
+                                        }
+                                    }
+
+                                    existingPayment.Advance += extraAdvance;
+                                    existingPayment.Sale = (existingPayment.Sale ?? 0) + totalAmount;
+                                }
+                                else
+                                {
+                                    existingPayment.Sale = (existingPayment.Sale ?? 0) + totalAmount;
+                                }
+
+                                _context.CustomerPayments.Update(existingPayment);
+                            }
+                            else
+                            {
+                                // First-time payment
+                                var paymentEntry = new CustomerPayment
+                                {
+                                    CustomerId = sale.custId,
+                                    ReceivedBy = sale.CashierId,
+                                    Amount = paidAmount,
+                                    PaymentMethod = "Credit",
+                                    Narration = $"Credit Sale Invoice {sale.InvoiceNumber}",
+                                    PaymentDate = DateTime.Now,
+                                    Advance = balance < 0 ? Math.Abs(balance) : 0,
+                                    Remaining = balance > 0 ? balance : 0
+                                };
+
+                                _context.CustomerPayments.Add(paymentEntry);
+                            }
+
+                            // Update customer's balance → store only Remaining (what customer owes)
+                            customer.OpeningBalance = (existingPayment?.Remaining ?? (balance > 0 ? balance : 0));
+
+                            await _context.SaveChangesAsync();
+                        }
+                    }
+
+                    foreach (var item in sale.SaleItems)
+                    {
+                        var dbItem = await _context.Items.FindAsync(item.ItemId);
+                        if (dbItem != null)
+                        {
+                            if (dbItem.Quantity < item.Quantity)
+                                throw new Exception($"Not enough stock for item {dbItem.ItemName}");
+
+                            dbItem.Quantity -= item.Quantity;
+                            _context.Items.Update(dbItem);
+                        }
+                    }
+                    await _context.SaveChangesAsync();
+
+                    await transaction.CommitAsync();
+
+                    return Ok(new
+                    {
+                        sale.Id,
+                        sale.InvoiceNumber,
+                        ReceiptUrl = Url.Action("KOTReceipt", "Sales", new { id = sale.Id }),
+                        Message = "Sale saved successfully"
+                    });
+                }
+
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                var errorMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, "Error saving sale: " + errorMessage);
+            }
+        }
 
         [HttpPost]
         public async Task<IActionResult> SaveOnly([FromBody] Sale sale)
@@ -921,6 +1196,70 @@ namespace GSoftPosNew.Controllers
 
             return View(vm);
         }
+
+        public IActionResult KOTReceipt(int id)
+        {
+            var sale = _context.Sales
+                               .Include(s => s.Payment)
+                               .Include(s => s.SaleItems)
+                               .FirstOrDefault(s => s.Id == id);
+
+            ViewBag.Setting = _context.ShopSettings.OrderByDescending(s => s.Id).FirstOrDefault() ?? new ShopSetting();
+
+            if (sale == null)
+                return NotFound();
+            ViewBag.Balance = _context.Customers.Where(c => c.Id == sale.CustomerId).Select(c => c.OpeningBalance).FirstOrDefault();
+
+            var vm = new SaleReceiptViewModel
+            {
+                SaleId = sale.Id,
+                InvoiceNumber = sale.InvoiceNumber,
+                SaleDate = sale.SaleDate,
+                CashierName = sale.CashierId,
+                SubTotal = sale.SubTotal,
+                Tax = sale.Tax,
+                Discount = sale.Discount,
+                Total = sale.Total,
+
+                // client-side fetching
+                CustomerId = sale.CustomerId,
+                CustomerName = _context.Customers
+                                       .AsEnumerable()
+                                       .Where(c => c.Id == sale.CustomerId)
+                                       .Select(c => c.CustomerName)
+                                       .FirstOrDefault() ?? "Walk-in Customer",
+                CustomerPhone = _context.Customers
+                                        .AsEnumerable()
+                                        .Where(c => c.Id == sale.CustomerId)
+                                        .Select(c => c.ContactNumber)
+                                        .FirstOrDefault(),
+
+                PaymentMethod = sale.Payment?.PaymentMethod ?? "Cash",
+                PaidAmount = sale.Payment?.Amount ?? sale.Total,
+                Change = (sale.Payment?.Amount ?? sale.Total) - sale.Total,
+
+                Items = (from si in _context.SaleItems
+                         join i in _context.Items on si.ItemId equals i.Id
+                         where si.SaleId == sale.Id
+                         select new SaleItemReceiptVM
+                         {
+                             SrNo = 0,
+                             ItemName = i.ItemName,
+                             UnitPrice = si.UnitPrice,
+                             Quantity = si.Quantity,
+                             LineTotal = si.LineTotal
+                         }).ToList()
+            };
+
+            // assign SrNo
+            for (int i = 0; i < vm.Items.Count; i++)
+            {
+                vm.Items[i].SrNo = i + 1;
+            }
+
+            return View(vm);
+        }
+
 
         private string GenerateInvoiceNumber()
         {

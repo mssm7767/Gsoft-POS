@@ -5,7 +5,6 @@
     ViewBag.Title = "GSoft POS";
     Layout = "~/Views/Shared/_Layout.cshtml";
 
-    var categories = ViewBag.Categories as IEnumerable<string> ?? new List<string>();
     var safeModel = Model ?? new List<ItemModel>();
     var itemsJson = JsonSerializer.Serialize(safeModel);
     var cashierId = ViewBag.CashierId as string ?? "N/A";
@@ -19,9 +18,12 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <style>
+    /* =============== GSoft POS — FULL PAGE CSS (UPDATED) =============== */
+
+    /* -------- Theme Vars -------- */
     :root {
-        --brand: #60a5fa;
-        --brand-2: #93c5fd;
+        --brand: #60a5fa; /* sky-400 */
+        --brand-2: #93c5fd; /* sky-300 */
         --ink: #0f172a;
         --muted: #64748b;
         --card: #ffffff;
@@ -30,12 +32,17 @@
         --warn: #f59e0b;
         --danger: #dc2626;
         --slate: #1e293b;
+        --grad-1: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%); /* sky -> violet */
+        --grad-2: linear-gradient(135deg, #22c55e 0%, #60a5fa 100%); /* green -> sky */
+        --grad-3: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%); /* amber -> red */
     }
 
+    /* -------- Base -------- */
     body {
         background: var(--bg);
     }
 
+    /* -------- Header -------- */
     .pos-header {
         background: linear-gradient(135deg,var(--brand) 0%, var(--brand-2) 100%);
         border-radius: 16px;
@@ -64,10 +71,10 @@
         gap: .6rem;
         padding: .6rem 1.4rem;
         border-radius: 16px;
-        background: rgba(255,255,255,0.25);
+        background: rgba(255,255,255,.25);
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
-        border: 1px solid rgba(255,255,255,0.35);
+        border: 1px solid rgba(255,255,255,.35);
         color: #0f172a;
         font-weight: 800;
         font-size: 1.6rem;
@@ -133,6 +140,7 @@
         font-weight: 700;
     }
 
+    /* -------- Cards & Sections -------- */
     .pos-card {
         background: var(--card);
         border-radius: 16px;
@@ -146,11 +154,13 @@
         margin-bottom: 10px;
     }
 
+    /* -------- Barcode / Search -------- */
     .barcode-input {
         height: 52px;
         font-size: 1rem;
         border-radius: 12px;
-        border: 1px solid #e2e8f0;
+        border: 2px solid #e2e8f0;
+        transition: all .15s;
     }
 
         .barcode-input:focus {
@@ -179,6 +189,34 @@
         }
     }
 
+    /* -------- Return Mode (Red) -------- */
+    @@keyframes blink-glow-red {
+        0% {
+            box-shadow: 0 0 0 rgba(239,68,68,0);
+            border-color: #e2e8f0;
+        }
+
+        50% {
+            box-shadow: 0 0 12px rgba(239,68,68,.5);
+            border-color: #ef4444;
+        }
+
+        100% {
+            box-shadow: 0 0 0 rgba(239,68,68,0);
+            border-color: #e2e8f0;
+        }
+    }
+
+    body.return-mode .pos-card .barcode-input {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 .2rem rgba(239,68,68,.15) !important;
+    }
+
+        body.return-mode .pos-card .barcode-input.blinking {
+            animation: blink-glow-red 1.5s infinite !important;
+        }
+
+    /* -------- Items Table -------- */
     .pos-table thead th {
         background: #3b82f6;
         color: #fff;
@@ -206,24 +244,7 @@
             background: #ffe4e6;
         }
 
-    .customer-chip {
-        background: #eff6ff;
-        color: #1d4ed8;
-        border: 1px solid #bfdbfe;
-        padding: .35rem .7rem;
-        border-radius: 999px;
-        font-weight: 600;
-    }
-
-    .balance-badge {
-        background: #ecfdf5;
-        color: #065f46;
-        border: 1px solid #a7f3d0;
-        border-radius: 10px;
-        padding: .3rem .6rem;
-        font-weight: 700;
-    }
-
+    /* -------- Sticky Totals / Actions -------- */
     .totals-bar {
         position: sticky;
         bottom: 0;
@@ -233,7 +254,7 @@
     }
 
     .totals-card {
-        background: #ffffff;
+        background: #fff;
         color: var(--ink);
         border-radius: 14px;
         padding: 10px 14px;
@@ -260,6 +281,7 @@
         font-weight: 600;
     }
 
+    /* -------- Controls & Buttons -------- */
     .top-controls .btn {
         border-radius: 10px;
         font-weight: 600;
@@ -309,6 +331,7 @@
         margin-right: 8px;
     }
 
+    /* -------- Payment Method Pills -------- */
     .method-pill {
         display: inline-flex;
         align-items: center;
@@ -329,6 +352,7 @@
             background: #e0f2fe;
         }
 
+    /* -------- Action Buttons (soft variants) -------- */
     .actions .btn {
         font-weight: 600;
         border-radius: 12px;
@@ -341,20 +365,11 @@
         overflow: visible;
     }
 
-    .actions i {
-        font-size: 1.05rem;
-        line-height: 1;
-    }
-
     .btn-soft-green {
         background: #ecfdf5;
         color: #065f46;
         border-color: #a7f3d0;
     }
-
-        .btn-soft-green:hover {
-            background: #d1fae5;
-        }
 
     .btn-soft-blue {
         background: #eff6ff;
@@ -362,19 +377,11 @@
         border-color: #bfdbfe;
     }
 
-        .btn-soft-blue:hover {
-            background: #dbeafe;
-        }
-
     .btn-soft-sky {
         background: #e0f2fe;
         color: #075985;
         border-color: #bae6fd;
     }
-
-        .btn-soft-sky:hover {
-            background: #cfe9fd;
-        }
 
     .btn-soft-slate {
         background: #f1f5f9;
@@ -382,19 +389,11 @@
         border-color: #cbd5e1;
     }
 
-        .btn-soft-slate:hover {
-            background: #e2e8f0;
-        }
-
     .btn-soft-amber {
         background: #fff7ed;
         color: #7c2d12;
         border-color: #fed7aa;
     }
-
-        .btn-soft-amber:hover {
-            background: #ffedd5;
-        }
 
     .btn-soft-gray {
         background: #f8fafc;
@@ -402,192 +401,13 @@
         border-color: #cbd5e1;
     }
 
-        .btn-soft-gray:hover {
-            background: #eef2f7;
-        }
-
-    .actions .btn::after {
-        content: "";
-        position: absolute;
-        left: 10%;
-        right: 10%;
-        bottom: -6px;
-        height: 10px;
-        background: radial-gradient(50% 120% at 50% 0%, var(--btn-halo, rgba(2,6,23,.15)) 0%, rgba(0,0,0,0) 70%);
-        filter: blur(6px);
-        opacity: .45;
-        pointer-events: none;
-        transition: opacity .2s ease, transform .2s ease;
-    }
-
-    .actions .btn:hover::after {
-        opacity: .70;
-        transform: translateY(-1px);
-    }
-
-    .actions .btn:active::after {
-        opacity: .85;
-        transform: translateY(0);
-    }
-
-    .btn-soft-green {
-        --btn-halo: rgba(16,185,129,.60);
-    }
-
-    .btn-soft-blue {
-        --btn-halo: rgba(59,130,246,.55);
-    }
-
-    .btn-soft-sky {
-        --btn-halo: rgba(14,165,233,.55);
-    }
-
-    .btn-soft-slate {
-        --btn-halo: rgba(51,65,85,.40);
-    }
-
-    .btn-soft-amber {
-        --btn-halo: rgba(245,158,11,.55);
-    }
-
-    .btn-soft-gray {
-        --btn-halo: rgba(148,163,184,.45);
-    }
-
-    .suggestion-item {
-        padding: 8px 12px;
-        cursor: pointer;
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        border-bottom: 1px solid #eee;
-        transition: background .2s,color .2s;
-        border-radius: 6px;
-        margin: 2px 0;
-    }
-
-        .suggestion-item:hover, .suggestion-item.active {
-            background-color: #FFEB99 !important;
-            color: #333 !important;
-        }
-
-    .suggestion-code {
-        font-weight: 600;
-        color: #444;
-        min-width: 70px;
-        font-size: 14px;
-    }
-
-    .suggestion-qty {
-        color: #666;
-        font-size: 13px;
-        min-width: 60px;
-        background: #f0f0f0;
-        padding: 2px 6px;
-        border-radius: 4px;
-    }
-
-    .suggestion-name {
-        flex: 1;
-        color: #222;
-        font-size: 14px;
-        font-weight: 600;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .suggestions-list {
-        position: absolute;
-        max-width: 400px;
-        width: 100%;
-        background: #fff;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        margin-top: 4px;
-        overflow: hidden;
-        z-index: 1000;
-        max-height: 300px;
-        overflow-y: auto;
-    }
-
-    .item-search-box {
-        position: relative;
-    }
-
-    #posShell:fullscreen, :-webkit-full-screen #posShell {
-        background: var(--bg);
-        padding: 8px;
-        width: 100vw;
-        height: 100vh;
-    }
-
-    @@keyframes blink-glow-red {
-        0% {
-            box-shadow: 0 0 0 rgba(239,68,68,0);
-            border-color: #e2e8f0;
-        }
-
-        50% {
-            box-shadow: 0 0 12px rgba(239,68,68,.45);
-            border-color: #ef4444;
-        }
-
-        100% {
-            box-shadow: 0 0 0 rgba(239,68,68,0);
-            border-color: #e2e8f0;
-        }
-    }
-
-    body.return-mode .barcode-input.blinking {
-        animation: blink-glow-red 1.5s infinite !important;
-    }
-
-    .qty-btns {
-        display: inline-flex;
-        align-items: center;
-        gap: .25rem;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        padding: 2px;
-        background: #f8fafc;
-    }
-
-    .qty-btn {
-        border: 1px solid #e2e8f0;
-        background: #ffffff;
-        border-radius: 8px;
-        width: 32px;
-        height: 32px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-    }
-
-        .qty-btn:hover {
-            background: #eef2f7;
-        }
-
-        .qty-btn i {
-            font-size: 1rem;
-        }
-
-    .focus-mode-qty .barcode-input {
-        border-left: 4px solid #22c55e;
-    }
-
-    .focus-mode-price .barcode-input {
-        border-left: 4px solid #3b82f6;
-    }
-
+    /* -------- Focus Indicators & Editable Price -------- */
     .focus-mode-indicator {
         position: absolute;
         top: -8px;
         right: -8px;
         background: #ef4444;
-        color: white;
+        color: #fff;
         border-radius: 50%;
         width: 20px;
         height: 20px;
@@ -596,20 +416,6 @@
         align-items: center;
         justify-content: center;
         font-weight: bold;
-    }
-
-    .price-highlight {
-        background-color: #fff7ed !important;
-        border: 2px solid #f59e0b !important;
-        border-radius: 6px;
-        transition: all .3s;
-    }
-
-    .qty-highlight {
-        background-color: #f0fdf4 !important;
-        border: 2px solid #22c55e !important;
-        border-radius: 6px;
-        transition: all .3s;
     }
 
     .focus-mode-text {
@@ -628,7 +434,6 @@
         color: #fff;
     }
 
-    /* price cell editable look */
     .editable-price {
         background: #fff7ed !important;
         border: 2px solid #f59e0b !important;
@@ -644,13 +449,268 @@
             border-color: #3b82f6 !important;
             box-shadow: 0 0 0 2px rgba(59,130,246,.25);
         }
+
+    /* -------- Modals: Payment & Retrieve (polished) -------- */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15,23,42,.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        backdrop-filter: blur(2px);
+    }
+
+    /* Payment: wider, colorful, polished */
+    .payment-modal {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 40px 100px rgba(2,6,23,.45);
+        width: 800px;
+        max-width: 96vw;
+        max-height: 96vh;
+        overflow-y: auto;
+        border: 1px solid #e5e7eb;
+    }
+
+        .payment-modal .titlebar {
+            background: var(--grad-1);
+            color: #0f172a;
+            border-radius: 16px 16px 0 0;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+    .titlebar .ttl {
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #0b1324;
+    }
+
+        .titlebar .ttl i {
+            font-size: 1.2rem;
+        }
+
+    .payment-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 12px;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        margin-bottom: 10px;
+        background: #fbfdff;
+    }
+
+    .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid #e5e7eb;
+        background: #eff6ff;
+        color: #1e3a8a;
+        font-weight: 700;
+    }
+
+    .stat-ok {
+        background: #ecfdf5;
+        border-color: #bbf7d0;
+        color: #065f46;
+    }
+
+    .stat-warn {
+        background: #fffbeb;
+        border-color: #fde68a;
+        color: #92400e;
+    }
+
+    /* Retrieve: stylish */
+    .retrieve-modal {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 30px 80px rgba(2,6,23,.45);
+        width: 900px;
+        max-width: 96vw;
+        max-height: 92vh;
+        overflow: auto;
+        border: 1px solid #e5e7eb;
+    }
+
+    .retrieve-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        border-bottom: 1px solid #e5e7eb;
+        background: var(--grad-2);
+    }
+
+        .retrieve-head .title {
+            font-weight: 800;
+            color: #0b1324;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+    .retrieve-toolbar {
+        display: flex;
+        gap: 8px;
+        padding: 10px 16px;
+        border-bottom: 1px solid #eef2f7;
+        background: #fcfcfd;
+    }
+
+    .table-hold th {
+        position: sticky;
+        top: 0;
+        background: #f1f5f9;
+    }
+
+    /* -------- Suggestions (Compact + Professional) -------- */
+    .suggestions-list {
+        position: absolute;
+        width: 100%;
+        max-width: 480px;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        box-shadow: 0 16px 40px rgba(2,6,23,.12);
+        margin-top: 6px;
+        overflow: hidden;
+        z-index: 1000;
+        max-height: 260px;
+        overflow-y: auto;
+        padding: 4px;
+        backdrop-filter: saturate(1.2) blur(2px);
+    }
+
+    .suggestion-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: background .15s ease, border-color .15s ease, transform .04s ease;
+        border: 1px solid transparent;
+        background: #f9fafb;
+        margin: 3px 2px;
+    }
+
+        .suggestion-item:hover {
+            background: #eff6ff;
+            border-color: #dbeafe;
+        }
+
+        .suggestion-item.active {
+            background: #dbeafe;
+            border-color: #93c5fd;
+        }
+
+    .suggestion-code {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 700;
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        color: #1e3a8a;
+        padding: 3px 8px;
+        border-radius: 8px;
+        border: 1px solid #c7d2fe;
+        background: #eef2ff;
+        white-space: nowrap;
+        line-height: 1.1;
+    }
+
+        .suggestion-code i {
+            font-size: .95rem;
+            opacity: .9;
+            color: #1e40af;
+        }
+
+    .suggestion-qty {
+        font-weight: 700;
+        color: #065f46;
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+        border-radius: 999px;
+        padding: 1px 8px;
+        white-space: nowrap;
+        font-size: .9rem;
+        line-height: 1.1;
+    }
+
+    .suggestion-name {
+        flex: 1;
+        min-width: 0;
+        font-weight: 600;
+        color: #0f172a;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: .95rem;
+    }
+
+    .suggestions-list::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    .suggestions-list::-webkit-scrollbar-thumb {
+        background: #e5e7eb;
+        border-radius: 10px;
+        border: 2px solid #ffffff;
+    }
+
+        .suggestions-list::-webkit-scrollbar-thumb:hover {
+            background: #cbd5e1;
+        }
+
+    .suggestions-list::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    /* -------- Misc layout polish -------- */
+    .table-responsive {
+        scrollbar-width: thin;
+    }
+
+        .table-responsive::-webkit-scrollbar {
+            height: 10px;
+            width: 10px;
+        }
+
+        .table-responsive::-webkit-scrollbar-thumb {
+            background: #e5e7eb;
+            border-radius: 8px;
+        }
+
+            .table-responsive::-webkit-scrollbar-thumb:hover {
+                background: #cbd5e1;
+            }
+
+    /* -------- Fullscreen container -------- */
+    #posShell:fullscreen, :-webkit-full-screen #posShell {
+        background: var(--bg);
+        padding: 8px;
+        width: 100vw;
+        height: 100vh;
+    }
 </style>
 
 <div id="posShell">
     <!-- HEADER -->
     <div class="pos-header">
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-            <!-- LEFT -->
             <div class="d-flex align-items-center flex-wrap gap-2">
                 <div class="input-group inv-group">
                     <span class="input-group-text"><i class="bi bi-search"></i></span>
@@ -659,25 +719,17 @@
                 </div>
                 <button id="btnInvPrev" class="icon-btn" title="Previous (Alt+Left)"><i class="bi bi-chevron-left"></i></button>
                 <button id="btnInvNext" class="icon-btn" title="Next (Alt+Right)"><i class="bi bi-chevron-right"></i></button>
-
-                <span class="inv-badge">
-                    <i class="bi bi-receipt-cutoff"></i>
-                    <span id="invoiceNoValue"></span>
-                </span>
+                <span class="inv-badge"><i class="bi bi-receipt-cutoff"></i><span id="invoiceNoValue"></span></span>
             </div>
 
-            <!-- CENTER -->
             <div class="text-center flex-grow-1 d-none d-md-block">
                 <span class="brand-chip"><i class="bi bi-shop"></i>@shopName</span>
             </div>
 
-            <!-- RIGHT -->
             <div class="d-flex align-items-center gap-2">
                 <span class="chip"><i class="bi bi-person-badge"></i> <span id="chipCashier">@cashierId</span></span>
                 <span class="chip"><i class="bi bi-calendar3-event"></i> <span id="liveClock">—</span></span>
-                <button id="btnFullscreen" class="icon-btn" title="Expand (Alt+Enter)">
-                    <i class="bi bi-arrows-fullscreen"></i>
-                </button>
+                <button id="btnFullscreen" class="icon-btn" title="Expand (Alt+Enter)"><i class="bi bi-arrows-fullscreen"></i></button>
             </div>
         </div>
     </div>
@@ -693,7 +745,7 @@
 
                     <div class="sale-return d-flex align-items-center gap-3">
                         <div class="form-check form-check-inline m-0">
-                            <input class="form-check-input new-btn saletype" type="radio" name="SaleType" id="rbSale" value="Sale" checked>
+                            <input class="form-check-input saletype" type="radio" name="SaleType" id="rbSale" value="Sale" checked>
                             <label class="form-check-label" for="rbSale"><i class="bi bi-bag-check me-1"></i>Sale</label>
                         </div>
                         <div class="form-check form-check-inline m-0">
@@ -715,9 +767,11 @@
                             <i class="bi bi-plus-lg"></i> New Item <span class="kbd">Alt+N</span>
                         </a>
                     </div>
-                    <div class="item-search-box"><div id="itemSuggestions" class="suggestions-list" style="display:none;"></div></div>
+                    <div class="item-search-box">
+                        <div id="itemSuggestions" class="suggestions-list" style="display:none;"></div>
+                    </div>
                     <div class="small text-muted mt-2">
-                        Scanner se item auto-add hota hai. Keyboard se type → suggestion → <span class="kbd">Enter</span>.
+                        Scanner se item seedha grid me add hota hai. Keyboard se: type → suggestion → <span class="kbd">Enter</span>.
                         <span class="kbd">F3</span> toggles focus (Qty/Price) | Current: <span id="currentFocusMode" class="focus-mode-text">Quantity</span>
                     </div>
                 </div>
@@ -731,16 +785,7 @@
                     <div class="table-responsive" style="max-height:60vh;">
                         <table class="table table-hover align-middle pos-table mb-0" id="salesTable">
                             <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Item Name</th>
-                                    <th>Price</th>
-                                    <th>Qty</th>
-                                    <th>Disc %</th>
-                                    <th>Tax %</th>
-                                    <th>Line Total</th>
-                                    <th>Action</th>
-                                </tr>
+                                <tr><th>#</th><th>Item Name</th><th>Price</th><th>Qty</th><th>Disc %</th><th>Tax %</th><th>Line Total</th><th>Action</th></tr>
                             </thead>
                             <tbody>
                                 <tr id="noDataRow">
@@ -759,13 +804,11 @@
                     <div class="section-title"><i class="bi bi-people"></i> Customer</div>
                     <div class="d-flex gap-2 mb-2">
                         <input type="radio" name="custType" id="walkinRadio" checked onchange="toggleCustomerType()" />
-                        <span class="customer-chip"><i class="bi bi-person-walking"></i> Walk-in</span>
+                        <span class="chip"><i class="bi bi-person-walking"></i> Walk-in</span>
                         <input type="radio" name="custType" id="customerRadio" onchange="toggleCustomerType()" class="ms-3" />
-                        <span class="customer-chip"><i class="bi bi-person-lines-fill"></i> Registered</span>
+                        <span class="chip"><i class="bi bi-person-lines-fill"></i> Registered</span>
                     </div>
-                    <div id="walkinBlock" class="p-2 border rounded bg-light">
-                        <strong>Walk-in Customer</strong>
-                    </div>
+                    <div id="walkinBlock" class="p-2 border rounded bg-light"><strong>Walk-in Customer</strong></div>
                     <div id="customerBlock" style="display:none;">
                         <div class="input-group mb-2">
                             <select id="customerDropdown" class="form-control" onchange="setSelectedCustomer(this)">
@@ -776,13 +819,11 @@
                                 }
                             </select>
                             <input name="CustomerId" type="hidden" id="selectedCustomerId" />
-                            <a class="btn btn-outline-primary" href="/Customer/Create" title="Add New Customer">
-                                <i class="bi bi-plus-lg"></i>
-                            </a>
+                            <a class="btn btn-outline-primary" href="/Customer/Create" title="Add New Customer"><i class="bi bi-plus-lg"></i></a>
                         </div>
                         <div class="d-flex justify-content-between mt-2" id="selectedCustomerBlock" style="display:none;">
                             <div class="text-muted">Balance</div>
-                            <div class="balance-badge" id="customerBalance"></div>
+                            <div class="chip" id="customerBalance"></div>
                         </div>
                     </div>
                 </div>
@@ -804,9 +845,7 @@
                         <span class="method-pill" data-value="bank"><i class="bi bi-bank"></i> Bank</span>
                         <span class="method-pill" data-value="online"><i class="bi bi-wifi"></i> Online</span>
                     </div>
-                    <div class="small text-muted mt-2">
-                        Amount enter karne ke liye <strong>Pay</strong> ya <span class="kbd">F4</span> use karein.
-                    </div>
+                    <div class="small text-muted mt-2">Pay karne ke liye <span class="kbd">F4</span>/<span class="kbd">F5</span> use karein.</div>
                 </div>
 
                 <!-- BILL SUMMARY -->
@@ -814,7 +853,6 @@
                     <div class="section-title"><i class="bi bi-cash-stack"></i> Bill Summary</div>
                     <div class="d-flex justify-content-between py-1"><span class="text-muted">Sub-Total</span><strong class="gpos-total" id="subTotal">₨0.00</strong></div>
 
-                    <!-- Discount controls -->
                     <div class="d-flex justify-content-between align-items-center py-1">
                         <span class="text-muted">Discount</span>
                         <div class="d-flex gap-2 align-items-center">
@@ -842,62 +880,48 @@
                     <div><div class="k">Payable</div><div class="v" id="sumPayable">0.00</div></div>
                 </div>
                 <div class="actions d-flex flex-wrap gap-2">
-                    <button class="btn btn-soft-green saveprint-btn" id="saveprint-btn" title="F4">
-                        <i class="bi bi-receipt"></i> Save & Print (F4)
-                    </button>
-                    <button class="btn btn-soft-blue saveonly-btn" id="saveonly-btn" title="F5">
-                        <i class="bi bi-floppy"></i> Save (F5)
-                    </button>
-                    <button class="btn btn-soft-sky new-btn" id="new-btn" title="F12" onclick="window.location.href='/sales/pos'">
-                        <i class="bi bi-file-earmark-plus"></i> New Invoice (F12)
-                    </button>
-                    <button class="btn btn-soft-slate print-btn" id="print-btn" title="F8">
-                        <i class="bi bi-printer"></i> Print (F8)
-                    </button>
+                    <button class="btn btn-soft-green saveprint-btn" id="saveprint-btn" title="F4"><i class="bi bi-receipt"></i> Save & Print (F4)</button>
+                    <button class="btn btn-soft-blue saveonly-btn" id="saveonly-btn" title="F5"><i class="bi bi-floppy"></i> Save (F5)</button>
+
                     <div class="btn-group">
-                        <button class="btn btn-soft-amber" id="btnHold" title="Hold current">
-                            <i class="bi bi-pause-circle"></i> Hold
-                        </button>
-                        <div class="dropdown d-inline-block">
-                            <button class="btn btn-soft-gray dropdown-toggle" id="btnRetrieveHeld" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-archive"></i> Retrieve Held
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="btnRetrieveHeld">
-                                <li><a class="dropdown-item" href="#" id="btnRetrieve">Retrieve</a></li>
-                                <li><a class="dropdown-item text-danger" href="#" id="btnRemoveHeld">Remove</a></li>
-                            </ul>
-                        </div>
+                        <button class="btn btn-soft-amber" id="btnHold" title="Hold current"><i class="bi bi-pause-circle"></i> Hold</button>
+                        <button class="btn btn-soft-gray" id="btnRetrieveHeld" title="Retrieve held"><i class="bi bi-archive"></i> Retrieve Held</button>
                     </div>
+
+                    <button class="btn btn-soft-sky new-btn" id="new-btn" title="F12" onclick="window.location.href='/sales/pos'"><i class="bi bi-file-earmark-plus"></i> New Invoice (F12)</button>
+                    <button class="btn btn-soft-slate print-btn" id="print-btn" title="F8"><i class="bi bi-printer"></i> Print (F8)</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Payment Modal -->
-    <div id="paymentModalOverlay" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); align-items:center; justify-content:center; z-index:9999;">
-        <div class="payment-modal" style="background:#fff; border-radius:16px; box-shadow:0 30px 80px rgba(0,0,0,.3); width:520px; max-width:92vw; max-height:96vh; overflow-y:auto; border:1px solid #e5e7eb;">
-            <div class="d-flex justify-content-between align-items-center p-3 border-bottom" style="background:linear-gradient(180deg,#ffffff,#f9fafb); border-radius:16px 16px 0 0;">
-                <div class="fw-bold" style="display:flex; gap:.6rem; align-items:center;"><i class="bi bi-wallet2" style="color:#f59e0b;"></i> Take Payment</div>
+    <div id="paymentModalOverlay" class="modal-overlay">
+        <div class="payment-modal" id="paymentModalCard" tabindex="-1">
+            <div class="titlebar">
+                <div class="ttl"><i class="bi bi-wallet2"></i> Take Payment</div>
                 <button class="btn btn-soft-slate" onclick="closePaymentModal()" title="Close (Esc)"><i class="bi bi-x-lg"></i></button>
             </div>
 
             <div class="p-3">
-                <div class="rowline d-flex justify-content-between align-items-center p-2 mb-2 border rounded">
-                    <div class="l d-flex align-items-center gap-2"><i class="bi bi-credit-card-2-front"></i><span>Method</span></div>
-                    <div class="r" id="modalMethod"><i class="bi bi-cash"></i> Cash</div>
+                <div class="payment-row">
+                    <div class="d-flex align-items-center gap-2"><span class="pill"><i class="bi bi-credit-card-2-front"></i> Method</span></div>
+                    <div id="modalMethod" class="pill"><i class="bi bi-cash"></i> Cash</div>
                 </div>
 
-                <div class="rowline d-flex justify-content-between align-items-center p-2 mb-2 border rounded">
-                    <div class="l d-flex align-items-center gap-2"><i class="bi bi-cash-stack"></i><span>Grand Total</span></div>
-                    <div class="r" id="tenderGrandTotal">0.00</div>
+                <div class="payment-row">
+                    <div class="d-flex align-items-center gap-2"><i class="bi bi-cash-stack"></i><span>Grand Total</span></div>
+                    <div id="tenderGrandTotal" class="fw-bold">0.00</div>
                 </div>
-                <div class="rowline d-flex justify-content-between align-items-center p-2 mb-2 border rounded" id="rowDiscount" style="display:none;">
-                    <div class="l d-flex align-items-center gap-2"><i class="bi bi-patch-minus"></i><span>Discount</span></div>
-                    <div class="r" id="tenderDiscount">0.00</div>
+
+                <div class="payment-row" id="rowDiscount" style="display:none;">
+                    <div class="d-flex align-items-center gap-2"><i class="bi bi-patch-minus"></i><span>Discount</span></div>
+                    <div id="tenderDiscount">0.00</div>
                 </div>
-                <div class="rowline d-flex justify-content-between align-items-center p-2 mb-3 border rounded" id="rowTax" style="display:none;">
-                    <div class="l d-flex align-items-center gap-2"><i class="bi bi-receipt"></i><span>Tax</span></div>
-                    <div class="r" id="tenderTax">0.00</div>
+
+                <div class="payment-row" id="rowTax" style="display:none;">
+                    <div class="d-flex align-items-center gap-2"><i class="bi bi-receipt"></i><span>Tax</span></div>
+                    <div id="tenderTax">0.00</div>
                 </div>
 
                 <div class="mb-3">
@@ -905,558 +929,328 @@
                     <input id="tenderInput" type="number" class="form-control" placeholder="Amount" min="0" step="0.01" />
                 </div>
 
-                <div class="rowline d-flex justify-content-between align-items-center p-2 mb-2 border rounded">
-                    <div class="l d-flex align-items-center gap-2"><i class="bi bi-hourglass-split"></i><span>Remaining Due</span></div>
-                    <div class="r" id="modalRemaining">0.00</div>
-                </div>
-                <div class="rowline d-flex justify-content-between align-items-center p-2 mb-3 border rounded">
-                    <div class="l d-flex align-items-center gap-2"><i class="bi bi-arrow-repeat"></i><span>Change</span></div>
-                    <div class="r" id="tenderChangeText">0.00</div>
+                <div class="payment-row">
+                    <div class="d-flex align-items-center gap-2"><i class="bi bi-hourglass-split"></i><span>Remaining Due</span></div>
+                    <div id="modalRemaining" class="stat-warn fw-bold px-3 py-1 rounded">0.00</div>
                 </div>
 
-                <div class="d-flex justify-content-end gap-2">
+                <div class="payment-row mb-3">
+                    <div class="d-flex align-items-center gap-2"><i class="bi bi-arrow-repeat"></i><span>Change</span></div>
+                    <div id="tenderChangeText" class="stat-ok fw-bold px-3 py-1 rounded">0.00</div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 pb-2">
                     <button class="btn btn-soft-gray" onclick="closePaymentModal()"><i class="bi bi-x-circle"></i> Cancel</button>
                     <button class="btn btn-soft-green" id="tenderOkBtn"><i class="bi bi-check2-circle"></i> <span id="btnPayConfirm">Confirm & Print (F4)</span></button>
                 </div>
             </div>
         </div>
     </div>
-</div> <!-- /#posShell -->
+
+    <!-- Retrieve Held Modal -->
+    <div id="retrieveOverlay" class="modal-overlay">
+        <div class="retrieve-modal">
+            <div class="retrieve-head">
+                <div class="title"><i class="bi bi-archive"></i> Retrieve Held Invoices</div>
+                <button class="btn btn-soft-slate" onclick="closeRetrieveModal()"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="retrieve-toolbar">
+                <div class="input-group" style="max-width:340px;">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input id="holdSearch" type="text" class="form-control" placeholder="Search by invoice #">
+                </div>
+                <button class="btn btn-soft-gray" onclick="sortHeld('time')"><i class="bi bi-clock"></i> Latest</button>
+                <button class="btn btn-soft-gray" onclick="sortHeld('grand')"><i class="bi bi-cash-coin"></i> Grand Total</button>
+                <button class="btn btn-soft-amber" onclick="clearAllHeld()"><i class="bi bi-trash3"></i> Clear All</button>
+            </div>
+            <div class="p-3">
+                <div class="table-responsive" style="max-height:60vh;">
+                    <table class="table table-hover align-middle table-hold" id="heldTable">
+                        <thead>
+                            <tr>
+                                <th>Invoice #</th>
+                                <th>Items</th>
+                                <th>Preview</th>
+                                <th>Grand</th>
+                                <th>Held At</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="heldTbody"></tbody>
+                    </table>
+                </div>
+                <div id="noHeldRow" class="text-center text-muted py-4" style="display:none;">
+                    <i class="bi bi-inbox fs-3 d-block mb-2"></i>No held invoices
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <script>
-    /* =========================
-       GLOBAL STATE / HELPERS
-    ========================= */
-    let filtered = []; let selectedIdx = -1;
-    let focusMode = 'qty'; // 'qty' or 'price'
-    let currentEditingPrice = null;
+    /* -------- GLOBALS -------- */
+    let filtered=[]; let selectedIdx=-1;
+    let focusMode='qty'; let currentEditingPrice=null;
     const items = @Html.Raw(itemsJson);
     const TAX_PERCENT = 0;
     let invoiceCounter = @((invoiceNo ?? 0));
     let pendingAction = null;
 
-    function toast(msg,icon='info',ms=1500){
-        Swal.fire({ toast:true, icon, title:msg, position:'top-end', showConfirmButton:false, timer:ms, timerProgressBar:true });
-    }
-    function selectAllContent(el){
-        const range = document.createRange(); range.selectNodeContents(el);
-        const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
-    }
-    function highlightField(element, type){
-        document.querySelectorAll('.price-highlight,.qty-highlight').forEach(el=>el.classList.remove('price-highlight','qty-highlight'));
-        if(type==='price') element.classList.add('price-highlight'); else element.classList.add('qty-highlight');
-        setTimeout(()=>element.classList.remove('price-highlight','qty-highlight'), 1500);
-    }
+    /* -------- UTILS -------- */
+    function toast(msg,icon='info',ms=1500){ Swal.fire({toast:true,icon,title:msg,position:'top-end',showConfirmButton:false,timer:ms,timerProgressBar:true}); }
+    function nowIso(){ return new Date().toISOString(); }
+    function selectAllContent(el){const r=document.createRange(); r.selectNodeContents(el); const s=window.getSelection(); s.removeAllRanges(); s.addRange(r); }
+    function money(n){return `₨${(n||0).toFixed(2)}`;}
+    function hasLineItems(){return !!document.querySelector('#salesTable .qty-input');}
 
-    /* =========================
-       FOCUS MODE CORE
-    ========================= */
-    function initializeFocusMode(){
-        document.body.classList.add('focus-mode-qty');
-        updateFocusModeIndicator();
-    }
+    /* -------- FOCUS / RETURN MODE -------- */
+    function initializeFocusMode(){ document.body.classList.add('focus-mode-qty'); updateFocusModeIndicator(); }
     function updateFocusModeIndicator(){
-        let indicator = document.getElementById('focusModeIndicator');
-        if(!indicator){
-            indicator = document.createElement('div');
-            indicator.id='focusModeIndicator'; indicator.className='focus-mode-indicator';
-            const parent = document.getElementById('itemSearchInput').parentNode;
-            parent.style.position='relative'; parent.appendChild(indicator);
-        }
-        indicator.textContent = (focusMode==='qty'?'Q':'P');
-        indicator.style.background = (focusMode==='qty'?'#22c55e':'#3b82f6');
-    }
-    function focusLastPriceCell(){
-        const lastRow = document.querySelector('#salesTable tbody tr:last-child');
-        if(!lastRow || lastRow.id==='noDataRow') return;
-        const priceCell = lastRow.querySelector('.price-cell');
-        if(!priceCell) return;
-        makePriceEditable(priceCell); // makes it editable + styles
-        selectAllContent(priceCell);
-        highlightField(priceCell,'price');
-        priceCell.focus();
-    }
-    function focusLastQtyInput(){
-        const lastRow = document.querySelector('#salesTable tbody tr:last-child');
-        if(!lastRow || lastRow.id==='noDataRow') return;
-        const qty = lastRow.querySelector('.qty-input');
-        if(!qty) return;
-        qty.focus(); qty.select();
-        highlightField(qty,'qty');
+      let i=document.getElementById('focusModeIndicator');
+      if(!i){ i=document.createElement('div'); i.id='focusModeIndicator'; i.className='focus-mode-indicator';
+        const p=document.getElementById('itemSearchInput').parentNode; p.style.position='relative'; p.appendChild(i); }
+      i.textContent= (focusMode==='qty'?'Q':'P'); i.style.background=(focusMode==='qty'?'#22c55e':'#3b82f6');
     }
     function toggleFocusMode(){
-        if(focusMode==='qty'){
-            focusMode='price';
-            document.body.classList.remove('focus-mode-qty');
-            document.body.classList.add('focus-mode-price');
-            document.getElementById('currentFocusMode').textContent='Price';
-            focusLastPriceCell();
-        }else{
-            focusMode='qty';
-            document.body.classList.remove('focus-mode-price');
-            document.body.classList.add('focus-mode-qty');
-            document.getElementById('currentFocusMode').textContent='Quantity';
-            focusLastQtyInput();
-        }
-        updateFocusModeIndicator();
-        toast(`Focus Mode: ${focusMode.toUpperCase()}`);
+      if(focusMode==='qty'){
+        focusMode='price';
+        document.body.classList.replace('focus-mode-qty','focus-mode-price');
+        document.getElementById('currentFocusMode').textContent='Price';
+        // After toggle, next added item will jump to price (scan/manual)
+      } else {
+        focusMode='qty';
+        document.body.classList.replace('focus-mode-price','focus-mode-qty');
+        document.getElementById('currentFocusMode').textContent='Quantity';
+      }
+      updateFocusModeIndicator();
+      toast(`Focus Mode: ${focusMode.toUpperCase()}`);
     }
-
-    /* =========================
-       SALE/RETURN VISUAL
-    ========================= */
+    function focusLastPriceCell(){
+      const r=document.querySelector('#salesTable tbody tr:last-child');
+      if(!r||r.id==='noDataRow')return;
+      const c=r.querySelector('.price-cell'); if(!c)return;
+      makePriceEditable(c); selectAllContent(c); c.focus();
+    }
+    function focusLastQtyInput(){
+      const r=document.querySelector('#salesTable tbody tr:last-child');
+      if(!r||r.id==='noDataRow')return;
+      const q=r.querySelector('.qty-input'); if(!q)return;
+      q.focus(); q.select();
+    }
+    function focusBarcode(){ const bi=document.getElementById('itemSearchInput'); bi?.classList.add('blinking'); bi?.focus(); bi?.select(); }
     function applySaleTypeVisual(){
-        const isReturn = document.getElementById('rbReturn')?.checked;
-        document.body.classList.toggle('return-mode', !!isReturn);
-        const barcodeInput = document.getElementById('itemSearchInput');
-        if(barcodeInput) barcodeInput.placeholder = isReturn ? "Return item scan karein… (Alt + B)" : "Sale item scan karein… (Alt + B)";
+      const isReturn=document.getElementById('rbReturn')?.checked;
+      document.body.classList.toggle('return-mode', !!isReturn);
+      const bi=document.getElementById('itemSearchInput');
+      if(bi) bi.placeholder = isReturn? "Return item scan karein… (Alt + B)":"Sale item scan karein… (Alt + B)";
     }
 
-    /* =========================
-       SUGGESTIONS (keyboard)
-    ========================= */
-    function showItemSuggestions(term){
-        term = (term||'').trim();
+    /* -------- SUGGESTIONS / SCAN -------- */
+    function showItemSuggestions(term) {
+        term = (term || '').trim();
         const listDiv = document.getElementById('itemSuggestions');
-        if(!term){ listDiv.style.display='none'; filtered=[]; selectedIdx=-1; return; }
-        filtered = items.filter(x => (x.ItemCode||'').toLowerCase().includes(term.toLowerCase()) || (x.ItemName||'').toLowerCase().includes(term.toLowerCase()));
-        listDiv.innerHTML = filtered.length ? filtered.map((item,i)=>`
-            <div class="suggestion-item ${i===selectedIdx?'active':''}" data-idx="${i}" onclick="selectItemSuggestion(${i})">
-                <span class="suggestion-code">${item.ItemCode}</span>
-                <span class="suggestion-qty">Qty: ${item.Quantity}</span>
-                <span class="suggestion-name">${item.ItemName}</span>
-            </div>`).join('') : `<div class="suggestion-item"><span class="suggestion-name text-muted">No items found</span></div>`;
-        listDiv.style.display='block'; selectedIdx=-1;
+
+        if (!term) {
+            listDiv.style.display = 'none';
+            filtered = [];
+            selectedIdx = -1;
+            return;
+        }
+
+        const lc = term.toLowerCase();
+        filtered = items.filter(x =>
+            (x.ItemCode || '').toLowerCase().includes(lc) ||
+            (x.ItemName || '').toLowerCase().includes(lc)
+        );
+
+        if (filtered.length === 0) {
+            listDiv.innerHTML = `
+                <div class="suggestion-item">
+                    <span class="suggestion-name text-muted">No items found</span>
+                </div>
+            `;
+            selectedIdx = -1;
+        } else {
+            listDiv.innerHTML = filtered.map((it, i) => {
+                const code = it.ItemCode || '—';
+                const qty  = (it.Quantity ?? 0);
+                const name = it.ItemName || '';
+                return `
+                <div class="suggestion-item ${i === selectedIdx ? 'active' : ''}"
+                     data-idx="${i}" onclick="selectItemSuggestion(${i})">
+                    <span class="suggestion-code"><i class="bi bi-upc-scan"></i>${code}</span>
+                    <span class="suggestion-qty">(${qty})</span>
+                    <span class="suggestion-name">${name}</span>
+                </div>`;
+            }).join('');
+            // default highlight first result
+            selectedIdx = 0;
+            updateHighlight();
+        }
+
+        listDiv.style.display = 'block';
     }
-    function updateHighlight(){ document.querySelectorAll('#itemSuggestions .suggestion-item').forEach((el,i)=>el.classList.toggle('active', i===selectedIdx)); }
-    function selectItemSuggestion(idx){
-        if(idx<0 || idx>=filtered.length) return;
-        const item = filtered[idx];
-        if(!item.Quantity || item.Quantity<=0){ Swal.fire({icon:'error',title:'Out of Stock',text:`${item.ItemName||'This item'} is out of stock!`}); return; }
-        addToSalesTable(item);
-        document.getElementById('itemSuggestions').style.display='none';
-        const bi=document.getElementById('itemSearchInput'); bi.value=''; bi.focus();
-        if(focusMode==='price') focusLastPriceCell(); else focusLastQtyInput();
+    function updateHighlight(){ document.querySelectorAll('#itemSuggestions .suggestion-item').forEach((el,i)=>el.classList.toggle('active',i===selectedIdx)); }
+
+    function selectItemSuggestion(i){
+      if(i<0||i>=filtered.length) return; const item=filtered[i];
+      if(!item.Quantity || item.Quantity<=0){ Swal.fire({icon:'error',title:'Out of Stock',text:`${item.ItemName||'This item'} is out of stock!`}); return; }
+      addToSalesTable(item);
+      const box=document.getElementById('itemSuggestions'); box.style.display='none';
+      const bi=document.getElementById('itemSearchInput'); bi.value=''; bi.focus();
+      // workflow based on mode
+      if(focusMode==='price') focusLastPriceCell(); else focusLastQtyInput();
     }
 
-    /* close suggestions on outside click */
-    document.addEventListener('click', function(e) {
-        const suggestions = document.getElementById('itemSuggestions');
-        const searchInput = document.getElementById('itemSearchInput');
-        if (suggestions && searchInput && !suggestions.contains(e.target) && e.target!==searchInput) {
-            suggestions.style.display='none'; filtered=[]; selectedIdx=-1;
+    /* quick scanner detection */
+    let scanState={start:0,last:0,count:0,timer:null};
+    const SCAN_MIN_LEN=6, SCAN_AVG_MS=35, SCAN_END_DELAY=60;
+    const itemInputEl=document.getElementById('itemSearchInput'); const suggDiv=document.getElementById('itemSuggestions');
+
+    itemInputEl.addEventListener('keydown', e=>{
+      const now=performance.now(); if(scanState.count===0) scanState.start=now; scanState.count++; scanState.last=now;
+
+      if(filtered.length && suggDiv.style.display==='block'){
+        if(e.key==='ArrowDown'){ e.preventDefault(); selectedIdx=(selectedIdx+1)%filtered.length; updateHighlight(); return; }
+        if(e.key==='ArrowUp'){ e.preventDefault(); selectedIdx=(selectedIdx-1+filtered.length)%filtered.length; updateHighlight(); return; }
+        if(e.key==='Enter'){
+            e.preventDefault();
+            if(selectedIdx===-1 && filtered.length>0) selectedIdx=0;
+            if(selectedIdx>=0){ selectItemSuggestion(selectedIdx); }
+            return;
         }
+        if(e.key==='Escape'){ suggDiv.style.display='none'; filtered=[]; selectedIdx=-1; return; }
+      } else {
+        if(e.key==='Enter'){ e.preventDefault(); manualTryAdd(itemInputEl.value.trim()); return; }
+      }
+
+      clearTimeout(scanState.timer);
+      scanState.timer=setTimeout(()=>{
+        const term=itemInputEl.value.trim();
+        const duration=scanState.last-scanState.start;
+        const avg=duration/Math.max(1,scanState.count);
+        const isScanner = term.length>=SCAN_MIN_LEN && avg<=SCAN_AVG_MS;
+        if(isScanner) scannerAutoAdd(term); else showItemSuggestions(term);
+        scanState={start:0,last:0,count:0,timer:null};
+      }, SCAN_END_DELAY);
     });
 
-    /* =========================
-       PRICE EDIT HELPERS
-    ========================= */
-    function makePriceEditable(priceCell){
-        // only when price mode OR caller explicitly set
-        priceCell.contentEditable = true;
-        priceCell.classList.add('editable-price');
-        currentEditingPrice = priceCell;
+    itemInputEl.addEventListener('input', ()=>{ if(scanState.count===0) showItemSuggestions(itemInputEl.value.trim()); });
+
+    function scannerAutoAdd(term){
+      const lc=term.toLowerCase();
+      let match = items.find(x=>(x.ItemCode||'').toLowerCase()===lc) || items.find(x=>(x.ItemName||'').toLowerCase()===lc);
+      if(!match){ const poss=items.filter(x=>(x.ItemCode||'').toLowerCase().includes(lc)||(x.ItemName||'').toLowerCase().includes(lc)); if(poss.length===1) match=poss[0]; }
+      if(!match){ toast('Item not found','warning'); showItemSuggestions(term); return; }
+      if(!match.Quantity || match.Quantity<=0){ Swal.fire({icon:'error',title:'Out of Stock',text:`${match.ItemName||'This item'} is out of stock!`}); return; }
+      addToSalesTable(match); suggDiv.style.display='none'; itemInputEl.value=''; itemInputEl.focus();
+      if(focusMode==='price') focusLastPriceCell(); else focusLastQtyInput();
     }
-    function savePrice(priceCell){
-        priceCell.contentEditable = false;
-        priceCell.classList.remove('editable-price');
-        let newPrice = priceCell.textContent.replace('₨','').trim();
-        newPrice = parseFloat(newPrice);
-        if(isNaN(newPrice) || newPrice<0){
-            const original = priceCell.dataset.originalPrice;
-            priceCell.textContent = `₨${parseFloat(original||0).toFixed(2)}`;
-        } else {
-            priceCell.textContent = `₨${newPrice.toFixed(2)}`;
-            updateRowTotal(priceCell.closest('tr'));
-        }
-        currentEditingPrice = null;
-        recalculateTotals();
+    function manualTryAdd(term){
+      const lc=(term||'').toLowerCase(); if(!lc) return;
+      let match = items.find(x=>(x.ItemCode||'').toLowerCase()===lc) || items.find(x=>(x.ItemName||'').toLowerCase()===lc);
+      if(match){
+        if(!match.Quantity || match.Quantity<=0){ Swal.fire({icon:'error',title:'Out of Stock',text:`${match.ItemName||'This item'} is out of stock!`}); return; }
+        addToSalesTable(match); suggDiv.style.display='none'; itemInputEl.value=''; itemInputEl.focus();
+        if(focusMode==='price') focusLastPriceCell(); else focusLastQtyInput();
+        return;
+      }
+      showItemSuggestions(term);
     }
 
-    /* =========================
-       ADD ROW / UPDATE ROW
-    ========================= */
+    /* -------- GRID OPS -------- */
+    function makePriceEditable(cell){ cell.contentEditable=true; cell.classList.add('editable-price'); currentEditingPrice=cell; }
+    function savePrice(cell){
+      cell.contentEditable=false; cell.classList.remove('editable-price');
+      let val=parseFloat((cell.textContent||'').replace('₨','').trim());
+      if(isNaN(val)||val<0){ const orig=cell.dataset.originalPrice; cell.textContent=`₨${parseFloat(orig||0).toFixed(2)}`; }
+      else { cell.textContent=`₨${val.toFixed(2)}`; updateRowTotal(cell.closest('tr')); }
+      currentEditingPrice=null; recalculateTotals();
+    }
+
     function addToSalesTable(item){
-        const table = document.getElementById('salesTable').querySelector('tbody');
-        document.getElementById('noDataRow')?.remove();
+      const tb=document.querySelector('#salesTable tbody'); document.getElementById('noDataRow')?.remove();
 
-        // if already exists → increment qty
-        const existingRow = table.querySelector(`tr[data-item-id="${item.Id}"]`);
-        if(existingRow){
-            const qtyInput = existingRow.querySelector(".qty-input");
-            if(focusMode==='qty'){
-                qtyInput.value = (parseInt(qtyInput.value)||0) + 1;
-                qtyInput.focus(); qtyInput.select(); highlightField(qtyInput,'qty');
-            } else {
-                const priceCell = existingRow.querySelector(".price-cell");
-                makePriceEditable(priceCell); selectAllContent(priceCell); highlightField(priceCell,'price');
-            }
-            qtyInputChanged(qtyInput); recalculateTotals(); return;
+      const existing=tb.querySelector(`tr[data-item-id="${item.Id}"]`);
+      if(existing){
+        const q=existing.querySelector('.qty-input');
+        // if price-mode, open price editor on same row; else increment qty
+        if(focusMode==='price'){
+            const p=existing.querySelector('.price-cell'); makePriceEditable(p); selectAllContent(p); p.focus();
+        } else {
+            q.value=(parseInt(q.value)||0)+1; q.focus(); q.select();
         }
+        qtyInputChanged(q); recalculateTotals(); return;
+      }
 
-        // new row
-        const row = document.createElement('tr');
-        row.dataset.itemId = item.Id;
-        const originalPrice = item.PackSize ? item.UnitPrice : item.SalePrice;
+      const row=document.createElement('tr'); row.dataset.itemId=item.Id;
+      const originalPrice=item.PackSize ? item.UnitPrice : item.SalePrice;
+      row.innerHTML=`
+        <td>${tb.rows.length+1}</td>
+        <td>${item.ItemName}</td>
+        <td><span tabindex="0" class="price-cell" data-original-price="${Number(originalPrice).toFixed(2)}">₨${Number(originalPrice).toFixed(2)}</span></td>
+        <td>
+          <div class="d-inline-flex gap-1 align-items-center">
+            <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(this,-1)"><i class="bi bi-dash-lg"></i></button>
+            <input type="number" class="qty-input" value="1" min="1" onchange="qtyInputChanged(this)" data-item='${JSON.stringify(item)}' />
+            <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(this,1)"><i class="bi bi-plus-lg"></i></button>
+          </div>
+        </td>
+        <td>0%</td>
+        <td>₨0</td>
+        <td id="salePrice-${item.ItemCode}">₨${(originalPrice*1).toFixed(2)}</td>
+        <td><button class="delete-row-btn" onclick="deleteRow(this)"><i class="bi bi-trash3"></i></button></td>`;
 
-        row.innerHTML = `
-            <td>${table.rows.length + 1}</td>
-            <td>${item.ItemName}</td>
-            <td>
-                <span tabindex="0" class="price-cell" data-original-price="${Number(originalPrice).toFixed(2)}">₨${Number(originalPrice).toFixed(2)}</span>
-            </td>
-            <td>
-                <div class="qty-btns">
-                    <button class="qty-btn" onclick="changeQty(this,-1)"><i class="bi bi-dash-lg"></i></button>
-                    <input type="number" class="qty-input" value="1" min="1" onchange="qtyInputChanged(this)" data-item='${JSON.stringify(item)}' />
-                    <button class="qty-btn" onclick="changeQty(this,1)"><i class="bi bi-plus-lg"></i></button>
-                </div>
-            </td>
-            <td>0%</td>
-            <td>₨0</td>
-            <td id="salePrice-${item.ItemCode}">₨${(originalPrice * 1).toFixed(2)}</td>
-            <td><button class="delete-row-btn" onclick="deleteRow(this)" title="Delete"><i class="bi bi-trash3"></i></button></td>
-        `;
-        table.appendChild(row);
+      tb.appendChild(row);
 
-        const priceCell = row.querySelector('.price-cell');
-        const qtyInput  = row.querySelector('.qty-input');
+      const priceCell=row.querySelector('.price-cell');
+      const qtyInput=row.querySelector('.qty-input');
 
-        // KEY HANDLERS on price-cell
-        priceCell.addEventListener('keydown', function(e){
-            if(e.key==='Enter'){
-                e.preventDefault();
-                savePrice(priceCell);
-                qtyInput?.focus(); qtyInput?.select();
-            }else if(e.key==='Escape'){
-                e.preventDefault();
-                const original = priceCell.dataset.originalPrice;
-                priceCell.textContent = `₨${parseFloat(original||0).toFixed(2)}`;
-                savePrice(priceCell);
-            }
-        });
-        priceCell.addEventListener('blur', function(){ if(priceCell.isContentEditable) savePrice(priceCell); });
+      priceCell.addEventListener('keydown',e=>{
+        if(e.key==='Enter'){ e.preventDefault(); savePrice(priceCell); qtyInput?.focus(); qtyInput?.select(); }
+        else if(e.key==='Escape'){ e.preventDefault(); const orig=priceCell.dataset.originalPrice; priceCell.textContent=`₨${parseFloat(orig||0).toFixed(2)}`; savePrice(priceCell); focusBarcode(); }
+      });
+      priceCell.addEventListener('blur',()=>{ if(priceCell.isContentEditable) savePrice(priceCell); });
+      qtyInput.addEventListener('keydown',e=>{
+        if(e.key==='Enter'){ e.preventDefault(); focusBarcode(); }
+      });
 
-        // qty ENTER → back to barcode
-        qtyInput.addEventListener('keydown', function(e){
-            if(e.key==='Enter'){
-                e.preventDefault();
-                const bi=document.getElementById('itemSearchInput');
-                bi?.focus(); bi?.select();
-            }
-        });
+      // NEW workflow: if F3 (price-mode) active => start editing price; else focus qty
+      if(focusMode==='price'){ makePriceEditable(priceCell); selectAllContent(priceCell); priceCell.focus(); }
+      else { qtyInput.focus(); qtyInput.select(); }
 
-        // initial focus per mode
-        if(focusMode==='price'){ makePriceEditable(priceCell); selectAllContent(priceCell); }
-        else { qtyInput.focus(); qtyInput.select(); }
-
-        recalculateTotals();
+      recalculateTotals();
     }
 
     function updateRowTotal(row){
-        const priceCell = row.querySelector('.price-cell');
-        const qtyInput  = row.querySelector('.qty-input');
-        const totalCell = row.querySelector('td:nth-child(7)');
-        const price = parseFloat(priceCell.textContent.replace('₨',''))||0;
-        const qty   = parseInt(qtyInput.value)||0;
-        totalCell.textContent = `₨${(price*qty).toFixed(2)}`;
+      const p=parseFloat(row.querySelector('.price-cell').textContent.replace('₨',''))||0;
+      const q=parseInt(row.querySelector('.qty-input').value)||0;
+      row.querySelector('td:nth-child(7)').textContent = `₨${(p*q).toFixed(2)}`;
     }
     function qtyInputChanged(input){
-        if(input.value<1) input.value=1;
-        const item = JSON.parse(input.dataset.item);
-        const price = parseFloat(input.closest('tr').querySelector('.price-cell').textContent.replace('₨',''))||0;
-        const totalCell = document.getElementById(`salePrice-${item.ItemCode}`);
-        totalCell.textContent = `₨${(price * parseInt(input.value)).toFixed(2)}`;
-        recalculateTotals();
+      if(input.value<1) input.value=1;
+      const item=JSON.parse(input.dataset.item);
+      const price=parseFloat(input.closest('tr').querySelector('.price-cell').textContent.replace('₨',''))||0;
+      document.getElementById(`salePrice-${item.ItemCode}`).textContent = `₨${(price * parseInt(input.value)).toFixed(2)}`;
+      recalculateTotals();
     }
-    function changeQty(btn,diff){
-        const input = btn.parentNode.querySelector('.qty-input');
-        let val = parseInt(input.value)||1; val=Math.max(1,val+diff);
-        input.value=val; qtyInputChanged(input);
-    }
+    function changeQty(btn,d){ const inp=btn.parentNode.querySelector('.qty-input'); let v=parseInt(inp.value)||1; v=Math.max(1,v+d); inp.value=v; qtyInputChanged(inp); }
     function deleteRow(btn){
-        const row=btn.closest('tr'); row.remove();
-        const table=document.getElementById('salesTable').querySelector('tbody');
-        if(table.rows.length===0){
-            const noDataRow=document.createElement('tr'); noDataRow.id='noDataRow';
-            noDataRow.innerHTML=`<td colspan="8" class="text-center text-muted py-4">No items added yet</td>`;
-            table.appendChild(noDataRow);
-        }
-        recalculateTotals();
+      btn.closest('tr').remove();
+      const tb=document.querySelector('#salesTable tbody');
+      if(tb.rows.length===0){
+        const tr=document.createElement('tr'); tr.id='noDataRow';
+        tr.innerHTML=`<td colspan="8" class="text-center text-muted py-4">No items added yet</td>`;
+        tb.appendChild(tr);
+      }
+      recalculateTotals();
     }
 
-    /* =========================
-       BARCODE / SCANNER LOGIC
-    ========================= */
-    let scanState = { start:0, last:0, count:0, timer:null };
-    const SCAN_MIN_LEN=6, SCAN_AVG_MS=35, SCAN_END_DELAY=60;
-
-    const itemInputEl = document.getElementById('itemSearchInput');
-    const suggDiv = document.getElementById('itemSuggestions');
-
-    itemInputEl.addEventListener('keydown', (e)=>{
-        const now=performance.now();
-        if(scanState.count===0) scanState.start=now;
-        scanState.count++; scanState.last=now;
-
-        if(filtered.length && suggDiv.style.display==='block'){
-            if(e.key==='ArrowDown'){ e.preventDefault(); selectedIdx=(selectedIdx+1)%filtered.length; updateHighlight(); return; }
-            if(e.key==='ArrowUp'){ e.preventDefault(); selectedIdx=(selectedIdx-1+filtered.length)%filtered.length; updateHighlight(); return; }
-            if(e.key==='Enter'){ e.preventDefault(); if(selectedIdx>=0){ selectItemSuggestion(selectedIdx); } return; }
-        } else {
-            if(e.key==='Enter'){ e.preventDefault(); manualTryAdd(itemInputEl.value.trim()); return; }
-        }
-
-        clearTimeout(scanState.timer);
-        scanState.timer = setTimeout(()=>{
-            const term=itemInputEl.value.trim();
-            const duration=scanState.last - scanState.start;
-            const avg = duration / Math.max(1, scanState.count);
-            const isScanner = term.length>=SCAN_MIN_LEN && avg<=SCAN_AVG_MS;
-
-            if(isScanner){ scannerAutoAdd(term); }
-            else { showItemSuggestions(term); }
-
-            scanState = { start:0, last:0, count:0, timer:null };
-        }, SCAN_END_DELAY);
-    });
-
-    itemInputEl.addEventListener('input', ()=>{
-        if(scanState.count===0){ showItemSuggestions(itemInputEl.value.trim()); }
-    });
-
-    function scannerAutoAdd(term){
-        const lc=term.toLowerCase();
-        let match = items.find(x => (x.ItemCode||'').toLowerCase()===lc) || items.find(x => (x.ItemName||'').toLowerCase()===lc);
-        if(!match){
-            const poss=items.filter(x => (x.ItemCode||'').toLowerCase().includes(lc) || (x.ItemName||'').toLowerCase().includes(lc));
-            if(poss.length===1) match=poss[0];
-        }
-        if(!match){ toast('Item not found','warning'); showItemSuggestions(term); return; }
-        if(!match.Quantity || match.Quantity<=0){ Swal.fire({icon:'error',title:'Out of Stock',text:`${match.ItemName||'This item'} is out of stock!`}); return; }
-
-        addToSalesTable(match);
-        suggDiv.style.display='none'; itemInputEl.value=''; itemInputEl.focus();
-
-        if(focusMode==='price') focusLastPriceCell(); else focusLastQtyInput();
-    }
-    function manualTryAdd(term){
-        const lc=(term||'').toLowerCase(); if(!lc) return;
-        let match = items.find(x => (x.ItemCode||'').toLowerCase()===lc) || items.find(x => (x.ItemName||'').toLowerCase()===lc);
-        if(!match){ if(selectedIdx>=0 && filtered[selectedIdx]) match=filtered[selectedIdx]; }
-        if(match){
-            if(!match.Quantity || match.Quantity<=0){ Swal.fire({icon:'error',title:'Out of Stock',text:`${match.ItemName||'This item'} is out of stock!`}); return; }
-            addToSalesTable(match); suggDiv.style.display='none'; itemInputEl.value=''; itemInputEl.focus();
-            if(focusMode==='price') focusLastPriceCell(); else focusLastQtyInput();
-            return;
-        }
-        showItemSuggestions(term);
-    }
-
-    /* =========================
-       TOTALS & DISCOUNT
-    ========================= */
+    /* -------- TOTALS & DISCOUNT -------- */
     function recalculateTotals(){
-        const rows=[...document.querySelectorAll('#salesTable tbody tr')].filter(r=>r.id!=='noDataRow');
-        if(!rows.length){
-            document.querySelector('.gpos-total').innerText='₨0.00';
-            document.querySelector('.gpos-items').innerText='0';
-            document.querySelector('.gpos-quantity').innerText='0';
-            document.querySelector('.gpos-tax').innerText='₨0.00';
-            document.querySelector('.gpos-grand-value').innerText='₨0.00';
-            document.getElementById('invoiceDiscountComputed').innerText='₨0.00';
-            document.getElementById('countItems').innerText='0';
-            document.getElementById('sumPayable').innerText='0.00';
-            return;
-        }
-
-        let subtotal=0, itemCount=0;
-        rows.forEach(r=>{
-            const price=parseFloat(r.querySelector('.price-cell').textContent.replace('₨',''))||0;
-            const qty=parseInt(r.querySelector('.qty-input').value)||0;
-            subtotal += price*qty; itemCount += qty;
-        });
-
-        const discountPercent = Math.max(parseFloat(document.getElementById('invoiceDiscountPercent')?.value||0),0);
-        const discountAmount  = Math.max(parseFloat(document.getElementById('invoiceDiscountAmount')?.value||0),0);
-        const discountFromPercent = subtotal * (discountPercent/100);
-        let totalDiscount = Math.min(discountFromPercent + discountAmount, subtotal);
-
-        let taxableAmount = Math.max(subtotal - totalDiscount, 0);
-        const taxAmount = TAX_PERCENT>0 ? (taxableAmount * TAX_PERCENT/100) : 0;
-        const grandTotal = taxableAmount + taxAmount;
-
-        document.querySelector('.gpos-total').innerText=`₨${subtotal.toFixed(2)}`;
-        document.querySelector('.gpos-items').innerText=itemCount;
-        document.querySelector('.gpos-quantity').innerText=rows.length;
-        document.querySelector('.gpos-tax').innerText=`₨${taxAmount.toFixed(2)}`;
-        document.getElementById('invoiceDiscountComputed').innerText=`₨${totalDiscount.toFixed(2)}`;
-        document.querySelector('.gpos-grand-value').innerText=`₨${grandTotal.toFixed(2)}`;
-        document.getElementById('sumPayable').innerText=grandTotal.toFixed(2);
-    }
-
-    /* =========================
-       CUSTOMER
-    ========================= */
-    function toggleCustomerType(){
-        const walkin=document.getElementById("walkinRadio").checked;
-        document.getElementById("walkinBlock").style.display = walkin ? "block" : "none";
-        document.getElementById("customerBlock").style.display = walkin ? "none" : "block";
-        if(walkin) clearCustomer();
-    }
-    function setSelectedCustomer(select){
-        let option = select.options[select.selectedIndex];
-        if(!option.value){ clearCustomer(); return; }
-        let customerId = parseInt(option.value) || 0;
-        let id = parseInt(option.getAttribute("data-id") || "0", 10);
-        let custPays = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(customerPayments));
-        let paymentsForCustomer = custPays.filter(p=>p.CustomerId===id);
-        document.getElementById("selectedCustomerBlock").style.display="block";
-        document.getElementById("customerBalance").innerText = "₨" + (paymentsForCustomer[0]?.Remaining || "0");
-        document.getElementById("selectedCustomerId").value = customerId;
-    }
-    function clearCustomer(){
-        document.getElementById("customerDropdown").selectedIndex=0;
-        document.getElementById("selectedCustomerBlock").style.display="none";
-    }
-
-    /* =========================
-       PAYMENT MODAL
-    ========================= */
-    function openTenderModal(e, actionFn){
-        pendingAction = actionFn;
-        const overlay = document.getElementById('paymentModalOverlay');
-        overlay.style.display='flex';
-        document.getElementById('btnPayConfirm').textContent = (actionFn===handleSaveOnly? 'Confirm (Save)' : 'Confirm & Print');
-        const tenderInput = document.getElementById('tenderInput');
-        tenderInput.value=''; tenderInput.focus();
-        // update breakdown
-        const method=document.getElementById('paymentMethod')?.value || 'cash';
-        const iconMap={cash:'bi-cash',credit:'bi-journal-text',credit_card:'bi-credit-card',bank:'bi-bank',online:'bi-wifi'};
-        const labelMap={cash:'Cash',credit:'Credit',credit_card:'Card',bank:'Bank',online:'Online'};
-        document.getElementById('modalMethod').innerHTML=`<i class="bi ${iconMap[method]||'bi-cash'}"></i> ${labelMap[method]||method}`;
-
-        const grand=parseFloat(document.querySelector('.gpos-grand-value').textContent.replace(/[₨,]/g,''))||0;
-        const tax=parseFloat(document.getElementById('sumTax').textContent.replace(/[₨,]/g,''))||0;
-        const disc=parseFloat(document.getElementById('invoiceDiscountComputed').textContent.replace(/[₨,]/g,''))||0;
-        document.getElementById('tenderGrandTotal').innerText = grand.toFixed(2);
-        if(disc>0){ document.getElementById('rowDiscount').style.display='flex'; document.getElementById('tenderDiscount').innerText=disc.toFixed(2); }
-        else { document.getElementById('rowDiscount').style.display='none'; document.getElementById('tenderDiscount').innerText='0.00'; }
-        if(tax>0){ document.getElementById('rowTax').style.display='flex'; document.getElementById('tenderTax').innerText=tax.toFixed(2); }
-        else { document.getElementById('rowTax').style.display='none'; document.getElementById('tenderTax').innerText='0.00'; }
-
-        updateChange();
-    }
-    function closePaymentModal(){
-        document.getElementById('paymentModalOverlay').style.display='none';
-        pendingAction=null;
-        const bi=document.getElementById('itemSearchInput'); bi?.classList.add('blinking'); bi?.focus();
-    }
-    function updateChange(){
-        const tendered = parseFloat(document.getElementById('tenderInput').value)||0;
-        const grandTotal = parseFloat(document.getElementById('tenderGrandTotal').innerText)||0;
-        const change = tendered - grandTotal;
-        document.getElementById('modalRemaining').innerText = (change<0? Math.abs(change):0).toFixed(2);
-        document.getElementById('tenderChangeText').innerText = (change>0? change:0).toFixed(2);
-    }
-    function handleTenderOk(){
-        const tendered = parseFloat(document.getElementById('tenderInput').value)||0;
-        if(tendered<0){ Swal.fire({icon:'warning',title:'Invalid Amount',text:'Tendered amount cannot be negative!'}); return; }
-        if(typeof pendingAction==="function"){ pendingAction(); pendingAction=null; }
-        closePaymentModal();
-    }
-    document.getElementById('tenderInput')?.addEventListener('input', updateChange);
-
-    /* =========================
-       SAVE / PRINT
-    ========================= */
-    async function handleSavePrint(){ await saveSaleCommon(true); }
-    async function handleSaveOnly(){ await saveSaleCommon(false); }
-    async function saveSaleCommon(printAfter){
-        const grandTotal = parseFloat(document.querySelector('.gpos-grand-value')?.textContent.replace(/[₨,]/g,'')||0);
-        let cust = parseInt(document.getElementById("selectedCustomerId")?.value)||0;
-        let tender = parseFloat(document.getElementById("tenderInput")?.value)||0;
-
-        const subtotal = parseFloat(document.querySelector('.gpos-total')?.textContent.replace(/[₨,]/g,'')||0);
-        const percent  = Math.max(parseFloat(document.getElementById('invoiceDiscountPercent')?.value||0),0);
-        const lessPKR  = Math.max(parseFloat(document.getElementById('invoiceDiscountAmount')?.value||0),0);
-        const discountFromPercent = subtotal * (percent/100);
-        let totalDiscount = Math.min(discountFromPercent + lessPKR, subtotal);
-
-        let saleData = {
-            InvoiceNumber: document.getElementById('invoiceNoValue').textContent,
-            SubTotal: subtotal,
-            Tax: parseFloat(document.querySelector('.gpos-tax')?.textContent.replace(/[₨,]/g,'')||0),
-            Discount: totalDiscount,
-            DiscountPercent: percent,
-            DiscountLessAmount: lessPKR,
-            SaleType: getSelectedSaleType(),
-            Total: grandTotal,
-            custId: cust,
-            tender_amount: tender,
-            Payment: {
-                Amount: tender,
-                PaymentMethod: document.getElementById('paymentMethod')?.value,
-                Change: Math.max(tender - grandTotal, 0),
-            },
-            SaleItems: getSaleItemsFromTable()
-        };
-
-        if(!saleData.SaleItems || saleData.SaleItems.length===0){
-            Swal.fire({icon:'warning',title:'No Items Selected',text:'Please select at least one item before proceeding!'}); return;
-        }
-
-        console.log(saleData);
-
-        saleData = cleanSaleData(saleData);
-
-        try{
-            const endpoint = printAfter ? '/Sales/SaveSale' : '/Sales/SaveOnly';
-            const response = await fetch(endpoint, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(saleData) });
-            if(response.ok){
-                const result = await response.json();
-                toast(result.Message,'success',1200);
-                if(printAfter){ window.open(`/Sales/Receipt/${result.id}`,'_blank'); }
-                handleNew();
-            }else{
-                const error = await response.json();
-                toast(error.Message || "Failed to save sale",'error',3000);
-            }
-        }catch(err){
-            console.error("Error saving sale:", err);
-            Swal.fire({icon:'error',title:'Error',text:'Something went wrong while saving the sale.'});
-        }
-    }
-
-    function getSelectedSaleType(){ let s=document.querySelector('input[name="SaleType"]:checked'); return s? s.value:null; }
-    function getSaleItemsFromTable(){
-        const rows=document.querySelectorAll('#salesTable tbody tr'); const items=[];
-        rows.forEach(row=>{
-            if(row.id==='noDataRow') return;
-            const cols=row.querySelectorAll('td'); const priceCell=row.querySelector('.price-cell');
-            items.push({
-                ItemId: parseInt(row.dataset.itemId),
-                Quantity: parseFloat(cols[3].querySelector('.qty-input')?.value || 0),
-                UnitPrice: parseFloat(priceCell.textContent.replace(/[₨,]/g,'')) || 0,
-                DiscountPercent: parseFloat(cols[4].textContent.replace('%','')) || 0,
-                TaxAmount: parseFloat(cols[5].textContent.replace(/[₨,]/g,'')) || 0,
-                LineTotal: parseFloat(cols[6].textContent.replace(/[₨,]/g,'')) || 0
-            });
-        });
-        return items;
-    }
-    function cleanSaleData(sd){ if(sd.Payment) delete sd.Payment.Id; (sd.SaleItems||[]).forEach(i=>delete i.Id); clearCustomer(); delete sd.Id; return sd; }
-
-    /* =========================
-       NEW / PRINT / INVOICE / CLOCK
-    ========================= */
-    function handleNew(){
-        const tableBody=document.querySelector('#salesTable tbody');
-        tableBody.innerHTML=`<tr id="noDataRow"><td colspan="8" class="text-center text-muted py-4">No items added yet</td></tr>`;
-        document.getElementById('invoiceDiscountPercent').value='0';
-        document.getElementById('invoiceDiscountAmount').value='0';
+      const rows=[...document.querySelectorAll('#salesTable tbody tr')].filter(r=>r.id!=='noDataRow');
+      if(!rows.length){
         document.querySelector('.gpos-total').innerText='₨0.00';
         document.querySelector('.gpos-items').innerText='0';
         document.querySelector('.gpos-quantity').innerText='0';
@@ -1465,102 +1259,343 @@
         document.getElementById('invoiceDiscountComputed').innerText='₨0.00';
         document.getElementById('countItems').innerText='0';
         document.getElementById('sumPayable').innerText='0.00';
-        document.getElementById('paymentModalOverlay').style.display='none';
-        const bi=document.getElementById('itemSearchInput'); bi?.classList.add('blinking'); bi?.focus();
-        document.getElementById('paymentMethod').value='cash';
-        document.getElementById('invoiceNoValue').innerText=generateInvoiceNumber();
-    }
-    function handlePrint(){ console.log("Print..."); }
-    function generateInvoiceNumber(){
-        const date=new Date().toISOString().slice(0,10).replace(/-/g,'');
-        invoiceCounter=(parseInt(invoiceCounter)||0)+1; 
-        const counterStr=String(invoiceCounter).padStart(4,'0');
-        return `INV-${date}-${counterStr}`;
-    }
-    function updateLiveClock(){
-        const now=new Date();
-        const dateStr=now.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'2-digit'});
-        const timeStr=now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-        document.getElementById('liveClock').innerText = dateStr+" | "+timeStr;
+        return;
+      }
+      let subtotal=0, itemCount=0;
+      rows.forEach(r=>{
+        const p=parseFloat(r.querySelector('.price-cell').textContent.replace('₨',''))||0;
+        const q=parseInt(r.querySelector('.qty-input').value)||0;
+        subtotal+=p*q; itemCount+=q;
+      });
+      const discP=Math.max(parseFloat(document.getElementById('invoiceDiscountPercent')?.value||0),0);
+      const discL=Math.max(parseFloat(document.getElementById('invoiceDiscountAmount')?.value||0),0);
+      const discFromP=subtotal*(discP/100);
+      const totalDisc=Math.min(discFromP+discL, subtotal);
+      const taxable=Math.max(subtotal-totalDisc,0);
+      const tax=TAX_PERCENT>0? taxable*(TAX_PERCENT/100):0;
+      const grand=taxable+tax;
+
+      document.querySelector('.gpos-total').innerText=money(subtotal);
+      document.querySelector('.gpos-items').innerText=itemCount;
+      document.querySelector('.gpos-quantity').innerText=rows.length;
+      document.querySelector('.gpos-tax').innerText=money(tax);
+      document.getElementById('invoiceDiscountComputed').innerText=money(totalDisc);
+      document.querySelector('.gpos-grand-value').innerText=money(grand);
+      document.getElementById('sumPayable').innerText=grand.toFixed(2);
     }
 
-    /* =========================
-       KEYBOARD SHORTCUTS
-    ========================= */
-    document.addEventListener('keydown', function(e){
-        // Suggestions navigation
-        const listDiv=document.getElementById('itemSuggestions');
-        if(filtered.length && listDiv.style.display==='block'){
-            if(e.key==='ArrowDown'){ e.preventDefault(); selectedIdx=(selectedIdx+1)%filtered.length; updateHighlight(); return; }
-            if(e.key==='ArrowUp'){ e.preventDefault(); selectedIdx=(selectedIdx-1+filtered.length)%filtered.length; updateHighlight(); return; }
-            if(e.key==='Enter'){ if(selectedIdx>=0){ e.preventDefault(); selectItemSuggestion(selectedIdx); } return; }
-            if(e.key==='Escape'){ listDiv.style.display='none'; filtered=[]; selectedIdx=-1; }
+    /* -------- CUSTOMER -------- */
+    function toggleCustomerType(){
+      const walkin=document.getElementById("walkinRadio").checked;
+      document.getElementById("walkinBlock").style.display=walkin?"block":"none";
+      document.getElementById("customerBlock").style.display=walkin?"none":"block";
+      if(walkin) clearCustomer();
+    }
+    function setSelectedCustomer(sel){
+      const opt=sel.options[sel.selectedIndex]; if(!opt.value){ clearCustomer(); return; }
+      const id=parseInt(opt.getAttribute('data-id')||"0",10);
+      const pays=@Html.Raw(System.Text.Json.JsonSerializer.Serialize(customerPayments));
+      const forCust=pays.filter(p=>p.CustomerId===id);
+      document.getElementById("selectedCustomerBlock").style.display="block";
+      document.getElementById("customerBalance").innerText="₨"+(forCust[0]?.Remaining||"0");
+      document.getElementById("selectedCustomerId").value=parseInt(opt.value)||0;
+    }
+    function clearCustomer(){ document.getElementById("customerDropdown").selectedIndex=0; document.getElementById("selectedCustomerBlock").style.display="none"; }
+
+    /* -------- PAYMENT MODAL -------- */
+    function openTenderModal(_, actionFn){
+      if(!hasLineItems()) return toast('Please add at least one item','warning');
+      pendingAction=actionFn;
+      const overlay=document.getElementById('paymentModalOverlay'); overlay.style.display='flex';
+      document.getElementById('btnPayConfirm').textContent = (actionFn===handleSaveOnly? 'Confirm (Save)' : 'Confirm & Print');
+
+      const method=document.getElementById('paymentMethod')?.value||'cash';
+      const iconMap={cash:'bi-cash',credit:'bi-journal-text',credit_card:'bi-credit-card',bank:'bi-bank',online:'bi-wifi'};
+      const labelMap={cash:'Cash',credit:'Credit',credit_card:'Card',bank:'Bank',online:'Online'};
+      document.getElementById('modalMethod').innerHTML=`<i class="bi ${iconMap[method]||'bi-cash'}"></i> ${labelMap[method]||method}`;
+
+      const grand=parseFloat(document.querySelector('.gpos-grand-value').textContent.replace(/[₨,]/g,''))||0;
+      const tax=parseFloat(document.getElementById('sumTax').textContent.replace(/[₨,]/g,''))||0;
+      const disc=parseFloat(document.getElementById('invoiceDiscountComputed').textContent.replace(/[₨,]/g,''))||0;
+      document.getElementById('tenderGrandTotal').innerText=grand.toFixed(2);
+      document.getElementById('rowDiscount').style.display = disc>0?'flex':'none';
+      document.getElementById('tenderDiscount').innerText=disc.toFixed(2);
+      document.getElementById('rowTax').style.display = tax>0?'flex':'none';
+      document.getElementById('tenderTax').innerText=tax.toFixed(2);
+
+      const ti=document.getElementById('tenderInput'); ti.value=''; ti.focus(); updateChange();
+    }
+    function closePaymentModal(){ document.getElementById('paymentModalOverlay').style.display='none'; focusBarcode(); }
+    function updateChange(){
+      const tendered=parseFloat(document.getElementById('tenderInput').value)||0;
+      const grand=parseFloat(document.getElementById('tenderGrandTotal').innerText)||0;
+      const change=tendered-grand;
+      document.getElementById('modalRemaining').textContent=(change<0? Math.abs(change):0).toFixed(2);
+      document.getElementById('tenderChangeText').textContent=(change>0? change:0).toFixed(2);
+    }
+    function handleTenderOk(){
+      const tendered=parseFloat(document.getElementById('tenderInput').value)||0;
+      if(tendered<0){ Swal.fire({icon:'warning',title:'Invalid Amount',text:'Tendered amount cannot be negative!'}); return; }
+      if(typeof pendingAction==="function"){ pendingAction(); pendingAction=null; }
+      closePaymentModal();
+    }
+    document.getElementById('tenderInput').addEventListener('input', updateChange);
+    document.getElementById('tenderInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); handleTenderOk(); } });
+    document.getElementById('paymentModalCard').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); handleTenderOk(); } });
+    // ESC to close payment modal
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && document.getElementById('paymentModalOverlay').style.display==='flex'){ e.preventDefault(); closePaymentModal(); } });
+
+    /* -------- SAVE / PRINT -------- */
+    async function handleSavePrint(){ await saveSaleCommon(true); }
+    async function handleSaveOnly(){ await saveSaleCommon(false); }
+    async function saveSaleCommon(printAfter){
+      const grand=parseFloat(document.querySelector('.gpos-grand-value')?.textContent.replace(/[₨,]/g,'')||0);
+      let cust=parseInt(document.getElementById("selectedCustomerId")?.value)||0;
+      let tender=parseFloat(document.getElementById("tenderInput")?.value)||0;
+
+      const subtotal=parseFloat(document.querySelector('.gpos-total')?.textContent.replace(/[₨,]/g,'')||0);
+      const percent=Math.max(parseFloat(document.getElementById('invoiceDiscountPercent')?.value||0),0);
+      const less=Math.max(parseFloat(document.getElementById('invoiceDiscountAmount')?.value||0),0);
+      const discFromP=subtotal*(percent/100);
+      const totalDisc=Math.min(discFromP+less, subtotal);
+
+      let saleData={
+        InvoiceNumber: document.getElementById('invoiceNoValue').textContent,
+        SubTotal: subtotal,
+        Tax: parseFloat(document.querySelector('.gpos-tax')?.textContent.replace(/[₨,]/g,'')||0),
+        Discount: totalDisc,
+        DiscountPercent: percent,
+        DiscountLessAmount: less,
+        SaleType: getSelectedSaleType(),
+        Total: grand,
+        custId: cust,
+        tender_amount: tender,
+        Payment:{ Amount:tender, PaymentMethod:document.getElementById('paymentMethod')?.value, Change:Math.max(tender-grand,0) },
+        SaleItems: getSaleItemsFromTable()
+      };
+
+      if(!saleData.SaleItems || saleData.SaleItems.length===0){
+        Swal.fire({icon:'warning',title:'No Items Selected',text:'Please select at least one item before proceeding!'}); return;
+      }
+
+      saleData=cleanSaleData(saleData);
+      try{
+        const endpoint=printAfter?'/Sales/SaveSale':'/Sales/SaveOnly';
+        const res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(saleData)});
+        if(res.ok){
+          const result=await res.json();
+          toast(result.Message,'success',1000);
+          if(printAfter){ window.open(`/Sales/Receipt/${result.id}`,'_blank'); }
+          handleNew();
+        }else{
+          const err=await res.json(); toast(err.Message||'Failed to save sale','error',3000);
         }
+      }catch(e){ console.error(e); Swal.fire({icon:'error',title:'Error',text:'Something went wrong while saving the sale.'}); }
+    }
+    function getSelectedSaleType(){ const s=document.querySelector('input[name="SaleType"]:checked'); return s? s.value:null; }
+    function getSaleItemsFromTable(){
+      const rows=document.querySelectorAll('#salesTable tbody tr'); const arr=[];
+      rows.forEach(r=>{
+        if(r.id==='noDataRow') return;
+        const cols=r.querySelectorAll('td'); const priceCell=r.querySelector('.price-cell');
+        arr.push({
+          ItemId: parseInt(r.dataset.itemId),
+          Quantity: parseFloat(cols[3].querySelector('.qty-input')?.value || 0),
+          UnitPrice: parseFloat(priceCell.textContent.replace(/[₨,]/g,'')) || 0,
+          DiscountPercent: parseFloat(cols[4].textContent.replace('%','')) || 0,
+          TaxAmount: parseFloat(cols[5].textContent.replace(/[₨,]/g,'')) || 0,
+          LineTotal: parseFloat(cols[6].textContent.replace(/[₨,]/g,'')) || 0
+        });
+      });
+      return arr;
+    }
+    function cleanSaleData(sd){ if(sd.Payment) delete sd.Payment.Id; (sd.SaleItems||[]).forEach(i=>delete i.Id); clearCustomer(); delete sd.Id; return sd; }
 
-        if(e.key==='F3'){ e.preventDefault(); toggleFocusMode(); return; }
-        if(e.key==='F4'){ e.preventDefault(); return hasLineItems()? openTenderModal(null,handleSavePrint):toast('Please add at least one item','warning'); }
-        if(e.key==='F5'){ e.preventDefault(); return hasLineItems()? openTenderModal(null,handleSaveOnly):toast('Please add at least one item','warning'); }
-        if(e.key==='F8'){ e.preventDefault(); handlePrint(); return; }
+    /* -------- HOLD / RETRIEVE (localStorage) -------- */
+    const HOLD_KEY='gposHeldInvoices';
+    function getAllHeld(){ try{return JSON.parse(localStorage.getItem(HOLD_KEY)||'[]');}catch{ return []; } }
+    function saveAllHeld(list){ localStorage.setItem(HOLD_KEY, JSON.stringify(list)); }
+    function holdCurrentInvoice(){
+      if(!hasLineItems()) return toast('No items to hold','warning');
+      const itemsArr=getSaleItemsFromTable();
+      const invoiceNumber=document.getElementById('invoiceNoValue').textContent;
+      const sub=parseFloat(document.querySelector('.gpos-total').textContent.replace(/[₨,]/g,''))||0;
+      const tax=parseFloat(document.getElementById('sumTax').textContent.replace(/[₨,]/g,''))||0;
+      const disc=parseFloat(document.getElementById('invoiceDiscountComputed').textContent.replace(/[₨,]/g,''))||0;
+      const grand=parseFloat(document.querySelector('.gpos-grand-value').textContent.replace(/[₨,]/g,''))||0;
+      const held={ id: cryptoRandomId(), invoiceNumber, items: itemsArr, subTotal: sub, discount: disc, tax: tax, grandTotal: grand, saleType: getSelectedSaleType(), heldAt: nowIso() };
+      const list=getAllHeld(); list.unshift(held); saveAllHeld(list);
+      toast('Invoice held','success'); handleNew();
+    }
+    function cryptoRandomId(){ try{ return [...crypto.getRandomValues(new Uint8Array(8))].map(x=>x.toString(16).padStart(2,'0')).join(''); } catch { return String(Date.now()); } }
 
-        if(e.altKey && e.key.toLowerCase()==='enter'){ e.preventDefault(); toggleFullscreen(); return; }
-        if(e.altKey && e.key.toLowerCase()==='b'){ e.preventDefault(); document.getElementById('itemSearchInput')?.focus(); return; }
-        if(e.altKey && e.key.toLowerCase()==='n'){ e.preventDefault(); document.getElementById('btnNewItem')?.click(); return; }
-        if(e.altKey && e.key.toLowerCase()==='s'){ e.preventDefault(); document.getElementById('rbSale').checked=true; applySaleTypeVisual(); return; }
-        if(e.altKey && e.key.toLowerCase()==='r'){ e.preventDefault(); document.getElementById('rbReturn').checked=true; applySaleTypeVisual(); return; }
-        if(e.ctrlKey && e.key.toLowerCase()==='d'){ e.preventDefault(); if(!hasLineItems()) return toast('No items. Add items first.','warning'); const p=document.getElementById('invoiceDiscountPercent'); p.focus(); p.select(); }
+    function openRetrieveModal(){ document.getElementById('retrieveOverlay').style.display='flex'; renderHeldTable(); document.getElementById('holdSearch').focus(); }
+    function closeRetrieveModal(){ document.getElementById('retrieveOverlay').style.display='none'; }
+    function renderHeldTable(){
+      const tbody = document.getElementById('heldTbody');
+      tbody.innerHTML = '';
+
+      const list = getAllHeld();
+      const q = (document.getElementById('holdSearch').value || '').trim().toLowerCase();
+
+      const view = list.filter(h => !q || (h.invoiceNumber || '').toLowerCase().includes(q));
+
+      document.getElementById('noHeldRow').style.display = view.length ? 'none' : 'block';
+
+      view.forEach(h => {
+        const previewNames = (h.items || [])
+          .slice(0, 3)
+          .map(it => {
+            const meta = (items || []).find(x => x.Id === it.ItemId);
+            return meta?.ItemName || it.ItemName || (`Item#${it.ItemId}`);
+          })
+          .join(', ');
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><span class="badge text-bg-light">${h.invoiceNumber}</span></td>
+          <td>${h.items?.length || 0}</td>
+          <td>${previewNames || '—'}</td>
+          <td><strong>${money(h.grandTotal || 0)}</strong></td>
+          <td>${new Date(h.heldAt).toLocaleString()}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-soft-green me-1" onclick="retrieveInvoice('${h.id}')">
+              <i class="bi bi-pencil-square"></i> Edit
+            </button>
+            <button class="btn btn-sm btn-soft-amber" onclick="deleteHeld('${h.id}')">
+              <i class="bi bi-trash3"></i> Delete
+            </button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function deleteHeld(id){ let list=getAllHeld(); list=list.filter(x=>x.id!==id); saveAllHeld(list); renderHeldTable(); toast('Held invoice deleted','success'); }
+    function clearAllHeld(){ Swal.fire({icon:'warning',title:'Clear all held invoices?',showCancelButton:true,confirmButtonText:'Yes, Clear'}).then(r=>{ if(r.isConfirmed){ localStorage.removeItem(HOLD_KEY); renderHeldTable(); toast('All cleared','success'); } }); }
+    function sortHeld(by){ let list=getAllHeld(); if(by==='time'){ list.sort((a,b)=> new Date(b.heldAt)-new Date(a.heldAt)); } if(by==='grand'){ list.sort((a,b)=> (b.grandTotal||0)-(a.grandTotal||0)); } saveAllHeld(list); renderHeldTable(); }
+    document.getElementById('holdSearch').addEventListener('input', renderHeldTable);
+
+    function retrieveInvoice(id){
+      const list=getAllHeld();
+      const h=list.find(x=>x.id===id); if(!h){ toast('Not found','error'); return; }
+      const tb=document.querySelector('#salesTable tbody'); tb.innerHTML='';
+      (h.items||[]).forEach((it,idx)=>{
+        const meta = items.find(x=>x.Id===it.ItemId) || {};
+        const row=document.createElement('tr'); row.dataset.itemId=it.ItemId;
+        row.innerHTML=`
+          <td>${idx+1}</td>
+          <td>${meta.ItemName || ('Item#'+it.ItemId)}</td>
+          <td><span tabindex="0" class="price-cell" data-original-price="${Number(it.UnitPrice).toFixed(2)}">₨${Number(it.UnitPrice).toFixed(2)}</span></td>
+          <td>
+            <div class="d-inline-flex gap-1 align-items-center">
+              <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(this,-1)"><i class="bi bi-dash-lg"></i></button>
+              <input type="number" class="qty-input" value="${Number(it.Quantity)}" min="1"
+                     onchange="qtyInputChanged(this)" data-item='${JSON.stringify(meta.Id?meta:{Id:it.ItemId, ItemCode: meta.ItemCode||"", ItemName: meta.ItemName||("Item#"+it.ItemId)})}' />
+              <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(this,1)"><i class="bi bi-plus-lg"></i></button>
+            </div>
+          </td>
+          <td>${it.DiscountPercent||0}%</td>
+          <td>₨${Number(it.TaxAmount||0).toFixed(2)}</td>
+          <td id="salePrice-${meta.ItemCode||('X'+idx)}">₨${Number(it.LineTotal).toFixed(2)}</td>
+          <td><button class="delete-row-btn" onclick="deleteRow(this)"><i class="bi bi-trash3"></i></button></td>`;
+        tb.appendChild(row);
+      });
+
+      document.getElementById('invoiceDiscountAmount').value = (h.discount||0).toFixed(2);
+      document.getElementById('invoiceDiscountPercent').value = "0";
+      if(h.saleType==='Return'){ document.getElementById('rbReturn').checked=true; } else { document.getElementById('rbSale').checked=true; }
+      applySaleTypeVisual();
+      recalculateTotals();
+
+      saveAllHeld(list.filter(x=>x.id!==id));
+      closeRetrieveModal();
+      toast('Invoice retrieved','success');
+      focusBarcode();
+    }
+
+    /* -------- NEW / PRINT / CLOCK -------- */
+    function handleNew(){
+      const tb=document.querySelector('#salesTable tbody');
+      tb.innerHTML=`<tr id="noDataRow"><td colspan="8" class="text-center text-muted py-4">No items added yet</td></tr>`;
+      document.getElementById('invoiceDiscountPercent').value='0';
+      document.getElementById('invoiceDiscountAmount').value='0';
+      document.querySelector('.gpos-total').innerText='₨0.00';
+      document.querySelector('.gpos-items').innerText='0';
+      document.querySelector('.gpos-quantity').innerText='0';
+      document.querySelector('.gpos-tax').innerText='₨0.00';
+      document.querySelector('.gpos-grand-value').innerText='₨0.00';
+      document.getElementById('invoiceDiscountComputed').innerText='₨0.00';
+      document.getElementById('countItems').innerText='0';
+      document.getElementById('sumPayable').innerText='0.00';
+      document.getElementById('paymentModalOverlay').style.display='none';
+      document.getElementById('paymentMethod').value='cash';
+      document.getElementById('invoiceNoValue').innerText=generateInvoiceNumber();
+      focusBarcode();
+    }
+    function handlePrint(){ openTenderModal(null,handleSavePrint); }
+    function generateInvoiceNumber(){ const date=new Date().toISOString().slice(0,10).replace(/-/g,''); invoiceCounter=(parseInt(invoiceCounter)||0)+1; return `INV-${date}-${String(invoiceCounter).padStart(4,'0')}`; }
+    function updateLiveClock(){ const n=new Date(); const d=n.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'2-digit'}); const t=n.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); document.getElementById('liveClock').innerText=d+" | "+t; }
+
+    /* -------- SHORTCUTS -------- */
+    document.addEventListener('keydown', (e)=>{
+      const listDiv=document.getElementById('itemSuggestions');
+      if(filtered.length && listDiv.style.display==='block'){
+        if(e.key==='ArrowDown'){ e.preventDefault(); selectedIdx=(selectedIdx+1)%filtered.length; updateHighlight(); return; }
+        if(e.key==='ArrowUp'){ e.preventDefault(); selectedIdx=(selectedIdx-1+filtered.length)%filtered.length; updateHighlight(); return; }
+        if(e.key==='Enter'){ if(selectedIdx===-1 && filtered.length>0) selectedIdx=0; if(selectedIdx>=0){ e.preventDefault(); selectItemSuggestion(selectedIdx); } return; }
+        if(e.key==='Escape'){ listDiv.style.display='none'; filtered=[]; selectedIdx=-1; }
+      }
+      if(e.key==='F3'){ e.preventDefault(); toggleFocusMode(); }
+      if(e.key==='F4'){ e.preventDefault(); openTenderModal(null,handleSavePrint); }
+      if(e.key==='F5'){ e.preventDefault(); openTenderModal(null,handleSaveOnly); }
+      if(e.key==='F8'){ e.preventDefault(); openTenderModal(null,handleSavePrint); }
+      if(e.altKey && e.key.toLowerCase()==='enter'){ e.preventDefault(); toggleFullscreen(); }
+      if(e.altKey && e.key.toLowerCase()==='b'){ e.preventDefault(); focusBarcode(); }
+      if(e.altKey && e.key.toLowerCase()==='n'){ e.preventDefault(); document.getElementById('btnNewItem')?.click(); }
+      if(e.altKey && e.key.toLowerCase()==='s'){ e.preventDefault(); document.getElementById('rbSale').checked=true; applySaleTypeVisual(); }
+      if(e.altKey && e.key.toLowerCase()==='r'){ e.preventDefault(); document.getElementById('rbReturn').checked=true; applySaleTypeVisual(); }
+      if(e.ctrlKey && e.key.toLowerCase()==='d'){ e.preventDefault(); if(!hasLineItems()) return toast('No items. Add items first.','warning'); const p=document.getElementById('invoiceDiscountPercent'); p.focus(); p.select(); }
     });
-    function hasLineItems(){ return Array.from(document.querySelectorAll('#salesTable tbody tr')).some(r=>r.querySelector('.qty-input')); }
 
-    /* =========================
-       FULLSCREEN
-    ========================= */
+    /* -------- FULLSCREEN -------- */
     const posShell=document.getElementById('posShell'); const btnFullscreen=document.getElementById('btnFullscreen');
     function isFullscreen(){ return document.fullscreenElement===posShell || document.webkitFullscreenElement===posShell; }
     function enterFullscreen(){ if(posShell.requestFullscreen) posShell.requestFullscreen(); else if(posShell.webkitRequestFullscreen) posShell.webkitRequestFullscreen(); }
     function exitFullscreen(){ if(document.exitFullscreen) document.exitFullscreen(); else if(document.webkitExitFullscreen) document.webkitExitFullscreen(); }
     function toggleFullscreen(){ isFullscreen()?exitFullscreen():enterFullscreen(); }
     btnFullscreen?.addEventListener('click', toggleFullscreen);
-    document.addEventListener('fullscreenchange', handleFsChange);
-    document.addEventListener('webkitfullscreenchange', handleFsChange);
-    function handleFsChange(){
-        const icon=btnFullscreen?.querySelector('i');
-        if(!icon) return;
-        if(isFullscreen()){ icon.classList.remove('bi-arrows-fullscreen'); icon.classList.add('bi-fullscreen-exit'); btnFullscreen.title="Exit Fullscreen (Alt+Enter)"; }
-        else{ icon.classList.remove('bi-fullscreen-exit'); icon.classList.add('bi-arrows-fullscreen'); btnFullscreen.title="Expand (Alt+Enter)"; }
-    }
+    document.addEventListener('fullscreenchange', handleFsChange); document.addEventListener('webkitfullscreenchange', handleFsChange);
+    function handleFsChange(){ const i=btnFullscreen?.querySelector('i'); if(!i) return; if(isFullscreen()){ i.classList.replace('bi-arrows-fullscreen','bi-fullscreen-exit'); btnFullscreen.title="Exit Fullscreen (Alt+Enter)"; } else { i.classList.replace('bi-fullscreen-exit','bi-arrows-fullscreen'); btnFullscreen.title="Expand (Alt+Enter)"; } }
 
-    /* =========================
-       INIT
-    ========================= */
-    document.addEventListener('DOMContentLoaded', function(){
-        initializeFocusMode();
-        applySaleTypeVisual();
+    /* -------- INIT -------- */
+    document.addEventListener('DOMContentLoaded', ()=>{
+      initializeFocusMode(); applySaleTypeVisual();
 
-        // payment method pills
-        document.querySelectorAll('#paymentPills .method-pill').forEach(p=>{
-            p.addEventListener('click',()=>{
-                document.querySelectorAll('#paymentPills .method-pill').forEach(x=>x.classList.remove('active'));
-                p.classList.add('active');
-                document.getElementById('paymentMethod').value = p.getAttribute('data-value');
-            });
+      document.getElementById('rbSale')?.addEventListener('change', applySaleTypeVisual);
+      document.getElementById('rbReturn')?.addEventListener('change', applySaleTypeVisual);
+      document.querySelectorAll('.form-check-input.saletype').forEach(r=> r.addEventListener('click', applySaleTypeVisual));
+
+      document.querySelectorAll('#paymentPills .method-pill').forEach(p=>{
+        p.addEventListener('click',()=>{
+          document.querySelectorAll('#paymentPills .method-pill').forEach(x=>x.classList.remove('active'));
+          p.classList.add('active'); document.getElementById('paymentMethod').value=p.getAttribute('data-value');
         });
+      });
 
-        document.getElementById('invoiceNoValue').innerText = generateInvoiceNumber();
-        updateLiveClock(); setInterval(updateLiveClock, 1000);
+      document.getElementById('btnHold').addEventListener('click', holdCurrentInvoice);
+      document.getElementById('btnRetrieveHeld').addEventListener('click', openRetrieveModal);
 
-        // pay buttons
-        document.querySelector('.saveprint-btn').addEventListener('click',()=> hasLineItems()? openTenderModal(null,handleSavePrint):toast('Please add at least one item','warning'));
-        document.querySelector('.saveonly-btn').addEventListener('click',()=> hasLineItems()? openTenderModal(null,handleSaveOnly):toast('Please add at least one item','warning'));
-        document.getElementById('tenderOkBtn').addEventListener('click', handleTenderOk);
+      document.querySelector('.saveprint-btn').addEventListener('click',()=> openTenderModal(null,handleSavePrint));
+      document.querySelector('.saveonly-btn').addEventListener('click',()=> openTenderModal(null,handleSaveOnly));
+      document.getElementById('tenderOkBtn').addEventListener('click', handleTenderOk);
+      document.getElementById('print-btn').addEventListener('click', ()=> openTenderModal(null,handleSavePrint));
 
-        // discount inputs
-        document.getElementById('invoiceDiscountPercent').addEventListener('input', ()=>{ let v=parseFloat(invoiceDiscountPercent.value)||0; if(v<0) v=0; if(v>100) v=100; invoiceDiscountPercent.value=v; recalculateTotals(); });
-        document.getElementById('invoiceDiscountAmount').addEventListener('input', ()=>{ let v=parseFloat(invoiceDiscountAmount.value)||0; if(v<0) v=0; invoiceDiscountAmount.value=v; recalculateTotals(); });
+      document.getElementById('invoiceDiscountPercent').addEventListener('input', ()=>{ let v=parseFloat(invoiceDiscountPercent.value)||0; if(v<0)v=0; if(v>100)v=100; invoiceDiscountPercent.value=v; recalculateTotals(); });
+      document.getElementById('invoiceDiscountAmount').addEventListener('input', ()=>{ let v=parseFloat(invoiceDiscountAmount.value)||0; if(v<0)v=0; invoiceDiscountAmount.value=v; recalculateTotals(); });
 
-        // initial totals
-        recalculateTotals();
+      document.getElementById('invoiceNoValue').innerText=generateInvoiceNumber();
+      updateLiveClock(); setInterval(updateLiveClock,1000);
+
+      recalculateTotals();
     });
-
-    /* small helpers used above */
-    function getSelectedSaleType(){ const s=document.querySelector('input[name="SaleType"]:checked'); return s? s.value:null; }
 </script>
