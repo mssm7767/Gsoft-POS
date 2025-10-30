@@ -1041,35 +1041,44 @@
         function holdCurrentInvoice(){
           if(!hasLineItems()) return toast('No items to hold','warning');
 
-          // --- Sale Items from cart rows ---
-            const saleItems = Array.from(document.querySelectorAll('.cart-row')).map(row => {
-                const qtyInput = row.querySelector('.qty-input');
-                const priceInput = row.querySelector('.price-input');
-                const qty = parseInt(qtyInput?.value || 0);
-                const price = parseFloat(priceInput?.value || 0);
-                const discount = parseFloat(document.getElementById('tDisc')?.value || 0);
-                const tax = parseFloat(document.getElementById('tTax')?.value || 0);
-                return {
-                    ItemId: parseInt(row.dataset.itemId),
-                    Quantity: qty,
-                    UnitPrice: price,
-                    DiscountPercent: discount,
-                    TaxAmount: tax,
-                    LineTotal: +(qty*price).toFixed(2)
-                };
-            });
+              // --- Sale Items from cart rows ---
+                const saleItems = Array.from(document.querySelectorAll('.cart-row')).map(row => {
+                    const qtyInput = row.querySelector('.qty-input');
+                    const priceInput = row.querySelector('.price-input');
+                    const qty = parseInt(qtyInput?.value || 0);
+                    const price = parseFloat(priceInput?.value || 0);
+                    const discount = parseFloat(document.getElementById('tDisc')?.value || 0);
+                    const tax = parseFloat(document.getElementById('tTax')?.value || 0);
+                    return {
+                        ItemId: parseInt(row.dataset.itemId),
+                        Quantity: qty,
+                        UnitPrice: price,
+                        DiscountPercent: discount,
+                        TaxAmount: tax,
+                        LineTotal: +(qty*price).toFixed(2)
+                    };
+                });
 
-          const itemsArr = saleItems;
-          const invoiceNumber=document.getElementById('orderNo')?.textContent || '';
-          const sub=parseFloat(document.getElementById('tGrand')?.textContent.replace(/,/g,'') || 0);
-          const tax=parseFloat(document.getElementById('tTax')?.value || 0);
-          const disc=parseFloat(document.getElementById('tDisc')?.value || 0);
-          const grand=parseFloat(document.getElementById('tGrand')?.textContent.replace(/,/g,'') || 0);
-          const held={ id: cryptoRandomId(), invoiceNumber, items: itemsArr, subTotal: sub, discount: disc, tax: tax, grandTotal: grand, heldAt: nowIso() };
-          const list=getAllHeld(); 
-          list.unshift(held); 
-          saveAllHeld(list);
-          toast('Invoice held','success'); handleNew();
+              const itemsArr = saleItems;
+              const invoiceNumber=document.getElementById('orderNo')?.textContent || '';
+              const sub=parseFloat(document.getElementById('tGrand')?.textContent.replace(/,/g,'') || 0);
+              const tax=parseFloat(document.getElementById('tTax')?.value || 0);
+              const disc=parseFloat(document.getElementById('tDisc')?.value || 0);
+              const grand=parseFloat(document.getElementById('tGrand')?.textContent.replace(/,/g,'') || 0);
+              const held={ id: cryptoRandomId(), invoiceNumber, items: itemsArr, subTotal: sub, discount: disc, tax: tax, grandTotal: grand, heldAt: nowIso() };
+              const list=getAllHeld(); 
+              list.unshift(held); 
+              saveAllHeld(list);
+
+                const orderEl = document.getElementById('orderNo');
+                const oldOrderNumber = orderEl.textContent.trim();
+
+                let nextNumber = (parseInt(oldOrderNumber, 10) + 1).toString();
+                nextNumber = nextNumber.padStart(oldOrderNumber.length, '0');
+
+                orderEl.textContent = nextNumber;
+
+              toast('Invoice held','success'); handleNew();
         }
         function cryptoRandomId(){ try{ return [...crypto.getRandomValues(new Uint8Array(8))].map(x=>x.toString(16).padStart(2,'0')).join(''); } catch { return String(Date.now()); } }
 
@@ -1155,6 +1164,11 @@
           // remove retrieved invoice from held list
           saveAllHeld(list.filter(x => x.id !== id));
 
+          const orderEl = document.getElementById('orderNo');
+          orderEl.textContent = h.invoiceNumber;
+
+          recalc();
+
           closeRetrieveModal();
           toast('Invoice retrieved', 'success');
           
@@ -1164,11 +1178,6 @@
         document.getElementById('acHold').addEventListener('click', holdCurrentInvoice);
         document.getElementById('acRetrieve').addEventListener('click', openRetrieveModal);
         // acRetrieve.addEventListener('click', ()=>{ openRetrieveModal(); loadHeldList(); });
-
-
-
-
-
 
         let invoiceCounter = @((invoiceNo ?? 0));
         document.getElementById('orderNo').innerText=generateInvoiceNumber();
@@ -1458,6 +1467,17 @@
           }
 
           async function savePOS(printAfter = false) {
+                  // Check only when printAfter is true
+                if (printAfter && (!tCash.value || tCash.value.trim() === "")) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Required Field',
+                        text: 'Please enter cash amount!',
+                        confirmButtonColor: '#3085d6',
+                    });
+                    return; // stop further execution
+                }
+
             // --- Totals ---
             const grandTotal = parseFloat(document.getElementById('tGrand')?.textContent.replace(/,/g,'') || 0);
             const tax = parseFloat(document.getElementById('tTax')?.value || 0);
@@ -1529,13 +1549,15 @@
                 if(response.ok){
                     const result = await response.json();
 
-                   window.location.reload();
+                  
 
                     if(printAfter){ window.open(`/Sales/Receipt/${result.id}`,'_blank'); }
                     else
                     {
                         window.open(`/Sales/KOTReceipt/${result.id}`,'_blank');
                     }
+
+                     window.location.reload();
                 } else {
                     const error = await response.json();
                     toast(error.Message || "Failed to save order", 'error', 3000);

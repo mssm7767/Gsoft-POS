@@ -21,6 +21,12 @@ namespace GSoftPosNew.Controllers
             _passwordHasher = passwordHasher;
         }
 
+        public IActionResult Index()
+        {
+            var UserList = _context.Users.OrderBy(u => u.FullName).ToList();
+            return View(UserList);
+        }
+
         // GET: User/Create
         [HttpGet]
         public IActionResult Create()
@@ -102,7 +108,7 @@ namespace GSoftPosNew.Controllers
                 TempData["Success"] = "User deleted successfully!";
             }
 
-            return RedirectToAction(nameof(Create));
+            return RedirectToAction(nameof(Index));
         }
     }
 }

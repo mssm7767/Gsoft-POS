@@ -1095,7 +1095,7 @@
 
     function selectItemSuggestion(i){
       if(i<0||i>=filtered.length) return; const item=filtered[i];
-      if(!item.Quantity || item.Quantity<=0){ Swal.fire({icon:'error',title:'Out of Stock',text:`${item.ItemName||'This item'} is out of stock!`}); return; }
+      // if(!item.Quantity || item.Quantity<=0){ Swal.fire({icon:'error',title:'Out of Stock',text:`${item.ItemName||'This item'} is out of stock!`}); return; }
       addToSalesTable(item);
       const box=document.getElementById('itemSuggestions'); box.style.display='none';
       const bi=document.getElementById('itemSearchInput'); bi.value=''; bi.focus();
@@ -1143,7 +1143,7 @@
       let match = items.find(x=>(x.ItemCode||'').toLowerCase()===lc) || items.find(x=>(x.ItemName||'').toLowerCase()===lc);
       if(!match){ const poss=items.filter(x=>(x.ItemCode||'').toLowerCase().includes(lc)||(x.ItemName||'').toLowerCase().includes(lc)); if(poss.length===1) match=poss[0]; }
       if(!match){ toast('Item not found','warning'); showItemSuggestions(term); return; }
-      if(!match.Quantity || match.Quantity<=0){ Swal.fire({icon:'error',title:'Out of Stock',text:`${match.ItemName||'This item'} is out of stock!`}); return; }
+      // if(!match.Quantity || match.Quantity<=0){ Swal.fire({icon:'error',title:'Out of Stock',text:`${match.ItemName||'This item'} is out of stock!`}); return; }
       addToSalesTable(match); suggDiv.style.display='none'; itemInputEl.value=''; itemInputEl.focus();
       if(focusMode==='price') focusLastPriceCell(); else focusLastQtyInput();
     }
@@ -1151,7 +1151,7 @@
       const lc=(term||'').toLowerCase(); if(!lc) return;
       let match = items.find(x=>(x.ItemCode||'').toLowerCase()===lc) || items.find(x=>(x.ItemName||'').toLowerCase()===lc);
       if(match){
-        if(!match.Quantity || match.Quantity<=0){ Swal.fire({icon:'error',title:'Out of Stock',text:`${match.ItemName||'This item'} is out of stock!`}); return; }
+        // if(!match.Quantity || match.Quantity<=0){ Swal.fire({icon:'error',title:'Out of Stock',text:`${match.ItemName||'This item'} is out of stock!`}); return; }
         addToSalesTable(match); suggDiv.style.display='none'; itemInputEl.value=''; itemInputEl.focus();
         if(focusMode==='price') focusLastPriceCell(); else focusLastQtyInput();
         return;

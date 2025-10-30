@@ -1,0 +1,152 @@
+﻿@using GSoftPosNew.ViewModels
+@model List<SaleReceiptViewModel>
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Receipt</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #fff;
+        }
+
+        .receiptContent {
+            width: 80mm;
+            margin: 0 auto 20px auto;
+            padding: 4px;
+            font-size: 11px;
+            border-bottom: 2px dashed #444;
+        }
+
+        .dashed {
+            border-top: 1px dashed #444;
+        }
+
+        @@page {
+            size: 80mm auto;
+            margin: 0;
+        }
+
+        @@media print {
+            body * {
+                visibility: hidden;
+            }
+
+            .receiptContent, .receiptContent * {
+                visibility: visible;
+            }
+
+            .receiptContent {
+                position: relative;
+                left: 0;
+                top: 0;
+            }
+
+            #printBtn {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="font-mono text-black text-xs">
+
+    <div class="text-center mb-2">
+        <button id="printBtn" onclick="printReceipt()" class="bg-blue-500 text-white px-3 py-1 rounded hidden">
+            🖨 Print
+        </button>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="receiptContent">
+            <!-- Show date only once at the top -->
+            <div class="py-1 text-[11px] mb-1">
+                <div><b>Date:</b> @Model.First().SaleDate.ToString("dd MMM yyyy")</div>
+            </div>
+        </div>
+
+        @foreach (var receipt in Model)
+        {
+            <div class="receiptContent">
+                <!-- Invoice Info without date -->
+                <div class="py-1 text-[11px] mb-1">
+                    <div><b>Invoice #:</b> @receipt.InvoiceNumber</div>
+                </div>
+
+                <!-- Items -->
+                <table class="w-full text-[11px] mb-1">
+                    <thead>
+                        <tr class="border-b border-gray-300">
+                            <th class="text-left w-5">#</th>
+                            <th class="text-left">Item</th>
+                            <th class="text-right w-12">Price</th>
+                            <th class="text-right w-8">Qty</th>
+                            <th class="text-right w-14">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (receipt.Items != null && receipt.Items.Any())
+                        {
+                            foreach (var item in receipt.Items)
+                            {
+                                <tr>
+                                    <td>@item.SrNo</td>
+                                    <td class="max-w-[100px] break-words">@item.ItemName</td>
+                                    <td class="text-right">@item.UnitPrice.ToString("N0")</td>
+                                    <td class="text-right">@item.Quantity</td>
+                                    <td class="text-right">@item.LineTotal.ToString("N0")</td>
+                                </tr>
+                            }
+
+                            <!-- Total Row -->
+                            <tr class="border-t border-gray-400 font-semibold">
+                                <td colspan="4" class="text-right pr-2">Total:</td>
+                                <td class="text-right">
+                                    @receipt.Items.Sum(x => x.LineTotal).ToString("N0")
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center text-red-500">No items found</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        <!-- Grand Total (after foreach) -->
+        <div class="receiptContent font-semibold text-right text-[11px] border-t border-gray-500 pt-2">
+            @{
+                var grandTotal = Model
+                .Where(r => r.Items != null && r.Items.Any())
+                .Sum(r => r.Items.Sum(i => i.LineTotal));
+            }
+            Grand Total: @grandTotal.ToString("N0")
+        </div>
+    }
+
+
+    <script>
+        function printReceipt() {
+            window.print();
+        }
+
+        window.onload = function () {
+            window.print();
+        };
+
+        window.onafterprint = function () {
+            window.close();
+        };
+    </script>
+</body>
+</html>

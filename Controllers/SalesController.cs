@@ -74,6 +74,8 @@ namespace GSoftPosNew.Controllers
 
         public async Task <IActionResult> POSTouch()
         {
+            var items = _context.Items.ToList();
+
             ViewBag.Customer = await _context.Customers.ToListAsync();
             var categoriesForJs = _context.Categories
                         .Select(c => new
@@ -119,9 +121,9 @@ namespace GSoftPosNew.Controllers
             ViewBag.InvoiceLastDigit = !string.IsNullOrEmpty(saleInvNo)
                                             ? int.Parse(saleInvNo[saleInvNo.Length - 1].ToString())
                                             : 0;
+            ViewBag.ShopName = _context.ShopSettings.OrderByDescending(s => s.Id).Select(s => s.ShopName).FirstOrDefault();
 
-
-            return View();
+            return View(items);
         }
         
         public IActionResult POSTouchNew()
@@ -269,8 +271,8 @@ namespace GSoftPosNew.Controllers
                         var dbItem = await _context.Items.FindAsync(item.ItemId);
                         if (dbItem != null)
                         {
-                            if (dbItem.Quantity < item.Quantity)
-                                throw new Exception($"Not enough stock for item {dbItem.ItemName}");
+                            //if (dbItem.Quantity < item.Quantity)
+                            //    throw new Exception($"Not enough stock for item {dbItem.ItemName}");
 
                             dbItem.Quantity += item.Quantity;
                             _context.Items.Update(dbItem);
@@ -391,8 +393,8 @@ namespace GSoftPosNew.Controllers
                         var dbItem = await _context.Items.FindAsync(item.ItemId);
                         if (dbItem != null)
                         {
-                            if (dbItem.Quantity < item.Quantity)
-                                throw new Exception($"Not enough stock for item {dbItem.ItemName}");
+                            //if (dbItem.Quantity < item.Quantity)
+                            //    throw new Exception($"Not enough stock for item {dbItem.ItemName}");
 
                             dbItem.Quantity -= item.Quantity;
                             _context.Items.Update(dbItem);
@@ -544,8 +546,8 @@ namespace GSoftPosNew.Controllers
                         var dbItem = await _context.Items.FindAsync(item.ItemId);
                         if (dbItem != null)
                         {
-                            if (dbItem.Quantity < item.Quantity)
-                                throw new Exception($"Not enough stock for item {dbItem.ItemName}");
+                            //if (dbItem.Quantity < item.Quantity)
+                            //    throw new Exception($"Not enough stock for item {dbItem.ItemName}");
 
                             dbItem.Quantity += item.Quantity;
                             _context.Items.Update(dbItem);
@@ -666,8 +668,8 @@ namespace GSoftPosNew.Controllers
                         var dbItem = await _context.Items.FindAsync(item.ItemId);
                         if (dbItem != null)
                         {
-                            if (dbItem.Quantity < item.Quantity)
-                                throw new Exception($"Not enough stock for item {dbItem.ItemName}");
+                            //if (dbItem.Quantity < item.Quantity)
+                            //    throw new Exception($"Not enough stock for item {dbItem.ItemName}");
 
                             dbItem.Quantity -= item.Quantity;
                             _context.Items.Update(dbItem);
@@ -818,8 +820,8 @@ namespace GSoftPosNew.Controllers
                         var dbItem = await _context.Items.FindAsync(item.ItemId);
                         if (dbItem != null)
                         {
-                            if (dbItem.Quantity < item.Quantity)
-                                throw new Exception($"Not enough stock for item {dbItem.ItemName}");
+                            //if (dbItem.Quantity < item.Quantity)
+                            //    throw new Exception($"Not enough stock for item {dbItem.ItemName}");
 
                             dbItem.Quantity += item.Quantity;
                             _context.Items.Update(dbItem);
@@ -1196,6 +1198,72 @@ namespace GSoftPosNew.Controllers
 
             return View(vm);
         }
+
+        public IActionResult LastDaySales()
+        {
+            // Step 1: Get the last sale date
+            var lastSaleDate = _context.Sales
+                                       .OrderByDescending(s => s.SaleDate)
+                                       .Select(s => s.SaleDate.Date) // only date part
+                                       .FirstOrDefault();
+
+            if (lastSaleDate == default)
+                return NotFound("No sales found.");
+
+            // Step 2: Get all sales on that date
+            var sales = _context.Sales
+                                .Include(s => s.Payment)
+                                .Include(s => s.SaleItems)
+                                .Where(s => s.SaleDate.Date == lastSaleDate)
+                                .ToList();
+
+            // Optional: Map to view models
+            var vmList = sales.Select(sale => new SaleReceiptViewModel
+            {
+                SaleId = sale.Id,
+                InvoiceNumber = sale.InvoiceNumber,
+                SaleDate = sale.SaleDate,
+                CashierName = sale.CashierId,
+                SubTotal = sale.SubTotal,
+                Tax = sale.Tax,
+                Discount = sale.Discount,
+                Total = sale.Total,
+                CustomerId = sale.CustomerId,
+                CustomerName = _context.Customers
+                                       .Where(c => c.Id == sale.CustomerId)
+                                       .Select(c => c.CustomerName)
+                                       .FirstOrDefault() ?? "Walk-in Customer",
+                CustomerPhone = _context.Customers
+                                        .Where(c => c.Id == sale.CustomerId)
+                                        .Select(c => c.ContactNumber)
+                                        .FirstOrDefault(),
+                PaymentMethod = sale.Payment?.PaymentMethod ?? "Cash",
+                PaidAmount = sale.Payment?.Amount ?? sale.Total,
+                Change = (sale.Payment?.Amount ?? sale.Total) - sale.Total,
+
+                Items = (from si in _context.SaleItems
+                         join i in _context.Items on si.ItemId equals i.Id
+                         where si.SaleId == sale.Id
+                         select new SaleItemReceiptVM
+                         {
+                             SrNo = 0,
+                             ItemName = i.ItemName,
+                             UnitPrice = si.UnitPrice,
+                             Quantity = si.Quantity,
+                             LineTotal = si.LineTotal
+                         }).ToList()
+            }).ToList();
+
+            // assign SrNo for each sale's items
+            foreach (var vm in vmList)
+            {
+                for (int i = 0; i < vm.Items.Count; i++)
+                    vm.Items[i].SrNo = i + 1;
+            }
+
+            return View(vmList); // send list of sales for the last date
+        }
+
 
         public IActionResult KOTReceipt(int id)
         {

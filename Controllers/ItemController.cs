@@ -123,7 +123,19 @@ namespace GSoftPosNew.Controllers
             return RedirectToAction("Add");
         }
 
+        [HttpGet]
+        public JsonResult CheckItemCode(string itemCode)
+        {
+            bool exists = _context.Items.Any(x => x.ItemCode == itemCode);
+            return Json(exists);
+        }
 
+        [HttpGet]
+        public JsonResult CheckItemName(string itemName)
+        {
+            bool exists = _context.Items.Any(x => x.ItemName == itemName);
+            return Json(exists);
+        }
 
 
         [HttpGet]

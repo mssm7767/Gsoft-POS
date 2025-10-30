@@ -3,13 +3,16 @@
     ViewData["Title"] = "Add New Item";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
 <link href="~/css/item-custom.css" rel="stylesheet" />
 
 <!-- TOP BAR -->
-<div class="top-info-bar mb-4">
-    <span><i class="fa fa-user-circle"></i> @ViewBag.CurrentUser ?? "Admin"</span>
-    <span><i class="fa fa-clock"></i> <span id="currentTime"></span></span>
-    <span><i class="fa fa-calendar"></i> <span id="currentDate"></span></span>
+<div class="top-info-bar mb-3 d-flex gap-3 align-items-center justify-content-between bg-dark text-white p-2 rounded">
+    <div><i class="fa fa-user-circle"></i> @(@ViewBag.CurrentUser ?? "Admin")</div>
+    <div>
+        <i class="fa fa-clock"></i> <span id="currentTime"></span>
+        <span class="ms-3"><i class="fa fa-calendar"></i> <span id="currentDate"></span></span>
+    </div>
 </div>
 
 <!-- ADD ITEM FORM -->
@@ -25,18 +28,25 @@
     {
         <div class="alert alert-danger shadow-sm" id="alert-danger">@TempData["Danger"]</div>
     }
-    <form asp-action="Add" method="post" enctype="multipart/form-data" class="row g-2">
+
+    <form asp-action="Add" method="post" enctype="multipart/form-data" class="row g-2" id="addItemForm">
+        <!-- Duplicate notice + hidden existing id -->
+        <div id="duplicateNotice" class="alert alert-warning d-none"></div>
+        <input type="hidden" id="ExistingItemId" name="ExistingItemId" />
+
         <!-- Main Fields -->
         <div class="col-12 col-md-6">
             <label asp-for="ItemData.ItemCode" class="form-label form-label-sm">
                 Item Code / Barcode <span class="text-danger">*</span>
             </label>
             <div class="input-group input-group-sm">
-                <input asp-for="ItemData.ItemCode" id="Item_ItemCode" class="form-control form-control-sm barcode-blink" placeholder="Scan or type barcode..." autocomplete="off" />
+                <input asp-for="ItemData.ItemCode" id="Item_ItemCode" class="form-control form-control-sm barcode-blink"
+                       placeholder="Scan or type barcode..." autocomplete="off" />
                 <button type="button" id="btnAutoCode" class="btn btn-outline-secondary btn-sm" title="Auto-generate code">
                     <i class="fa fa-sync-alt"></i>
                 </button>
             </div>
+            <span id="itemCodeMessage" style="color:red; font-size:12px;"></span>
             @if (TempData["Error"] != null)
             {
                 <span class="text-danger small">@TempData["Error"]</span>
@@ -46,14 +56,16 @@
 
         <div class="col-12 col-md-6">
             <label asp-for="ItemData.ReferenceCode" class="form-label form-label-sm">Reference Code</label>
-            <input asp-for="ItemData.ReferenceCode" class="form-control form-control-sm" />
+            <input asp-for="ItemData.ReferenceCode" id="Item_ReferenceCode" class="form-control form-control-sm" />
         </div>
 
         <div class="col-12 col-md-6">
             <label asp-for="ItemData.ItemName" class="form-label form-label-sm">
                 Item Name <span class="text-danger">*</span>
             </label>
-            <input asp-for="ItemData.ItemName" class="form-control form-control-sm" />
+            <input asp-for="ItemData.ItemName" id="Item_ItemName" class="form-control form-control-sm" />
+            <span id="itemNameMessage" style="color:red; font-size:12px;"></span>
+
             @if (TempData["ErrorName"] != null)
             {
                 <span class="text-danger small">@TempData["ErrorName"]</span>
@@ -61,13 +73,14 @@
             @Html.ValidationMessageFor(m => m.ItemData.ItemName, "", new { @class = "text-danger" })
         </div>
 
-        <!-- NEW: Flavour after Item Name -->
+        <!-- Flavour -->
         <div class="col-12 col-md-6">
             <label asp-for="ItemData.Flavour" class="form-label form-label-sm">
                 Flavour
             </label>
             <div class="input-group input-group-sm">
                 <input asp-for="ItemData.Flavour"
+                       id="Item_Flavour"
                        class="form-control form-control-sm"
                        list="flavourList"
                        placeholder="e.g., Spicy, Cheesy, BBQ..." />
@@ -87,14 +100,13 @@
                 <option value="Strawberry"></option>
             </datalist>
         </div>
-        <!-- /NEW -->
 
         <div class="col-12 col-md-6">
             <label class="form-label form-label-sm">
                 Category <span class="text-danger">*</span>
             </label>
             <div class="input-group input-group-sm">
-                <select name="ItemData.CategoryId" class="form-select form-select-sm">
+                <select id="CategoryId" name="ItemData.CategoryId" class="form-select form-select-sm">
                     <option value="">Select category</option>
                     @foreach (var category in ViewBag.CategoryList)
                     {
@@ -113,7 +125,7 @@
                 Supplier <span class="text-danger">*</span>
             </label>
             <div class="input-group input-group-sm">
-                <select name="ItemData.SupplierId" class="form-select form-select-sm">
+                <select id="SupplierId" name="ItemData.SupplierId" class="form-select form-select-sm">
                     <option value="">Select supplier</option>
                     @foreach (var supplier in ViewBag.SupplierList)
                     {
@@ -150,12 +162,12 @@
 
         <div class="col-12 col-md-6">
             <label asp-for="ItemData.Quantity" class="form-label form-label-sm">Opening Qty</label>
-            <input asp-for="ItemData.Quantity" class="form-control form-control-sm" type="number" min="0" value="0" />
+            <input asp-for="ItemData.Quantity" id="Item_Quantity" class="form-control form-control-sm" type="number" min="0" value="0" />
         </div>
 
         <div class="col-md-4">
             <label class="form-label"><i class="fa-solid fa-image text-primary me-1"></i> Item Image</label>
-            <input type="file" name="ImageFile" class="form-control" />
+            <input type="file" name="ImageFile" id="ImageFile" class="form-control" />
         </div>
 
         <!-- More Details Button -->
@@ -172,7 +184,7 @@
                     <div class="row g-2">
                         <div class="col-md-4">
                             <label class="form-label form-label-sm">Sale Price 2</label>
-                            <input name="SalePrice2" class="form-control form-control-sm" type="number" step="0.01" placeholder="Second Sale Price" />
+                            <input name="SalePrice2" id="SalePrice2" class="form-control form-control-sm" type="number" step="0.01" placeholder="Second Sale Price" />
                         </div>
                         <div class="col-md-4">
                             <label asp-for="ItemData.PackSize" class="form-label form-label-sm">Pack Size</label>
@@ -192,7 +204,7 @@
                                 Unit <span class="text-danger">*</span>
                             </label>
                             <div class="input-group input-group-sm">
-                                <select name="ItemData.UnitId" class="form-select form-select-sm">
+                                <select name="ItemData.UnitId" id="UnitId" class="form-select form-select-sm">
                                     <option value="">Select Unit</option>
                                     @foreach (var unit in ViewBag.UnitList)
                                     {
@@ -211,7 +223,7 @@
                                 Location <span class="text-danger">*</span>
                             </label>
                             <div class="input-group input-group-sm">
-                                <select asp-for="ItemData.LocationId" asp-items="Model.LocationList" class="form-select form-select-sm">
+                                <select asp-for="ItemData.LocationId" id="LocationId" asp-items="Model.LocationList" class="form-select form-select-sm">
                                     <option value="">Select Location</option>
                                 </select>
                                 <a asp-controller="Location" asp-action="Create" class="btn btn-success btn-sm" title="Add Location">
@@ -228,8 +240,8 @@
 
         <!-- Bottom Buttons -->
         <div class="col-12 d-flex justify-content-end mt-3 gap-2">
-            <button type="reset" class="btn btn-secondary btn-sm">Clear</button>
-            <button type="submit" class="btn btn-primary btn-sm">Save & Next</button>
+            <button type="reset" id="btnClearAll" class="btn btn-secondary btn-sm">Clear</button>
+            <button type="submit" id="btnSaveNext" class="btn btn-primary btn-sm">Save & Next</button>
             <a href="@Url.Action("Index", "Home")" class="btn btn-danger btn-sm ms-2">Exit to Dashboard</a>
         </div>
     </form>
@@ -237,10 +249,10 @@
 
 <!-- ITEMS TABLE (CURRENT STOCK) -->
 <div class="card mb-4 mt-4" style="max-width:900px;margin:0 auto;">
-    <div class="search-bar-row">
-        <input type="text" id="searchItemInput" placeholder="Search item..." />
-        <button class="btn btn-primary" type="button" onclick="searchTable()">Search</button>
-        <button class="btn btn-secondary" type="button" onclick="window.location.href='@Url.Action("Index", "Item")'">
+    <div class="search-bar-row p-2 d-flex gap-2">
+        <input type="text" id="searchItemInput" class="form-control form-control-sm" placeholder="Search item..." />
+        <button class="btn btn-primary btn-sm" type="button" onclick="searchTable()">Search</button>
+        <button class="btn btn-secondary btn-sm" type="button" onclick="window.location.href='@Url.Action("Index", "Item")'">
             <i class="fa fa-list me-1"></i> Stock List
         </button>
     </div>
@@ -290,102 +302,188 @@
 </div>
 
 @section Scripts {
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const packSizeInput = document.getElementById("packsize");
-            const unitPriceInput = document.getElementById("unitprice");
-            const packPriceInput = document.getElementById("packprice");
-            const mrpPriceInput = document.getElementById("mrpPrice");
+        const input = document.getElementById("Item_ItemCode");
+        const message = document.getElementById("itemCodeMessage");
 
-            function calculatePrices() {
-                const packSize = parseFloat(packSizeInput?.value) || 0;
-                const mrpPrice = parseFloat(mrpPriceInput?.value) || 0;
-
-                if (packSize > 0) {
-                    const unitPrice = mrpPrice / packSize;
-                    const packPrice = packSize * unitPrice;
-
-                    if(unitPriceInput) unitPriceInput.value = unitPrice.toFixed(2);
-                    if(packPriceInput) packPriceInput.value = packPrice.toFixed(2);
-                } else {
-                    if(unitPriceInput) unitPriceInput.value = "";
-                    if(packPriceInput) packPriceInput.value = "";
-                }
+        input.addEventListener("input", function () {
+            const code = input.value.trim();
+            if (code.length < 1) {
+                message.textContent = "";
+                return;
             }
 
-            packSizeInput?.addEventListener("keyup", calculatePrices);
-            mrpPriceInput?.addEventListener("keyup", calculatePrices);
+            fetch(`/Item/CheckItemCode?itemCode=${encodeURIComponent(code)}`)
+                .then(res => res.json())
+                .then(exists => {
+                    if (exists) {
+                        message.textContent = "This Item Code already exists!";
+                    } else {
+                        message.textContent = "";
+                    }
+                });
         });
     </script>
 
     <script>
-        // alerts auto-hide
-        setTimeout(() => { document.getElementById("alert-success")?.remove(); }, 2000);
-        setTimeout(() => { document.getElementById("alert-danger")?.remove(); }, 2000);
-
-        // Live time & date
-        function updateDateTime() {
-            const now = new Date();
-            document.getElementById("currentTime").innerText = now.toLocaleTimeString();
-            document.getElementById("currentDate").innerText = now.toLocaleDateString();
-        }
-        setInterval(updateDateTime, 1000); updateDateTime();
-
-        // Auto-generate code
         document.addEventListener("DOMContentLoaded", function () {
-            const btn = document.getElementById('btnAutoCode');
-            if (btn) {
-                btn.addEventListener('click', function () {
-                    fetch('@Url.Action("GetNextCode", "Item")')
-                        .then(response => { if (!response.ok) throw new Error("Network error"); return response.json(); })
-                        .then(code => { document.getElementById('Item_ItemCode').value = code; })
-                        .catch(() => alert("Cannot generate code"));
+
+            const nameInput = document.getElementById("Item_ItemName");
+            const nameMsg = document.getElementById("itemNameMessage");
+
+            if (nameInput) {
+                nameInput.addEventListener("input", function () {
+                    const name = nameInput.value.trim();
+                    if (!name) {
+                        nameMsg.textContent = "";
+                        return;
+                    }
+
+                    fetch(`/Item/CheckItemName?itemName=${encodeURIComponent(name)}`)
+                        .then(res => res.json())
+                        .then(exists => {
+                            nameMsg.textContent = exists ? "This Item Name already exists!" : "";
+                        });
                 });
             }
         });
 
-        // Purchase price auto-calc
-        function updatePurchasePrice() {
-            const mrp = parseFloat(document.getElementById('mrpPrice')?.value);
-            const pct = parseFloat(document.getElementById('markupPct')?.value);
-            const purchEl = document.getElementById('purchasePrice');
-            if (!purchEl) return;
+    </script>
 
-            if (!isNaN(mrp)) {
-                if (!isNaN(pct) && pct !== 0) {
-                    purchEl.value = (mrp * (100 - pct) / 100).toFixed(2);
-                    purchEl.readOnly = true;
+
+    <script>
+        // =================== Time & Date ===================
+        function updateDateTime() {
+            const now = new Date();
+            document.getElementById("currentTime")?.replaceChildren(document.createTextNode(now.toLocaleTimeString()));
+            document.getElementById("currentDate")?.replaceChildren(document.createTextNode(now.toLocaleDateString()));
+        }
+        setInterval(updateDateTime, 1000); updateDateTime();
+
+        // =================== Alerts auto-hide ===================
+        setTimeout(() => { document.getElementById("alert-success")?.remove(); }, 2000);
+        setTimeout(() => { document.getElementById("alert-danger")?.remove(); }, 2000);
+
+        // =================== Helpers ===================
+        function qs(sel, root=document){ return root.querySelector(sel); }
+        function qsa(sel, root=document){ return Array.from(root.querySelectorAll(sel)); }
+        function byText(root, tag, text){
+            return qsa(tag, root).find(b => (b.textContent||'').trim().toLowerCase() === text.trim().toLowerCase());
+        }
+        // Find form, save & clear buttons even if IDs not present
+        const addForm = qs('.add-item-container form') || qs('form[asp-action="Add"]') || document.forms[0];
+        const btnSaveNext = document.getElementById('btnSaveNext') || byText(addForm||document, 'button', 'Save & Next') || qs('button[type="submit"]', addForm||document);
+        const btnClearAll = document.getElementById('btnClearAll') || byText(addForm||document, 'button', 'Clear') || qs('button[type="reset"]', addForm||document);
+
+        const codeInput = document.getElementById('Item_ItemCode');
+        const refInput  = document.getElementById('Item_ReferenceCode') || qs('input[name="ItemData.ReferenceCode"]');
+        const nameInput = document.getElementById('Item_ItemName')      || qs('input[name="ItemData.ItemName"]');
+        const flavInput = document.getElementById('Item_Flavour')       || qs('input[name="ItemData.Flavour"]');
+        const catSel    = document.getElementById('CategoryId')         || qs('select[name="ItemData.CategoryId"]');
+        const supSel    = document.getElementById('SupplierId')         || qs('select[name="ItemData.SupplierId"]');
+        const qtyInput  = document.getElementById('Item_Quantity')      || qs('input[name="ItemData.Quantity"]');
+        const imgInput  = document.getElementById('ImageFile')          || qs('input[name="ImageFile"]');
+
+        // Ensure duplicate notice container exists (under barcode field)
+        let duplicateNotice = document.getElementById('duplicateNotice');
+        if(!duplicateNotice && codeInput){
+            duplicateNotice = document.createElement('div');
+            duplicateNotice.id = 'duplicateNotice';
+            duplicateNotice.className = 'alert alert-warning d-none mt-2';
+            const wrap = codeInput.closest('.col-12, .col-md-6, .mb-3') || codeInput.parentElement;
+            wrap?.appendChild(duplicateNotice);
+        }
+
+        // =================== Auto-generate code ===================
+        (function(){
+            const btn = document.getElementById('btnAutoCode');
+            if (!btn) return;
+            btn.addEventListener('click', function () {
+                fetch('@Url.Action("GetNextCode", "Item")')
+                    .then(r => { if(!r.ok) throw 0; return r.json(); })
+                    .then(code => {
+                        if(codeInput){ codeInput.value = code; codeInput.dispatchEvent(new Event('input')); }
+                    })
+                    .catch(() => alert("Cannot generate code"));
+            });
+        })();
+
+        // =================== Prices auto-calc ===================
+        (function(){
+            const mrpEl = document.getElementById('mrpPrice');
+            const pctEl = document.getElementById('markupPct');
+            const purchEl = document.getElementById('purchasePrice');
+
+            function updatePurchasePrice() {
+                const mrp = parseFloat(mrpEl?.value);
+                const pct = parseFloat(pctEl?.value);
+                if (!purchEl) return;
+                if (!isNaN(mrp)) {
+                    if (!isNaN(pct) && pct !== 0) {
+                        purchEl.value = (mrp * (100 - pct) / 100).toFixed(2);
+                        purchEl.readOnly = true;
+                    } else {
+                        purchEl.value = (mrp * (100 - (pct || 0)) / 100).toFixed(2);
+                        purchEl.readOnly = false;
+                    }
                 } else {
-                    purchEl.value = (mrp * (100 - (pct||0)) / 100).toFixed(2);
+                    purchEl.value = '';
                     purchEl.readOnly = false;
                 }
-            } else {
-                purchEl.value = '';
-                purchEl.readOnly = false;
             }
-        }
-        document.getElementById('mrpPrice')?.addEventListener('input', updatePurchasePrice);
-        document.getElementById('markupPct')?.addEventListener('input', updatePurchasePrice);
+            mrpEl?.addEventListener('input', updatePurchasePrice);
+            pctEl?.addEventListener('input', updatePurchasePrice);
 
-        const mrpEl = document.getElementById("mrpPrice");
-        const pctEl = document.getElementById("markupPct");
-        const purchEl = document.getElementById("purchasePrice");
+            purchEl?.addEventListener("input", function () {
+                const mrp = parseFloat(mrpEl?.value);
+                const purch = parseFloat(purchEl?.value);
+                if (!isNaN(mrp) && mrp > 0 && !isNaN(purch) && purch > 0) {
+                    const pct = ((mrp - purch) / mrp) * 100;
+                    if (pctEl) pctEl.value = pct.toFixed(0);
+                } else {
+                    if (pctEl) pctEl.value = "";
+                }
+            });
 
-        purchEl?.addEventListener("input", function () {
-            const mrp = parseFloat(mrpEl?.value);
-            const purch = parseFloat(purchEl?.value);
-
-            if (!isNaN(mrp) && mrp > 0 && !isNaN(purch) && purch > 0) {
-                const pct = ((mrp - purch) / mrp) * 100;
-                if(pctEl) pctEl.value = pct.toFixed(0);
-            } else {
-                if(pctEl) pctEl.value = "";
+            // PackSize → Unit/Pack Price
+            const packSizeInput = document.getElementById("packsize")   || qs('input[name="ItemData.PackSize"]');
+            const unitPriceInput = document.getElementById("unitprice") || qs('input[name="ItemData.UnitPrice"]');
+            const packPriceInput = document.getElementById("packprice") || qs('input[name="ItemData.PackPrice"]');
+            function calculatePrices() {
+                const packSize = parseFloat(packSizeInput?.value) || 0;
+                const mrpPrice = parseFloat(mrpEl?.value) || 0;
+                if (packSize > 0) {
+                    const unitPrice = mrpPrice / packSize;
+                    const packPrice = packSize * unitPrice;
+                    if (unitPriceInput) unitPriceInput.value = unitPrice.toFixed(2);
+                    if (packPriceInput) packPriceInput.value = packPrice.toFixed(2);
+                } else {
+                    if (unitPriceInput) unitPriceInput.value = "";
+                    if (packPriceInput) packPriceInput.value = "";
+                }
             }
+            packSizeInput?.addEventListener("keyup", calculatePrices);
+            mrpEl?.addEventListener("keyup", calculatePrices);
+        })();
+
+        // =================== Flavour clear ===================
+        document.getElementById('btnClearFlavour')?.addEventListener('click', () => {
+            if (flavInput) { flavInput.value = ''; flavInput.focus(); }
         });
 
-        // More Details Toggle
+        // =================== Stock search ===================
+        function searchTable() {
+            var input = document.getElementById("searchItemInput");
+            var filter = (input?.value || '').toLowerCase();
+            var trs = document.querySelectorAll("#stockTable tbody tr");
+            trs.forEach(tr => {
+                var rowText = tr.innerText.toLowerCase();
+                tr.style.display = rowText.includes(filter) ? "" : "none";
+            });
+        }
+        window.searchTable = searchTable;
+
+        // =================== More details toggle ===================
         function toggleMoreDetails() {
             const section = document.getElementById('moreDetailsSection');
             const icon = document.getElementById('iconMoreDetails');
@@ -402,50 +500,169 @@
         }
         window.toggleMoreDetails = toggleMoreDetails;
 
-        // Search functionality (stock table)
-        function searchTable() {
-            var input = document.getElementById("searchItemInput");
-            var filter = (input?.value || '').toLowerCase();
-            var trs = document.querySelectorAll("#stockTable tbody tr");
-            trs.forEach(tr => {
-                var rowText = tr.innerText.toLowerCase();
-                tr.style.display = rowText.includes(filter) ? "" : "none";
-            });
-        }
-        window.searchTable = searchTable;
+        // =================== ENTER FLOW (barcode → … → Save) ===================
+        (function(){
+            const flow = [
+                'Item_ItemCode','Item_ReferenceCode','Item_ItemName','Item_Flavour',
+                (catSel && catSel.id) || 'CategoryId',
+                (supSel && supSel.id) || 'SupplierId',
+                'mrpPrice','markupPct','purchasePrice','Item_Quantity','ImageFile','btnSaveNext'
+            ].filter(Boolean);
 
-        // Barcode blinking: focus and remove on input
-        document.addEventListener("DOMContentLoaded", function() {
-            var barcodeInput = document.getElementById("Item_ItemCode");
-            if (barcodeInput) {
-                barcodeInput.focus();
-                function removeBlink() {
-                    barcodeInput.classList.remove("barcode-blink");
-                    barcodeInput.removeEventListener('input', removeBlink);
+            function focusNext(currId){
+                const i = flow.indexOf(currId);
+                if (i >= 0 && i < flow.length - 1) {
+                    const nx = document.getElementById(flow[i+1]) ||
+                               (flow[i+1]==='btnSaveNext' ? btnSaveNext : null);
+                    if (nx) { nx.focus(); if (nx.select && nx.tagName === 'INPUT') nx.select(); }
                 }
-                barcodeInput.addEventListener('input', removeBlink);
             }
-        });
 
-        // Flavour clear button
-        document.addEventListener('DOMContentLoaded', function () {
-            document.getElementById('btnClearFlavour')?.addEventListener('click', () => {
-                const input = document.querySelector('[name="ItemData.Flavour"]');
-                if (input) { input.value = ''; input.focus(); }
+            // attach
+            flow.forEach(id=>{
+                const el = (id==='btnSaveNext') ? btnSaveNext : document.getElementById(id);
+                if(!el) return;
+                el.addEventListener('keydown', (e)=>{
+                    if(e.key === 'Enter'){
+                        e.preventDefault();
+                        if(id === 'btnSaveNext'){ btnSaveNext?.click(); return; }
+                        focusNext(id);
+                    }
+                });
             });
-        });
+        })();
 
-        // Notification auto-hide
-        document.addEventListener("DOMContentLoaded", function () {
-            const notification = document.getElementById("customNotification");
-            if (notification) {
-                setTimeout(() => {
-                    notification.classList.remove("show");
-                    setTimeout(() => notification.style.display = 'none', 500);
-                }, 1500);
+        // =================== Duplicate check (instant) ===================
+        (function () {
+            if (!codeInput) return;
+
+            function setVal(el, v){ if(el) el.value = (v ?? ''); }
+            function fillFromItem(it){
+                setVal(refInput, it.referenceCode);
+                setVal(nameInput, it.itemName);
+                setVal(flavInput, it.flavour);
+                setVal(document.getElementById('mrpPrice'),      it.salePrice);
+                setVal(document.getElementById('markupPct'),     it.markupPercentage);
+                setVal(document.getElementById('purchasePrice'), it.purchasePrice);
+                setVal(qtyInput, it.quantity);
+                setVal(document.getElementById('packsize'),      it.packSize);
+                setVal(document.getElementById('unitprice'),     it.unitPrice);
+                setVal(document.getElementById('packprice'),     it.packPrice);
+
+                if (catSel && it.categoryId) catSel.value = String(it.categoryId);
+                if (supSel && it.supplierId) supSel.value = String(it.supplierId);
             }
-        });
+            function showDuplicate(it){
+                if (duplicateNotice){
+                    const editUrl = '@Url.Action("Edit", "Item")' + '/' + it.id;
+                    duplicateNotice.innerHTML = `
+                        <i class="fa fa-triangle-exclamation me-1"></i>
+                        <strong>Already Saved:</strong> Item code <b>${it.itemCode}</b> is already in inventory.
+                        <a href="${editUrl}" class="btn btn-sm btn-outline-primary ms-2">
+                          <i class="fa fa-pen-to-square"></i> Edit This Item
+                        </a>`;
+                    duplicateNotice.classList.remove('d-none');
+                }
+                if (btnSaveNext){
+                    btnSaveNext.disabled = true;
+                    btnSaveNext.classList.add('disabled');
+                    btnSaveNext.title = 'This code already exists. Use Edit.';
+                }
+            }
+            function clearDuplicate(){
+                if (duplicateNotice){
+                    duplicateNotice.classList.add('d-none');
+                    duplicateNotice.innerHTML = '';
+                }
+                if (btnSaveNext){
+                    btnSaveNext.disabled = false;
+                    btnSaveNext.classList.remove('disabled');
+                    btnSaveNext.removeAttribute('title');
+                }
+            }
+
+            let lastChecked = '';
+            function checkCodeImmediate(){
+                const code = (codeInput.value || '').trim();
+                if (!code){ clearDuplicate(); lastChecked=''; return; }
+                if (code === lastChecked) return;
+                lastChecked = code;
+
+                fetch('@Url.Action("CheckCode", "Item")' + '?code=' + encodeURIComponent(code))
+                  .then(r=>r.json())
+                  .then(res=>{
+                      if(res && res.exists && res.item){
+                          fillFromItem(res.item);
+                          showDuplicate(res.item);   // instant feedback
+                      }else{
+                          clearDuplicate();
+                      }
+                  })
+                  .catch(()=>{/* ignore */});
+            }
+
+            // fire on all common scanner/typing events
+            codeInput.addEventListener('input',  checkCodeImmediate);
+            codeInput.addEventListener('change', checkCodeImmediate);
+            codeInput.addEventListener('blur',   checkCodeImmediate);
+            codeInput.addEventListener('keydown', function(e){
+                if (e.key === 'Enter') { e.preventDefault(); checkCodeImmediate(); }
+            });
+
+            // Clear-all → also clear duplicate notice after reload
+            btnClearAll?.addEventListener('click', ()=>{
+                setTimeout(clearDuplicate, 0);
+                lastChecked='';
+            });
+        })();
+
+        // =================== Save & Next → focus barcode on next load ===================
+        (function(){
+            btnSaveNext?.addEventListener('click', ()=>{
+                sessionStorage.setItem('focusBarcodeNext','1');
+            });
+            document.addEventListener('DOMContentLoaded', ()=>{
+                const wantFocus = sessionStorage.getItem('focusBarcodeNext') === '1';
+                if (wantFocus || true){
+                    codeInput?.focus(); codeInput?.select?.();
+                }
+                sessionStorage.removeItem('focusBarcodeNext');
+            });
+        })();
+
+        // =================== Clear button → refresh, keep Supplier/Category ===================
+        (function(){
+            btnClearAll?.addEventListener('click', function(e){
+                e.preventDefault();
+                const cat = catSel?.value || '';
+                const sup = supSel?.value || '';
+                sessionStorage.setItem('persistCat', cat);
+                sessionStorage.setItem('persistSup', sup);
+                sessionStorage.setItem('focusBarcodeNext', '1');
+                location.reload();
+            });
+
+            document.addEventListener('DOMContentLoaded', ()=>{
+                const cat = sessionStorage.getItem('persistCat');
+                const sup = sessionStorage.getItem('persistSup');
+                if (cat !== null && catSel) catSel.value = cat;
+                if (sup !== null && supSel) supSel.value = sup;
+                sessionStorage.removeItem('persistCat');
+                sessionStorage.removeItem('persistSup');
+            });
+        })();
+
+        // =================== Barcode blink remove on input ===================
+        (function(){
+            if (codeInput) {
+                function removeBlink() {
+                    codeInput.classList.remove("barcode-blink");
+                    codeInput.removeEventListener('input', removeBlink);
+                }
+                codeInput.addEventListener('input', removeBlink);
+            }
+        })();
     </script>
 
-    <partial name="_ValidationScriptsPartial" />
 }
+
