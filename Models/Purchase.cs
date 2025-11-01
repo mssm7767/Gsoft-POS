@@ -81,6 +81,7 @@ namespace GSoftPosNew.Models
 
         [JsonPropertyName("mrp")] // ✅ maps "qty" → Quantity
         public decimal UnitCost { get; set; }
+        [JsonPropertyName("disPct")]
         public decimal DiscountPercent { get; set; }
         public decimal TaxPercent { get; set; }
         public decimal LineTotal { get; set; }

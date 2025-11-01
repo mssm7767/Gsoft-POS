@@ -113,7 +113,12 @@ namespace GSoftPosNew.Controllers
                             else
                             {
                                 // Existing product case → update stock & price
-                                existingProduct.PurchasePrice = item.UnitCost;   // update cost price if needed
+                                existingProduct.SalePrice = item.UnitCost;
+                                existingProduct.MarkupPercentage = item.DiscountPercent;
+
+                                // Calculate percentage deduction
+                                existingProduct.PurchasePrice = item.UnitCost - (item.UnitCost * (item.DiscountPercent / 100m));
+
                                 var q = existingProduct.Quantity + item.Quantity; // ✅ add to existing stock
 
                                 if (!string.IsNullOrEmpty(existingProduct.PackSize))
@@ -138,6 +143,7 @@ namespace GSoftPosNew.Controllers
 
                                 item.ItemId = existingProduct.Id;
                                 item.UnitCost = existingProduct.SalePrice;
+                                item.LineTotal = existingProduct.PurchasePrice * item.Quantity;
                             }
                                 
                         }

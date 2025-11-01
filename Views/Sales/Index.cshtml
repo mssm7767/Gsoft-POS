@@ -221,12 +221,11 @@
                                         <a asp-action="Edit" asp-route-id="@sale.Id" class="btn btn-sm btn-outline-primary me-1" title="Edit">
                                             <i class="fa fa-edit"></i>
                                         </a>
-                                        <a asp-action="Delete" asp-route-id="@sale.Id"
-                                           class="btn btn-sm btn-outline-danger"
-                                           onclick="confirmDelete(event, this)"
-                                           title="Delete">
+                                        <button onclick="deleteSale(@sale.Id)"
+                                                class="btn btn-sm btn-outline-danger">
+  
                                             <i class="fa fa-trash"></i>
-                                        </a>
+                                        </button>
                                     </td>
                                 </tr>
                             }
@@ -309,65 +308,6 @@
             </tbody>
         </table>
     </div>
-
-    <!-- 80MM THERMAL TEMPLATE -->
-    <div id="thermalArea" class="d-none" style="font-family: 'Arial', sans-serif;">
-        <div style="text-align:center;font-weight:700;font-size:11px;margin-bottom:4px;">Sales Report</div>
-        <div style="text-align:center;font-size:9px;margin-bottom:6px;">
-            Range: @((Model.FromDate?.ToString("yyyy-MM-dd") ?? "--")) → @((Model.ToDate?.ToString("yyyy-MM-dd") ?? "--"))
-            <br />Printed: @DateTime.Now.ToString("yyyy-MM-dd HH:mm")
-        </div>
-
-        <table style="width:100%;border-collapse:collapse;font-size:9px;table-layout:fixed;">
-            <thead>
-                <tr>
-                    <th style="text-align:left;border-bottom:1px solid #000;padding:1px;">Inv</th>
-                    <th style="text-align:center;border-bottom:1px solid #000;padding:1px;width:22%;">Date</th>
-                    <th style="text-align:left;border-bottom:1px solid #000;padding:1px;">Cash</th>
-                    @* <th style="text-align:right;border-bottom:1px solid #000;padding:1px;">Sub</th>
-                    <th style="text-align:right;border-bottom:1px solid #000;padding:1px;">Tax</th> *@
-                    <th style="text-align:right;border-bottom:1px solid #000;padding:1px;">Dis</th>
-                    <th style="text-align:right;border-bottom:1px solid #000;padding:1px;">Tot</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model.Sales != null && Model.Sales.Any())
-                {
-                    decimal tSub = 0, tTax = 0, tDis = 0, tTot = 0;
-                    foreach (var s in Model.Sales)
-                    {
-                        tSub += s.SubTotal; tTax += s.Tax; tDis += s.Discount; tTot += s.Total;
-                        <tr>
-                            <td style="padding:1px;">@s.InvoiceNumber</td>
-                            <td style="padding:1px;text-align:center;">@s.SaleDate.ToString("dd-MMM HH:mm")</td>
-                            <td style="padding:1px;">@s.CashierId</td>
-                           @*  <td style="padding:1px;text-align:right;">@s.SubTotal.ToString("0.00")</td>
-                            <td style="padding:1px;text-align:right;">@s.Tax.ToString("0.00")</td> *@
-                            <td style="padding:1px;text-align:right;">-@s.Discount.ToString("0.00")</td>
-                            <td style="padding:1px;text-align:right;"><strong>@s.Total.ToString("0.00")</strong></td>
-                        </tr>
-                    }
-                    <tr><td colspan="7" style="padding-top:2px;border-top:1px solid #000;"></td></tr>
-                    <tr>
-                        <td colspan="3" style="padding:1px;"><strong>Totals</strong></td>
-                        <td style="padding:1px;text-align:right;"><strong>@tSub.ToString("0.00")</strong></td>
-                        <td style="padding:1px;text-align:right;"><strong>@tTax.ToString("0.00")</strong></td>
-                        <td style="padding:1px;text-align:right;"><strong>-@tDis.ToString("0.00")</strong></td>
-                        <td style="padding:1px;text-align:right;"><strong>@tTot.ToString("0.00")</strong></td>
-                    </tr>
-                }
-                else
-                {
-                    <tr><td colspan="7" style="text-align:center;padding:4px;">No sales records</td></tr>
-                }
-            </tbody>
-        </table>
-
-        <div style="margin-top:6px;border-top:1px dashed #000;padding-top:4px;text-align:center;font-size:8px;">
-            — — — — — — — — — —
-        </div>
-    </div>
-
 </div>
 
 <style>
@@ -400,62 +340,68 @@
         }
     }
 </style>
-<style>
-    @@media print {
-        body * {
-            visibility: hidden !important;
-        }
-
-
-    #thermalArea, #thermalArea * {
-        display: block;
-        visibility: visible;
-    }
-
-    #thermalArea {
-        width: 80mm;
-        margin: 0;
-        padding: 0;
-        font-size: 9px;
-    }
-
-    }
-</style>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    function confirmDelete(event, element) {
-        event.preventDefault(); // stop immediate navigation
-
+    function deleteSale(saleId) {
         Swal.fire({
-            title: 'Are you sure?',
-            text: "This action cannot be undone!",
-            icon: 'warning',
+            title: "Are you sure?",
+            text: "This will permanently delete the sale.",
+            icon: "warning",
             showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'Cancel'
+            confirmButtonText: "Yes, delete it!",
+            cancelButtonText: "Cancel"
         }).then((result) => {
             if (result.isConfirmed) {
-                // Redirect to delete URL
-                window.location.href = element.href;
+                fetch(`/Sales/Delete/${saleId}`, {
+                    method: "POST"
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: "Deleted!",
+                            text: data.message,
+                            icon: "success",
+                            showConfirmButton: false,
+                            timer: 1500, // 🕒 Auto close after 1.5 seconds
+                            timerProgressBar: true
+                        });
+
+                        // Auto reload after alert closes
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        Swal.fire({
+                            title: "Access Denied",
+                            text: data.message,
+                            icon: "error",
+                            showConfirmButton: false,
+                            timer: 2000
+                        });
+                    }
+                })
+                .catch(() => {
+                    Swal.fire({
+                        title: "Error",
+                        text: "Something went wrong!",
+                        icon: "error",
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                });
             }
         });
     }
 </script>
+
 @section Scripts {
     <script>
         function printA4() {
             window.print();
         }
-
-        function thermalPrint() {
-            window.print();
-        }
-
-
     </script>
 
 }

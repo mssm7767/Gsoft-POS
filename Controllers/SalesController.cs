@@ -1,5 +1,5 @@
-﻿using GSoftPosNew.Data;  // adjust namespace for your AppDbContext
-using GSoftPosNew.Models; // if you fetch Products from a ProductModel
+﻿using GSoftPosNew.Data;
+using GSoftPosNew.Models;
 using GSoftPosNew.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,8 +11,6 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
 namespace GSoftPosNew.Controllers
 {
-    //[Route("api/[controller]")]
-
     public class SalesController : Controller
     {
         private readonly AppDbContext _context;
@@ -23,7 +21,6 @@ namespace GSoftPosNew.Controllers
             _context = context;
             _viewEngine = viewEngine;
         }
-        // GET: /Sale
         public IActionResult Index(DateTime? fromDate, DateTime? toDate, string search)
         {
             var query = _context.Sales.AsQueryable();
@@ -48,8 +45,6 @@ namespace GSoftPosNew.Controllers
             return View(model);
         }
 
-
-        // GET: Sales/POS
         public IActionResult POS()
         {
             var items = _context.Items.ToList();
@@ -1335,8 +1330,6 @@ namespace GSoftPosNew.Controllers
             return $"INV-{now:yyyyMMdd}-{Guid.NewGuid().ToString().Substring(0, 4).ToUpper()}";
         }
 
-        // Example JSON endpoint to fetch products from DB.
-        // Agar aap database mein Products table rakhe hain to uncomment/adjust:
         [HttpGet]
         public IActionResult GetProductsJson()
         {
@@ -1374,5 +1367,65 @@ namespace GSoftPosNew.Controllers
 
             return Json(items);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> Delete(int id)
+        {
+            // ✅ Check if current user is Admin
+            if (!User.IsInRole("Admin"))
+            {
+                // Return a JSON result (handled by JS SweetAlert)
+                return Json(new { success = false, message = "Only Admin users can delete sales." });
+            }
+
+            var sale = _context.Sales
+                               .Include(s => s.Payment)
+                               .Include(s => s.SaleItems)
+                               .FirstOrDefault(s => s.Id == id);
+
+            if (sale == null)
+                return Json(new { success = false, message = "Sale not found." });
+
+            if (sale.CustomerId != null && sale.CustomerId != 0)
+            {
+                var customer = await _context.Customers
+                    .FirstOrDefaultAsync(c => c.Id == sale.CustomerId);
+
+                if (customer != null)
+                {
+                    customer.OpeningBalance = customer.OpeningBalance + sale.Total;
+                    ViewBag.Balance = customer.OpeningBalance;
+
+                    var payment = await _context.CustomerPayments
+                        .FirstOrDefaultAsync(p => p.CustomerId == sale.CustomerId);
+
+                    if (payment != null)
+                    {
+                        decimal currentSale = payment.Sale ?? 0m;
+                        decimal currentAmount = payment.Amount;
+                        payment.Sale = currentSale - sale.Total;
+                        payment.Remaining = currentAmount - (payment.Sale ?? 0m);
+                    }
+
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            var saleItems = (from si in _context.SaleItems
+                             join i in _context.Items on si.ItemId equals i.Id
+                             where si.SaleId == sale.Id
+                             select new { Item = i, SaleItem = si }).ToList();
+
+            foreach (var entry in saleItems)
+            {
+                entry.Item.Quantity += entry.SaleItem.Quantity;
+            }
+
+            _context.Sales.Remove(sale);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Sale deleted successfully." });
+        }
+
     }
 }
