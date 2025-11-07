@@ -30,5 +30,8 @@ namespace GSoftPosNew.Models
 
         [NotMapped]
         public decimal tender_amount { get; set; }
+
+        public string? Waiter { get; set; }
+        public string? TableNo { get; set; }
     }
 }

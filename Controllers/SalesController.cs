@@ -1279,6 +1279,8 @@ namespace GSoftPosNew.Controllers
                 InvoiceNumber = sale.InvoiceNumber,
                 SaleDate = sale.SaleDate,
                 CashierName = sale.CashierId,
+                Waiter = sale.Waiter,
+                TableNo = sale.TableNo,
                 SubTotal = sale.SubTotal,
                 Tax = sale.Tax,
                 Discount = sale.Discount,

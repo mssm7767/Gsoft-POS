@@ -276,6 +276,42 @@
 </style>
 
 <div class="container-fluid p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 p-3 rounded shadow-sm flex-wrap"
+         style="background: #f8fafc; border: 1px solid #e5e7eb;">
+
+        <!-- Filter Section -->
+        <form method="get" asp-action="Index" class="d-flex align-items-center gap-2 flex-wrap mb-0">
+
+            <div class="input-group input-group-sm" style="width: auto;">
+                <span class="input-group-text bg-light fw-semibold text-secondary">From</span>
+                <input type="date" name="fromDate" class="form-control form-control-sm"
+                       style="width: 160px;" value="@ViewBag.FromDate" />
+            </div>
+
+            <div class="input-group input-group-sm" style="width: auto;">
+                <span class="input-group-text bg-light fw-semibold text-secondary">To</span>
+                <input type="date" name="toDate" class="form-control form-control-sm"
+                       style="width: 160px;" value="@ViewBag.ToDate" />
+            </div>
+
+            <button type="submit" class="btn btn-sm btn-primary d-flex align-items-center gap-1 shadow-sm">
+                <i class="fa fa-filter"></i> Filter
+            </button>
+
+            <a asp-action="Index" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 shadow-sm">
+                <i class="fa fa-sync"></i> Reset
+            </a>
+        </form>
+
+        <!-- Current Date & Time -->
+        <div class="d-flex align-items-center">
+            <div class="bg-white px-3 py-2 rounded shadow-sm border text-secondary d-flex align-items-center gap-2">
+                <i class="fa fa-clock text-primary"></i>
+                <span id="currentDateTime" class="fw-semibold" style="font-size: 0.95rem;"></span>
+            </div>
+        </div>
+    </div>
+
     <!-- Summary Cards -->
     <div class="row g-4">
         <div class="col-sm-6 col-md-3">
@@ -436,6 +472,25 @@
 
 <!-- Chart.js — remove if already included globally -->
 <script src="~/lib/chart/chart.js"></script>
+
+<script>
+    function updateDateTime() {
+        const now = new Date();
+        const options = {
+            weekday: 'short',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        };
+        document.getElementById('currentDateTime').textContent = now.toLocaleString('en-US', options);
+    }
+
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+</script>
 
 <!-- YOUR ORIGINAL JS (UNTOUCHED) -->
 <script>

@@ -80,10 +80,10 @@
 
         <!-- Invoice Info -->
         <div class="dashed py-1 text-[11px] mb-1">
-            <div><p><strong>Table:</strong> 05</p></div>
+            <div><p><strong>Table:</strong> @Model.TableNo</p></div>
             <div><b>Order No:</b> @Model.InvoiceNumber</div>
             <div>
-                <p><strong>Waiter:</strong> Ali Khan</p>
+                <p><strong>Waiter:</strong> @Model.Waiter</p>
             </div>
             <div><b>Date:</b> @Model.SaleDate.ToString("dd MMM yyyy hh:mm tt")</div>
             <div><b>Customer:</b> @Model.CustomerName</div>
