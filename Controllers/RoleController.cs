@@ -57,6 +57,7 @@ namespace GSoftPosNew.Controllers
                     }).ToList(),
                 Modules = new List<string>
         {
+            "User",
             "Sales",
             "Purchase",
             "Reports",

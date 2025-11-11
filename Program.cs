@@ -1,5 +1,6 @@
 ﻿using GSoftPosNew.data;
 using GSoftPosNew.Data;
+using GSoftPosNew.Middlewares;
 using GSoftPosNew.Repositories;
 using GSoftPosNew.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -84,6 +85,7 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseSession();               // Session (if you are using it)
 app.UseAuthentication();        // <-- Always BEFORE UseAuthorization
+app.UseMiddleware<UserRolePermissionMiddleware>();
 app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",

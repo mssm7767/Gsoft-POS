@@ -1,13 +1,15 @@
-﻿@*
-    Views/Shared/_Layout.cshtml
-*@
+﻿@{
+    var role = Context.Items["UserRole"] as string;
+    var permissions = Context.Items["UserPermissions"] as Dictionary<string, bool> ?? new();
+}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@ViewData["Title"] - GSoft POS</title>
-    
+
     <!-- Bootstrap & Font-Awesome -->
     <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="~/lib/fontawesome/css/all.min.css" rel="stylesheet" />
@@ -96,7 +98,6 @@
                 </ul>
             </li>
 
-
             <!-- Purchase Submenu -->
             <li class="has-sub">
                 <a href="#">
@@ -118,25 +119,28 @@
             </li>
 
             <!-- Sales Submenu -->
-            <li class="has-sub">
-                <a href="#">
-                    <i class="fa fa-shopping-cart"></i> <span>Sales</span>
-                    <i class="arrow-icon">
-                        <svg class="chevron-svg" width="15" height="15" viewBox="0 0 16 16" fill="none">
-                            <path d="M5 7L8 10L11 7"
-                                  stroke="currentColor"
-                                  stroke-width="1.7"
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round" />
-                        </svg>
-                    </i>
-                </a>
-                <ul class="submenu">
-                    <li><a asp-controller="Sales" asp-action="POS"><i class="fa fa-plus-circle"></i> POS New</a></li>
-                    <li><a asp-controller="Sales" asp-action="POSTouch"><i class="fa fa-plus-circle"></i> POS Touch</a></li>
-                    <li><a asp-controller="Sales" asp-action="Index"><i class="fa fa-list"></i> Sales List</a></li>
-                </ul>
-            </li>
+            @if (permissions.TryGetValue("Sales", out var canAccessSales) && canAccessSales)
+            {
+                <li class="has-sub">
+                    <a href="#">
+                        <i class="fa fa-shopping-cart"></i> <span>Sales</span>
+                        <i class="arrow-icon">
+                            <svg class="chevron-svg" width="15" height="15" viewBox="0 0 16 16" fill="none">
+                                <path d="M5 7L8 10L11 7"
+                                      stroke="currentColor"
+                                      stroke-width="1.7"
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round" />
+                            </svg>
+                        </i>
+                    </a>
+                    <ul class="submenu">
+                        <li><a asp-controller="Sales" asp-action="POS"><i class="fa fa-plus-circle"></i> POS New</a></li>
+                        <li><a asp-controller="Sales" asp-action="POSTouch"><i class="fa fa-plus-circle"></i> POS Touch</a></li>
+                        <li><a asp-controller="Sales" asp-action="Index"><i class="fa fa-list"></i> Sales List</a></li>
+                    </ul>
+                </li>
+            }
 
             <!-- Barcode Submenu -->
             <li class="has-sub">
@@ -248,8 +252,10 @@
             </li>
 
             <!-- Users Submenu -->
-            <li class="has-sub">
-                <a href="#">
+            @if (permissions.TryGetValue("User", out var canAccessUser) && canAccessUser)
+            {
+                <li class="has-sub">
+                    <a href="#">
                     <i class="fa fa-users-cog"></i> <span>Users</span>
                     <i class="arrow-icon">
                         <svg class="chevron-svg" width="15" height="15" viewBox="0 0 16 16" fill="none">
@@ -267,7 +273,7 @@
                     <li><a asp-controller="Role" asp-action="Index"><i class="fa fa-user-shield"></i> User Roles</a></li>
                 </ul>
             </li>
-
+            }
             <!-- Reports Submenu -->
             <li class="has-sub">
                 <a href="#">
@@ -459,7 +465,7 @@
                 }, 600); // fade duration match
               }, 1500); // visible 1.5s
             });
-        </script>    
+        </script>
     }
 </body>
 </html>

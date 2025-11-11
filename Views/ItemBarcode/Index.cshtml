@@ -93,6 +93,7 @@
                     <tr>
                         <th style="min-width:120px">Item Code</th>
                         <th>Name</th>
+                        <th>Price</th>
                         <th style="width:110px">Qty</th>
                         <th style="width:80px">Remove</th>
                     </tr>
@@ -105,7 +106,7 @@
             <div class="col-md-6">
                 <label class="form-label fw-semibold">🎯 Select Label Size</label>
                 <select class="form-select rounded shadow-sm" id="labelSize">
-                    <option value="28x38">28 x 38 mm</option>
+                    <option value="38x25">38 x 25 mm</option>
                     <option value="25x50">25 x 50 mm</option>
                     <option value="40x30">40 x 30 mm</option>
                     <option value="50x25">50 x 25 mm</option>
@@ -133,10 +134,12 @@
 
         // ===== HELPERS =====
         function rowHtml(item, qty){
+
             return `
             <tr data-id="${item.id}">
                 <td>${item.itemCode}<input type="hidden" name="ItemId" value="${item.itemCode}" /></td>
                 <td>${item.itemName}<input type="hidden" name="ItemName" value="${item.itemName}" /></td>
+                <td>${item.unitPrice}<input type="hidden" name="ItemPrice" value="${item.unitPrice}" /></td>
                 <td><input type="number" name="Quantity" value="${qty||1}" class="form-control form-control-sm qtyInput" min="1" /></td>
                 <td>
                     <button class="btn btn-danger btn-sm rounded-circle" onclick="$(this).closest('tr').remove()" title="Remove">
@@ -164,7 +167,8 @@
                     ItemId: $(this).find('input[name="ItemId"]').val(),
                     Quantity: $(this).find('input[name="Quantity"]').val(),
                     LabelSize: $('#labelSize').val(),
-                    ItemName: $(this).find('input[name="ItemName"]').val()
+                    ItemName: $(this).find('input[name="ItemName"]').val(),
+                    ItemPrice: $(this).find('input[name="ItemPrice"]').val()
                 });
             });
             return barcodes;
@@ -278,55 +282,100 @@
         $('#qpClearTable').on('click', clearTable);
 
 
-        // // ===== SUBMIT =====
-        $('#btnPrint').on('click', function(){
-            const barcodes = collectRows(); // e.g. [{ItemId:'10', Quantity:'2', LabelSize:'28x38'}]
+        $('#btnPrint').on('click', function () {
+            const barcodes = collectRows(); // e.g. [{ItemId:'10', Quantity:'2', LabelSize:'38x25', ItemName:'Mouse'}]
+            if (!barcodes.length) {
+                alert('⚠️ No items selected.');
+                return;
+            }
 
-            if (!barcodes.length) { alert('⚠️ No items selected.'); return; }
+            const container = document.getElementById("barcodeContainer");
+            container.innerHTML = ''; // clear previous labels
 
-                // generate barcode labels
             barcodes.forEach(b => {
+                const [w, h] = b.LabelSize.split("x").map(Number); // e.g. 38x25
+
                 for (let i = 0; i < parseInt(b.Quantity); i++) {
                     const wrapper = document.createElement("div");
-                   /*  wrapper.style.pageBreakAfter = "always"; */ // each label on new page if printing
-
-                   const [w, h] = b.LabelSize.split("x").map(Number);
+                    wrapper.classList.add("label");
 
                     wrapper.innerHTML = `
-                        <div style="width:300px; text-align:center; font-family:Arial; border:1px solid #ccc; padding:8px; margin:5px;">
-                            <div style="font-weight:bold;">@ViewBag.ShopName</div>
-                            <div>Asset ID ${b.ItemId.toString().padStart(4,'0')}</div>
+                        <div style="
+                            width:${w}mm;
+                            height:${h}mm;
+                            display:flex;
+                            flex-direction:column;
+                            justify-content:center;
+                            align-items:center;
+                            border:1px dashed #ccc;
+                            font-family:Arial, sans-serif;
+                            font-size:12px;
+                            text-align:center;
+                            transform: rotate(0deg);
+                            padding:0px;">
+                            <div>@ViewBag.ShopName</div>
+                            <div>ID ${b.ItemId.toString().padStart(4, '0')} (Rs. ${b.ItemPrice || ''} )</div>
                             <svg class="barcode"></svg>
-                            <div>${b.ItemName}</div>
+                            <div>${b.ItemName || ''}</div>
                         </div>
                     `;
 
-                    document.getElementById("barcodeContainer").appendChild(wrapper);
+                    container.appendChild(wrapper);
 
-                            // Split LabelSize (e.g., "28x38")
-                    
-
-                    // Generate barcode
+                    // Generate barcode inside the wrapper
                     JsBarcode(wrapper.querySelector(".barcode"), b.ItemId, {
                         format: "CODE128",
                         displayValue: false,
                         lineColor: "#000",
-                        width: w / 10,   // JsBarcode 'width' is bar thickness, not full label width
-                        height: h        // Use height directly
+                        width: 1.5,
+                        height: h * 1, // Adjusted height for landscape label
+                        margin: 0
                     });
-
                 }
             });
 
-                const printWin = window.open('', '', 'width=600,height=400');
-                printWin.document.write(document.getElementById("barcodeContainer").innerHTML);
-                printWin.document.close();
-                printWin.print();
-               
+            // Clone container and remove scripts
+            const cloneContainer = container.cloneNode(true);
+            cloneContainer.querySelectorAll('script').forEach(s => s.remove());
+
+            // Open print window in landscape mode
+            const printWin = window.open('', '', 'width=800,height=600');
+            printWin.document.write(`
+                <html>
+                <head>
+                    <title>Print Barcodes</title>
+                    <style>
+                        @@page {
+                            size: 38mm 25mm landscape;
+                            margin: 0;
+                        }
+                        body {
+                            margin: 0;
+                            display: flex;
+                            flex-wrap: wrap;
+                            flex-direction:column;
+                            justify-content: center;
+                            align-items: center;
+                        }
+                        .label {
+                            page-break-after: always;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                        }
+                        svg {
+                            width: 90%;
+                        }
+                    </style>
+                </head>
+                    ${cloneContainer.innerHTML}
+                </html>
+            `);
+
+            printWin.document.close();
+            printWin.focus();
+            printWin.print();
         });
- 
-
-
 
 
         // ===== BOOT =====
