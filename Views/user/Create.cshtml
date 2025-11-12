@@ -86,10 +86,10 @@
                                     <span class="ms-2 d-flex gap-2">
                                         @{
                                             var roleShortcuts = new[] { "Admin", "Manager", "Cashier", "Sales", "SS" };
-                                            foreach (var role in roleShortcuts)
+                                            foreach (var role in ViewBag.Roles as List<Role>)
                                             {
                                                 <span class="badge bg-warning text-dark" style="cursor:pointer;"
-                                                      onclick="document.getElementById('RoleText').value='@role'">@role</span>
+                                                      onclick="document.getElementById('RoleText').value='@role.RoleName'">@role.RoleName</span>
                                             }
                                         }
                                     </span>

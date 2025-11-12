@@ -37,6 +37,7 @@
             </li>
 
             <!-- Add Submenu -->
+            <!-- Add Submenu -->
             <li class="has-sub">
                 <a href="#">
                     <i class="fa fa-plus-circle"></i> <span>Add</span>
@@ -51,18 +52,40 @@
                     </i>
                 </a>
                 <ul class="submenu">
-                    <li><a asp-controller="User" asp-action="Create"><i class="fa fa-user-plus"></i> Add New User</a></li>
-                    <li><a asp-controller="Customer" asp-action="Create"><i class="fa fa-user"></i> Add Customer</a></li>
-                    <li><a asp-controller="Supplier" asp-action="Create"><i class="fa fa-user-tie"></i> Add Supplier</a></li>
-                    <li><a asp-controller="Category" asp-action="Create"><i class="fa fa-tags"></i> Add Category</a></li>
-                    <li><a asp-controller="SubCategory" asp-action="Create"><i class="fa fa-tag"></i> Add Sub Category</a></li>
-                    <li><a asp-controller="Location" asp-action="Create"><i class="fa fa-map-marker-alt"></i> Add Location</a></li>
+                    @if (permissions.TryGetValue("User", out var canAccessAddUser) && canAccessAddUser)
+                    {
+                        <li><a asp-controller="User" asp-action="Create"><i class="fa fa-user-plus"></i> Add New User</a></li>
+                    }
+                    @if (permissions.TryGetValue("Customers", out var canAccessAddCustomers) && canAccessAddCustomers)
+                    {
+                        <li><a asp-controller="Customer" asp-action="Create"><i class="fa fa-user"></i> Add Customer</a></li>
+                    }
+                    @if (permissions.TryGetValue("Suppliers", out var canAccessAddSuppliers) && canAccessAddSuppliers)
+                    {
+                        <li><a asp-controller="Supplier" asp-action="Create"><i class="fa fa-user-tie"></i> Add Supplier</a></li>
+                    }
+                    @if (permissions.TryGetValue("Categories", out var canAccessAddCategory) && canAccessAddCategory)
+                    {
+                        <li><a asp-controller="Category" asp-action="Create"><i class="fa fa-tags"></i> Add Category</a></li>
+                    }
+                    @if (permissions.TryGetValue("SubCategory", out var canAccessAddSubCategory) && canAccessAddSubCategory)
+                    {
+                        <li><a asp-controller="SubCategory" asp-action="Create"><i class="fa fa-tag"></i> Add Sub Category</a></li>
+                    }
+                    @if (permissions.TryGetValue("Location", out var canAccessAddLocation) && canAccessAddLocation)
+                    {
+                        <li><a asp-controller="Location" asp-action="Create"><i class="fa fa-map-marker-alt"></i> Add Location</a></li>
+                    }
                 </ul>
+
             </li>
 
+
             <!-- Items Submenu -->
-            <li class="has-sub">
-                <a href="#">
+            @if (permissions.TryGetValue("Items", out var canAccessItems) && canAccessItems)
+            {
+                <li class="has-sub">
+                    <a href="#">
                     <i class="fa fa-box"></i> <span>Items</span>
                     <i class="arrow-icon">
                         <svg class="chevron-svg" width="15" height="15" viewBox="0 0 16 16" fill="none">
@@ -97,27 +120,29 @@
                     </li>
                 </ul>
             </li>
-
+            }
             <!-- Purchase Submenu -->
-            <li class="has-sub">
-                <a href="#">
-                    <i class="fa fa-truck"></i> <span>Purchase</span>
-                    <i class="arrow-icon">
-                        <svg class="chevron-svg" width="15" height="15" viewBox="0 0 16 16" fill="none">
-                            <path d="M5 7L8 10L11 7"
-                                  stroke="currentColor"
-                                  stroke-width="1.7"
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round" />
-                        </svg>
-                    </i>
-                </a>
-                <ul class="submenu">
-                    <li><a asp-controller="Purchase" asp-action="Create"><i class="fa fa-plus-circle"></i> New Purchase</a></li>
-                    <li><a asp-controller="Purchase" asp-action="Index"><i class="fa fa-list"></i> Purchase List</a></li>
-                </ul>
-            </li>
-
+            @if (permissions.TryGetValue("Purchase", out var canAccessPurchase) && canAccessPurchase)
+            {
+                <li class="has-sub">
+                    <a href="#">
+                        <i class="fa fa-truck"></i> <span>Purchase</span>
+                        <i class="arrow-icon">
+                            <svg class="chevron-svg" width="15" height="15" viewBox="0 0 16 16" fill="none">
+                                <path d="M5 7L8 10L11 7"
+                                      stroke="currentColor"
+                                      stroke-width="1.7"
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round" />
+                            </svg>
+                        </i>
+                    </a>
+                    <ul class="submenu">
+                        <li><a asp-controller="Purchase" asp-action="Create"><i class="fa fa-plus-circle"></i> New Purchase</a></li>
+                        <li><a asp-controller="Purchase" asp-action="Index"><i class="fa fa-list"></i> Purchase List</a></li>
+                    </ul>
+                </li>
+            }
             <!-- Sales Submenu -->
             @if (permissions.TryGetValue("Sales", out var canAccessSales) && canAccessSales)
             {
@@ -163,75 +188,81 @@
             </li>
 
             <!-- Customers Submenu -->
-            <li class="has-sub">
-                <a href="#">
-                    <i class="fa fa-users"></i>
-                    <span>Customer</span>
-                    <i class="arrow-icon">
-                        <svg class="chevron-svg" width="15" height="15" viewBox="0 0 16 16" fill="none">
-                            <path d="M5 7L8 10L11 7"
-                                  stroke="currentColor"
-                                  stroke-width="1.7"
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round" />
-                        </svg>
-                    </i>
-                </a>
-                <ul class="submenu">
-                    <li>
-                        <a asp-controller="Customer" asp-action="Create">
-                            <i class="fa fa-user-plus"></i> Add Customer
-                        </a>
-                    </li>
-                    <li>
-                        <a asp-controller="Sales" asp-action="CustomerReport">
-                            <i class="fa fa-list"></i> Customer Reports
-                        </a>
-                    </li>
-                    <li>
-                        <a asp-controller="CustomerPayment" asp-action="Receive" target="_blank">
-                            <i class="fa fa-money-bill-wave"></i> C.Pay Receiving
-                        </a>
-                    </li>
-                </ul>
-            </li>
-
+            @if (permissions.TryGetValue("Customers", out var canAccessCustomers) && canAccessCustomers)
+            {
+                <li class="has-sub">
+                    <a href="#">
+                        <i class="fa fa-users"></i>
+                        <span>Customer</span>
+                        <i class="arrow-icon">
+                            <svg class="chevron-svg" width="15" height="15" viewBox="0 0 16 16" fill="none">
+                                <path d="M5 7L8 10L11 7"
+                                      stroke="currentColor"
+                                      stroke-width="1.7"
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round" />
+                            </svg>
+                        </i>
+                    </a>
+                    <ul class="submenu">
+                        <li>
+                            <a asp-controller="Customer" asp-action="Create">
+                                <i class="fa fa-user-plus"></i> Add Customer
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-controller="Sales" asp-action="CustomerReport">
+                                <i class="fa fa-list"></i> Customer Reports
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-controller="CustomerPayment" asp-action="Receive" target="_blank">
+                                <i class="fa fa-money-bill-wave"></i> C.Pay Receiving
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            }
             <!-- Supplier Submenu -->
-            <li class="has-sub">
-                <a href="#">
-                    <i class="fa fa-user-tie"></i> <span>Supplier</span>
-                    <i class="arrow-icon">
-                        <svg class="chevron-svg" width="15" height="15" viewBox="0 0 16 16" fill="none">
-                            <path d="M5 7L8 10L11 7"
-                                  stroke="currentColor"
-                                  stroke-width="1.7"
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round" />
-                        </svg>
-                    </i>
-                </a>
-                <ul class="submenu">
-                    <li>
-                        <a asp-controller="Supplier" asp-action="Create">
-                            <i class="fa fa-user-plus"></i> Add Supplier
-                        </a>
-                    </li>
-                    <li>
-                        <a asp-controller="Supplier" asp-action="Index">
-                            <i class="fa fa-list"></i> Supplier List
-                        </a>
-                    </li>
-                    <li>
-                        <a asp-controller="SupplierPayment" asp-action="Receive" target="_blank">
-                            <i class="fa fa-hand-holding-usd"></i> S.Pay Receiving
-                        </a>
-                    </li>
-                </ul>
-            </li>
-
+            @if (permissions.TryGetValue("Suppliers", out var canAccessSuppliers) && canAccessSuppliers)
+            {
+                <li class="has-sub">
+                    <a href="#">
+                        <i class="fa fa-user-tie"></i> <span>Supplier</span>
+                        <i class="arrow-icon">
+                            <svg class="chevron-svg" width="15" height="15" viewBox="0 0 16 16" fill="none">
+                                <path d="M5 7L8 10L11 7"
+                                      stroke="currentColor"
+                                      stroke-width="1.7"
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round" />
+                            </svg>
+                        </i>
+                    </a>
+                    <ul class="submenu">
+                        <li>
+                            <a asp-controller="Supplier" asp-action="Create">
+                                <i class="fa fa-user-plus"></i> Add Supplier
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-controller="Supplier" asp-action="Index">
+                                <i class="fa fa-list"></i> Supplier List
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-controller="SupplierPayment" asp-action="Receive" target="_blank">
+                                <i class="fa fa-hand-holding-usd"></i> S.Pay Receiving
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            }
             <!-- Expense Submenu -->
-            <li class="has-sub">
-                <a href="#">
+            @if (permissions.TryGetValue("Expenses", out var canAccessExpenses) && canAccessExpenses)
+            {
+                <li class="has-sub">
+                    <a href="#">
                     <i class="fa fa-money-bill-wave"></i> <span>Expense</span>
                     <i class="arrow-icon">
                         <svg class="chevron-svg" width="15" height="15" viewBox="0 0 16 16" fill="none">
@@ -250,33 +281,35 @@
                     <li><a asp-controller="ExpenseCategory" asp-action="Index"><i class="fa fa-list-ul"></i> Expense Category List</a></li>
                 </ul>
             </li>
-
+            }
             <!-- Users Submenu -->
             @if (permissions.TryGetValue("User", out var canAccessUser) && canAccessUser)
             {
                 <li class="has-sub">
                     <a href="#">
-                    <i class="fa fa-users-cog"></i> <span>Users</span>
-                    <i class="arrow-icon">
-                        <svg class="chevron-svg" width="15" height="15" viewBox="0 0 16 16" fill="none">
-                            <path d="M5 7L8 10L11 7"
-                                  stroke="currentColor"
-                                  stroke-width="1.7"
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round" />
-                        </svg>
-                    </i>
-                </a>
-                <ul class="submenu">
-                    <li><a asp-controller="User" asp-action="Create"><i class="fa fa-user-plus"></i> Add New User</a></li>
-                    <li><a asp-controller="User" asp-action="Index"><i class="fa fa-list"></i> User List</a></li>
-                    <li><a asp-controller="Role" asp-action="Index"><i class="fa fa-user-shield"></i> User Roles</a></li>
-                </ul>
-            </li>
+                        <i class="fa fa-users-cog"></i> <span>Users</span>
+                        <i class="arrow-icon">
+                            <svg class="chevron-svg" width="15" height="15" viewBox="0 0 16 16" fill="none">
+                                <path d="M5 7L8 10L11 7"
+                                      stroke="currentColor"
+                                      stroke-width="1.7"
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round" />
+                            </svg>
+                        </i>
+                    </a>
+                    <ul class="submenu">
+                        <li><a asp-controller="User" asp-action="Create"><i class="fa fa-user-plus"></i> Add New User</a></li>
+                        <li><a asp-controller="User" asp-action="Index"><i class="fa fa-list"></i> User List</a></li>
+                        <li><a asp-controller="Role" asp-action="Index"><i class="fa fa-user-shield"></i> User Roles</a></li>
+                    </ul>
+                </li>
             }
             <!-- Reports Submenu -->
-            <li class="has-sub">
-                <a href="#">
+            @if (permissions.TryGetValue("Reports", out var canAccessReports) && canAccessReports)
+            {
+                <li class="has-sub">
+                    <a href="#">
                     <i class="fa fa-chart-bar"></i> <span>Reports</span>
                     <i class="arrow-icon">
                         <svg class="chevron-svg" width="15" height="15" viewBox="0 0 16 16" fill="none">
@@ -295,35 +328,45 @@
                     <li><a asp-controller="Reports" asp-action="CustomerSummary"><i class="fa fa-user-circle"></i> Customer Summary</a></li>
                 </ul>
             </li>
-
+            }
             <!-- Accounts Submenu -->
-            <li class="has-sub">
-                <a href="#">
-                    <i class="fa fa-file-invoice-dollar"></i> <span>Accounts</span>
-                    <i class="arrow-icon">
-                        <svg class="chevron-svg" width="15" height="15" viewBox="0 0 16 16" fill="none">
-                            <path d="M5 7L8 10L11 7"
-                                  stroke="currentColor"
-                                  stroke-width="1.7"
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round" />
-                        </svg>
-                    </i>
-                </a>
-                <ul class="submenu">
-                    <li><a asp-controller="Reports" asp-action="IncomeStatement"><i class="fa fa-balance-scale"></i> Income Statement</a></li>
-                    <li><a asp-controller="Expense" asp-action="Index"><i class="fa fa-money-bill-wave"></i> Expense Report</a></li>
-                    <li><a asp-controller="Reports" asp-action="TrialBalance"><i class="fa fa-balance-scale"></i> Trial Balance</a></li>
-                    <li><a asp-controller="Reports" asp-action="BalanceSheet"><i class="fa fa-balance-scale"></i> Balance Sheet</a></li>
-                </ul>
-            </li>
+            @if (permissions.TryGetValue("Accounts", out var canAccessAccounts) && canAccessAccounts)
+            {
+                <li class="has-sub">
+                    <a href="#">
+                        <i class="fa fa-file-invoice-dollar"></i> <span>Accounts</span>
+                        <i class="arrow-icon">
+                            <svg class="chevron-svg" width="15" height="15" viewBox="0 0 16 16" fill="none">
+                                <path d="M5 7L8 10L11 7"
+                                      stroke="currentColor"
+                                      stroke-width="1.7"
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round" />
+                            </svg>
+                        </i>
+                    </a>
+                    <ul class="submenu">
+                        <li><a asp-controller="Reports" asp-action="IncomeStatement"><i class="fa fa-balance-scale"></i> Income Statement</a></li>
+                        <li><a asp-controller="Expense" asp-action="Index"><i class="fa fa-money-bill-wave"></i> Expense Report</a></li>
+                        <li><a asp-controller="Reports" asp-action="TrialBalance"><i class="fa fa-balance-scale"></i> Trial Balance</a></li>
+                        <li><a asp-controller="Reports" asp-action="BalanceSheet"><i class="fa fa-balance-scale"></i> Balance Sheet</a></li>
+                    </ul>
+                </li>
+            }
 
-            <li>
-                <a asp-controller="Sms" asp-action="Index"><i class="fa fa-sms"></i> <span>SMS</span></a>
-            </li>
-            <li>
-                <a asp-controller="Settings" asp-action="Index"><i class="fa fa-cogs"></i> <span>Settings</span></a>
-            </li>
+            @if (permissions.TryGetValue("SMS", out var canAccessSMS) && canAccessSMS)
+            {
+                <li>
+                    <a asp-controller="Sms" asp-action="Index"><i class="fa fa-sms"></i> <span>SMS</span></a>
+                </li>
+            }
+
+            @if (permissions.TryGetValue("Settings", out var canAccessSettings) && canAccessSettings)
+            {
+                <li>
+                    <a asp-controller="Settings" asp-action="Index"><i class="fa fa-cogs"></i> <span>Settings</span></a>
+                </li>
+            }
         </ul>
         <div class="sidebar-bottom">
             <a class="text-danger" href="/Account/Logout">

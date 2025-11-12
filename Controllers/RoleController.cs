@@ -3,12 +3,14 @@ using GSoftPosNew.Models;
 using GSoftPosNew.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Security.Claims;
 
 namespace GSoftPosNew.Controllers
 {
     public class RoleController : Controller
     {
         private readonly AppDbContext _context;
+
 
         public RoleController(AppDbContext context)
         {
@@ -56,23 +58,56 @@ namespace GSoftPosNew.Controllers
                         Text = r.RoleName
                     }).ToList(),
                 Modules = new List<string>
-        {
-            "User",
-            "Sales",
-            "Purchase",
-            "Reports",
-            "Customers",
-            "Suppliers",
-            "Items",
-            "Categories",
-            "Settings",
-            "Accounts",
-            "SMS"
-        },
+                {
+                    "User",
+                    "Sales",
+                    "Purchase",
+                    "Reports",
+                    "Customers",
+                    "Suppliers",
+                    "Items",
+                    "Categories",
+                    "SubCategory",
+                    "Expenses",
+                    "Settings",
+                    "Accounts",
+                    "SMS",
+                    "Location"
+                },
                 SelectedModules = new List<string>()
             };
 
+            var userRole = HttpContext.User.FindFirst(ClaimTypes.Role)?.Value;
+
+            if (!string.IsNullOrEmpty(userRole))
+            {
+                var role = _context.Roles.FirstOrDefault(r => r.RoleName == userRole);
+
+                if (role != null)
+                {
+                    // Get allowed module names
+                    var allowedModules = _context.RolePermissions
+                        .Where(p => p.RoleId == role.Id && p.IsAllowed)
+                        .Select(p => p.ModuleName)
+                        .ToList();
+
+                    // Send list of allowed module names to view
+                    ViewBag.AllowedModules = allowedModules;
+                }
+            }
+
             return View(model);
+        }
+
+        [HttpGet]
+        public IActionResult GetRolePermissions(int roleId)
+        {
+            var permissions = _context.RolePermissions
+                .Where(p => p.RoleId == roleId && p.IsAllowed)
+                .Select(p => p.ModuleName)
+                .ToList();
+
+            return Json(permissions);
         }
 
         // ✅ Assign Permissions - POST

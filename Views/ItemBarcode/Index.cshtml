@@ -1,386 +1,784 @@
-﻿@model List<GSoftPosNew.Models.ItemBarcodeModel>
-@{
-    ViewData["Title"] = "Print Barcode";
-    Layout = "~/Views/Shared/_Layout.cshtml";
-}
-<script src="~/lib/jsbarcode/jsbarcode.all.min.js"></script>
-<link href="~/lib/fontawesome/css/all.min.css" rel="stylesheet" />
-
-<style>
-    /* Quick pick cards */
-    .qp-card {
-        border: 1px solid #e5e7eb;
-        border-radius: 10px;
-        padding: .6rem .7rem;
-        background: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: .6rem;
-        cursor: pointer
-    }
-
-        .qp-card:hover {
-            background: #f8fafc
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barcode Printing System</title>
+    <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/lib/fontawesome/css/all.min.css" rel="stylesheet" />
+    <script src="~/lib/jsbarcode/jsbarcode.all.min.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --border: #dee2e6;
         }
 
-    .qp-name {
-        font-weight: 700;
-        color: #0f172a;
-        line-height: 1.1
-    }
+        body {
+            background-color: #f5f7fb;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-    .qp-meta {
-        font-size: .8rem;
-        color: #64748b
-    }
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
 
-    .qp-badge {
-        font-size: .75rem;
-        border: 1px solid #dbeafe;
-        background: #eff6ff;
-        color: #1d4ed8;
-        border-radius: 6px;
-        padding: 1px 6px
-    }
+        .header-gradient {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 12px 12px 0 0;
+            padding: 1.5rem;
+        }
 
-    .qp-qty {
-        width: 64px
-    }
+        .search-container {
+            position: relative;
+        }
 
-    .qp-add {
-        white-space: nowrap
-    }
-</style>
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            max-height: 300px;
+            overflow-y: auto;
+            background: white;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold text-primary"><i class="fas fa-barcode me-2"></i> Print Barcode</h2>
-        <div class="text-muted small">@DateTime.Now.ToString("dddd, MMMM dd yyyy - hh:mm tt")</div>
-    </div>
+        .search-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
 
-    <div class="card shadow-lg border-0 p-4">
-        <!-- SEARCH -->
-        <div class="mb-4 position-relative">
-            <label class="form-label fw-semibold text-dark">🔍 Search Item</label>
-            <input type="text" class="form-control rounded-pill shadow-sm" id="itemSearch" placeholder="Type name, code, or barcode..." autocomplete="off" />
-            <div id="searchResults" class="list-group mt-2 shadow-sm" style="display:none; position:absolute; left:0; right:0; z-index:1050;"></div>
-        </div>
+            .search-item:hover {
+                background-color: #f8f9fa;
+            }
 
-        <!-- QUICK PICKS (sequenced auto/manual lists) -->
-        <div class="mb-4" style="display: none">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <div class="fw-semibold text-secondary"><i class="fas fa-bolt me-1"></i> Quick Picks</div>
-                <div class="btn-group btn-group-sm" role="group">
-                    <button id="qpAutoBtn" type="button" class="btn btn-outline-primary active">Auto 0001/00001/001</button>
-                    <button id="qpManualBtn" type="button" class="btn btn-outline-secondary">Manual (DB)</button>
+            .search-item:last-child {
+                border-bottom: none;
+            }
+
+        .item-code {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .item-price {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .table-responsive {
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .table th {
+            background-color: #f1f3f9;
+            font-weight: 600;
+            color: var(--dark);
+            border-bottom: 2px solid var(--border);
+        }
+
+        .qty-input {
+            width: 80px;
+            text-align: center;
+        }
+
+        .size-option {
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+            .size-option:hover {
+                border-color: var(--primary);
+            }
+
+            .size-option.active {
+                border-color: var(--primary);
+                background-color: rgba(67, 97, 238, 0.05);
+            }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 8px;
+            padding: 10px 24px;
+            font-weight: 600;
+        }
+
+            .btn-primary:hover {
+                background: linear-gradient(135deg, var(--secondary), var(--primary));
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+            }
+
+        .btn-danger {
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .datetime {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+
+        .barcode-preview {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 15px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--gray);
+        }
+
+            .empty-state i {
+                font-size: 3rem;
+                margin-bottom: 15px;
+                color: #dee2e6;
+            }
+
+        .preview-label {
+            width: 142px; /* 38mm */
+            height: 105px; /* 28mm */
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 2px;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* Left aligned */
+            justify-content: space-between;
+            margin: 0 auto;
+            padding: 3px 5px;
+        }
+
+        /* Improved barcode styling */
+        .barcode-svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .barcode-container {
+            display: flex;
+            justify-content: flex-start; /* Left aligned */
+            align-items: center;
+            width: 100%;
+            margin: 2px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <div class="card mb-4">
+            <div class="header-gradient">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0"><i class="fas fa-barcode me-2"></i> Barcode Printing System</h2>
+                    <div class="datetime">
+                        <i class="fas fa-clock me-2"></i>
+                        <span id="currentDateTime">Loading...</span>
+                    </div>
                 </div>
             </div>
-            <div id="qpLoading" class="text-muted small"><i class="fas fa-circle-notch fa-spin me-1"></i>Loading quick picks…</div>
-            <div id="qpEmpty" class="text-muted small d-none">Nothing to show.</div>
-            <div id="qpAuto" class="row g-2"></div>
-            <div id="qpManual" class="row g-2 d-none"></div>
-            <div class="d-flex gap-2 mt-2">
-                <button id="qpAddAll" type="button" class="btn btn-sm btn-primary d-none"><i class="fa fa-plus-circle me-1"></i>Add All (1 each)</button>
-                <button id="qpClearTable" type="button" class="btn btn-sm btn-outline-secondary"><i class="fa fa-trash me-1"></i>Clear Table</button>
-            </div>
-        </div>
 
-        <!-- TABLE -->
-        <div class="table-responsive mb-4">
-            <table class="table table-striped align-middle" id="barcodeTable">
-                <thead class="table-light">
-                    <tr>
-                        <th style="min-width:120px">Item Code</th>
-                        <th>Name</th>
-                        <th>Price</th>
-                        <th style="width:110px">Qty</th>
-                        <th style="width:80px">Remove</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
+            <div class="card-body p-4">
+                <!-- Search Section -->
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <div class="search-container">
+                            <label class="form-label fw-semibold">Search Items by Name or Code</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="fas fa-search text-muted"></i></span>
+                                <input type="text" class="form-control" id="itemSearch" placeholder="Enter item name, code or barcode...">
+                                <button class="btn btn-outline-secondary" type="button" id="clearSearch">Clear</button>
+                            </div>
+                            <div class="search-results" id="searchResults"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Quick Actions</label>
+                        <div class="d-grid gap-2 d-md-flex">
+                            <button class="btn btn-outline-primary flex-fill" id="addSampleItems">
+                                <i class="fas fa-plus-circle me-2"></i>Add Sample Items
+                            </button>
+                            <button class="btn btn-outline-danger flex-fill" id="clearAll">
+                                <i class="fas fa-trash me-2"></i>Clear All
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
-        <div class="row g-3">
-            <div class="col-md-6">
-                <label class="form-label fw-semibold">🎯 Select Label Size</label>
-                <select class="form-select rounded shadow-sm" id="labelSize">
-                    <option value="38x25">38 x 25 mm</option>
-                    <option value="25x50">25 x 50 mm</option>
-                    <option value="40x30">40 x 30 mm</option>
-                    <option value="50x25">50 x 25 mm</option>
-                </select>
-            </div>
-            <div class="col-md-6 text-end align-self-end">
-                <button class="btn btn-success btn-lg rounded-pill px-4 shadow" id="btnPrint">
-                    <i class="fas fa-print me-2"></i>Print Barcodes
-                </button>
+                <!-- Items Table -->
+                <div class="table-responsive mb-4">
+                    <table class="table table-hover" id="itemsTable">
+                        <thead>
+                            <tr>
+                                <th width="15%">Item Code</th>
+                                <th width="35%">Item Name</th>
+                                <th width="15%">Price</th>
+                                <th width="15%">Quantity</th>
+                                <th width="10%">Total</th>
+                                <th width="10%">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsTableBody">
+                            <!-- Items will be added here dynamically -->
+                        </tbody>
+                    </table>
+
+                    <div class="empty-state" id="emptyTableState">
+                        <i class="fas fa-shopping-cart"></i>
+                        <h4>No items added</h4>
+                        <p>Search for items above to add them to your barcode print list</p>
+                    </div>
+                </div>
+
+                <!-- Label Size Selection -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Select Label Size</label>
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <div class="size-option active" data-size="38x28">
+                                    <h5>38 × 28 mm</h5>
+                                    <p class="text-muted mb-0">1.50" × 1.10"</p>
+                                    <small class="text-success">Standard Retail</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="size-option" data-size="50x25">
+                                    <h5>50 × 25 mm</h5>
+                                    <p class="text-muted mb-0">1.97" × 0.98"</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="size-option" data-size="40x30">
+                                    <h5>40 × 30 mm</h5>
+                                    <p class="text-muted mb-0">1.57" × 1.18"</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="size-option" data-size="60x40">
+                                    <h5>60 × 40 mm</h5>
+                                    <p class="text-muted mb-0">2.36" × 1.57"</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Print Section -->
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <div class="barcode-preview">
+                            <h6 class="mb-2">Barcode Preview (38×28mm)</h6>
+                            <div class="preview-label">
+                                <div style="font-size: 10px; font-weight: bold; letter-spacing: 0.3px; text-align: left; width: 100%;">
+                                    @((string.IsNullOrWhiteSpace(ViewBag.ShopName) ? "G-Soft" : ViewBag.ShopName))
+                                </div>
+                                <div style="font-size: 9px; font-weight: 500; max-width: 95%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; width: 100%; margin: 1px 0;" id="previewItemName">Cotton T-Shirt</div>
+                                <div class="barcode-container">
+                                    <svg id="barcodePreview" class="barcode-svg"></svg>
+                                </div>
+                                <div style="width: 100%;">
+                                    <div style="font-size: 9px; font-weight: bold; text-align: left;" id="previewItemCode">00001</div>
+                                    <div style="font-size: 10px; font-weight: bold; color: #d63384; text-align: left;" id="previewPrice">Rs. 1,250</div>
+                                </div>
+                            </div>
+                            <p class="small text-muted mt-2 mb-0">Perfect for scanning - 38×28mm (1.50" × 1.10")</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <button class="btn btn-primary btn-lg" id="printBarcodes">
+                            <i class="fas fa-print me-2"></i>Print Barcodes
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="barcodeContainer" style="display:none;"></div>
-</div>
+    <!-- Print Template (Hidden) -->
+    <div id="printTemplate" style="display: none;"></div>
 
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
-
-@section Scripts {
-    <script src="~/lib/jquery/dist/jquery-3.6.0.min.js"></script>
     <script>
-        // ===== CONFIG =====
-        const AUTO_PREFIXES = ["0001","00001","001"]; // auto-generated barcode prefixes
-        const MAX_QP = 50; // how many to show in quick picks
-
-        // ===== HELPERS =====
-        function rowHtml(item, qty){
-
-            return `
-            <tr data-id="${item.id}">
-                <td>${item.itemCode}<input type="hidden" name="ItemId" value="${item.itemCode}" /></td>
-                <td>${item.itemName}<input type="hidden" name="ItemName" value="${item.itemName}" /></td>
-                <td>${item.unitPrice}<input type="hidden" name="ItemPrice" value="${item.unitPrice}" /></td>
-                <td><input type="number" name="Quantity" value="${qty||1}" class="form-control form-control-sm qtyInput" min="1" /></td>
-                <td>
-                    <button class="btn btn-danger btn-sm rounded-circle" onclick="$(this).closest('tr').remove()" title="Remove">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            </tr>`;
+        // Update current date and time
+        function updateDateTime() {
+            const now = new Date();
+            const options = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            document.getElementById('currentDateTime').textContent = now.toLocaleDateString('en-US', options);
         }
 
-        function pushToTable(item, qty){
-            const $tbody = $('#barcodeTable tbody');
-            const $existing = $tbody.find(`tr[data-id="${item.id}"]`);
-            if($existing.length){
-                const $q = $existing.find('input[name="Quantity"]');
-                $q.val( (+$q.val()||0) + (+qty||1) );
+        // Initialize datetime and update every minute
+        updateDateTime();
+        setInterval(updateDateTime, 60000);
+
+        // Sample data for demonstration
+        const sampleItems = [
+            { id: 1, code: '0001', name: 'Cotton T-Shirt', price: 1250, barcode: '2912345678906' },
+            { id: 2, code: '00002', name: 'Denim Jeans', price: 2999, barcode: '2912345678913' },
+            { id: 3, code: '00003', name: 'Sports Shoes', price: 4550, barcode: '2912345678920' },
+            { id: 4, code: '00004', name: 'Winter Jacket', price: 7999, barcode: '2912345678937' },
+            { id: 5, code: '00005', name: 'Baseball Cap', price: 1575, barcode: '2912345678944' },
+            { id: 6, code: '00006', name: 'Leather Belt', price: 2250, barcode: '2912345678951' },
+            { id: 7, code: '00007', name: 'Wool Socks', price: 899, barcode: '2912345678968' },
+            { id: 8, code: '00008', name: 'Sunglasses', price: 3525, barcode: '2912345678975' },
+            { id: 9, code: '00009', name: 'Backpack', price: 4200, barcode: '2912345678982' },
+            { id: 10, code: '00010', name: 'Water Bottle', price: 1250, barcode: '2912345678999' }
+        ];
+
+        // Currently selected items
+        let selectedItems = [];
+        let selectedSize = '38x28';
+
+        // Initialize barcode preview
+        function updateBarcodePreview() {
+            if (selectedItems.length > 0) {
+                const firstItem = selectedItems[0];
+                document.getElementById('previewItemName').textContent = firstItem.name;
+                document.getElementById('previewItemCode').textContent = firstItem.code;
+                document.getElementById('previewPrice').textContent = 'Rs. ' + firstItem.price.toLocaleString();
+
+                JsBarcode("#barcodePreview", firstItem.barcode, {
+                    format: "CODE128",
+                    lineColor: "#000",
+                    width: 1.0,
+                    height: 35,
+                    displayValue: false,
+                    margin: 0
+                });
             } else {
-                $tbody.append(rowHtml(item, qty||1));
+                document.getElementById('barcodePreview').innerHTML = '';
+                document.getElementById('previewItemName').textContent = 'Cotton T-Shirt';
+                document.getElementById('previewItemCode').textContent = '00001';
+                document.getElementById('previewPrice').textContent = 'Rs. 1,250';
+
+                // Reset to sample barcode
+                JsBarcode("#barcodePreview", '2912345678906', {
+                    format: "CODE128",
+                    lineColor: "#000",
+                    width: 1.0,
+                    height: 35,
+                    displayValue: false,
+                    margin: 0
+                });
             }
         }
 
-        function collectRows(){
-            const barcodes = [];
-            $('#barcodeTable tbody tr').each(function(){
-                barcodes.push({
-                    ItemId: $(this).find('input[name="ItemId"]').val(),
-                    Quantity: $(this).find('input[name="Quantity"]').val(),
-                    LabelSize: $('#labelSize').val(),
-                    ItemName: $(this).find('input[name="ItemName"]').val(),
-                    ItemPrice: $(this).find('input[name="ItemPrice"]').val()
-                });
-            });
-            return barcodes;
-        }
-
-        function clearTable(){ $('#barcodeTable tbody').empty(); }
-
-        // ===== SEARCH (live) =====
-        $('#itemSearch').on('input', function () {
-            const term = $(this).val();
-            if (!term || term.length < 2) { $('#searchResults').hide(); return; }
-            $.get('/Sales/SearchItems', { term }, function (data) {
-                if(!Array.isArray(data) || !data.length){ $('#searchResults').hide(); return; }
-                let html = '';
-                data.forEach(i => {
-                    html += `
-                        <button type='button' class='list-group-item list-group-item-action d-flex justify-content-between align-items-start' data-id='${i.id}'>
-                            <div>
-                                <strong>${i.itemName}</strong> <span class='text-muted'>(${i.itemCode})</span><br/>
-                                <small class='text-muted'>${i.barcode ?? ''} ${i.description ? ' - '+i.description : ''}</small>
-                            </div>
-                            <span class='badge bg-light text-dark'>Add</span>
-                        </button>`;
-                });
-                $('#searchResults').html(html).show();
-                $('#searchResults .list-group-item').off('click').on('click', function(){
-                    const id = $(this).data('id');
-                    const item = (data||[]).find(x=>x.id===id);
-                    if(!item) return;
-                    pushToTable(item, 1);
-                    $('#searchResults').hide();
-                    $('#itemSearch').val('').focus();
-                });
-            });
-        });
-        // close results on outside click
-        $(document).on('click', function(e){ if(!$(e.target).closest('#itemSearch,#searchResults').length){ $('#searchResults').hide(); } });
-
-        // ===== QUICK PICKS =====
-        function renderQuick(containerId, items){
-            const $c = $('#'+containerId); $c.empty();
-            if(!items || !items.length){ $('#qpEmpty').removeClass('d-none'); $('#qpAddAll').addClass('d-none'); return; }
-            $('#qpEmpty').addClass('d-none');
-
-            items.slice(0, MAX_QP).forEach(i=>{
-                const $col = $('<div/>', { class:'col-12 col-md-6 col-lg-4' });
-                const $card = $('<div/>', { class:'qp-card', tabindex:0 });
-                const left = $(`
-                    <div>
-                        <div class="qp-name">${i.itemName}</div>
-                        <div class="qp-meta">
-                            <span class="qp-badge">${i.barcode || '—'}</span>
-                            <span class="ms-2">${i.itemCode}</span>
-                        </div>
-                    </div>`);
-                const right = $(`
-                    <div class="d-flex align-items-center gap-1">
-                        <input type="number" value="1" min="1" class="form-control form-control-sm qp-qty"/>
-                        <button type="button" class="btn btn-sm btn-primary qp-add">Add</button>
-                    </div>`);
-
-                const addFn = ()=>{
-                    const qty = +$card.find('.qp-qty').val() || 1;
-                    pushToTable(i, qty);
-                };
-                // click anywhere on card except controls
-                $card.on('click', (e)=>{ if(!$(e.target).closest('.qp-qty,.qp-add').length) addFn(); });
-                right.find('.qp-add').on('click', addFn);
-
-                $card.append(left, right); $col.append($card); $c.append($col);
-            });
-            $('#qpAddAll').removeClass('d-none');
-        }
-
-        function loadAutoQuick(){
-            $('#qpLoading').show();
-            $.get('/Sales/QuickBarcodeItems', { prefixes: AUTO_PREFIXES.join(','), count: MAX_QP })
-              .done(function(data){ $('#qpLoading').hide(); renderQuick('qpAuto', Array.isArray(data)? data: []); })
-              .fail(function(){ $('#qpLoading').hide(); $('#qpEmpty').removeClass('d-none'); });
-        }
-
-        function loadManualQuick(){
-            $.get('/Sales/ListManualBarcodes')
-              .done(function(data){ renderQuick('qpManual', Array.isArray(data)? data: []); })
-              .fail(function(){ $('#qpManual').empty().append('<div class="text-muted small">(Manual list endpoint not available)</div>'); });
-        }
-
-        // tab toggles
-        $('#qpAutoBtn').on('click', function(){
-            $(this).addClass('active'); $('#qpManualBtn').removeClass('active');
-            $('#qpAuto').removeClass('d-none'); $('#qpManual').addClass('d-none');
-        });
-        $('#qpManualBtn').on('click', function(){
-            $(this).addClass('active'); $('#qpAutoBtn').removeClass('active');
-            $('#qpManual').removeClass('d-none'); $('#qpAuto').addClass('d-none');
-        });
-
-        // add-all
-        $('#qpAddAll').on('click', function(){
-            // pick visible tab
-            const $container = $('#qpManual').hasClass('d-none') ? $('#qpAuto') : $('#qpManual');
-            $container.find('.qp-card').each(function(){
-                const iName = $(this).find('.qp-name').text();
-                const code = $(this).find('.qp-meta').text();
-                // we need original payload; to keep simple, click the Add button which has closure
-                $(this).find('.qp-add').trigger('click');
+        // Update selected size
+        document.querySelectorAll('.size-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.size-option').forEach(opt => opt.classList.remove('active'));
+                this.classList.add('active');
+                selectedSize = this.getAttribute('data-size');
+                updateBarcodePreview();
             });
         });
 
-        // clear table button
-        $('#qpClearTable').on('click', clearTable);
+        // Search functionality
+        document.getElementById('itemSearch').addEventListener('input', async function () {
+            const searchTerm = this.value.trim();
+            const resultsContainer = document.getElementById('searchResults');
 
-
-        $('#btnPrint').on('click', function () {
-            const barcodes = collectRows(); // e.g. [{ItemId:'10', Quantity:'2', LabelSize:'38x25', ItemName:'Mouse'}]
-            if (!barcodes.length) {
-                alert('⚠️ No items selected.');
+            if (searchTerm.length < 2) {
+                resultsContainer.style.display = 'none';
                 return;
             }
 
-            const container = document.getElementById("barcodeContainer");
-            container.innerHTML = ''; // clear previous labels
+            try {
+                const response = await fetch(`/Sales/SearchItems?term=${encodeURIComponent(searchTerm)}`);
+                const items = await response.json();
 
-            barcodes.forEach(b => {
-                const [w, h] = b.LabelSize.split("x").map(Number); // e.g. 38x25
-
-                for (let i = 0; i < parseInt(b.Quantity); i++) {
-                    const wrapper = document.createElement("div");
-                    wrapper.classList.add("label");
-
-                    wrapper.innerHTML = `
-                        <div style="
-                            width:${w}mm;
-                            height:${h}mm;
-                            display:flex;
-                            flex-direction:column;
-                            justify-content:center;
-                            align-items:center;
-                            border:1px dashed #ccc;
-                            font-family:Arial, sans-serif;
-                            font-size:12px;
-                            text-align:center;
-                            transform: rotate(0deg);
-                            padding:0px;">
-                            <div>@ViewBag.ShopName</div>
-                            <div>ID ${b.ItemId.toString().padStart(4, '0')} (Rs. ${b.ItemPrice || ''} )</div>
-                            <svg class="barcode"></svg>
-                            <div>${b.ItemName || ''}</div>
-                        </div>
-                    `;
-
-                    container.appendChild(wrapper);
-
-                    // Generate barcode inside the wrapper
-                    JsBarcode(wrapper.querySelector(".barcode"), b.ItemId, {
-                        format: "CODE128",
-                        displayValue: false,
-                        lineColor: "#000",
-                        width: 1.5,
-                        height: h * 1, // Adjusted height for landscape label
-                        margin: 0
+                if (items.length > 0) {
+                    let resultsHTML = '';
+                    items.forEach(item => {
+                        resultsHTML += `
+                            <div class="search-item" data-id="${item.id}">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <div class="fw-semibold">${item.itemName}</div>
+                                        <div class="small text-muted">Code: <span class="item-code">${item.itemCode}</span></div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="item-price">Rs. ${item.salePrice.toLocaleString()}</div>
+                                        <div class="small text-muted">Barcode: ${item.itemCode ?? '-'}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
                     });
+
+                    resultsContainer.innerHTML = resultsHTML;
+                    resultsContainer.style.display = 'block';
+
+                    // Add click event to each item
+                    document.querySelectorAll('.search-item').forEach(item => {
+                        item.addEventListener('click', function () {
+                            const itemId = parseInt(this.getAttribute('data-id'));
+                            const selectedItem = items.find(i => i.id === itemId);
+
+                            addItemToTable(selectedItem);
+
+                            document.getElementById('itemSearch').value = '';
+                            resultsContainer.style.display = 'none';
+                        });
+                    });
+                } else {
+                    resultsContainer.innerHTML = '<div class="search-item text-muted">No items found</div>';
+                    resultsContainer.style.display = 'block';
                 }
-            });
-
-            // Clone container and remove scripts
-            const cloneContainer = container.cloneNode(true);
-            cloneContainer.querySelectorAll('script').forEach(s => s.remove());
-
-            // Open print window in landscape mode
-            const printWin = window.open('', '', 'width=800,height=600');
-            printWin.document.write(`
-                <html>
-                <head>
-                    <title>Print Barcodes</title>
-                    <style>
-                        @@page {
-                            size: 38mm 25mm landscape;
-                            margin: 0;
-                        }
-                        body {
-                            margin: 0;
-                            display: flex;
-                            flex-wrap: wrap;
-                            flex-direction:column;
-                            justify-content: center;
-                            align-items: center;
-                        }
-                        .label {
-                            page-break-after: always;
-                            display: flex;
-                            justify-content: center;
-                            align-items: center;
-                        }
-                        svg {
-                            width: 90%;
-                        }
-                    </style>
-                </head>
-                    ${cloneContainer.innerHTML}
-                </html>
-            `);
-
-            printWin.document.close();
-            printWin.focus();
-            printWin.print();
+            } catch (error) {
+                console.error('Error fetching items:', error);
+                resultsContainer.innerHTML = '<div class="search-item text-danger">Error loading items</div>';
+                resultsContainer.style.display = 'block';
+            }
         });
 
 
-        // ===== BOOT =====
-        $(function(){ loadAutoQuick(); loadManualQuick(); });
+        // Clear search
+        document.getElementById('clearSearch').addEventListener('click', function() {
+            document.getElementById('itemSearch').value = '';
+            document.getElementById('searchResults').style.display = 'none';
+        });
+
+        // Add item to table
+        function addItemToTable(item) {
+            // Check if item already exists in table
+            const existingItemIndex = selectedItems.findIndex(i => i.id === item.id);
+
+            if (existingItemIndex !== -1) {
+                // Increase quantity if item already exists
+                selectedItems[existingItemIndex].quantity += 1;
+                updateTableRow(selectedItems[existingItemIndex]);
+            } else {
+                // Add new item
+                const newItem = {
+                    id: item.id,
+                    code: item.itemCode,
+                    name: item.itemName,
+                    price: item.salePrice,
+                    barcode: item.itemCode,
+                    quantity: 1
+                };
+
+                
+
+                selectedItems.push(newItem);
+                console.log(selectedItems);
+                addTableRow(newItem);
+            }
+
+            updateBarcodePreview();
+            updateEmptyState();
+        }
+
+        // Add table row
+        function addTableRow(item) {
+            const tableBody = document.getElementById('itemsTableBody');
+            const row = document.createElement('tr');
+            row.setAttribute('data-id', item.id);
+            row.innerHTML = `
+                <td>${item.code}</td>
+                <td>${item.name}</td>
+                <td>Rs. ${item.price.toLocaleString()}</td>
+                <td>
+                    <input type="number" class="form-control qty-input" value="${item.quantity}" min="1">
+                </td>
+                <td>Rs. ${(item.price * item.quantity).toLocaleString()}</td>
+                <td>
+                    <button class="btn btn-danger btn-sm remove-item">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+
+            // Add event listeners
+            const qtyInput = row.querySelector('.qty-input');
+            qtyInput.addEventListener('change', function() {
+                const newQty = parseInt(this.value) || 1;
+                updateItemQuantity(item.id, newQty);
+            });
+
+            const removeBtn = row.querySelector('.remove-item');
+            removeBtn.addEventListener('click', function() {
+                removeItem(item.id);
+            });
+        }
+
+        // Update table row
+        function updateTableRow(item) {
+            const row = document.querySelector(`tr[data-id="${item.id}"]`);
+            if (row) {
+                const qtyInput = row.querySelector('.qty-input');
+                qtyInput.value = item.quantity;
+
+                const totalCell = row.querySelector('td:nth-child(5)');
+                totalCell.textContent = `Rs. ${(item.price * item.quantity).toLocaleString()}`;
+            }
+        }
+
+        // Update item quantity
+        function updateItemQuantity(itemId, newQty) {
+            const itemIndex = selectedItems.findIndex(item => item.id === itemId);
+            if (itemIndex !== -1) {
+                selectedItems[itemIndex].quantity = newQty;
+                updateTableRow(selectedItems[itemIndex]);
+                updateBarcodePreview();
+            }
+        }
+
+        // Remove item
+        function removeItem(itemId) {
+            selectedItems = selectedItems.filter(item => item.id !== itemId);
+            const row = document.querySelector(`tr[data-id="${itemId}"]`);
+            if (row) {
+                row.remove();
+            }
+            updateBarcodePreview();
+            updateEmptyState();
+        }
+
+        // Update empty state visibility
+        function updateEmptyState() {
+            const emptyState = document.getElementById('emptyTableState');
+            if (selectedItems.length === 0) {
+                emptyState.style.display = 'block';
+                document.querySelector('#itemsTable thead').style.display = 'none';
+            } else {
+                emptyState.style.display = 'none';
+                document.querySelector('#itemsTable thead').style.display = 'table-header-group';
+            }
+        }
+
+        // Add sample items
+        document.getElementById('addSampleItems').addEventListener('click', function() {
+            // Add first 5 sample items
+            for (let i = 0; i < 5; i++) {
+                addItemToTable(sampleItems[i]);
+            }
+        });
+
+        // Clear all items
+        document.getElementById('clearAll').addEventListener('click', function() {
+            selectedItems = [];
+            document.getElementById('itemsTableBody').innerHTML = '';
+            updateBarcodePreview();
+            updateEmptyState();
+        });
+
+        // Print barcodes with left-aligned layout
+        document.getElementById('printBarcodes').addEventListener('click', function() {
+            if (selectedItems.length === 0) {
+                alert('Please add items to print barcodes.');
+                return;
+            }
+
+            // Get dimensions
+            const dimensions = selectedSize.split('x');
+            const width = parseInt(dimensions[0]);
+            const height = parseInt(dimensions[1]);
+
+            // Size-specific configurations with left alignment
+            const sizeConfigs = {
+                '38x28': {
+                    shopFont: '11px', itemFont: '10px', codeFont: '10px', priceFont: '11px',
+                    barcodeWidth: 1.0, barcodeHeight: 32, padding: '1mm 1mm 1mm 2mm' // More left padding
+                },
+                '50x25': {
+                    shopFont: '12px', itemFont: '11px', codeFont: '11px', priceFont: '12px',
+                    barcodeWidth: 1.2, barcodeHeight: 28, padding: '1mm 1mm 1mm 2mm'
+                },
+                '40x30': {
+                    shopFont: '12px', itemFont: '11px', codeFont: '11px', priceFont: '12px',
+                    barcodeWidth: 1.1, barcodeHeight: 34, padding: '1.5mm 1.5mm 1.5mm 3mm'
+                },
+                '60x40': {
+                    shopFont: '14px', itemFont: '13px', codeFont: '13px', priceFont: '14px',
+                    barcodeWidth: 1.4, barcodeHeight: 42, padding: '2mm 2mm 2mm 4mm'
+                }
+            };
+
+            const config = sizeConfigs[selectedSize] || sizeConfigs['38x28'];
+
+            // Create print content with @@page at the top
+            let printHTML = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Barcode Labels</title>
+                    <style>
+                        @@page {
+                            size: ${width}mm ${height}mm;
+                            margin: 0;
+                        }
+
+                        body {
+                            margin: 0;
+                            padding: 0;
+                            font-family: Arial, sans-serif;
+                            background: white;
+                            width: ${width}mm;
+                            height: ${height}mm;
+                        }
+
+                        .label {
+                            width: ${width}mm;
+                            height: ${height}mm;
+                            display: flex;
+                            flex-direction: column;
+                            justify-content: space-between;
+                            align-items: flex-start;
+                            page-break-after: always;
+                            box-sizing: border-box;
+                            padding: ${config.padding};
+                            text-align: left;
+                        }
+
+                        .shop-name {
+                            font-size: ${config.shopFont};
+                            font-weight: bold;
+                            margin-bottom: 0.5mm;
+                            letter-spacing: 0.3px;
+                            width: 100%;
+                            text-align: left;
+                        }
+
+                        .item-name {
+                            font-size: ${config.itemFont};
+                            margin-bottom: 1mm;
+                            font-weight: 500;
+                            max-width: ${width - 6}mm;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            white-space: nowrap;
+                            width: 100%;
+                            text-align: left;
+                        }
+
+                        .barcode-container {
+                            margin: 1mm 0;
+                            width: 95%;
+                            display: flex;
+                            justify-content: flex-start;
+                            flex-grow: 1;
+                        }
+
+                        .bottom-section {
+                            display: flex;
+                            flex-direction: column;
+                            align-items: flex-start;
+                            width: 100%;
+                            margin-top: 1mm;
+                        }
+
+                        .item-code {
+                            font-size: ${config.codeFont};
+                            font-weight: bold;
+                            margin-bottom: 1mm;
+                        }
+
+                        .item-price {
+                            font-size: ${config.priceFont};
+                            font-weight: bold;
+                            color: #d63384;
+                        }
+                    </style>
+                </head>
+                <body>
+            `;
+
+            // Generate labels for each item
+            selectedItems.forEach(item => {
+                for (let i = 0; i < item.quantity; i++) {
+                    printHTML += `
+                        <div class="label">
+                            <div class="shop-name">FASHION MALL</div>
+                            <div class="item-name">${item.name}</div>
+                            <div class="barcode-container">
+                                <svg class="barcode"></svg>
+                            </div>
+                            <div class="bottom-section">
+                                <div class="item-code">${item.code}</div>
+                                <div class="item-price">Rs. ${item.price.toLocaleString()}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            // Open print window
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(printHTML);
+            printWindow.document.close();
+
+            // Generate barcodes after the content is loaded
+            printWindow.onload = function() {
+                const barcodes = printWindow.document.querySelectorAll('.barcode');
+                let currentIndex = 0;
+
+                selectedItems.forEach(item => {
+                    for (let i = 0; i < item.quantity; i++) {
+                        if (barcodes[currentIndex]) {
+                            JsBarcode(barcodes[currentIndex], item.barcode, {
+                                format: "CODE128",
+                                lineColor: "#000",
+                                width: config.barcodeWidth,
+                                height: config.barcodeHeight,
+                                displayValue: false,
+                                margin: 0
+                            });
+                        }
+                        currentIndex++;
+                    }
+                });
+
+                // Trigger print after a short delay to ensure barcodes are rendered
+                setTimeout(() => {
+                    printWindow.print();
+                }, 500);
+            };
+        });
+
+        // Initialize
+        updateEmptyState();
+        updateBarcodePreview();
     </script>
-}
-
-
+</body>
+</html>

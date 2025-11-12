@@ -1365,10 +1365,18 @@ namespace GSoftPosNew.Controllers
             var items = _context.Items
                 .Where(i => i.ItemName.Contains(term) || i.ItemCode.Contains(term))
                 .Take(5)
+                .Select(i => new
+                {
+                    i.Id,
+                    i.ItemName,
+                    i.ItemCode,
+                    i.SalePrice
+                })
                 .ToList();
 
             return Json(items);
         }
+
 
         [HttpPost]
         public async Task<IActionResult> Delete(int id)

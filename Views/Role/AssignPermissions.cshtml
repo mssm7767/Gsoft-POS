@@ -5,6 +5,9 @@
     ViewData["Title"] = "Assign Permissions";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+@{
+    var allowedModules = ViewBag.AllowedModules as List<string> ?? new List<string>();
+}
 
 <div class="container mt-4" style="max-width:800px;">
     <div class="card shadow-sm">
@@ -26,9 +29,15 @@
                     <div class="row">
                         @foreach (var module in Model.Modules)
                         {
+                            var isChecked = allowedModules.Contains(module);
                             <div class="col-md-4">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="SelectedModules" value="@module" id="@module" />
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           name="SelectedModules"
+                                           value="@module"
+                                           id="@module"
+                                           @(isChecked ? "checked" : "") />
                                     <label class="form-check-label" for="@module">@module</label>
                                 </div>
                             </div>
@@ -46,3 +55,34 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const roleDropdown = document.getElementById('RoleId');
+            const checkboxes = document.querySelectorAll('.form-check-input');
+
+            roleDropdown.addEventListener('change', function () {
+                const roleId = this.value;
+
+                // Uncheck all first
+                checkboxes.forEach(cb => cb.checked = false);
+
+                if (!roleId) return; // Skip if "-- Select Role --"
+
+                fetch(`/Role/GetRolePermissions?roleId=${roleId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (Array.isArray(data)) {
+                            data.forEach(moduleName => {
+                                const checkbox = document.getElementById(moduleName);
+                                if (checkbox) checkbox.checked = true;
+                            });
+                        }
+                    })
+                    .catch(error => console.error('Error loading role permissions:', error));
+            });
+        });
+    </script>
+}
+

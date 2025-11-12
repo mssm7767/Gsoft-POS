@@ -32,6 +32,7 @@ namespace GSoftPosNew.Controllers
         public IActionResult Create()
         {
             ViewBag.UserList = _context.Users.OrderBy(u => u.FullName).ToList();
+            ViewBag.Roles = _context.Roles.ToList();
             return View(new User());
         }
 
