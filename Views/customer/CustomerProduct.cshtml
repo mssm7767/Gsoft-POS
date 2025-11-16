@@ -1,0 +1,491 @@
+﻿@{
+    ViewData["Title"] = "My Products";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+<style>
+    .product-list-item {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 18px;
+        margin-bottom: 12px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+        transition: 0.2s;
+    }
+
+        .product-list-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.09);
+        }
+
+    .product-thumb {
+        width: 80px;
+        height: 80px;
+        border-radius: 10px;
+        object-fit: cover;
+    }
+
+    .filter-box {
+        background: #ffffff;
+        padding: 15px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .empty-box {
+        padding: 40px;
+        text-align: center;
+        font-size: 1.2rem;
+        color: #777;
+    }
+
+    #scanner {
+        width: 100%;
+        max-width: 480px;
+        margin: 12px 0;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #000;
+    }
+
+
+    /* ================= MOBILE RESPONSIVE FIXES ================= */
+    @@media (max-width: 768px) {
+        .container
+
+    {
+        padding: 10px !important;
+    }
+
+    /* Title + Scan Button stack */
+    .d-flex.justify-content-between.align-items-center.mb-4 {
+        flex-direction: column !important;
+        gap: 10px;
+        text-align: center;
+    }
+
+    /* Filter boxes stack cleanly */
+    .filter-box .row > div {
+        width: 100% !important;
+    }
+
+    /* Product row: stack vertically */
+    .product-list-item {
+        flex-direction: column !important;
+        text-align: center;
+        padding: 15px !important;
+    }
+
+    .product-thumb {
+        width: 100px !important;
+        height: 100px !important;
+        margin-bottom: 10px !important;
+    }
+
+    .product-list-item .flex-grow-1 {
+        width: 100% !important;
+    }
+
+    /* Quantity badge larger for touch */
+    .qty-badge {
+        font-size: 0.9rem !important;
+        padding: 6px 10px !important;
+    }
+
+    /* Sell button full width */
+    .product-list-item button {
+        width: 100% !important;
+        margin-top: 12px !important;
+    }
+
+    /* Scanner full width */
+    #scanner {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+    }
+
+    /* Modal fully responsive */
+    .modal-dialog {
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 10px !important;
+    }
+
+    .modal-content {
+        border-radius: 15px !important;
+    }
+
+    }
+</style>
+
+<div class="container-fluid py-4">
+
+    <!-- PAGE TITLE -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-primary">
+            <i class="fa-solid fa-box-user"></i> My Purchased Products
+        </h3>
+
+        <div>
+            <button class="btn btn-dark" id="scanBtn">
+                <i class="fa-solid fa-barcode"></i> Scan Product Barcode
+            </button>
+        </div>
+    </div>
+
+    <!-- FILTER SECTION -->
+    <div class="filter-box mb-4">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Search Product</label>
+                <input type="text" id="searchInput" class="form-control" placeholder="Search by name...">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Filter by Date</label>
+                <input type="date" id="dateFilter" class="form-control" />
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Sort by</label>
+                <select id="sortFilter" class="form-select">
+                    <option value="">Default</option>
+                    <option value="priceAsc">Price: Low to High</option>
+                    <option value="priceDesc">Price: High to Low</option>
+                    <option value="newest">Newest First</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCANNER (hidden until started) -->
+    <div id="scannerWrapper" style="display:none;">
+        <div id="scanner"></div>
+        <div class="mt-2">
+            <button class="btn btn-sm btn-outline-danger" id="stopScanner">Stop Scanner</button>
+        </div>
+    </div>
+
+    <!-- PRODUCT LIST -->
+    <div id="productList">
+
+        <!-- Single Product Item -->
+        @if (ViewBag.CustomerItems != null)
+        {
+            foreach (var item in ViewBag.CustomerItems)
+            {
+                <div class="product-list-item d-flex align-items-center product-row"
+                     data-name="@item.ItemName"
+                     data-price="@item.Price"
+                     data-date="@(item.PurchaseDate?.ToString("yyyy-MM-dd") ?? "")"
+                     data-code="@item.ItemCode"
+                     data-quantity="@item.Quantity">
+
+                    <img src="@Url.Content("~" + item.ImagePath)" class="product-thumb me-3" />
+
+                    <div class="flex-grow-1">
+
+                        <div class="d-flex align-items-center mb-1">
+                            <h5 class="fw-semibold me-2 mb-0">@item.ItemName</h5>
+
+                            <!-- Quantity Badge -->
+                            <span class="badge rounded-pill bg-primary px-3 py-2 qty-badge">
+                                Qty: @item.Quantity
+                            </span>
+                        </div>
+
+                        <p class="text-muted mb-1">Purchased: @item.PurchaseDate</p>
+                        <p class="fw-bold text-success mb-0">Rs. @item.Price</p>
+
+                    </div>
+
+
+                   @*  <div>
+                        <button class="btn btn-outline-primary btn-sm sell-btn me-2"
+                                data-title="@item.ItemName"
+                                data-code="@item.ItemCode"
+                                data-price="@item.Price"
+                                data-quantity="@item.Quantity">
+                            Sell
+                        </button>
+                    </div> *@
+                </div>
+            }
+        }
+
+    </div>
+
+    <!-- Empty Message -->
+    <div id="emptyMessage" class="empty-box d-none">
+        <i class="fa-solid fa-box-open"></i> No Products Found
+    </div>
+</div>
+
+<!-- SELL MODAL -->
+<div class="modal fade" id="sellModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Sell Product</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="fw-semibold">Product</label>
+                    <input type="text" id="sellProductName" class="form-control" readonly />
+                </div>
+
+                <div class="mb-3">
+                    <label class="fw-semibold">Selling Price</label>
+                    <input type="number" id="sellProductPrice" class="form-control" required />
+                </div>
+
+                <div class="mb-3">
+                    <label class="fw-semibold">Quantity</label>
+                    <input type="number" id="sellQty" class="form-control" min="1" value="1" required />
+                    <small id="availableInfo" class="text-muted"></small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="fw-semibold">Description</label>
+                    <textarea id="sellDescription" class="form-control"></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-primary" id="confirmSell">Sell Now</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+    const sellModal = new bootstrap.Modal(document.getElementById("sellModal"));
+
+    // Wire up existing Sell buttons
+    document.querySelectorAll(".sell-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const name = btn.dataset.title;
+            const price = btn.dataset.price;
+            const code = btn.dataset.code;
+            const qty = btn.dataset.quantity;
+
+            openSellModal({ name, price, code, qty });
+        });
+    });
+
+    // Confirm Sell -> POST to server and update UI
+    document.getElementById("confirmSell").addEventListener("click", async () => {
+        const itemCode = document.getElementById("confirmSell").dataset.code;
+        const qty = parseInt(document.getElementById("sellQty").value, 10);
+        const price = parseFloat(document.getElementById("sellProductPrice").value);
+        const desc = document.getElementById("sellDescription").value;
+
+        if (!itemCode) return alert("No item selected.");
+        if (!qty || qty <= 0) return alert("Enter a valid quantity");
+
+        try {
+            const res = await fetch("/Customer/SellProduct", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ItemCode: itemCode, Quantity: qty, SellingPrice: price, Description: desc })
+            });
+
+            if (!res.ok) {
+                const txt = await res.text();
+                throw new Error(txt || "Server error");
+            }
+
+            // On success: update UI quantities without full reload
+            updateQtyOnUI(itemCode, qty);
+
+            alert("Product sold successfully!");
+            sellModal.hide();
+        } catch (err) {
+            console.error(err);
+            alert("Error: " + (err.message || "Could not sell product"));
+        }
+    });
+
+    function updateQtyOnUI(itemCode, soldQty) {
+        const rows = document.querySelectorAll('.product-row');
+        for (const r of rows) {
+            if (r.dataset.code === itemCode) {
+                const cur = parseInt(r.dataset.quantity || '0', 10);
+                const newQty = Math.max(0, cur - soldQty);
+                r.dataset.quantity = newQty;
+                const badge = r.querySelector('.qty-badge');
+                if (badge) badge.textContent = 'Qty: ' + newQty;
+
+                // if stock zero hide or show out of stock
+                if (newQty === 0) {
+                    r.style.opacity = '0.6';
+                }
+
+                break;
+            }
+        }
+    }
+
+    function openSellModal(p) {
+        document.getElementById("sellProductName").value = p.name || '';
+        document.getElementById("sellProductPrice").value = p.price || '';
+        document.getElementById("sellQty").value = 1;
+        document.getElementById("confirmSell").dataset.code = p.code || '';
+
+        const availableInfo = document.getElementById('availableInfo');
+        availableInfo.textContent = p.qty ? ('Available: ' + p.qty) : '';
+
+        sellModal.show();
+    }
+
+    // Basic filters
+    document.getElementById("searchInput").addEventListener("keyup", filterProducts);
+    document.getElementById("dateFilter").addEventListener("change", filterProducts);
+    document.getElementById("sortFilter").addEventListener("change", sortProducts);
+
+    function filterProducts() {
+        let search = document.getElementById("searchInput").value.toLowerCase();
+        let date = document.getElementById("dateFilter").value;
+
+        document.querySelectorAll(".product-row").forEach(item => {
+            let name = (item.dataset.name || '').toLowerCase();
+            let itemDate = item.dataset.date;
+
+            let match = true;
+
+            if (search && !name.includes(search)) match = false;
+            if (date && date !== itemDate) match = false;
+
+            item.style.display = match ? "flex" : "none";
+        });
+
+        checkEmpty();
+    }
+
+    function sortProducts() {
+        let sortType = document.getElementById("sortFilter").value;
+        let list = document.getElementById("productList");
+        let items = Array.from(document.querySelectorAll(".product-row"));
+
+        items.sort((a, b) => {
+            let priceA = parseFloat(a.dataset.price || 0);
+            let priceB = parseFloat(b.dataset.price || 0);
+            let dateA = new Date(a.dataset.date || 0);
+            let dateB = new Date(b.dataset.date || 0);
+
+            if (sortType === "priceAsc") return priceA - priceB;
+            if (sortType === "priceDesc") return priceB - priceA;
+            if (sortType === "newest") return dateB - dateA;
+
+            return 0;
+        });
+
+        items.forEach(i => list.appendChild(i));
+    }
+
+    function checkEmpty() {
+        const visible = Array.from(document.querySelectorAll('.product-row')).some(r => r.style.display !== 'none');
+        if (!visible) document.getElementById("emptyMessage").classList.remove("d-none");
+        else document.getElementById("emptyMessage").classList.add("d-none");
+    }
+
+    // ----------------- Barcode Scanner logic -----------------
+    let html5QrCode;
+    const scanBtn = document.getElementById('scanBtn');
+    const scannerWrapper = document.getElementById('scannerWrapper');
+    const stopScannerBtn = document.getElementById('stopScanner');
+
+    scanBtn.addEventListener('click', async () => {
+        scannerWrapper.style.display = 'block';
+
+        if (html5QrCode) {
+            try { await html5QrCode.stop(); } catch (e) { }
+            html5QrCode.clear();
+        }
+
+        html5QrCode = new Html5Qrcode("scanner");
+
+        const config = { fps: 10, qrbox: { width: 250, height: 150 } };
+
+        try {
+            await html5QrCode.start({ facingMode: { exact: "environment" } }, config,
+                qrCodeMessage => {
+                    // On successful scan
+                    handleScannedCode(qrCodeMessage);
+                },
+                errorMessage => {
+                    // ignore per-frame errors
+                }
+            );
+        } catch (err) {
+            // fallback to generic camera if environment exact failed
+            try {
+                await html5QrCode.start({ facingMode: "environment" }, config,
+                    qrCodeMessage => handleScannedCode(qrCodeMessage),
+                    () => { }
+                );
+            } catch (e) {
+                alert('Unable to start camera for scanning.');
+                console.error(e);
+            }
+        }
+    });
+
+    stopScannerBtn.addEventListener('click', async () => {
+        if (html5QrCode) {
+            try { await html5QrCode.stop(); } catch (e) { }
+            html5QrCode.clear();
+        }
+        scannerWrapper.style.display = 'none';
+    });
+
+    function handleScannedCode(code) {
+        // stop scanner
+        if (html5QrCode) {
+            html5QrCode.stop().catch(()=>{});
+            html5QrCode.clear();
+        }
+        scannerWrapper.style.display = 'none';
+
+        // code might be the exact itemcode or contain it; try to match
+        const normalized = (code || '').trim();
+
+        // Attempt exact match first, then partial contains
+        const rows = document.querySelectorAll('.product-row');
+        let found = null;
+        for (const r of rows) {
+            if ((r.dataset.code || '') === normalized) { found = r; break; }
+        }
+        if (!found) {
+            for (const r of rows) {
+                if ((r.dataset.code || '').length && normalized.includes(r.dataset.code)) { found = r; break; }
+            }
+        }
+
+        if (!found) {
+            alert('Product not found for scanned code: ' + normalized);
+            return;
+        }
+
+        // prepare product object and open modal
+        const product = {
+            name: found.dataset.name,
+            price: found.dataset.price,
+            code: found.dataset.code,
+            qty: found.dataset.quantity
+        };
+
+        openSellModal(product);
+    }
+
+</script>

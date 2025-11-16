@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using GSoftPosNew.Data;
 using GSoftPosNew.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace GSoftPosNew.Controllers
 {
@@ -199,6 +200,90 @@ namespace GSoftPosNew.Controllers
                 TempData["Error"] = "Delete failed: " + (ex.InnerException?.Message ?? ex.Message);
                 return RedirectToAction(nameof(Create));
             }
+        }
+
+        public async Task<IActionResult> CustomerProduct(int id)
+        {
+            var vanItems = await _context.CustomerVanStocks
+                .Where(v => v.CustomerId == id)
+                .GroupBy(v => v.ItemId)
+                .Select(g => new
+                {
+                    ItemId = g.Key,
+                    Quantity = g.Sum(x => x.Quantity),           // Total stock quantity
+                    LastPurchaseDate = g.Max(x => x.PurchasedDate) // Last purchased date
+                })
+                .Join(
+                    _context.Items,
+                    v => v.ItemId,
+                    i => i.Id,
+                    (v, i) => new
+                    {
+                        ItemId = i.Id,
+                        ItemCode = i.ItemCode,
+                        ImagePath = i.ImagePath,
+                        ItemName = i.ItemName,
+                        Quantity = v.Quantity,
+                        Price = i.UnitPrice,
+                        PurchaseDate = v.LastPurchaseDate
+                    }
+                )
+                .ToListAsync();
+
+
+
+            ViewBag.CustomerItems = vanItems;
+
+
+
+
+            //var saleIds = await _context.Sales
+            //    .Where(s => s.CustomerId == id)
+            //    .Select(s => s.Id)
+            //    .ToListAsync();
+
+            //var customerItems = await _context.SaleItems
+            //    .Where(si => saleIds.Contains(si.SaleId))
+            //    .Join(
+            //        _context.Sales,
+            //        si => si.SaleId,
+            //        s => s.Id,
+            //        (si, s) => new
+            //        {
+            //            si.ItemId,
+            //            si.Quantity,
+            //            si.UnitPrice,
+            //            s.SaleDate
+            //        }
+            //    )
+            //    .GroupBy(x => x.ItemId)
+            //    .Select(g => new
+            //    {
+            //        ItemId = g.Key,
+            //        Quantity = g.Sum(x => x.Quantity),
+            //        Price = g.Select(x => x.UnitPrice).FirstOrDefault(),   // unit price from sale items
+            //        SaleDate = g.Select(x => x.SaleDate).FirstOrDefault()  // sale date from sale table
+            //    })
+            //    .Join(
+            //        _context.Items,
+            //        sale => sale.ItemId,
+            //        item => item.Id,
+            //        (sale, item) => new
+            //        {
+            //            ItemId = item.Id,
+            //            ItemCode = item.ItemCode,
+            //            ImagePath = item.ImagePath,
+            //            ItemName = item.ItemName,
+            //            Quantity = sale.Quantity,
+            //            Price = sale.Price,
+            //            SaleDate = sale.SaleDate
+            //        }
+            //    )
+            //    .ToListAsync();
+
+            //ViewBag.CustomerItems = customerItems;
+
+            return View();
         }
     }
 }

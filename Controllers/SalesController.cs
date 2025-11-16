@@ -304,6 +304,23 @@ namespace GSoftPosNew.Controllers
                         sale.Payment.SaleId = sale.Id;
 
                     await _context.SaveChangesAsync();
+
+                    var vanStockList = new List<CustomerVanStock>();
+                    foreach (var item in sale.SaleItems)
+                    {
+                        var vanStock = new CustomerVanStock
+                        {
+                            CustomerId = sale.CustomerId,
+                            ItemId = item.ItemId,
+                            Quantity = item.Quantity,
+                        };
+
+                        vanStockList.Add(vanStock);
+                    }
+
+                    await _context.AddRangeAsync(vanStockList);
+                    await _context.SaveChangesAsync();
+
                     if (sale.Payment?.PaymentMethod?.ToLower() == "credit")
                     {
                         var customer = await _context.Customers.FindAsync(sale.custId);
@@ -733,6 +750,7 @@ namespace GSoftPosNew.Controllers
                         sale.Payment.SaleId = sale.Id;
 
                     await _context.SaveChangesAsync();
+
                     if (sale.Payment?.PaymentMethod?.ToLower() == "credit")
                     {
                         var customer = await _context.Customers.FindAsync(sale.custId);
@@ -852,6 +870,23 @@ namespace GSoftPosNew.Controllers
                         sale.Payment.SaleId = sale.Id;
 
                     await _context.SaveChangesAsync();
+
+                    var vanStockList = new List<CustomerVanStock>();
+                    foreach (var item in sale.SaleItems)
+                    {
+                        var vanStock = new CustomerVanStock
+                        {
+                            CustomerId = sale.CustomerId,
+                            ItemId = item.ItemId,
+                            Quantity = item.Quantity,
+                        };
+
+                        vanStockList.Add(vanStock);
+                    }
+
+                    await _context.AddRangeAsync(vanStockList);
+                    await _context.SaveChangesAsync();
+
                     if (sale.Payment?.PaymentMethod?.ToLower() == "credit")
                     {
                         var customer = await _context.Customers.FindAsync(sale.custId);

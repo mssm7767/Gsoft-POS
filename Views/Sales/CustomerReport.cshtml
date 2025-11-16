@@ -261,6 +261,7 @@
                                 <td class="text-end">@item.Advance.ToString("N2")</td>
                                 <td class="text-end text-success">@item.Receivable.ToString("N2")</td>
                                 <td class="text-end text-danger">@item.Payable.ToString("N2")</td>
+                                <td><a asp-action="CustomerProduct" asp-controller="Customer" asp-route-id="@item.CustomerId">Products</a></td>
                             </tr>
                         }
                     </tbody>

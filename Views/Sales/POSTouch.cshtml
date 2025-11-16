@@ -919,7 +919,11 @@
     <div class="left-col">
         <div class="card cat-pane">
             <div class="pos-left-header">
-                <div class="brand"><i class="fa-solid fa-burger"></i><span>POS – Fast Food</span></div>
+                <div class="brand">
+                    <i class="fa-solid fa-burger"></i>
+                    <span>@(ViewBag.ShopName ?? "G-Soft")</span>
+                </div>
+
 
                 <!-- UPDATED: add .pro -->
                 <button id="newOrderBtn" class="fs-btn pro" title="Start New Order">

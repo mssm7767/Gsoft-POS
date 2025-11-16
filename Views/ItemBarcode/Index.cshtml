@@ -726,10 +726,13 @@
 
             // Generate labels for each item
             selectedItems.forEach(item => {
+
+                 const shopName = "@(ViewBag.ShopName ?? "G-Soft")";
+
                 for (let i = 0; i < item.quantity; i++) {
                     printHTML += `
                         <div class="label">
-                            <div class="shop-name">FASHION MALL</div>
+                            <div class="shop-name">${shopName}</div>
                             <div class="item-name">${item.name}</div>
                             <div class="barcode-container">
                                 <svg class="barcode"></svg>
