@@ -10,51 +10,83 @@
     :root {
         --ink: #0f172a;
         --muted: #64748b;
-        --bg: #f5faff; /* light blue-ish background */
+        --bg: #f5faff;
         --card: #ffffff;
-        --brand: #3b82f6; /* blue */
-        --brand-2: #60a5fa; /* light blue */
-        --green: #22c55e; /* green */
-        --green-2: #86efac; /* light green */
-        --amber: #f59e0b; /* yellow/amber */
-        --amber-2: #fde68a; /* light yellow */
+        --brand: #3b82f6;
+        --brand-2: #60a5fa;
+        --green: #22c55e;
+        --green-2: #86efac;
+        --amber: #f59e0b;
+        --amber-2: #fde68a;
+        --purple: #8b5cf6;
+        --purple-2: #c4b5fd;
+        --pink: #ec4899;
+        --pink-2: #f9a8d4;
         --shadow: 0 10px 30px rgba(2,6,23,.06);
+        --shadow-lg: 0 20px 50px rgba(2,6,23,.1);
     }
 
     body {
-        background: radial-gradient(1200px 800px at -10% -10%, #eaf3ff 0%, transparent 50%), radial-gradient(1000px 700px at 110% -10%, #e8ffe6 0%, transparent 50%), radial-gradient(900px 600px at 50% 120%, #fff6db 0%, transparent 55%), var(--bg);
+        background: radial-gradient(1200px 800px at -10% -10%, #eaf3ff 0%, transparent 50%), 
+                    radial-gradient(1000px 700px at 110% -10%, #e8ffe6 0%, transparent 50%), 
+                    radial-gradient(900px 600px at 50% 120%, #fff6db 0%, transparent 55%), 
+                    var(--bg);
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         color: var(--ink);
+        min-height: 100vh;
     }
 
     /* ===== Summary Cards ===== */
     .dashboard-card {
-        border-radius: 16px;
+        border-radius: 20px;
         background: var(--card);
         box-shadow: var(--shadow);
-        padding: 1rem;
+        padding: 1.5rem;
         height: 100%;
-        border: 1px solid #e5e7eb;
-        transition: transform .15s ease, box-shadow .15s ease;
+        border: 1px solid rgba(255,255,255,0.8);
+        transition: transform .3s ease, box-shadow .3s ease;
+        position: relative;
+        overflow: hidden;
     }
 
-        .dashboard-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 16px 42px rgba(2,6,23,.09);
-        }
+    .dashboard-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--brand), var(--green));
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+    }
+
+    .dashboard-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
 
     .card-icon {
-        font-size: 1.2rem;
-        padding: .9rem;
-        border-radius: 12px;
+        font-size: 1.4rem;
+        padding: 1rem;
+        border-radius: 16px;
         color: #0b1220;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         margin-right: 1rem;
-        min-width: 52px;
-        min-height: 52px;
-        box-shadow: inset 0 0 0 2px rgba(255,255,255,.6);
+        min-width: 60px;
+        min-height: 60px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        transition: transform 0.3s ease;
+    }
+
+    .dashboard-card:hover .card-icon {
+        transform: scale(1.1);
     }
 
     .bg-blue {
@@ -73,58 +105,85 @@
         background: linear-gradient(135deg, #dcfce7, #bbf7d0);
     }
 
+    .bg-pink {
+        background: linear-gradient(135deg, #fce7f3, #f9a8d4);
+    }
+
     .title-small {
         font-size: 0.82rem;
         color: var(--muted);
         letter-spacing: 0.03em;
         text-transform: uppercase;
         font-weight: 700;
+        margin-bottom: 0.5rem;
     }
 
     .main-number {
-        font-size: 1.5rem;
+        font-size: 1.8rem;
         font-weight: 900;
         color: var(--ink);
         letter-spacing: .02em;
+        background: linear-gradient(90deg, var(--brand), var(--green));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
 
     .section-title {
-        font-size: 1.1rem;
+        font-size: 1.3rem;
         font-weight: 800;
         color: var(--ink);
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
         letter-spacing: .02em;
         display: flex;
         align-items: center;
         gap: .5rem;
+        position: relative;
+        padding-bottom: 0.75rem;
     }
 
-        .section-title i {
-            color: var(--brand);
-        }
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 50px;
+        height: 4px;
+        background: linear-gradient(90deg, var(--brand), var(--green));
+        border-radius: 2px;
+    }
+
+    .section-title i {
+        color: var(--brand);
+    }
 
     /* ===== Chart Cards ===== */
     .chart-card {
-        border-radius: 16px;
-        background: linear-gradient(180deg, #eff6ff, #ffffff 40%);
+        border-radius: 20px;
+        background: linear-gradient(180deg, #ffffff, #f8fafc);
         box-shadow: var(--shadow);
-        padding: 1rem;
-        border: 1px solid #e5e7eb;
+        padding: 1.5rem;
+        border: 1px solid rgba(255,255,255,0.8);
         display: flex;
         flex-direction: column;
         height: 100%;
+        transition: transform .3s ease, box-shadow .3s ease;
+    }
+
+    .chart-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-lg);
     }
 
     .chart-container {
         position: relative;
         width: 100%;
-        height: 320px; /* ensure line chart visible */
+        height: 320px;
     }
-    /* Most Sales fixed height + wrapper for spin */
+
     #mostSalesContainer {
         position: relative;
         width: 100%;
-        height: 260px; /* ensure doughnut visible */
+        height: 260px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -143,20 +202,9 @@
         from {
             transform: rotate(0deg);
         }
-
         to {
             transform: rotate(360deg);
         }
-    }
-
-    {
-        transform: rotate(0deg);
-    }
-
-    to {
-        transform: rotate(360deg);
-    }
-
     }
 
     .ms-spin-on-load {
@@ -167,33 +215,57 @@
     /* ===== Quick Cards ===== */
     .quick-card {
         background: var(--card);
-        border-radius: 14px;
+        border-radius: 20px;
         box-shadow: var(--shadow);
-        padding: 1rem 1.25rem;
+        padding: 1.5rem;
         text-align: center;
         height: 100%;
         display: flex;
         flex-direction: column;
         justify-content: center;
-        border: 1px solid #e5e7eb;
-        transition: transform .15s ease, box-shadow .15s ease;
+        align-items: center;
+        border: 1px solid rgba(255,255,255,0.8);
+        transition: transform .3s ease, box-shadow .3s ease;
+        position: relative;
+        overflow: hidden;
     }
 
-        .quick-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 16px 42px rgba(2,6,23,.09);
-        }
+    .quick-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--brand), var(--green));
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+    }
+
+    .quick-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .quick-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
 
     .quick-icon {
-        font-size: 1.4rem;
-        margin-bottom: .6rem;
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
         color: #0b1220;
-        width: 60px;
-        height: 60px;
-        border-radius: 14px;
+        width: 80px;
+        height: 80px;
+        border-radius: 20px;
         display: grid;
         place-items: center;
-        box-shadow: inset 0 0 0 2px rgba(255,255,255,.6);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+
+    .quick-card:hover .quick-icon {
+        transform: scale(1.1) rotate(5deg);
     }
 
     .text-primary {
@@ -209,54 +281,67 @@
     }
 
     .quick-title {
-        font-size: 1rem;
+        font-size: 1.1rem;
         color: #333;
         font-weight: 800;
-        margin-bottom: .3rem;
+        margin-bottom: .5rem;
     }
 
     .quick-number {
-        font-size: 1.4rem;
+        font-size: 1.8rem;
         font-weight: 900;
         color: #222;
+        background: linear-gradient(90deg, var(--brand), var(--green));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
 
     .quick-card .btn {
         font-weight: 800;
         font-size: 0.9rem;
-        border-radius: 10px;
-        padding: 0.5rem 0.9rem;
+        border-radius: 12px;
+        padding: 0.7rem 1.2rem;
         display: inline-flex;
         align-items: center;
         gap: .5rem;
         border: none;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .quick-card .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
     }
 
     .quick-card .btn-primary {
         background: linear-gradient(135deg, #60a5fa, #3b82f6);
         color: #fff;
-        box-shadow: 0 10px 22px rgba(59,130,246,.35);
     }
 
     .quick-card .btn-success {
         background: linear-gradient(135deg, #86efac, #22c55e);
         color: #064e3b;
-        box-shadow: 0 10px 22px rgba(34,197,94,.25);
     }
 
     .quick-card .btn-warning {
         background: linear-gradient(135deg, #fde68a, #f59e0b);
         color: #7c2d12;
-        box-shadow: 0 10px 22px rgba(245,158,11,.25);
     }
 
     /* ===== Table Styling ===== */
     .table-wrap {
-        border: 1px solid #e5e7eb;
-        border-radius: 16px;
+        border: 1px solid rgba(229, 231, 235, 0.8);
+        border-radius: 20px;
         overflow: hidden;
         background: var(--card);
         box-shadow: var(--shadow);
+        transition: transform .3s ease, box-shadow .3s ease;
+    }
+
+    .table-wrap:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-lg);
     }
 
     .table thead {
@@ -267,21 +352,132 @@
     .table th, .table td {
         vertical-align: middle;
         font-size: 0.95rem;
-        padding: 0.75rem 1rem;
+        padding: 1rem 1.25rem;
     }
 
     .table-hover tbody tr:hover {
         background-color: #f0f9ff;
     }
+
+    /* ===== Header Filter Section ===== */
+    .header-filter {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: var(--shadow);
+        border-radius: 20px;
+    }
+
+    .current-time {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    /* ===== Ball Animation for Most Sales ===== */
+    .ball-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .sales-ball {
+        position: absolute;
+        border-radius: 50%;
+        opacity: 0.7;
+        animation: float 6s ease-in-out infinite;
+    }
+
+    .ball-1 {
+        width: 80px;
+        height: 80px;
+        background: radial-gradient(circle at 30% 30%, #6ee7b7, #10b981);
+        top: 10%;
+        left: 15%;
+        animation-delay: 0s;
+    }
+
+    .ball-2 {
+        width: 60px;
+        height: 60px;
+        background: radial-gradient(circle at 30% 30%, #93c5fd, #3b82f6);
+        top: 60%;
+        left: 10%;
+        animation-delay: 1s;
+    }
+
+    .ball-3 {
+        width: 70px;
+        height: 70px;
+        background: radial-gradient(circle at 30% 30%, #fde68a, #f59e0b);
+        top: 30%;
+        right: 15%;
+        animation-delay: 2s;
+    }
+
+    .ball-4 {
+        width: 50px;
+        height: 50px;
+        background: radial-gradient(circle at 30% 30%, #f9a8d4, #ec4899);
+        bottom: 10%;
+        right: 20%;
+        animation-delay: 3s;
+    }
+
+    @@keyframes float {
+        0%, 100% {
+            transform: translateY(0) rotate(0deg);
+        }
+        50% {
+            transform: translateY(-20px) rotate(10deg);
+        }
+    }
+
+    /* ===== Pulse Animation for Quick Cards ===== */
+    @@keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+        }
+    }
+
+    .pulse-animation {
+        animation: pulse 2s infinite;
+    }
+
+    /* ===== Responsive Adjustments ===== */
+    @@media (max-width: 768px) {
+        .dashboard-card, .quick-card, .chart-card {
+            border-radius: 16px;
+            padding: 1.25rem;
+        }
+        
+        .main-number, .quick-number {
+            font-size: 1.5rem;
+        }
+        
+        .card-icon, .quick-icon {
+            min-width: 50px;
+            min-height: 50px;
+            font-size: 1.2rem;
+        }
+    }
 </style>
 
 <div class="container-fluid p-4">
-    <div class="d-flex justify-content-between align-items-center mb-4 p-3 rounded shadow-sm flex-wrap"
-         style="background: #f8fafc; border: 1px solid #e5e7eb;">
-
+    <!-- Header with Filter -->
+    <div class="d-flex justify-content-between align-items-center mb-4 p-3 rounded flex-wrap header-filter">
         <!-- Filter Section -->
         <form method="get" asp-action="Index" class="d-flex align-items-center gap-2 flex-wrap mb-0">
-
             <div class="input-group input-group-sm" style="width: auto;">
                 <span class="input-group-text bg-light fw-semibold text-secondary">From</span>
                 <input type="date" name="fromDate" class="form-control form-control-sm"
@@ -305,7 +501,7 @@
 
         <!-- Current Date & Time -->
         <div class="d-flex align-items-center">
-            <div class="bg-white px-3 py-2 rounded shadow-sm border text-secondary d-flex align-items-center gap-2">
+            <div class="current-time px-3 py-2 rounded text-secondary d-flex align-items-center gap-2">
                 <i class="fa fa-clock text-primary"></i>
                 <span id="currentDateTime" class="fw-semibold" style="font-size: 0.95rem;"></span>
             </div>
@@ -367,17 +563,25 @@
         </div>
 
         <div class="col-lg-4">
-            <div class="chart-card" style="background: linear-gradient(180deg, #ecfdf5, #ffffff 45%);">
+            <div class="chart-card" style="background: linear-gradient(180deg, #ffffff, #f0fdf4);">
                 <div class="section-title"><i class="fa fa-chart-pie"></i> Most Sales</div>
-
-                <!-- ✅ Fixed-height container + spin wrapper -->
-                <div id="mostSalesContainer">
-                    <div id="mostSalesWrap" class="ms-spin-on-load">
-                        <canvas id="mostSalesChart" width="280" height="280"></canvas>
+                
+                <!-- Ball Animation Container -->
+                <div class="ball-container">
+                    <div class="sales-ball ball-1"></div>
+                    <div class="sales-ball ball-2"></div>
+                    <div class="sales-ball ball-3"></div>
+                    <div class="sales-ball ball-4"></div>
+                    
+                    <!-- Chart Container -->
+                    <div id="mostSalesContainer">
+                        <div id="mostSalesWrap" class="ms-spin-on-load">
+                            <canvas id="mostSalesChart" width="280" height="280"></canvas>
+                        </div>
                     </div>
                 </div>
-
-                <div class="text-muted small mt-2">Top products share</div>
+                
+                <div class="text-muted small mt-2 text-center">Top products share</div>
             </div>
         </div>
     </div>
@@ -386,8 +590,8 @@
     <div class="row g-4 mt-4">
         <div class="col-md-4">
             <div class="quick-card d-flex flex-column justify-content-center align-items-center">
-                <div class="d-flex gap-2 justify-content-center w-100">
-                    <a href="@Url.Action("Add", "Item")" class="btn btn-sm btn-primary d-flex align-items-center gap-2">
+                <div class="d-flex gap-2 justify-content-center w-100 flex-wrap">
+                    <a href="@Url.Action("Add", "Item")" class="btn btn-sm btn-primary d-flex align-items-center gap-2 pulse-animation">
                         <i class="fa fa-box"></i> Add New
                     </a>
                     <a href="@Url.Action("POS", "Sales")" class="btn btn-sm btn-success d-flex align-items-center gap-2">
@@ -402,7 +606,7 @@
 
         <div class="col-md-4">
             <div class="quick-card d-flex flex-column justify-content-center align-items-center">
-                <div class="quick-icon" style="background: linear-gradient(135deg, #fef9c3, #fde68a);">
+                <div class="quick-icon bg-orange">
                     <i class="fa fa-exclamation-triangle"></i>
                 </div>
                 <div class="quick-title">Expiry Items</div>
@@ -412,7 +616,7 @@
 
         <div class="col-md-4">
             <div class="quick-card d-flex flex-column justify-content-center align-items-center">
-                <div class="quick-icon" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0);">
+                <div class="quick-icon bg-green">
                     <i class="fa fa-box-open"></i>
                 </div>
                 <div class="quick-title">Low Stock</div>
@@ -470,7 +674,7 @@
     </div>
 </div>
 
-<!-- Chart.js — remove if already included globally -->
+<!-- Chart.js -->
 <script src="~/lib/chart/chart.js"></script>
 
 <script>
@@ -492,7 +696,7 @@
     setInterval(updateDateTime, 1000);
 </script>
 
-<!-- YOUR ORIGINAL JS (UNTOUCHED) -->
+<!-- Chart Initialization -->
 <script>
     // Sales Line Chart
     const salesCtx = document.getElementById('salesChart').getContext('2d');
@@ -506,16 +710,44 @@
                 borderColor: '#2cc786',
                 backgroundColor: 'rgba(44,199,134,0.1)',
                 tension: 0.4,
-                fill: true
+                fill: true,
+                borderWidth: 3,
+                pointBackgroundColor: '#2cc786',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                pointHoverRadius: 7
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
+            plugins: { 
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    titleColor: '#0f172a',
+                    bodyColor: '#0f172a',
+                    borderColor: '#e2e8f0',
+                    borderWidth: 1,
+                    cornerRadius: 12,
+                    displayColors: false
+                }
+            },
             scales: {
-                x: { grid: { display: false } },
-                y: { grid: { color: '#e0f3e7' }, beginAtZero: true }
+                x: { 
+                    grid: { display: false },
+                    ticks: {
+                        color: '#64748b'
+                    }
+                },
+                y: { 
+                    grid: { color: '#f1f5f9' }, 
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#64748b'
+                    }
+                }
             }
         }
     });
@@ -529,18 +761,40 @@
             datasets: [{
                 data: @Html.Raw(Json.Serialize(Model.TopProductSales)),
                 backgroundColor: ['#6ee7b7', '#93c5fd', '#fde68a', '#f87171', '#c084fc'],
-                hoverOffset: 4
+                hoverOffset: 8,
+                borderWidth: 2,
+                borderColor: '#ffffff'
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '60%'
+            cutout: '60%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: '#64748b',
+                        font: {
+                            size: 11
+                        },
+                        padding: 15
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    titleColor: '#0f172a',
+                    bodyColor: '#0f172a',
+                    borderColor: '#e2e8f0',
+                    borderWidth: 1,
+                    cornerRadius: 12
+                }
+            }
         }
     });
 </script>
 
-<!-- Tiny helper (independent) — re-trigger spin when you want -->
+<!-- Re-trigger spin animation -->
 <script>
     function spinMostSales() {
         const wrap = document.getElementById('mostSalesWrap');
@@ -549,4 +803,7 @@
         void wrap.offsetWidth; // reflow
         wrap.classList.add('ms-spin-on-load');
     }
+    
+    // Re-spin the chart every 10 seconds for visual interest
+    setInterval(spinMostSales, 10000);
 </script>

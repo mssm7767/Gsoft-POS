@@ -6,114 +6,394 @@
     var categories = ViewBag.Categories as List<GSoftPosNew.Models.ExpenseCategory>;
 }
 
-<div class="container mt-4" style="max-width:800px;">
-    <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">
-                <i class="fa fa-folder-plus me-2"></i> Add Expense Category
-            </h5>
-        </div>
-        <div class="card-body">
+@section Styles {
+    <style>
+        :root {
+            --cat-bg: #f3f4f6;
+            --cat-card: #ffffff;
+            --cat-muted: #6b7280;
+            --cat-accent: #0f172a;
+            --cat-primary: #0ea5a4;
+            --cat-success: #22c55e;
+            --cat-danger: #ef4444;
+        }
 
-            @if (TempData["Message"] != null)
-            {
-                <div id="successAlert"
-                     style="
-                         position: fixed;
-                         top: 50%;
-                         left: 50%;
-                         transform: translate(-50%, -50%);
-                         z-index: 9999;
-                         background-color: #d4edda;
-                         border: 1px solid #c3e6cb;
-                         color: #155724;
-                         padding: 15px 25px;
-                         border-radius: 8px;
-                         font-size: 1.2em;
-                         box-shadow: 0 0 10px rgba(0,0,0,0.2);
-                         text-align: center;
-                         max-width: 90%;
-                     ">
-                    <i class="fa fa-check-circle me-2"></i> @TempData["Message"]
-                </div>
+        .cat-create-wrapper {
+            min-height: calc(100vh - 120px);
+            padding: 26px 12px 34px;
+            background: radial-gradient(circle at top left, rgba(56,189,248,0.18), transparent 55%), radial-gradient(circle at bottom right, rgba(16,185,129,0.18), transparent 55%), var(--cat-bg);
+        }
 
-                <script>
-                    setTimeout(() => {
-                        const alert = document.getElementById('successAlert');
-                        if (alert) {
-                            alert.style.display = 'none';
-                        }
-                    }, 1500);
-                </script>
+        .cat-create-shell {
+            max-width: 980px;
+            margin: 0 auto;
+        }
+
+        .cat-create-card {
+            border-radius: 18px;
+            border: 1px solid rgba(148,163,184,0.4);
+            box-shadow: 0 22px 60px rgba(15,23,42,0.22);
+            overflow: hidden;
+            background: radial-gradient(circle at top, #ffffff 0, #f9fafb 45%, #eef2ff 100%);
+        }
+
+        .cat-create-card-header {
+            background: radial-gradient(circle at top left, rgba(56,189,248,0.3), transparent 60%), linear-gradient(135deg, #0ea5e9, #0ea5a4);
+            padding: 15px 20px;
+            color: #e0f2fe;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .cat-header-main {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cat-header-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: rgba(15,23,42,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 24px rgba(15,23,42,0.45);
+        }
+
+            .cat-header-icon i {
+                font-size: 18px;
             }
 
-            @using (Html.BeginForm("Create", "ExpenseCategory", FormMethod.Post))
-            {
-                @Html.AntiForgeryToken()
-                <div class="mb-3">
-                    @Html.LabelFor(m => m.CategoryName, new { @class = "form-label fw-semibold" })
-                    @Html.TextBoxFor(m => m.CategoryName, new { @class = "form-control", placeholder = "Enter category name" })
-                    @Html.ValidationMessageFor(m => m.CategoryName, "", new { @class = "text-danger" })
-                </div>
-                <div class="mb-3">
-                    @Html.LabelFor(m => m.ExpenseFor, new { @class = "form-label fw-semibold" })
-                    @Html.TextBoxFor(m => m.ExpenseFor, new { @class = "form-control", placeholder = "Enter category name" })
-                    @Html.ValidationMessageFor(m => m.ExpenseFor, "", new { @class = "text-danger" })
-                </div>
-                <div class="mb-3">
-                    @Html.LabelFor(m => m.Description, new { @class = "form-label fw-semibold" })
-                    @Html.TextAreaFor(m => m.Description, new { @class = "form-control", rows = 3, placeholder = "Description (optional)" })
-                </div>
-                <div class="text-end">
-                    <button type="submit" class="btn btn-success me-2">
-                        <i class="fa fa-save"></i> Save
-                    </button>
-                    <button type="button" class="btn btn-secondary" onclick="clearForm()">
-                        <i class="fa fa-eraser"></i> Clear
-                    </button>
-                </div>
+        .cat-header-title {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+        }
+
+        .cat-header-subtitle {
+            margin: 0;
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .cat-header-badge {
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            border: 1px solid rgba(219,234,254,0.7);
+            background: rgba(15,23,42,0.16);
+            color: #eff6ff;
+            white-space: nowrap;
+        }
+
+        .cat-card-body {
+            padding: 18px 20px 20px;
+        }
+
+        .cat-section-title {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: var(--cat-muted);
+            margin-bottom: 12px;
+        }
+
+        .cat-card .form-label {
+            font-size: 12px;
+            color: var(--cat-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.09em;
+            margin-bottom: 4px;
+        }
+
+        .cat-card .form-control {
+            border-radius: 10px;
+            border: 1px solid rgba(148,163,184,0.9);
+            font-size: 14px;
+            padding: 9px 11px;
+            background: linear-gradient(180deg, #ffffff, #f9fafb);
+            box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+            transition: border-color 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+        }
+
+            .cat-card .form-control:focus {
+                border-color: var(--cat-primary);
+                box-shadow: 0 0 0 1px rgba(45,212,191,0.4);
+                background: #ffffff;
             }
-        </div>
-    </div>
 
-    <hr class="my-4" />
-    <h5>All Expense Categories</h5>
+        .cat-card .text-danger {
+            font-size: 11px;
+        }
 
-    @if (categories != null && categories.Any())
-    {
-        <table class="table table-bordered table-striped mt-3">
-            <thead class="table-light">
-                <tr>
-                    <th>#</th>
-                    <th>Category Name</th>
-                    <th>Description</th>
-                    <th style="width:120px;">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var c in categories)
-                {
-                    <tr>
-                        <td>@c.Id</td>
-                        <td>@c.CategoryName</td>
-                        <td>@c.Description</td>
-                        <td>
-                            <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-warning">
-                                <i class="fa fa-edit"></i>
-                            </a>
-                            <a asp-action="Delete" asp-route-id="@c.Id" class="btn btn-sm btn-danger" onclick="return confirm('Delete this category?');">
-                                <i class="fa fa-trash"></i>
-                            </a>
-                        </td>
-                    </tr>
+        .cat-actions {
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px dashed rgba(148,163,184,0.7);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .cat-card .btn-success {
+            border-radius: 999px;
+            padding: 8px 18px;
+            font-size: 13px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border: 1px solid rgba(21,128,61,0.9);
+            box-shadow: 0 10px 24px rgba(22,163,74,0.35);
+        }
+
+            .cat-card .btn-success:hover {
+                background: linear-gradient(135deg, #16a34a, #15803d);
+            }
+
+        .cat-card .btn-secondary {
+            border-radius: 999px;
+            padding: 8px 16px;
+            font-size: 13px;
+            border: 1px solid rgba(148,163,184,0.9);
+            background: #f9fafb;
+            color: var(--cat-accent);
+        }
+
+            .cat-card .btn-secondary:hover {
+                background: #e5e7eb;
+            }
+
+        .cat-toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+            background: linear-gradient(135deg, #ecfdf5, #bbf7d0);
+            border: 1px solid #86efac;
+            color: #166534;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-size: 1rem;
+            box-shadow: 0 18px 40px rgba(22,163,74,0.45);
+            text-align: center;
+            max-width: 90%;
+            min-width: 260px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+            .cat-toast i {
+                font-size: 18px;
+            }
+
+        .cat-list-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-top: 20px;
+            margin-bottom: 8px;
+            color: var(--cat-accent);
+            letter-spacing: 0.04em;
+        }
+
+        .cat-list-wrapper {
+            border-radius: 14px;
+            border: 1px solid rgba(148,163,184,0.4);
+            overflow: hidden;
+            background: #ffffff;
+            box-shadow: 0 18px 40px rgba(15,23,42,0.18);
+        }
+
+        .cat-list-table {
+            margin-bottom: 0;
+            font-size: 13px;
+        }
+
+            .cat-list-table thead {
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+            }
+
+                .cat-list-table thead tr th {
+                    padding-top: 9px;
+                    padding-bottom: 9px;
+                    background: linear-gradient(180deg, #eef2ff, #e0f2fe);
+                    border-bottom: 1px solid rgba(148,163,184,0.8);
+                    white-space: nowrap;
                 }
-            </tbody>
-        </table>
-    }
-    else
-    {
-        <div class="alert alert-info mt-3">No categories found.</div>
-    }
+
+            .cat-list-table tbody tr td {
+                padding-top: 8px;
+                padding-bottom: 8px;
+                vertical-align: middle;
+                border-bottom: 1px dashed rgba(148,163,184,0.5);
+            }
+
+            .cat-list-table tbody tr:nth-child(even) td {
+                background-color: #f9fafb;
+            }
+
+            .cat-list-table tbody tr:hover td {
+                background: rgba(219,234,254,0.9);
+            }
+
+        .cat-list-actions .btn {
+            border-radius: 999px;
+            padding: 4px 9px;
+            font-size: 12px;
+        }
+
+        .cat-list-actions .btn-warning {
+            background: #facc15;
+            border-color: #eab308;
+            color: #713f12;
+        }
+
+            .cat-list-actions .btn-warning:hover {
+                background: #eab308;
+            }
+
+        .cat-list-actions .btn-danger {
+            background: #ef4444;
+            border-color: #dc2626;
+        }
+
+            .cat-list-actions .btn-danger:hover {
+                background: #dc2626;
+            }
+    </style>
+}
+
+<div class="cat-create-wrapper">
+    <div class="cat-create-shell">
+        <div class="cat-create-card cat-card card shadow-sm border-0">
+            <div class="cat-create-card-header">
+                <div class="cat-header-main">
+                    <div class="cat-header-icon">
+                        <i class="fa fa-folder-plus"></i>
+                    </div>
+                    <div>
+                        <h5 class="cat-header-title mb-1">Add Expense Category</h5>
+                        <p class="cat-header-subtitle mb-0">
+                            Create categories to organize and track your expenses.
+                        </p>
+                    </div>
+                </div>
+                <div class="cat-header-badge">
+                    <i class="fa fa-layer-group me-1"></i> Category Setup
+                </div>
+            </div>
+
+            <div class="cat-card-body card-body">
+                @if (TempData["Message"] != null)
+                {
+                    <div id="successAlert" class="cat-toast">
+                        <i class="fa fa-check-circle me-1"></i> @TempData["Message"]
+                    </div>
+
+                    <script>
+                        setTimeout(() => {
+                            const alert = document.getElementById('successAlert');
+                            if (alert) {
+                                alert.style.transition = "opacity 0.4s ease";
+                                alert.style.opacity = "0";
+                                setTimeout(() => {
+                                    alert.style.display = "none";
+                                }, 400);
+                            }
+                        }, 1500);
+                    </script>
+                }
+
+                <div class="cat-section-title">
+                    Category Details
+                </div>
+
+                @using (Html.BeginForm("Create", "ExpenseCategory", FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        @Html.LabelFor(m => m.CategoryName, new { @class = "form-label fw-semibold" })
+                        @Html.TextBoxFor(m => m.CategoryName, new { @class = "form-control", placeholder = "Enter category name" })
+                        @Html.ValidationMessageFor(m => m.CategoryName, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="mb-3">
+                        @Html.LabelFor(m => m.ExpenseFor, new { @class = "form-label fw-semibold" })
+                        @Html.TextBoxFor(m => m.ExpenseFor, new { @class = "form-control", placeholder = "Enter purpose e.g. Utilities / Rent / Salary" })
+                        @Html.ValidationMessageFor(m => m.ExpenseFor, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="mb-3">
+                        @Html.LabelFor(m => m.Description, new { @class = "form-label fw-semibold" })
+                        @Html.TextAreaFor(m => m.Description, new { @class = "form-control", rows = 3, placeholder = "Description (optional)" })
+                    </div>
+
+                    <div class="cat-actions text-end">
+                        <button type="button" class="btn btn-secondary" onclick="clearForm()">
+                            <i class="fa fa-eraser me-1"></i> Clear
+                        </button>
+                        <button type="submit" class="btn btn-success me-0">
+                            <i class="fa fa-save me-1"></i> Save Category
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <h5 class="cat-list-title">All Expense Categories</h5>
+
+        @if (categories != null && categories.Any())
+        {
+            <div class="cat-list-wrapper mt-2">
+                <table class="table table-bordered table-striped cat-list-table">
+                    <thead>
+                        <tr>
+                            <th style="width:60px;">#</th>
+                            <th>Category Name</th>
+                            <th>Description</th>
+                            <th style="width:130px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var c in categories)
+                        {
+                            <tr>
+                                <td>@c.Id</td>
+                                <td>@c.CategoryName</td>
+                                <td>@c.Description</td>
+                                <td class="cat-list-actions">
+                                    <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-warning me-1" title="Edit">
+                                        <i class="fa fa-edit"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@c.Id" class="btn btn-sm btn-danger"
+                                       onclick="return confirm('Delete this category?');" title="Delete">
+                                        <i class="fa fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info mt-3 mb-0">
+                <i class="fa fa-info-circle me-1"></i> No categories found.
+            </div>
+        }
+    </div>
 </div>
 
 @section Scripts {

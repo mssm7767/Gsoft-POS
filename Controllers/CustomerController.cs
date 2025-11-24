@@ -7,16 +7,20 @@ using Microsoft.AspNetCore.Mvc;
 using GSoftPosNew.Data;
 using GSoftPosNew.Models;
 using Microsoft.EntityFrameworkCore;
+using GSoftPosNew.Repositories;
+using System.Threading.Tasks;
 
 namespace GSoftPosNew.Controllers
 {
     public class CustomerController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IPasswordHasher _passwordHasher;
 
-        public CustomerController(AppDbContext context)
+        public CustomerController(AppDbContext context, IPasswordHasher passwordHasher)
         {
             _context = context;
+            _passwordHasher = passwordHasher;
         }
 
         // Helper: load grid list
@@ -38,16 +42,38 @@ namespace GSoftPosNew.Controllers
         // ---------- CREATE (POST) ----------
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(Customer model, IFormFile? PictureFile)
+        public async Task<IActionResult> Create(Customer model, IFormFile? PictureFile)
         {
             // Save to database
             try
             {
+                
+
                 _context.Customers.Add(model);
                 _context.SaveChanges();
 
-               
-                    var payment = new CustomerPayment
+                if (model.UserName != null && model.Password != null)
+                {
+                    var hashPassword = _passwordHasher.HashPassword(model.Password);
+
+                    var user = new User
+                    {
+                        CustomerId = model.Id,
+                        FullName = model.CustomerName,
+                        Username = model.UserName,
+                        PasswordHash = hashPassword,
+                        Role = "Customer",
+                        IsActive = false,
+                        EmailConfirmed = false,
+                    };
+
+                    _context.Users.Add(user);
+
+                    await _context.SaveChangesAsync();
+                }
+
+
+                var payment = new CustomerPayment
                     {
                         CustomerId = model.Id,
                         ReceivedBy = "System", // or current user
@@ -225,7 +251,8 @@ namespace GSoftPosNew.Controllers
                         ItemName = i.ItemName,
                         Quantity = v.Quantity,
                         Price = i.UnitPrice,
-                        PurchaseDate = v.LastPurchaseDate
+                        PurchaseDate = v.LastPurchaseDate,
+                        CustomerId = id,
                     }
                 )
                 .ToListAsync();
@@ -235,55 +262,86 @@ namespace GSoftPosNew.Controllers
             ViewBag.CustomerItems = vanItems;
 
 
-
-
-            //var saleIds = await _context.Sales
-            //    .Where(s => s.CustomerId == id)
-            //    .Select(s => s.Id)
-            //    .ToListAsync();
-
-            //var customerItems = await _context.SaleItems
-            //    .Where(si => saleIds.Contains(si.SaleId))
-            //    .Join(
-            //        _context.Sales,
-            //        si => si.SaleId,
-            //        s => s.Id,
-            //        (si, s) => new
-            //        {
-            //            si.ItemId,
-            //            si.Quantity,
-            //            si.UnitPrice,
-            //            s.SaleDate
-            //        }
-            //    )
-            //    .GroupBy(x => x.ItemId)
-            //    .Select(g => new
-            //    {
-            //        ItemId = g.Key,
-            //        Quantity = g.Sum(x => x.Quantity),
-            //        Price = g.Select(x => x.UnitPrice).FirstOrDefault(),   // unit price from sale items
-            //        SaleDate = g.Select(x => x.SaleDate).FirstOrDefault()  // sale date from sale table
-            //    })
-            //    .Join(
-            //        _context.Items,
-            //        sale => sale.ItemId,
-            //        item => item.Id,
-            //        (sale, item) => new
-            //        {
-            //            ItemId = item.Id,
-            //            ItemCode = item.ItemCode,
-            //            ImagePath = item.ImagePath,
-            //            ItemName = item.ItemName,
-            //            Quantity = sale.Quantity,
-            //            Price = sale.Price,
-            //            SaleDate = sale.SaleDate
-            //        }
-            //    )
-            //    .ToListAsync();
-
-            //ViewBag.CustomerItems = customerItems;
-
             return View();
         }
+
+        [HttpPost]
+        public async Task<IActionResult> SellProductsBatch([FromBody] List<SaleItemDto> items)
+        {
+            if (items == null || items.Count == 0)
+                return BadRequest("No items received.");
+
+            var vanStockSale = new List<VanStockSale>();
+
+            foreach (var saleItem in items)
+            {
+                if (saleItem.ItemId <= 0 || saleItem.Quantity <= 0)
+                    continue;
+
+                var vanStock = new VanStockSale
+                {
+                    ItemId = saleItem.ItemId,
+                    CustomerId = saleItem.CustomerId,
+                    Quantity = saleItem.Quantity,
+                    ItemCode = saleItem.ItemCode,
+                    ShopName = saleItem.ShopName,
+                    Description = saleItem.Description,
+                };
+
+                vanStockSale.Add( vanStock );
+
+                // Get all van stocks for this item
+                var vanStocks = await _context.CustomerVanStocks
+                    .Where(v => v.ItemId == saleItem.ItemId)
+                    .ToListAsync();
+
+                if (!vanStocks.Any())
+                    continue; // no stock found for this item
+
+                int qtyToReduce = saleItem.Quantity;
+
+                foreach (var stock in vanStocks)
+                {
+                    if (qtyToReduce <= 0)
+                        break;
+
+                    // If this stock has enough quantity
+                    if (stock.Quantity >= qtyToReduce)
+                    {
+                        stock.Quantity -= qtyToReduce;
+                        qtyToReduce = 0;
+                    }
+                    else
+                    {
+                        // Reduce entire stock and continue
+                        qtyToReduce -= stock.Quantity;
+                        stock.Quantity = 0;
+                    }
+
+                    _context.CustomerVanStocks.Update(stock);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            await _context.AddRangeAsync(vanStockSale);
+
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true });
+        }
+
+    }
+
+    // DTO to receive scanned sale items
+    public class SaleItemDto
+    {
+        public int ItemId { get; set; }
+        public int CustomerId { get; set; }
+        public string ItemCode { get; set; }
+        public int Quantity { get; set; }
+        public string ShopName { get; set; }
+        public string Description { get; set; }
     }
 }
+

@@ -147,6 +147,23 @@
                                 </label>
                                 @Html.TextBoxFor(m => m.Website, new { @class = "form-control", placeholder = "https://example.com" })
                             </div>
+
+                            <!-- Username -->
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="fa fa-user text-primary me-1"></i> User Name (optional)
+                                </label>
+                                @Html.TextBoxFor(m => m.UserName, new { @class = "form-control", placeholder = "Enter username" })
+                            </div>
+
+                            <!-- Password -->
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="fa fa-lock text-danger me-1"></i> Password (optional)
+                                </label>
+                                @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Enter password" })
+                            </div>
+
                         </div>
 
                         <div class="mt-3">

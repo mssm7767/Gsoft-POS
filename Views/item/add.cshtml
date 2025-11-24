@@ -1,8 +1,31 @@
 ﻿@model GSoftPosNew.Models.AddItemViewModel
+@using System.Linq
+@using System.Collections.Generic
+
 @{
     ViewData["Title"] = "Add New Item";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // Safe list for existing items (current stock)
+    var existingItems = Model?.ExistingItems ?? new List<GSoftPosNew.Models.ItemModel>();
+
+    // Distinct supplier names from navigation property Supplier.SupplierName
+    var supplierNames = existingItems
+        .Where(x => x.Supplier != null && !string.IsNullOrWhiteSpace(x.Supplier.SupplierName))
+        .Select(x => x.Supplier.SupplierName)
+        .Distinct()
+        .OrderBy(x => x)
+        .ToList();
+
+    // Distinct category names from navigation property Category.Name
+    var categoryNames = existingItems
+        .Where(x => x.Category != null && !string.IsNullOrWhiteSpace(x.Category.Name))
+        .Select(x => x.Category.Name)
+        .Distinct()
+        .OrderBy(x => x)
+        .ToList();
 }
+
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
 <link href="~/css/item-custom.css" rel="stylesheet" />
 
@@ -20,6 +43,8 @@
     <div class="d-flex align-items-center mb-3">
         <h4 class="mb-0"><i class="fa fa-plus-circle me-2"></i>Add New Item</h4>
     </div>
+
+    @* Success / Error alerts *@
     @if (TempData["Success"] != null)
     {
         <div class="alert alert-success shadow-sm" id="alert-success">@TempData["Success"]</div>
@@ -249,13 +274,41 @@
 
 <!-- ITEMS TABLE (CURRENT STOCK) -->
 <div class="card mb-4 mt-4" style="max-width:900px;margin:0 auto;">
-    <div class="search-bar-row p-2 d-flex gap-2">
-        <input type="text" id="searchItemInput" class="form-control form-control-sm" placeholder="Search item..." />
-        <button class="btn btn-primary btn-sm" type="button" onclick="searchTable()">Search</button>
-        <button class="btn btn-secondary btn-sm" type="button" onclick="window.location.href='@Url.Action("Index", "Item")'">
+    <div class="search-bar-row p-2 d-flex flex-wrap gap-2 align-items-center">
+        <!-- Free text search -->
+        <input type="text"
+               id="searchItemInput"
+               class="form-control form-control-sm"
+               style="max-width:200px;"
+               placeholder="Search item / code..." />
+
+        <!-- Supplier filter -->
+        <select id="filterSupplier" class="form-select form-select-sm" style="max-width:180px;">
+            <option value="">All Suppliers</option>
+            @foreach (var s in supplierNames)
+            {
+                <option value="@s">@s</option>
+            }
+        </select>
+
+        <!-- Category filter -->
+        <select id="filterCategory" class="form-select form-select-sm" style="max-width:180px;">
+            <option value="">All Categories</option>
+            @foreach (var c in categoryNames)
+            {
+                <option value="@c">@c</option>
+            }
+        </select>
+
+        <button class="btn btn-primary btn-sm" type="button" onclick="searchTable()">
+            Search
+        </button>
+
+        <button class="btn btn-secondary btn-sm ms-auto" type="button" onclick="window.location.href='@Url.Action("Index", "Item")'">
             <i class="fa fa-list me-1"></i> Stock List
         </button>
     </div>
+
     <div class="card-header bg-secondary text-white form-label-sm">Current Stock</div>
     <div class="card-body p-0">
         <div class="table-responsive" style="max-height:300px; overflow-y:auto;">
@@ -272,14 +325,19 @@
                         <th class="form-label-sm">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="stockBody">
+                    @* yahan Model.ExistingItems se sirf 20 items aayeinge, kyunke controller me already .Take(20) laga diya *@
                     @foreach (var it in Model.ExistingItems)
                     {
-                        <tr>
+                        var supplierName = it.Supplier?.SupplierName ?? "";
+                        var categoryName = it.Category?.Name ?? "";
+
+                        <tr data-supplier="@supplierName"
+                            data-category="@categoryName">
                             <td class="form-label-sm">@it.ItemCode</td>
                             <td class="form-label-sm">@it.ItemName</td>
-                            <td class="form-label-sm">@it.CategoryId</td>
-                            <td class="form-label-sm">@it.SupplierId</td>
+                            <td class="form-label-sm">@categoryName</td>
+                            <td class="form-label-sm">@supplierName</td>
                             <td class="form-label-sm">@it.Quantity</td>
                             <td class="form-label-sm">@it.PurchasePrice.ToString("0.00")</td>
                             <td class="form-label-sm">@it.SalePrice.ToString("0.00")</td>
@@ -306,23 +364,25 @@
         const input = document.getElementById("Item_ItemCode");
         const message = document.getElementById("itemCodeMessage");
 
-        input.addEventListener("input", function () {
-            const code = input.value.trim();
-            if (code.length < 1) {
-                message.textContent = "";
-                return;
-            }
+        if (input) {
+            input.addEventListener("input", function () {
+                const code = input.value.trim();
+                if (code.length < 1) {
+                    message.textContent = "";
+                    return;
+                }
 
-            fetch(`/Item/CheckItemCode?itemCode=${encodeURIComponent(code)}`)
-                .then(res => res.json())
-                .then(exists => {
-                    if (exists) {
-                        message.textContent = "This Item Code already exists!";
-                    } else {
-                        message.textContent = "";
-                    }
-                });
-        });
+                fetch(`/Item/CheckItemCode?itemCode=${encodeURIComponent(code)}`)
+                    .then(res => res.json())
+                    .then(exists => {
+                        if (exists) {
+                            message.textContent = "This Item Code already exists!";
+                        } else {
+                            message.textContent = "";
+                        }
+                    });
+            });
+        }
     </script>
 
     <script>
@@ -347,9 +407,7 @@
                 });
             }
         });
-
     </script>
-
 
     <script>
         // =================== Time & Date ===================
@@ -377,12 +435,12 @@
 
         const codeInput = document.getElementById('Item_ItemCode');
         const refInput  = document.getElementById('Item_ReferenceCode') || qs('input[name="ItemData.ReferenceCode"]');
-        const nameInput = document.getElementById('Item_ItemName')      || qs('input[name="ItemData.ItemName"]');
-        const flavInput = document.getElementById('Item_Flavour')       || qs('input[name="ItemData.Flavour"]');
-        const catSel    = document.getElementById('CategoryId')         || qs('select[name="ItemData.CategoryId"]');
-        const supSel    = document.getElementById('SupplierId')         || qs('select[name="ItemData.SupplierId"]');
-        const qtyInput  = document.getElementById('Item_Quantity')      || qs('input[name="ItemData.Quantity"]');
-        const imgInput  = document.getElementById('ImageFile')          || qs('input[name="ImageFile"]');
+        const nameInput2 = document.getElementById('Item_ItemName')      || qs('input[name="ItemData.ItemName"]');
+        const flavInput  = document.getElementById('Item_Flavour')       || qs('input[name="ItemData.Flavour"]');
+        const catSel     = document.getElementById('CategoryId')         || qs('select[name="ItemData.CategoryId"]');
+        const supSel     = document.getElementById('SupplierId')         || qs('select[name="ItemData.SupplierId"]');
+        const qtyInput   = document.getElementById('Item_Quantity')      || qs('input[name="ItemData.Quantity"]');
+        const imgInput   = document.getElementById('ImageFile')          || qs('input[name="ImageFile"]');
 
         // Ensure duplicate notice container exists (under barcode field)
         let duplicateNotice = document.getElementById('duplicateNotice');
@@ -471,17 +529,79 @@
             if (flavInput) { flavInput.value = ''; flavInput.focus(); }
         });
 
-        // =================== Stock search ===================
-        function searchTable() {
-            var input = document.getElementById("searchItemInput");
-            var filter = (input?.value || '').toLowerCase();
-            var trs = document.querySelectorAll("#stockTable tbody tr");
-            trs.forEach(tr => {
-                var rowText = tr.innerText.toLowerCase();
-                tr.style.display = rowText.includes(filter) ? "" : "none";
+        // =================== Stock search (AJAX – text + supplier + category) ===================
+        function renderStockRows(items) {
+            const tbody = document.querySelector('#stockTable tbody');
+            if (!tbody) return;
+
+            tbody.innerHTML = '';
+
+            if (!items || !items.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-2">No items found</td>
+                    </tr>`;
+                return;
+            }
+
+            items.forEach(it => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="form-label-sm">${it.itemCode ?? ''}</td>
+                    <td class="form-label-sm">${it.itemName ?? ''}</td>
+                    <td class="form-label-sm">${it.categoryName ?? ''}</td>
+                    <td class="form-label-sm">${it.supplierName ?? ''}</td>
+                    <td class="form-label-sm">${it.quantity ?? 0}</td>
+                    <td class="form-label-sm">${(it.purchasePrice ?? 0).toFixed(2)}</td>
+                    <td class="form-label-sm">${(it.salePrice ?? 0).toFixed(2)}</td>
+                    <td class="form-label-sm">
+                        <a href="/Item/Edit/${it.id}" class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                            <i class="fa fa-edit"></i>
+                        </a>
+                        <form action="/Item/Delete/${it.id}" method="post" style="display:inline">
+                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                    onclick="return confirm('Confirm delete?');" title="Delete">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </form>
+                    </td>`;
+                tbody.appendChild(tr);
             });
         }
+
+        function searchTable() {
+            const text = (document.getElementById("searchItemInput")?.value || "").trim();
+            const sup  = (document.getElementById("filterSupplier")?.value || "").trim();
+            const cat  = (document.getElementById("filterCategory")?.value || "").trim();
+
+            const url = '@Url.Action("SearchStockAjax", "Item")'
+                + `?search=${encodeURIComponent(text)}`
+                + `&supplier=${encodeURIComponent(sup)}`
+                + `&category=${encodeURIComponent(cat)}`;
+
+            fetch(url)
+                .then(r => {
+                    if (!r.ok) throw new Error("Network error");
+                    return r.json();
+                })
+                .then(data => {
+                    renderStockRows(data);
+                })
+                .catch(() => {
+                    alert("Error loading stock items.");
+                });
+        }
         window.searchTable = searchTable;
+
+        document.addEventListener("DOMContentLoaded", function () {
+            document.getElementById("searchItemInput")?.addEventListener("keyup", function (e) {
+                if (e.key === "Enter") {
+                    searchTable();
+                }
+            });
+            document.getElementById("filterSupplier")?.addEventListener("change", searchTable);
+            document.getElementById("filterCategory")?.addEventListener("change", searchTable);
+        });
 
         // =================== More details toggle ===================
         function toggleMoreDetails() {
@@ -539,7 +659,7 @@
             function setVal(el, v){ if(el) el.value = (v ?? ''); }
             function fillFromItem(it){
                 setVal(refInput, it.referenceCode);
-                setVal(nameInput, it.itemName);
+                setVal(nameInput2, it.itemName);
                 setVal(flavInput, it.flavour);
                 setVal(document.getElementById('mrpPrice'),      it.salePrice);
                 setVal(document.getElementById('markupPct'),     it.markupPercentage);
@@ -663,6 +783,5 @@
             }
         })();
     </script>
-
 }
 

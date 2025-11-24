@@ -68,7 +68,9 @@ namespace GSoftPosNew.Controllers
                     {
                         new Claim(ClaimTypes.Name, user.FullName ?? string.Empty),
                         new Claim(ClaimTypes.Role, user.Role),
+                        new Claim("CustomerId", user.CustomerId?.ToString() ?? "0") // <-- Add this
                     };
+
 
                     var claimsIdentity = new ClaimsIdentity(
                         claims, CookieAuthenticationDefaults.AuthenticationScheme);

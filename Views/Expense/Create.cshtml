@@ -5,66 +5,316 @@
     var categories = ViewBag.Categories as List<SelectListItem>;
 }
 
-<div class="container mt-4" style="max-width:700px;">
-    <div class="card shadow">
-        <div class="card-header bg-primary text-white">
-            <h5><i class="fa fa-plus-circle"></i> Add New Expense</h5>
+@section Styles {
+    <style>
+        :root {
+            --expense-bg: #0f172a;
+            --expense-card: #ffffff;
+            --expense-muted: #6b7280;
+            --expense-accent: #0f172a;
+            --expense-primary: #0ea5a4;
+            --expense-danger: #ef4444;
+        }
+
+        .expense-wrapper {
+            min-height: calc(100vh - 120px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 12px;
+            background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 55%), radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.18), transparent 55%), #f3f4f6;
+        }
+
+        .expense-card {
+            max-width: 760px;
+            width: 100%;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.26);
+            background: radial-gradient(circle at top, #ffffff 0, #f9fafb 40%, #eef2ff 100%);
+        }
+
+        .expense-card-header {
+            background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 55%), linear-gradient(135deg, #0ea5a4, #0891b2);
+            padding: 16px 22px;
+            color: #ecfeff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .expense-card-header-main {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .expense-icon-wrap {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.35);
+        }
+
+            .expense-icon-wrap i {
+                font-size: 18px;
+            }
+
+        .expense-title {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+        }
+
+        .expense-subtitle {
+            margin: 0;
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .expense-badge {
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            border: 1px solid rgba(240, 253, 250, 0.65);
+            background: rgba(15, 23, 42, 0.18);
+            white-space: nowrap;
+        }
+
+        .expense-card-body {
+            padding: 18px 22px 20px;
+        }
+
+        .expense-alert {
+            border-radius: 12px;
+            border: 1px solid rgba(34, 197, 94, 0.35);
+            background: linear-gradient(135deg, #ecfdf5, #dcfce7);
+            color: #166534;
+            font-size: 14px;
+        }
+
+        .expense-section-title {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            color: var(--expense-muted);
+            margin-bottom: 14px;
+        }
+
+        .expense-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px 18px;
+        }
+
+        .expense-grid-full {
+            grid-column: 1 / -1;
+        }
+
+        .expense-card .form-label {
+            font-size: 12px;
+            color: var(--expense-muted);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.09em;
+        }
+
+        .expense-card .form-control,
+        .expense-card .form-select {
+            border-radius: 10px;
+            border: 1px solid rgba(148, 163, 184, 0.9);
+            font-size: 14px;
+            padding: 9px 11px;
+            background: linear-gradient(180deg, #ffffff, #f9fafb);
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+            transition: border-color 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+        }
+
+            .expense-card .form-control:focus,
+            .expense-card .form-select:focus {
+                border-color: var(--expense-primary);
+                box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.4);
+                background: #ffffff;
+            }
+
+        .expense-card .text-danger {
+            font-size: 11px;
+        }
+
+        .expense-actions {
+            border-top: 1px dashed rgba(148, 163, 184, 0.6);
+            margin-top: 18px;
+            padding-top: 14px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .expense-card .btn-success {
+            border-radius: 999px;
+            padding: 8px 18px;
+            font-size: 13px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border: 1px solid rgba(21, 128, 61, 0.9);
+            box-shadow: 0 10px 24px rgba(22, 163, 74, 0.35);
+        }
+
+            .expense-card .btn-success i {
+                font-size: 13px;
+            }
+
+            .expense-card .btn-success:hover {
+                background: linear-gradient(135deg, #16a34a, #15803d);
+            }
+
+        .expense-card .btn-secondary {
+            border-radius: 999px;
+            padding: 8px 16px;
+            font-size: 13px;
+            border: 1px solid rgba(148, 163, 184, 0.9);
+            background: #f9fafb;
+            color: var(--expense-accent);
+        }
+
+            .expense-card .btn-secondary i {
+                font-size: 13px;
+            }
+
+            .expense-card .btn-secondary:hover {
+                background: #e5e7eb;
+            }
+
+        @@media (max-width: 768px) {
+            .expense-wrapper
+
+        {
+            padding: 18px 10px;
+            align-items: flex-start;
+        }
+
+        .expense-card {
+            border-radius: 14px;
+            box-shadow: 0 16px 38px rgba(15, 23, 42, 0.18);
+        }
+
+        .expense-card-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .expense-badge {
+            align-self: flex-start;
+        }
+
+        .expense-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .expense-actions {
+            flex-direction: row-reverse;
+            justify-content: space-between;
+        }
+
+        }</style>
+}
+
+<div class="expense-wrapper">
+    <div class="expense-card card shadow border-0">
+        <div class="expense-card-header">
+            <div class="expense-card-header-main">
+                <div class="expense-icon-wrap">
+                    <i class="fa fa-wallet"></i>
+                </div>
+                <div>
+                    <p class="expense-title">Add New Expense</p>
+                    <p class="expense-subtitle">Record and track your business spending in a few clicks.</p>
+                </div>
+            </div>
+            <div class="expense-badge">
+                <i class="fa fa-receipt me-1"></i> Expense Entry
+            </div>
         </div>
-        <div class="card-body">
+
+        <div class="expense-card-body card-body">
             @if (TempData["Message"] != null)
             {
-                <div class="alert alert-success text-center" id="success-alert">
-                    <i class="fa fa-check-circle"></i> @TempData["Message"]
+                <div class="expense-alert alert alert-success text-center d-flex align-items-center justify-content-center mb-3" id="success-alert">
+                    <i class="fa fa-check-circle me-2"></i>
+                    <span>@TempData["Message"]</span>
                 </div>
             }
 
+            <div class="expense-section-title">
+                Expense Details
+            </div>
 
             @using (Html.BeginForm("Create", "Expense", FormMethod.Post))
             {
                 @Html.AntiForgeryToken()
 
-                <div class="mb-3">
-                    @Html.LabelFor(m => m.ExpenseDate, new { @class = "form-label" })
-                    @Html.TextBoxFor(m => m.ExpenseDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
-                    @Html.ValidationMessageFor(m => m.ExpenseDate, "", new { @class = "text-danger" })
-                </div>
+                <div class="expense-grid">
+                    <div class="mb-2">
+                        @Html.LabelFor(m => m.ExpenseDate, new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.ExpenseDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+                        @Html.ValidationMessageFor(m => m.ExpenseDate, "", new { @class = "text-danger" })
+                    </div>
 
-                <div class="mb-3">
-                    @Html.LabelFor(m => m.ExpenseCategoryId, new { @class = "form-label" })
-                    @Html.DropDownListFor(m => m.ExpenseCategoryId, categories, "-- Select Category --", new { @class = "form-select" })
-                    @Html.ValidationMessageFor(m => m.ExpenseCategoryId, "", new { @class = "text-danger" })
-                </div>
+                    <div class="mb-2">
+                        @Html.LabelFor(m => m.ExpenseCategoryId, new { @class = "form-label" })
+                        @Html.DropDownListFor(m => m.ExpenseCategoryId, categories, "-- Select Category --", new { @class = "form-select" })
+                        @Html.ValidationMessageFor(m => m.ExpenseCategoryId, "", new { @class = "text-danger" })
+                    </div>
 
-                <div class="mb-3">
-                   @Html.LabelFor(m => m.ExpenseFor, new { @class = "form-label" })
-                   @Html.TextBoxFor(m => m.ExpenseFor, new { @class = "form-control" })
-                </div>
+                    <div class="mb-2 expense-grid-full">
+                        @Html.LabelFor(m => m.ExpenseFor, new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.ExpenseFor, new { @class = "form-control", placeholder = "What is this expense for?" })
+                    </div>
 
-                <div class="mb-3">
-                    @Html.LabelFor(m => m.Amount, new { @class = "form-label" })
-                    @Html.TextBoxFor(m => m.Amount, new { @class = "form-control", type = "number", step = "0.01" })
+                    <div class="mb-2">
+                        @Html.LabelFor(m => m.Amount, new { @class = "form-label" })
+                        @Html.TextBoxFor(
+                        m => m.Amount,
+                                        new { @class = "form-control", type = "number", step = "0.01", placeholder = "0.00" }
+                                        )
                     @Html.ValidationMessageFor(m => m.Amount, "", new { @class = "text-danger" })
                 </div>
 
-                <div class="mb-3">
+                <div class="mb-2">
                     @Html.LabelFor(m => m.ReferenceNumber, new { @class = "form-label" })
-                    @Html.TextBoxFor(m => m.ReferenceNumber, new { @class = "form-control", placeholder = "Reference number" })
+                    @Html.TextBoxFor(
+                                        m => m.ReferenceNumber,
+                                        new { @class = "form-control", placeholder = "Invoice / slip / reference no." }
+                                        )
                 </div>
 
-                <div class="mb-3">
+                <div class="mb-2 expense-grid-full">
                     @Html.LabelFor(m => m.Note, new { @class = "form-label" })
-                    @Html.TextAreaFor(m => m.Note, new { @class = "form-control", rows = 2, placeholder = "Additional notes" })
+                    @Html.TextAreaFor(
+                                        m => m.Note,
+                                        new { @class = "form-control", rows = 2, placeholder = "Optional: add any extra details or notes" }
+                                        )
                 </div>
+            </div>
 
-                <div class="text-end">
-                    <button type="submit" class="btn btn-success me-2">
-                        <i class="fa fa-save"></i> Save
-                    </button>
-                    <button type="reset" class="btn btn-secondary">
-                        <i class="fa fa-eraser"></i> Clear
-                    </button>
-                </div>
-            }
+            <div class="expense-actions text-end">
+                <button type="reset" class="btn btn-secondary">
+                    <i class="fa fa-eraser me-1"></i> Clear
+                </button>
+                <button type="submit" class="btn btn-success">
+                    <i class="fa fa-save me-1"></i> Save Expense
+                </button>
+            </div>
+                        }
         </div>
     </div>
 </div>
@@ -77,7 +327,7 @@
             alertBox.style.opacity = "0";
             setTimeout(function () {
                 alertBox.style.display = "none";
-            }, 500); // wait for fade-out
+            }, 500);
         }
-    }, 2000); // 2 seconds
+    }, 2000);
 </script>

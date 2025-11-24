@@ -7,6 +7,7 @@ namespace GSoftPosNew.Models
     {
         [Key]
         public int Id { get; set; }
+        public int? CustomerId { get; set; }
 
         [Required, Display(Name = "Full Name")]
         public string FullName { get; set; } = string.Empty; // nvarchar(MAX), NOT NULL

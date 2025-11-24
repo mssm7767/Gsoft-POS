@@ -1,6 +1,8 @@
 ﻿@model IEnumerable<GSoftPosNew.Models.CustomerReportDto>
 
 @{
+    var role = Context.Items["UserRole"] as string;
+    var permissions = Context.Items["UserPermissions"] as Dictionary<string, bool> ?? new();
     ViewData["Title"] = "Customer Report";
     var totalCustomers = Model?.Count() ?? 0;
     var sumSales = Model?.Sum(x => x.Debit) ?? 0m;
@@ -10,6 +12,8 @@
     var sumPayable = Model?.Sum(x => x.Payable) ?? 0m;
 }
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
 <style>
     :root {
         --ink: #0f172a;
@@ -18,12 +22,7 @@
         --card: #fff;
         --line: #e2e8f0;
         --shadow: 0 8px 24px rgba(2,6,23,.06);
-        --blue: #2563eb;
-        --blue-2: #60a5fa;
         --indigo: #1e3a8a;
-        --green: #10b981;
-        --amber: #f59e0b;
-        --red: #dc2626;
     }
 
     body {
@@ -38,7 +37,6 @@
         background: var(--card);
     }
 
-    /* Header: light, modern */
     .card-header {
         background: linear-gradient(135deg,#e0f2fe 0%,#dbeafe 40%,#bfdbfe 100%) !important;
         border-bottom: 1px solid #c7d2fe;
@@ -49,6 +47,7 @@
         display: flex;
         align-items: center;
         gap: 12px;
+        flex-wrap: wrap;
     }
 
     .hdr-title {
@@ -59,6 +58,7 @@
         color: var(--indigo);
         margin: 0;
         letter-spacing: .2px;
+        white-space: nowrap;
     }
 
     .hdr-right {
@@ -94,10 +94,6 @@
         min-width: 260px;
     }
 
-        .search-wrap i {
-            color: #1e40af;
-        }
-
     #searchBox {
         border: none;
         outline: none;
@@ -106,7 +102,6 @@
         background: transparent;
     }
 
-    /* Toolbar (Totals Buttons) */
     .toolbar {
         display: flex;
         gap: 10px;
@@ -129,14 +124,11 @@
         font-weight: 700;
         cursor: pointer;
         transition: background .15s ease,border-color .15s ease, transform .04s ease;
+        white-space: nowrap;
     }
 
         .btn-chip:hover {
             background: #eef2f7;
-        }
-
-        .btn-chip:active {
-            transform: translateY(1px);
         }
 
         .btn-chip.active {
@@ -149,50 +141,75 @@
             font-weight: 800;
         }
 
-        .btn-chip .arrow {
-            font-size: .95rem;
-            opacity: .8;
+    /* ===== TABLE ===== */
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    #customerTable {
+        min-width: 600px;
+    }
+
+        #customerTable thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: #f1f5f9;
+            color: #0f172a;
+            border-bottom: 1px solid var(--line);
+            font-weight: 800;
+            letter-spacing: .02em;
+            white-space: nowrap; /* prevent wrap */
+            overflow: hidden;
+            text-overflow: ellipsis; /* show ... if too long */
+            font-size: 0.9rem;
         }
 
-    /* Table */
-    .table-responsive {
-        border-top: 1px solid var(--line);
-        border-bottom: 1px solid var(--line);
-        max-height: 70vh;
-        overflow: auto;
+        #customerTable tbody tr:hover {
+            background: #f8fafc !important;
+        }
+
+        #customerTable td.text-end {
+            font-weight: 400;
+        }
+
+        #customerTable tfoot {
+            background: #eff6ff;
+            color: #1e3a8a;
+            border-top: 1px solid #bfdbfe;
+            font-weight: 700;
+        }
+
+    /* Responsive font size for table headings on small screens */
+    @@media (max-width: 576px) {
+        #customerTable thead th
+
+    {
+        font-size: 0.8rem;
     }
 
-    #customerTable thead th {
-        position: sticky;
-        top: 0;
-        z-index: 2;
-        background: #f1f5f9;
-        color: #0f172a;
-        border-bottom: 1px solid var(--line);
-        font-weight: 800;
-        letter-spacing: .02em;
     }
 
-    .table-hover tbody tr:hover {
-        background: #f8fafc !important;
+    /* Modern buttons */
+    .modern-btn {
+        display: inline-flex;
+        align-items: center;
+        font-size: 0.85rem;
+        padding: 6px 12px;
+        border-radius: 50px;
+        color: #fff !important;
+        font-weight: 500;
+        background: linear-gradient(135deg, #4f46e5, #06b6d4);
+        border: none;
+        box-shadow: 0 4px 10px rgba(79, 70, 229, 0.25);
+        transition: all .25s ease;
+        white-space: nowrap;
     }
 
-    #customerTable td.text-end {
-        font-weight: 400;
-    }
-    /* numbers not bold */
-
-    /* Footer totals row */
-    #customerTable tfoot {
-        background: #eff6ff;
-        color: #1e3a8a;
-        border-top: 1px solid #bfdbfe;
-    }
-
-    /* Utility */
-    .muted {
-        color: var(--muted);
-    }
+        .modern-btn:hover {
+            background: linear-gradient(135deg, #4338ca, #0ea5e9);
+            box-shadow: 0 6px 14px rgba(79, 70, 229, 0.35);
+        }
 </style>
 
 <div class="container-fluid py-4">
@@ -216,27 +233,23 @@
             </div>
         </div>
 
-        <!-- Totals Buttons Toolbar (TOP) -->
+        <!-- Toolbar -->
         <div class="toolbar">
             <button id="btnAll" class="btn-chip active" type="button" title="Show all">
                 <i class="fa-regular fa-rectangle-list"></i>
                 All <span class="sum">@totalCustomers</span>
-                <span class="arrow"><i class="fa-solid fa-angle-down"></i></span>
             </button>
-
             <button id="btnReceivable" class="btn-chip" type="button" title="Only receivable > 0">
                 <i class="fa-solid fa-arrow-trend-up"></i>
                 Receivable <span class="sum">@sumReceivable.ToString("N2")</span>
-                <span class="arrow"><i class="fa-solid fa-angle-down"></i></span>
             </button>
-
             <button id="btnPayable" class="btn-chip" type="button" title="Only payable > 0">
                 <i class="fa-solid fa-arrow-trend-down"></i>
                 Payable <span class="sum">@sumPayable.ToString("N2")</span>
-                <span class="arrow"><i class="fa-solid fa-angle-down"></i></span>
             </button>
         </div>
 
+        <!-- Table -->
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table id="customerTable" class="table table-bordered table-hover mb-0">
@@ -248,24 +261,37 @@
                             <th class="text-end">Advance (₨)</th>
                             <th class="text-end">Receivable (₨)</th>
                             <th class="text-end">Payable (₨)</th>
+                            @if (permissions.TryGetValue("CustomersProducts", out var canAccessCustomersProducts) && canAccessCustomersProducts)
+                            {
+                                <th>Products</th>
+                            }
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var item in Model)
                         {
-                            <tr data-receivable="@item.Receivable.ToString("0.##")"
-                                data-payable="@item.Payable.ToString("0.##")">
+                            <tr data-receivable="@item.Receivable" data-payable="@item.Payable">
                                 <td>@item.CustomerName</td>
                                 <td class="text-end">@item.Debit.ToString("N2")</td>
                                 <td class="text-end">@item.Credit.ToString("N2")</td>
                                 <td class="text-end">@item.Advance.ToString("N2")</td>
                                 <td class="text-end text-success">@item.Receivable.ToString("N2")</td>
                                 <td class="text-end text-danger">@item.Payable.ToString("N2")</td>
-                                <td><a asp-action="CustomerProduct" asp-controller="Customer" asp-route-id="@item.CustomerId">Products</a></td>
+                                @if (permissions.TryGetValue("CustomersProducts", out var canAccessCustomersProduct) && canAccessCustomersProduct)
+                                {
+                                    <td>
+                                        <a asp-action="CustomerProduct"
+                                           asp-controller="Customer"
+                                           asp-route-id="@item.CustomerId"
+                                           class="modern-btn">
+                                            <i class="bi bi-box-seam me-1"></i> Products
+                                        </a>
+                                    </td>
+                                }
                             </tr>
                         }
                     </tbody>
-                    <tfoot class="fw-semibold">
+                    <tfoot>
                         <tr>
                             <td>Total</td>
                             <td class="text-end">@sumSales.ToString("N2")</td>
@@ -273,6 +299,10 @@
                             <td class="text-end">@sumAdvance.ToString("N2")</td>
                             <td class="text-end">@sumReceivable.ToString("N2")</td>
                             <td class="text-end">@sumPayable.ToString("N2")</td>
+                            @if (permissions.TryGetValue("CustomersProducts", out var canAccessCustomersProductss) && canAccessCustomersProductss)
+                            {
+                                <td></td>
+                            }
                         </tr>
                     </tfoot>
                 </table>
@@ -281,15 +311,9 @@
     </div>
 </div>
 
-@section Styles {
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-          crossorigin="anonymous" referrerpolicy="no-referrer" />
-}
-
 @section Scripts {
     <script>
-        // Live clock (header right)
+        // Live clock
         function tickClock(){
             const el = document.getElementById('liveClock');
             if(!el) return;
@@ -299,7 +323,7 @@
         }
         tickClock(); setInterval(tickClock, 30000);
 
-        // Existing search filter (unchanged)
+        // Search filter
         document.getElementById("searchBox").addEventListener("keyup", function () {
             var value = this.value.toLowerCase();
             var rows = document.querySelectorAll("#customerTable tbody tr");
@@ -310,8 +334,6 @@
                 if (txt.includes(value) && row.dataset._hiddenByBtn !== "true") {
                     row.style.display = "";
                     anyVisible = true;
-                } else if (row.dataset._hiddenByBtn === "true") {
-                    row.style.display = "none";
                 } else {
                     row.style.display = "none";
                 }
@@ -322,12 +344,12 @@
                 if (!noRow) {
                     document.querySelector("#customerTable tbody")
                         .insertAdjacentHTML("beforeend",
-                            "<tr id='noResultsRow'><td colspan='6' class='text-center text-muted'>No customers found</td></tr>");
+                            "<tr id='noResultsRow'><td colspan='7' class='text-center text-muted'>No customers found</td></tr>");
                 }
             } else if (noRow) { noRow.remove(); }
         });
 
-        // Top totals buttons filtering (adds-on; search logic untouched)
+        // Top totals buttons filtering
         const btnAll = document.getElementById('btnAll');
         const btnRec = document.getElementById('btnReceivable');
         const btnPay = document.getElementById('btnPayable');
@@ -348,7 +370,6 @@
                 else hide = false;
                 r.dataset._hiddenByBtn = hide ? "true" : "false";
             });
-            // re-trigger search to combine both filters
             document.getElementById("searchBox").dispatchEvent(new Event('keyup'));
         }
 

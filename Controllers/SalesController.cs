@@ -306,8 +306,13 @@ namespace GSoftPosNew.Controllers
                     await _context.SaveChangesAsync();
 
                     var vanStockList = new List<CustomerVanStock>();
+
                     foreach (var item in sale.SaleItems)
                     {
+                        // ❗ Skip if CustomerId is null or 0
+                        if (sale.CustomerId == null || sale.CustomerId == 0)
+                            continue;
+
                         var vanStock = new CustomerVanStock
                         {
                             CustomerId = sale.CustomerId,
@@ -318,8 +323,11 @@ namespace GSoftPosNew.Controllers
                         vanStockList.Add(vanStock);
                     }
 
-                    await _context.AddRangeAsync(vanStockList);
-                    await _context.SaveChangesAsync();
+                    if (vanStockList.Any())
+                    {
+                        await _context.AddRangeAsync(vanStockList);
+                        await _context.SaveChangesAsync();
+                    }
 
                     if (sale.Payment?.PaymentMethod?.ToLower() == "credit")
                     {
@@ -872,8 +880,13 @@ namespace GSoftPosNew.Controllers
                     await _context.SaveChangesAsync();
 
                     var vanStockList = new List<CustomerVanStock>();
+
                     foreach (var item in sale.SaleItems)
                     {
+                        // ❗ Skip if CustomerId is null or 0
+                        if (sale.CustomerId == null || sale.CustomerId == 0)
+                            continue;
+
                         var vanStock = new CustomerVanStock
                         {
                             CustomerId = sale.CustomerId,
@@ -884,8 +897,12 @@ namespace GSoftPosNew.Controllers
                         vanStockList.Add(vanStock);
                     }
 
-                    await _context.AddRangeAsync(vanStockList);
-                    await _context.SaveChangesAsync();
+                    if (vanStockList.Any())
+                    {
+                        await _context.AddRangeAsync(vanStockList);
+                        await _context.SaveChangesAsync();
+                    }
+
 
                     if (sale.Payment?.PaymentMethod?.ToLower() == "credit")
                     {
@@ -1001,7 +1018,19 @@ namespace GSoftPosNew.Controllers
 
         public async Task<IActionResult> CustomerReport()
         {
-            var customers = await _context.Customers.ToListAsync();
+            int customerId = int.Parse(User.FindFirst("CustomerId")?.Value ?? "0");
+
+
+            var customers = new List<Customer>();
+
+            if(customerId != 0)
+            {
+                customers = await _context.Customers.Where(c => c.Id == customerId).ToListAsync();
+            }
+            else
+            {
+                customers = await _context.Customers.ToListAsync();
+            }
 
             var payments = await _context.CustomerPayments
                 .OrderBy(p => p.PaymentDate)

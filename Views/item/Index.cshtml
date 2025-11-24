@@ -1,4 +1,6 @@
 ﻿@model IEnumerable<GSoftPosNew.Models.ItemModel>
+@using System
+@using System.Linq
 
 @{
     ViewData["Title"] = "Item List";
@@ -9,35 +11,518 @@
     // KPIs
     var totalItems = items.Count;
     var totalStock = items.Sum(x => x.Quantity);
-    var totalPurchaseValue = items.Sum(x =>
-        (x.GetType().GetProperty("PurchasePrice")?.GetValue(x) as decimal? ?? 0m) * x.Quantity);
+    var totalPurchaseValue = items.Sum(x => x.PurchasePrice * x.Quantity);
     var totalSaleValue = items.Sum(x => x.SalePrice * x.Quantity);
 
     string GetPropStr(object o, string name) =>
         o?.GetType().GetProperty(name)?.GetValue(o)?.ToString();
 
-    // Names only (no numeric fallback)
+    // Supplier names from navigation property
     var supplierOptions = items
-        .Select(i => GetPropStr(i, "SupplierName"))
-        .Where(s => !string.IsNullOrWhiteSpace(s))
+        .Where(i => i.Supplier != null && !string.IsNullOrWhiteSpace(i.Supplier.SupplierName))
+        .Select(i => i.Supplier.SupplierName)
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .OrderBy(s => s)
         .ToList();
 
+    // Category names from navigation property
     var categoryOptions = items
-        .Select(i => GetPropStr(i, "CategoryName"))
-        .Where(c => !string.IsNullOrWhiteSpace(c))
+        .Where(i => i.Category != null && !string.IsNullOrWhiteSpace(i.Category.Name))
+        .Select(i => i.Category.Name)
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .OrderBy(c => c)
         .ToList();
 
-    // NEW: flavour options for datalist
+    // Flavour options
     var flavourOptions = items
-        .Select(i => GetPropStr(i, "Flavour"))
-        .Where(f => !string.IsNullOrWhiteSpace(f))
+        .Where(i => !string.IsNullOrWhiteSpace(i.Flavour))
+        .Select(i => i.Flavour)
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .OrderBy(f => f)
         .ToList();
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+    <style>
+        /* Page background – halka soft gradient */
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at top, #eef2ff 0%, #f5f7fb 40%, #ffffff 100%);
+        }
+
+        /* full width container for POS style */
+        .container-fluid {
+            max-width: 100% !important;
+            padding-left: 12px;
+            padding-right: 12px;
+        }
+
+        /* Top band */
+        .inv-hero {
+            position: sticky;
+            top: 0;
+            z-index: 9;
+            background: linear-gradient(95deg, #0ea5e9 0%, #4f46e5 55%, #10b981 115%);
+        }
+
+        .inv-hero-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+        }
+
+        .inv-hero-accent {
+            height: 4px;
+            background: linear-gradient(90deg, #e0f2fe 0%, #ede9fe 50%, #d1fae5 100%);
+            opacity: .95;
+        }
+
+        .card {
+            border-radius: 16px;
+            box-shadow: 0 6px 18px rgba(2, 6, 23, .08);
+            overflow: hidden;
+            border: 1px solid #e6eaf2;
+        }
+
+        .toolbar {
+            background: #ffffff;
+            border: 1px solid #e6eaf2;
+            border-radius: 16px;
+            padding: 10px 12px;
+            margin-top: 10px;
+        }
+
+            .toolbar .row {
+                align-items: center;
+            }
+
+        .timebox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+            .timebox .sep {
+                opacity: .6;
+            }
+
+        .kpi-wrap {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 6px;
+        }
+
+        .kpi {
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #eef;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, .03);
+        }
+
+        .kpi-items {
+            background: #eff6ff;
+            color: #1e3a8a;
+            border-color: #dbeafe;
+        }
+
+        .kpi-stock {
+            background: #fffbeb;
+            color: #92400e;
+            border-color: #fde68a;
+        }
+
+        .kpi-purchase {
+            background: #ecfdf5;
+            color: #065f46;
+            border-color: #a7f3d0;
+        }
+
+        .kpi-sale {
+            background: #fef2f2;
+            color: #991b1b;
+            border-color: #fecaca;
+        }
+
+        .chip {
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #ffffff;
+            border: 1px solid #dbe1ea;
+            font-weight: 800;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+            .chip.active {
+                background: #2563eb;
+                color: #ffffff;
+                border-color: #2563eb;
+            }
+
+        /* Inputs with icon (search / supplier / category / flavour) */
+        .input-ico {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: #F0FFFF; /* requested background */
+            border: 1px solid #4f9eea; /* darker border */
+            border-radius: 10px;
+            min-height: 36px;
+            padding-left: 34px;
+            overflow: hidden;
+        }
+
+            .input-ico > i {
+                position: absolute;
+                left: 10px;
+                color: #1d4ed8;
+                opacity: .9;
+                font-size: .95rem;
+            }
+
+            .input-ico input {
+                border: none;
+                outline: none;
+                height: 34px;
+                padding: .2rem .6rem;
+                flex: 1;
+                background: transparent;
+                min-width: 220px;
+                font-size: .9rem;
+            }
+
+        .type-input {
+            height: 34px;
+            border: none;
+            outline: none;
+            width: 100%;
+            min-width: 180px;
+            background: transparent;
+        }
+
+        /* Suggest popup */
+        .suggest {
+            position: absolute;
+            top: 110%;
+            left: 0;
+            right: 0;
+            z-index: 20;
+            display: none;
+            background: #ffffff;
+            border: 1px solid #e6eaf2;
+            border-radius: 10px;
+            box-shadow: 0 10px 24px rgba(2, 6, 23, .08);
+            max-height: 280px;
+            overflow: auto;
+        }
+
+        .sug-item {
+            padding: .55rem .7rem;
+            display: flex;
+            justify-content: space-between;
+            gap: .75rem;
+            cursor: pointer;
+        }
+
+            .sug-item:hover {
+                background: #f5f7fb;
+            }
+
+        .s-name {
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .s-meta {
+            font-size: .85rem;
+            color: #667085;
+        }
+
+        .btn-mini {
+            height: 36px;
+            border-radius: 10px;
+            padding: 0 .7rem;
+            font-weight: 800;
+            border: 1px solid #dbeafe;
+            color: #1e3a8a;
+            background: #eff6ff;
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+        }
+
+            .btn-mini:hover {
+                background: #e0efff;
+            }
+
+        .btn-split {
+            position: relative;
+        }
+
+            .btn-split .drop {
+                position: absolute;
+                top: 110%;
+                right: 0;
+                min-width: 200px;
+                background: #ffffff;
+                color: #0f172a;
+                border: 1px solid #e6eaf2;
+                border-radius: 12px;
+                box-shadow: 0 12px 28px rgba(2, 6, 23, .12);
+                display: none;
+                overflow: hidden;
+            }
+
+            .btn-split.open .drop {
+                display: block;
+            }
+
+        .drop a,
+        .drop button,
+        .drop label {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            width: 100%;
+            padding: .6rem .8rem;
+            background: #ffffff;
+            border: 0;
+            text-align: left;
+        }
+
+            .drop a:hover,
+            .drop button:hover,
+            .drop label:hover {
+                background: #f5f7fb;
+                cursor: pointer;
+            }
+
+        .btn-add {
+            background: #0ea5e9;
+            color: #ffffff;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+            .btn-add:hover {
+                filter: brightness(.95);
+            }
+
+        .table-responsive {
+            border: 1px solid #e6eaf2;
+            background: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .table thead th {
+            background: #f9fafb;
+            font-weight: 800;
+        }
+
+        .table td {
+            vertical-align: middle;
+        }
+
+        .table tbody tr:hover td {
+            background: #dbeafe; /* blue hover highlight */
+        }
+
+        .num {
+            text-align: right;
+        }
+
+        .code-badge {
+            display: inline-block;
+            padding: .28rem .55rem;
+            border-radius: 999px;
+            background: #f6ecfa;
+            color: #6b21a8;
+            border: 1px solid #e6d5e7;
+            font-weight: 800;
+            font-size: .85rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: .28rem .55rem;
+            border-radius: 999px;
+            font-weight: 800;
+            font-size: .8rem;
+            border: 1px solid transparent;
+        }
+
+        .s-ok {
+            background: #ecfdf5;
+            color: #065f46;
+            border-color: #a7f3d0;
+        }
+
+        .s-low {
+            background: #fef2f2;
+            color: #991b1b;
+            border-color: #fecaca;
+        }
+
+        .s-exp {
+            background: #fffbeb;
+            color: #92400e;
+            border-color: #fde68a;
+        }
+
+        .btn-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            border: 1px solid #e6eaf2;
+            background: #ffffff;
+            color: #0f172a;
+            transition: background .15s, transform .04s;
+        }
+
+            .btn-icon:active {
+                transform: translateY(1px);
+            }
+
+        .btn-edit {
+            border-color: #93c5fd;
+            color: #1d4ed8;
+        }
+
+            .btn-edit:hover {
+                background: #e0f2fe;
+            }
+
+        .btn-del {
+            border-color: #fecaca;
+            color: #b91c1c;
+        }
+
+            .btn-del:hover {
+                background: #fee2e2;
+            }
+
+        /* Pagination bar – yahan F0FFFF colour */
+        .pager-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 12px;
+            background: #F0FFFF; /* 👈 requested here */
+            border: 1px solid #e6eaf2; /* thora dark border */
+            border-radius: 16px;
+            margin-top: 10px;
+        }
+
+        .pager-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pager-pages {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .page-btn {
+            min-width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            border: 1px solid #e6eaf2;
+            background: #ffffff;
+            font-weight: 700;
+        }
+
+            .page-btn.active {
+                background: #2563eb;
+                color: #ffffff;
+                border-color: #2563eb;
+            }
+
+        .page-nav {
+            padding: 0 10px;
+            height: 34px;
+            border-radius: 10px;
+            border: 1px solid #e6eaf2;
+            background: #ffffff;
+            font-weight: 700;
+        }
+
+        .btn-bottom {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 12px 14px;
+            background: #ffffff;
+            border: 1px solid #e6eaf2;
+            border-radius: 16px;
+            margin-top: 10px;
+        }
+
+        .btn-action {
+            padding: 9px 14px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-print {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .btn-clear {
+            background: #facc15;
+            color: #000000;
+        }
+
+        .btn-exit {
+            background: #ef4444;
+            color: #ffffff;
+        }
+
+        @@media print {
+            .inv-hero,
+            .toolbar,
+            .pager-bar,
+            .btn-bottom {
+                display: none !important;
+            }
+
+            .table-responsive {
+                border: none;
+            }
+
+            body {
+                background: #ffffff;
+            }
+        }
+    </style>
 }
 
 <!-- ===== Top Band (Premium) ===== -->
@@ -51,469 +536,6 @@
     </div>
     <div class="inv-hero-accent"></div>
 </div>
-
-<style>
-    body {
-        background: #f4f7fb;
-    }
-
-    /* full width */
-    .container-fluid {
-        max-width: 100% !important;
-        padding-left: 12px;
-        padding-right: 12px;
-    }
-
-    /* Top band */
-    .inv-hero {
-        position: sticky;
-        top: 0;
-        z-index: 9;
-        background: linear-gradient(95deg,#0ea5e9 0%,#4f46e5 55%,#10b981 115%);
-    }
-
-    .inv-hero-inner {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 10px 12px;
-    }
-
-    .inv-hero-accent {
-        height: 4px;
-        background: linear-gradient(90deg,#e0f2fe 0%,#ede9fe 50%,#d1fae5 100%);
-        opacity: .95;
-    }
-
-    .card {
-        border-radius: 16px;
-        box-shadow: 0 6px 18px rgba(2,6,23,.08);
-        overflow: hidden;
-        border: 1px solid #e6eaf2;
-    }
-
-    .toolbar {
-        background: #fff;
-        border: 1px solid #e6eaf2;
-        border-radius: 16px;
-        padding: 10px 12px;
-        margin-top: 10px;
-    }
-
-        .toolbar .row {
-            align-items: center;
-        }
-
-    .timebox {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-weight: 800;
-        color: #0f172a;
-    }
-
-        .timebox .sep {
-            opacity: .6;
-        }
-
-    .kpi-wrap {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-top: 6px;
-    }
-
-    .kpi {
-        padding: 6px 12px;
-        border-radius: 12px;
-        font-weight: 800;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        border: 1px solid #eef;
-        box-shadow: 0 4px 10px rgba(0,0,0,.03);
-    }
-
-    .kpi-items {
-        background: #eff6ff;
-        color: #1e3a8a;
-        border-color: #dbeafe;
-    }
-
-    .kpi-stock {
-        background: #fffbeb;
-        color: #92400e;
-        border-color: #fde68a;
-    }
-
-    .kpi-purchase {
-        background: #ecfdf5;
-        color: #065f46;
-        border-color: #a7f3d0;
-    }
-
-    .kpi-sale {
-        background: #fef2f2;
-        color: #991b1b;
-        border-color: #fecaca;
-    }
-
-    .chip {
-        padding: 6px 12px;
-        border-radius: 999px;
-        background: #fff;
-        border: 1px solid #dbe1ea;
-        font-weight: 800;
-        cursor: pointer;
-        white-space: nowrap;
-    }
-
-        .chip.active {
-            background: #2563eb;
-            color: #fff;
-            border-color: #2563eb;
-        }
-
-    /* Inputs with icon */
-    .input-ico {
-        position: relative;
-        display: flex;
-        align-items: center;
-        background: #fff;
-        border: 1px solid #e1e5ee;
-        border-radius: 10px;
-        min-height: 36px;
-        padding-left: 34px;
-        overflow: hidden;
-    }
-
-        .input-ico > i {
-            position: absolute;
-            left: 10px;
-            color: #2563eb;
-            opacity: .9;
-            font-size: .95rem;
-        }
-
-        .input-ico input {
-            border: none;
-            outline: none;
-            height: 34px;
-            padding: .2rem .6rem;
-            flex: 1;
-            background: transparent;
-            min-width: 220px;
-        }
-
-    .type-input {
-        height: 34px;
-        border: none;
-        outline: none;
-        width: 100%;
-        min-width: 180px;
-    }
-
-    /* Suggest popup */
-    .suggest {
-        position: absolute;
-        top: 110%;
-        left: 0;
-        right: 0;
-        z-index: 20;
-        display: none;
-        background: #fff;
-        border: 1px solid #e6eaf2;
-        border-radius: 10px;
-        box-shadow: 0 10px 24px rgba(2,6,23,.08);
-        max-height: 280px;
-        overflow: auto;
-    }
-
-    .sug-item {
-        padding: .55rem .7rem;
-        display: flex;
-        justify-content: space-between;
-        gap: .75rem;
-        cursor: pointer;
-    }
-
-        .sug-item:hover {
-            background: #f5f7fb;
-        }
-
-    .s-name {
-        font-weight: 800;
-        color: #0f172a;
-    }
-
-    .s-meta {
-        font-size: .85rem;
-        color: #667085;
-    }
-
-    .btn-mini {
-        height: 36px;
-        border-radius: 10px;
-        padding: 0 .7rem;
-        font-weight: 800;
-        border: 1px solid #dbeafe;
-        color: #1e3a8a;
-        background: #eff6ff;
-        display: inline-flex;
-        align-items: center;
-        gap: .45rem;
-    }
-
-        .btn-mini:hover {
-            background: #e0efff;
-        }
-
-    .btn-split {
-        position: relative;
-    }
-
-        .btn-split .drop {
-            position: absolute;
-            top: 110%;
-            right: 0;
-            min-width: 200px;
-            background: #fff;
-            color: #0f172a;
-            border: 1px solid #e6eaf2;
-            border-radius: 12px;
-            box-shadow: 0 12px 28px rgba(2,6,23,.12);
-            display: none;
-            overflow: hidden;
-        }
-
-        .btn-split.open .drop {
-            display: block;
-        }
-
-    .drop a, .drop button, .drop label {
-        display: flex;
-        align-items: center;
-        gap: .5rem;
-        width: 100%;
-        padding: .6rem .8rem;
-        background: #fff;
-        border: 0;
-        text-align: left;
-    }
-
-        .drop a:hover, .drop button:hover, .drop label:hover {
-            background: #f5f7fb;
-            cursor: pointer;
-        }
-
-    .btn-add {
-        background: #0ea5e9;
-        color: #fff;
-        border: none;
-        padding: 8px 14px;
-        border-radius: 10px;
-        font-weight: 800;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        white-space: nowrap;
-    }
-
-        .btn-add:hover {
-            filter: brightness(.95);
-        }
-
-    .table-responsive {
-        border: 1px solid #e6eaf2;
-        background: #fff;
-        border-radius: 16px;
-        overflow: hidden;
-    }
-
-    .table thead th {
-        background: #f9fafb;
-        font-weight: 800;
-    }
-
-    .table td {
-        vertical-align: middle;
-    }
-
-    .num {
-        text-align: right;
-    }
-
-    .code-badge {
-        display: inline-block;
-        padding: .28rem .55rem;
-        border-radius: 999px;
-        background: #f6ecfa;
-        color: #6b21a8;
-        border: 1px solid #e6d5e7;
-        font-weight: 800;
-        font-size: .85rem;
-    }
-
-    .status-badge {
-        display: inline-block;
-        padding: .28rem .55rem;
-        border-radius: 999px;
-        font-weight: 800;
-        font-size: .8rem;
-        border: 1px solid transparent;
-    }
-
-    .s-ok {
-        background: #ecfdf5;
-        color: #065f46;
-        border-color: #a7f3d0;
-    }
-
-    .s-low {
-        background: #fef2f2;
-        color: #991b1b;
-        border-color: #fecaca;
-    }
-
-    .s-exp {
-        background: #fffbeb;
-        color: #92400e;
-        border-color: #fde68a;
-    }
-
-    .btn-icon {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 34px;
-        height: 34px;
-        border-radius: 10px;
-        border: 1px solid #e6eaf2;
-        background: #fff;
-        color: #0f172a;
-        transition: background .15s, transform .04s;
-    }
-
-        .btn-icon:active {
-            transform: translateY(1px);
-        }
-
-    .btn-edit {
-        border-color: #93c5fd;
-        color: #1d4ed8;
-    }
-
-        .btn-edit:hover {
-            background: #e0f2fe;
-        }
-
-    .btn-del {
-        border-color: #fecaca;
-        color: #b91c1c;
-    }
-
-        .btn-del:hover {
-            background: #fee2e2;
-        }
-
-    .pager-bar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        padding: 10px 12px;
-        background: #fff;
-        border: 1px solid #e6eaf2;
-        border-radius: 16px;
-        margin-top: 10px;
-    }
-
-    .pager-left {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .pager-pages {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-    }
-
-    .page-btn {
-        min-width: 34px;
-        height: 34px;
-        border-radius: 10px;
-        border: 1px solid #e6eaf2;
-        background: #fff;
-        font-weight: 700;
-    }
-
-        .page-btn.active {
-            background: #2563eb;
-            color: #fff;
-            border-color: #2563eb;
-        }
-
-    .page-nav {
-        padding: 0 10px;
-        height: 34px;
-        border-radius: 10px;
-        border: 1px solid #e6eaf2;
-        background: #fff;
-        font-weight: 700;
-    }
-
-    .btn-bottom {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        padding: 12px 14px;
-        background: #fff;
-        border: 1px solid #e6eaf2;
-        border-radius: 16px;
-        margin-top: 10px;
-    }
-
-    .btn-action {
-        padding: 9px 14px;
-        border: none;
-        border-radius: 10px;
-        font-weight: 800;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .btn-print {
-        background: #2563eb;
-        color: #fff;
-    }
-
-    .btn-clear {
-        background: #facc15;
-        color: #000;
-    }
-
-    .btn-exit {
-        background: #ef4444;
-        color: #fff;
-    }
-
-    @@media print {
-        .inv-hero, .toolbar, .pager-bar, .btn-bottom {
-            display: none !important;
-        }
-
-        .table-responsive {
-            border: none;
-        }
-
-        body {
-            background: #fff;
-        }
-    }
-</style>
 
 <div class="container-fluid my-3">
     <!-- Row 1: Time/Date + KPIs + Low stock -->
@@ -550,7 +572,7 @@
                 </div>
             </div>
 
-            <!-- NEW: Flavour search -->
+            <!-- Flavour search -->
             <div class="col-lg-2 col-md-3">
                 <div class="input-ico" title="Search by Flavour">
                     <i class="fa-solid fa-ice-cream"></i>
@@ -628,7 +650,6 @@
                     <th>#</th>
                     <th>Item Code</th>
                     <th>Item Name</th>
-                    <!-- NEW: Flavour column -->
                     <th>Flavour</th>
                     <th>Category</th>
                     <th>Supplier</th>
@@ -646,32 +667,34 @@
                     var isExp = item.ExpiryDate.HasValue && item.ExpiryDate.Value < DateTime.Today;
 
                     var barcode = GetPropStr(item, "Barcode") ?? "";
-                    var purchase = (decimal)(item.GetType().GetProperty("PurchasePrice")?.GetValue(item) ?? 0m);
-                    var flav = GetPropStr(item, "Flavour") ?? "";
+                    var purchase = item.PurchasePrice;
+
+                    var flav = item.Flavour ?? "";
+                    var supplierName = item.Supplier?.SupplierName ?? "";
+                    var categoryName = item.Category?.Name ?? "";
 
                     <tr data-name="@item.ItemName"
                         data-code="@item.ItemCode"
                         data-barcode="@barcode"
                         data-sale="@item.SalePrice.ToString("0.####")"
                         data-purchase="@purchase.ToString("0.####")"
-                        data-supplier="@item.Supplier.SupplierName"
-                        data-category="@item.Category.Name"
+                        data-supplier="@supplierName"
+                        data-category="@categoryName"
                         data-flavour="@flav"
                         data-qty="@item.Quantity">
                         <td>@item.Id</td>
                         <td><span class="code-badge">@item.ItemCode</span></td>
                         <td>@item.ItemName</td>
                         <td>@flav</td>
-                        <td>@item.Category.Name</td>
-                        <td>@item.Supplier.SupplierName</td>
+                        <td>@categoryName</td>
+                        <td>@supplierName</td>
                         <td class="num">@purchase.ToString("N2")</td>
                         <td class="num">@item.SalePrice.ToString("N2")</td>
                         <td class="num @(isLow ? "text-danger" : "")">
                             @item.Quantity pcs
 
-                            @if (item.PackSize != null && Convert.ToInt32(item.PackSize) != 0)
+                            @if (!string.IsNullOrEmpty(item.PackSize) && int.TryParse(item.PackSize, out var packSizeInt) && packSizeInt != 0)
                             {
-                                var packSizeInt = Convert.ToInt32(item.PackSize);
                                 <text> (@(item.Quantity / packSizeInt) Packs)</text>
                             }
                         </td>
@@ -734,15 +757,11 @@
     </div>
 </div>
 
-@section Styles {
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-}
-
 @section Scripts {
     <script>
-        (function(){
+        (function () {
             // Time/Date live
-            function tick(){
+            function tick() {
                 const n = new Date();
                 document.getElementById('nowTime').textContent = n.toLocaleTimeString();
                 document.getElementById('nowDate').textContent = n.toLocaleDateString();
@@ -755,43 +774,43 @@
 
             const supplierSel = document.getElementById('supplierSel');
             const categorySel = document.getElementById('categorySel');
-            const flavourSel  = document.getElementById('flavourSel'); // NEW
+            const flavourSel = document.getElementById('flavourSel');
             const chipLow = document.getElementById('chipLow');
 
             // Import/Export menus
             const exportSplit = document.getElementById('exportSplit');
             const importSplit = document.getElementById('importSplit');
-            document.getElementById('btnExport').addEventListener('click', ()=> exportSplit.classList.toggle('open'));
-            document.getElementById('btnImport').addEventListener('click', ()=> importSplit.classList.toggle('open'));
-            document.addEventListener('click', (e)=>{
-                if(!e.target.closest('#exportSplit')) exportSplit.classList.remove('open');
-                if(!e.target.closest('#importSplit')) importSplit.classList.remove('open');
+            document.getElementById('btnExport').addEventListener('click', () => exportSplit.classList.toggle('open'));
+            document.getElementById('btnImport').addEventListener('click', () => importSplit.classList.toggle('open'));
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('#exportSplit')) exportSplit.classList.remove('open');
+                if (!e.target.closest('#importSplit')) importSplit.classList.remove('open');
             });
 
             // Items cache for suggest
-            function buildItems(){
-                return rowsQ().map(r=>({
-                    el:r,
-                    name:(r.dataset.name||'').trim(),
-                    code:(r.dataset.code||'').trim(),
-                    barcode:(r.dataset.barcode||'').trim(),
-                    sale:parseFloat(r.dataset.sale||'0'),
-                    supplier:(r.dataset.supplier||'').toLowerCase(),
-                    category:(r.dataset.category||'').toLowerCase(),
-                    flavour:(r.dataset.flavour||'').toLowerCase(), // NEW
-                    qty:parseFloat(r.dataset.qty||'0')
+            function buildItems() {
+                return rowsQ().map(r => ({
+                    el: r,
+                    name: (r.dataset.name || '').trim(),
+                    code: (r.dataset.code || '').trim(),
+                    barcode: (r.dataset.barcode || '').trim(),
+                    sale: parseFloat(r.dataset.sale || '0'),
+                    supplier: (r.dataset.supplier || '').toLowerCase(),
+                    category: (r.dataset.category || '').toLowerCase(),
+                    flavour: (r.dataset.flavour || '').toLowerCase(),
+                    qty: parseFloat(r.dataset.qty || '0')
                 }));
             }
             let ITEMS = buildItems();
 
-            function showSuggest(list){
-                if(!list.length){ sug.style.display='none'; sug.innerHTML=''; return; }
-                const html = list.slice(0,12).map(it=>`
+            function showSuggest(list) {
+                if (!list.length) { sug.style.display = 'none'; sug.innerHTML = ''; return; }
+                const html = list.slice(0, 12).map(it => `
                     <div class="sug-item" data-code="${it.code}">
                         <div class="s-name">${it.name}</div>
                         <div class="s-meta">
-                            ${it.code ? `<i class="fa-solid fa-hashtag"></i> ${it.code}`:''}
-                            ${it.barcode ? ` · <i class="fa-solid fa-barcode"></i> ${it.barcode}`:''}
+                            ${it.code ? `<i class="fa-solid fa-hashtag"></i> ${it.code}` : ''}
+                            ${it.barcode ? ` · <i class="fa-solid fa-barcode"></i> ${it.barcode}` : ''}
                         </div>
                     </div>
                 `).join('');
@@ -808,87 +827,98 @@
             let filteredRows = [];
             let currentPage = 1;
 
-            function getPageSize(){ return parseInt(pageSizeSel.value || '25', 10); }
-            function rebuildFilteredRows(){ filteredRows = rowsQ().filter(r => r.style.display !== 'none'); }
+            function getPageSize() { return parseInt(pageSizeSel.value || '25', 10); }
+            function rebuildFilteredRows() { filteredRows = rowsQ().filter(r => r.style.display !== 'none'); }
 
-            function renderPagination(){
+            function renderPagination() {
                 const total = filteredRows.length;
                 const ps = getPageSize();
                 const totalPages = Math.max(1, Math.ceil(total / ps));
-                if(currentPage > totalPages) currentPage = totalPages;
+                if (currentPage > totalPages) currentPage = totalPages;
 
                 pageNumbers.innerHTML = '';
-                function makeBtn(p){
+                function makeBtn(p) {
                     const b = document.createElement('button');
-                    b.className = 'page-btn'+(p===currentPage?' active':'');
+                    b.className = 'page-btn' + (p === currentPage ? ' active' : '');
                     b.textContent = p;
-                    b.addEventListener('click', ()=>{ currentPage=p; applyPaginationOnly(); });
+                    b.addEventListener('click', () => { currentPage = p; applyPaginationOnly(); });
                     return b;
                 }
                 const windowSize = 5;
-                let start = Math.max(1, currentPage - Math.floor(windowSize/2));
+                let start = Math.max(1, currentPage - Math.floor(windowSize / 2));
                 let end = Math.min(totalPages, start + windowSize - 1);
-                if(end - start + 1 < windowSize){ start = Math.max(1, end - windowSize + 1); }
+                if (end - start + 1 < windowSize) { start = Math.max(1, end - windowSize + 1); }
 
-                if(start > 1) pageNumbers.appendChild(makeBtn(1));
-                for(let p=start; p<=end; p++) pageNumbers.appendChild(makeBtn(p));
-                if(end < totalPages) pageNumbers.appendChild(makeBtn(totalPages));
+                if (start > 1) pageNumbers.appendChild(makeBtn(1));
+                for (let p = start; p <= end; p++) pageNumbers.appendChild(makeBtn(p));
+                if (end < totalPages) pageNumbers.appendChild(makeBtn(totalPages));
 
-                prevPageBtn.disabled = currentPage<=1;
-                nextPageBtn.disabled = currentPage>=totalPages;
+                prevPageBtn.disabled = currentPage <= 1;
+                nextPageBtn.disabled = currentPage >= totalPages;
 
-                pageInfo.textContent = total ? `Showing ${(currentPage-1)*ps+1}–${Math.min(currentPage*ps,total)} of ${total}` : 'No rows';
+                pageInfo.textContent = total ? `Showing ${(currentPage - 1) * ps + 1}–${Math.min(currentPage * ps, total)} of ${total}` : 'No rows';
             }
 
-            function applyPaginationOnly(){
+            function applyPaginationOnly() {
                 const ps = getPageSize();
-                const startIdx = (currentPage-1)*ps;
+                const startIdx = (currentPage - 1) * ps;
                 const endIdx = startIdx + ps - 1;
 
-                filteredRows.forEach((r,i)=>{
-                    r.style.display = (i>=startIdx && i<=endIdx) ? '' : 'none';
+                filteredRows.forEach((r, i) => {
+                    r.style.display = (i >= startIdx && i <= endIdx) ? '' : 'none';
                 });
 
                 renderPagination();
             }
 
-            // Filters + search (WITH flavour)
-            function applyFilters(){
-                const q    = (box.value||'').toLowerCase().trim();
-                const supp = (supplierSel.value||'').toLowerCase().trim();
-                const cat  = (categorySel.value||'').toLowerCase().trim();
-                const flav = (flavourSel.value||'').toLowerCase().trim(); // NEW
+            // Filters + search (WITH flavour) – supplier/category partial match
+            function applyFilters() {
+                const q = (box.value || '').toLowerCase().trim();
+                const supp = (supplierSel.value || '').toLowerCase().trim();
+                const cat = (categorySel.value || '').toLowerCase().trim();
+                const flav = (flavourSel.value || '').toLowerCase().trim();
                 const wantLow = chipLow.classList.contains('active');
 
-                let any=false;
-                rowsQ().forEach(r=>{
-                    const name = (r.dataset.name||'').toLowerCase();
-                    const code = (r.dataset.code||'').toLowerCase();
-                    const bar  = (r.dataset.barcode||'').toLowerCase();
-                    const qty  = parseFloat(r.dataset.qty||'0');
-                    const rsup = (r.dataset.supplier||'').toLowerCase();
-                    const rcat = (r.dataset.category||'').toLowerCase();
-                    const rflv = (r.dataset.flavour||'').toLowerCase(); // NEW
+                let any = false;
+                rowsQ().forEach(r => {
+                    const name = (r.dataset.name || '').toLowerCase();
+                    const code = (r.dataset.code || '').toLowerCase();
+                    const bar = (r.dataset.barcode || '').toLowerCase();
+                    const qty = parseFloat(r.dataset.qty || '0');
+                    const rsup = (r.dataset.supplier || '').toLowerCase();
+                    const rcat = (r.dataset.category || '').toLowerCase();
+                    const rflv = (r.dataset.flavour || '').toLowerCase();
 
                     let ok = true;
-                    if(q)      ok = (name.includes(q) || code.includes(q) || bar.includes(q));
-                    if(ok && supp) ok = rsup === supp;
-                    if(ok && cat)  ok = rcat === cat;
-                    if(ok && flav) ok = rflv.includes(flav);   // partial match for flavour
-                    if(ok && wantLow) ok = qty <= 5;
+
+                    if (q) {
+                        ok = (name.includes(q) || code.includes(q) || bar.includes(q));
+                    }
+                    if (ok && supp) {
+                        ok = rsup.includes(supp);
+                    }
+                    if (ok && cat) {
+                        ok = rcat.includes(cat);
+                    }
+                    if (ok && flav) {
+                        ok = rflv.includes(flav);
+                    }
+                    if (ok && wantLow) {
+                        ok = qty <= 5;
+                    }
 
                     r.style.display = ok ? '' : 'none';
-                    if(ok) any = true;
+                    if (ok) any = true;
                 });
 
                 let noRow = document.getElementById('noItemsRow');
-                if(!any){
-                    if(!noRow){
+                if (!any) {
+                    if (!noRow) {
                         document.querySelector('#itemsTable tbody')
                             .insertAdjacentHTML('beforeend',
                                 "<tr id='noItemsRow'><td colspan='11' class='text-center text-muted py-3'>No items found</td></tr>");
                     }
-                }else if(noRow){ noRow.remove(); }
+                } else if (noRow) { noRow.remove(); }
 
                 rebuildFilteredRows();
                 currentPage = 1;
@@ -896,140 +926,91 @@
             }
 
             // Search + suggest events
-            box.addEventListener('input', function(){
-                const q = (this.value||'').trim().toLowerCase();
-                if(!q){ sug.style.display='none'; showSuggest([]); applyFilters(); return; }
+            box.addEventListener('input', function () {
+                const q = (this.value || '').trim().toLowerCase();
+                if (!q) { sug.style.display = 'none'; sug.innerHTML = ''; applyFilters(); return; }
                 const list = ITEMS.filter(it =>
                     it.name.toLowerCase().includes(q) ||
                     it.code.toLowerCase().includes(q) ||
-                    (it.barcode||'').toLowerCase().includes(q)
+                    (it.barcode || '').toLowerCase().includes(q)
                 );
                 showSuggest(list);
                 applyFilters();
             });
-            sug.addEventListener('click', function(e){
-                const row = e.target.closest('.sug-item'); if(!row) return;
+            sug.addEventListener('click', function (e) {
+                const row = e.target.closest('.sug-item'); if (!row) return;
                 const code = row.getAttribute('data-code');
-                const it = ITEMS.find(x=>x.code===code);
-                if(it){ box.value = it.code; }
-                sug.style.display='none';
+                const it = ITEMS.find(x => x.code === code);
+                if (it) { box.value = it.code; }
+                sug.style.display = 'none';
                 applyFilters();
             });
-            box.addEventListener('keydown', function(e){
-                if(e.key === 'Enter'){ e.preventDefault(); sug.style.display='none'; applyFilters(); }
-                if(e.key === 'Escape'){ sug.style.display='none'; }
+            box.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') { e.preventDefault(); sug.style.display = 'none'; applyFilters(); }
+                if (e.key === 'Escape') { sug.style.display = 'none'; }
             });
-            document.addEventListener('click', (e)=>{ if(!e.target.closest('.input-ico')) sug.style.display='none'; });
+            document.addEventListener('click', (e) => { if (!e.target.closest('.input-ico')) sug.style.display = 'none'; });
 
-            // NEW: live flavour filter
+            // live filters
             flavourSel.addEventListener('input', applyFilters);
-
             supplierSel.addEventListener('input', applyFilters);
             categorySel.addEventListener('input', applyFilters);
-            chipLow.addEventListener('click', ()=>{ chipLow.classList.toggle('active'); applyFilters(); });
+            chipLow.addEventListener('click', () => { chipLow.classList.toggle('active'); applyFilters(); });
 
             // Bottom actions
-            document.getElementById('btnPrint')?.addEventListener('click', ()=> window.print());
-            document.getElementById('btnClear')?.addEventListener('click', ()=>{
-                box.value=''; supplierSel.value=''; categorySel.value=''; flavourSel.value='';
+            document.getElementById('btnPrint')?.addEventListener('click', () => window.print());
+            document.getElementById('btnClear')?.addEventListener('click', () => {
+                box.value = ''; supplierSel.value = ''; categorySel.value = ''; flavourSel.value = '';
                 chipLow.classList.remove('active');
                 applyFilters();
             });
 
             // Export helpers
-            function tableToCSV(){
-                const rows = Array.from(document.querySelectorAll('#itemsTable tr')).filter(r=> r.style.display!=='none');
-                return rows.map(row=>{
-                    return Array.from(row.querySelectorAll('th,td')).map(cell=>{
-                        let t = cell.innerText.replace(/\s+/g,' ').trim();
-                        t = t.replaceAll('"','""');
+            function tableToCSV() {
+                const rows = Array.from(document.querySelectorAll('#itemsTable tr')).filter(r => r.style.display !== 'none');
+                return rows.map(row => {
+                    return Array.from(row.querySelectorAll('th,td')).map(cell => {
+                        let t = cell.innerText.replace(/\s+/g, ' ').trim();
+                        t = t.replaceAll('"', '""');
                         return `"${t}"`;
                     }).join(',');
                 }).join('\n');
             }
-            function downloadBlob(data, filename, type){
-                const blob = new Blob([data], {type});
+            function downloadBlob(data, filename, type) {
+                const blob = new Blob([data], { type });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url; a.download = filename; a.click();
                 URL.revokeObjectURL(url);
             }
-            document.getElementById('expCsv').addEventListener('click', ()=>{
+            document.getElementById('expCsv').addEventListener('click', () => {
                 const csv = tableToCSV();
                 downloadBlob(csv, 'items-export.csv', 'text/csv;charset=utf-8;');
             });
-            document.getElementById('expPdf').addEventListener('click', ()=>{ window.print(); });
-            document.getElementById('expCopy').addEventListener('click', async ()=>{
+            document.getElementById('expPdf').addEventListener('click', () => { window.print(); });
+            document.getElementById('expCopy').addEventListener('click', async () => {
                 const csv = tableToCSV();
-                try{ await navigator.clipboard.writeText(csv); alert('Table copied to clipboard (CSV format).'); }
-                catch{ alert('Copy failed.'); }
+                try { await navigator.clipboard.writeText(csv); alert('Table copied to clipboard (CSV format).'); }
+                catch { alert('Copy failed.'); }
             });
 
-            // Import (front-end demo)
-            document.getElementById('importFile').addEventListener('change', (e)=>{
-                const file = e.target.files?.[0]; if(!file) return;
+            // Import (front-end demo stub)
+            document.getElementById('importFile').addEventListener('change', (e) => {
+                const file = e.target.files?.[0]; if (!file) return;
                 const reader = new FileReader();
-                reader.onload = function(){
-                    const text = String(reader.result||'').trim();
+                reader.onload = function () {
+                    const text = String(reader.result || '').trim();
                     const lines = text.split(/\r?\n/);
-                    if(!lines.length){ return; }
-                    const header = lines[0].split(',').map(h=>h.replace(/(^"|"$)/g,'').trim().toLowerCase());
-                    const map = (name)=> header.indexOf(name.toLowerCase());
-                    const idx = { code: map('itemcode'), name: map('itemname'), cat: map('category'),
-                                  sup: map('supplier'), pur: map('purchaseprice'), sale: map('saleprice'), qty: map('quantity'), flav: map('flavour') };
-                    const tbody = document.querySelector('#itemsTable tbody');
-
-                    for(let i=1;i<lines.length;i++){
-                        const cols = lines[i].match(/("([^"]|"")*"|[^,]+)/g);
-                        if(!cols) continue;
-                        const get = (j)=> j>=0 ? (cols[j]||'').replace(/(^"|"$)/g,'').replaceAll('""','"').trim() : '';
-                        const code = get(idx.code), name = get(idx.name), cat = get(idx.cat), sup = get(idx.sup);
-                        const pur = parseFloat(get(idx.pur)||'0')||0; const sale = parseFloat(get(idx.sale)||'0')||0; const qty = parseFloat(get(idx.qty)||'0')||0;
-                        const flav = get(idx.flav)||'';
-
-                        const tr = document.createElement('tr');
-                        tr.setAttribute('data-name', name);
-                        tr.setAttribute('data-code', code);
-                        tr.setAttribute('data-barcode','');
-                        tr.setAttribute('data-sale', String(sale));
-                        tr.setAttribute('data-purchase', String(pur));
-                        tr.setAttribute('data-supplier', sup.toString());
-                        tr.setAttribute('data-category', cat.toString());
-                        tr.setAttribute('data-flavour', flav.toString());
-                        tr.setAttribute('data-qty', String(qty));
-
-                        tr.innerHTML = `
-                            <td>—</td>
-                            <td><span class="code-badge">${code}</span></td>
-                            <td>${name}</td>
-                            <td>${flav}</td>
-                            <td>${cat}</td>
-                            <td>${sup}</td>
-                            <td class="num">${pur.toFixed(2)}</td>
-                            <td class="num">${sale.toFixed(2)}</td>
-                            <td class="num">${qty}</td>
-                            <td><span class="status-badge ${qty<=5?'s-low':'s-ok'}">${qty<=5?'Low Stock':'In Stock'}</span></td>
-                            <td>
-                                <div class="d-flex gap-1">
-                                    <a class="btn-icon btn-edit" title="Edit"><i class="fa-solid fa-pen-to-square"></i></a>
-                                    <a class="btn-icon btn-del" title="Delete"><i class="fa-solid fa-trash-can"></i></a>
-                                </div>
-                            </td>`;
-                        tbody.appendChild(tr);
-                    }
-                    // refresh caches + filters + pagination
-                    ITEMS = buildItems();
-                    applyFilters();
-                    alert('CSV imported to grid (demo). Backend save not applied.');
-                    e.target.value = '';
+                    if (!lines.length) { return; }
+                    // yahan aap apni parsing / backend mapping laga sakte hain
                 };
                 reader.readAsText(file);
             });
 
             // Pager events
-            document.getElementById('pageSize').addEventListener('change', ()=>{ currentPage=1; rebuildFilteredRows(); applyPaginationOnly(); });
-            document.getElementById('prevPage').addEventListener('click', ()=>{ if(currentPage>1){ currentPage--; applyPaginationOnly(); }});
-            document.getElementById('nextPage').addEventListener('click', ()=>{ currentPage++; applyPaginationOnly(); });
+            document.getElementById('pageSize').addEventListener('change', () => { currentPage = 1; rebuildFilteredRows(); applyPaginationOnly(); });
+            document.getElementById('prevPage').addEventListener('click', () => { if (currentPage > 1) { currentPage--; applyPaginationOnly(); } });
+            document.getElementById('nextPage').addEventListener('click', () => { currentPage++; applyPaginationOnly(); });
 
             // First render
             applyFilters();
