@@ -97,18 +97,18 @@ namespace GSoftPosNew.Controllers
                 return View(vm);
             }
 
-            bool existsName = _context.Items.Any(i => i.ItemName == vm.ItemData.ItemName);
-            if (existsName)
-            {
-                TempData["ErrorName"] = $"Item Name '{vm.ItemData.ItemName}' already exists!";
+            //bool existsName = _context.Items.Any(i => i.ItemName == vm.ItemData.ItemName);
+            //if (existsName)
+            //{
+            //    TempData["ErrorName"] = $"Item Name '{vm.ItemData.ItemName}' already exists!";
 
-                ViewBag.CategoryList = vm.CategoryList;
-                ViewBag.SupplierList = vm.SupplierList;
-                ViewBag.UnitList = vm.UnitList;
-                ViewBag.LocationList = vm.LocationList;
-                ViewBag.ExistingItems = vm.ExistingItems;
-                return View(vm);
-            }
+            //    ViewBag.CategoryList = vm.CategoryList;
+            //    ViewBag.SupplierList = vm.SupplierList;
+            //    ViewBag.UnitList = vm.UnitList;
+            //    ViewBag.LocationList = vm.LocationList;
+            //    ViewBag.ExistingItems = vm.ExistingItems;
+            //    return View(vm);
+            //}
 
             if (vm.ItemData.Quantity < 0)
                 vm.ItemData.Quantity = 0;

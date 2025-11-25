@@ -396,6 +396,51 @@
                     <a asp-controller="Settings" asp-action="Index"><i class="fa fa-cogs"></i> <span>Settings</span></a>
                 </li>
             }
+
+            @if (permissions.TryGetValue("Database", out var canAccessDatabase) && canAccessDatabase)
+            {
+                <li class="has-sub">
+                    <a href="#">
+                        <i class="fa fa-database me-2"></i> <span>Database</span>
+                        <i class="arrow-icon">
+                            <svg class="chevron-svg" width="15" height="15" viewBox="0 0 16 16" fill="none">
+                                <path d="M5 7L8 10L11 7"
+                                      stroke="currentColor"
+                                      stroke-width="1.7"
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round" />
+                            </svg>
+                        </i>
+                    </a>
+                    <ul class="submenu">
+                        <li>
+                            <a asp-action="ResetDb" asp-controller="Settings">
+                                <i class="fa fa-refresh me-2"></i> Reset DB
+                            </a>
+                        </li>
+
+                        <li>
+                            <a asp-action="ResetTransactions" asp-controller="Settings">
+                                <i class="fa fa-undo me-2"></i> Reset Transactions
+                            </a>
+                        </li>
+
+                        <li>
+                            <a asp-action="ResetItemQuantity" asp-controller="Settings">
+                                <i class="fa fa-cubes me-2"></i> Reset Item Quantity
+                            </a>
+                        </li>
+
+                        <li>
+                            <a asp-action="DatabaseBackup" asp-controller="Settings">
+                                <i class="fa fa-database me-2"></i> Backup DB
+                            </a>
+                        </li>
+                    </ul>
+
+
+                </li>
+            }
         </ul>
         <div class="sidebar-bottom">
             <a class="text-danger" href="/Account/Logout">

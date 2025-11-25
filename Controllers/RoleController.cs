@@ -75,7 +75,8 @@ namespace GSoftPosNew.Controllers
                     "Settings",
                     "Accounts",
                     "SMS",
-                    "Location"
+                    "Location",
+                    "Database",
                 },
                 SelectedModules = new List<string>()
             };

@@ -27,9 +27,9 @@
     }
 
     body {
-        background: radial-gradient(1200px 800px at -10% -10%, #eaf3ff 0%, transparent 50%), 
-                    radial-gradient(1000px 700px at 110% -10%, #e8ffe6 0%, transparent 50%), 
-                    radial-gradient(900px 600px at 50% 120%, #fff6db 0%, transparent 55%), 
+        background: radial-gradient(1200px 800px at -10% -10%, #eaf3ff 0%, transparent 50%),
+                    radial-gradient(1000px 700px at 110% -10%, #e8ffe6 0%, transparent 50%),
+                    radial-gradient(900px 600px at 50% 120%, #fff6db 0%, transparent 55%),
                     var(--bg);
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         color: var(--ink);
@@ -460,11 +460,11 @@
             border-radius: 16px;
             padding: 1.25rem;
         }
-        
+
         .main-number, .quick-number {
             font-size: 1.5rem;
         }
-        
+
         .card-icon, .quick-icon {
             min-width: 50px;
             min-height: 50px;
@@ -565,14 +565,14 @@
         <div class="col-lg-4">
             <div class="chart-card" style="background: linear-gradient(180deg, #ffffff, #f0fdf4);">
                 <div class="section-title"><i class="fa fa-chart-pie"></i> Most Sales</div>
-                
+
                 <!-- Ball Animation Container -->
                 <div class="ball-container">
                     <div class="sales-ball ball-1"></div>
                     <div class="sales-ball ball-2"></div>
                     <div class="sales-ball ball-3"></div>
                     <div class="sales-ball ball-4"></div>
-                    
+
                     <!-- Chart Container -->
                     <div id="mostSalesContainer">
                         <div id="mostSalesWrap" class="ms-spin-on-load">
@@ -580,7 +580,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="text-muted small mt-2 text-center">Top products share</div>
             </div>
         </div>
@@ -722,7 +722,7 @@
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { 
+            plugins: {
                 legend: { display: false },
                 tooltip: {
                     backgroundColor: 'rgba(255, 255, 255, 0.9)',
@@ -735,14 +735,14 @@
                 }
             },
             scales: {
-                x: { 
+                x: {
                     grid: { display: false },
                     ticks: {
                         color: '#64748b'
                     }
                 },
-                y: { 
-                    grid: { color: '#f1f5f9' }, 
+                y: {
+                    grid: { color: '#f1f5f9' },
                     beginAtZero: true,
                     ticks: {
                         color: '#64748b'
@@ -803,7 +803,7 @@
         void wrap.offsetWidth; // reflow
         wrap.classList.add('ms-spin-on-load');
     }
-    
+
     // Re-spin the chart every 10 seconds for visual interest
     setInterval(spinMostSales, 10000);
 </script>

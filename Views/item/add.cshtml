@@ -91,10 +91,10 @@
             <input asp-for="ItemData.ItemName" id="Item_ItemName" class="form-control form-control-sm" />
             <span id="itemNameMessage" style="color:red; font-size:12px;"></span>
 
-            @if (TempData["ErrorName"] != null)
+            @* @if (TempData["ErrorName"] != null)
             {
                 <span class="text-danger small">@TempData["ErrorName"]</span>
-            }
+            } *@
             @Html.ValidationMessageFor(m => m.ItemData.ItemName, "", new { @class = "text-danger" })
         </div>
 
@@ -386,27 +386,27 @@
     </script>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
+        // document.addEventListener("DOMContentLoaded", function () {
 
-            const nameInput = document.getElementById("Item_ItemName");
-            const nameMsg = document.getElementById("itemNameMessage");
+        //     // const nameInput = document.getElementById("Item_ItemName");
+        //     const nameMsg = document.getElementById("itemNameMessage");
 
-            if (nameInput) {
-                nameInput.addEventListener("input", function () {
-                    const name = nameInput.value.trim();
-                    if (!name) {
-                        nameMsg.textContent = "";
-                        return;
-                    }
+        //     if (nameInput) {
+        //         nameInput.addEventListener("input", function () {
+        //             const name = nameInput.value.trim();
+        //             if (!name) {
+        //                 nameMsg.textContent = "";
+        //                 return;
+        //             }
 
-                    fetch(`/Item/CheckItemName?itemName=${encodeURIComponent(name)}`)
-                        .then(res => res.json())
-                        .then(exists => {
-                            nameMsg.textContent = exists ? "This Item Name already exists!" : "";
-                        });
-                });
-            }
-        });
+        //             fetch(`/Item/CheckItemName?itemName=${encodeURIComponent(name)}`)
+        //                 .then(res => res.json())
+        //                 .then(exists => {
+        //                     nameMsg.textContent = exists ? "This Item Name already exists!" : "";
+        //                 });
+        //         });
+        //     }
+        // });
     </script>
 
     <script>
