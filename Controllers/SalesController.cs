@@ -39,7 +39,7 @@ namespace GSoftPosNew.Controllers
                 FromDate = fromDate,
                 ToDate = toDate,
                 Search = search,
-                Sales = query.OrderByDescending(s => s.SaleDate).ToList()
+                Sales = query.OrderByDescending(s => s.SaleDate).Include(s => s.SaleItems).ThenInclude(s => s.Item).ToList()
             };
 
             return View(model);
@@ -1200,6 +1200,7 @@ namespace GSoftPosNew.Controllers
             var sale = _context.Sales
                                .Include(s => s.Payment)
                                .Include(s => s.SaleItems)
+                               .Include(s => s.Payment)
                                .FirstOrDefault(s => s.Id == id);
 
             ViewBag.Setting = _context.ShopSettings.OrderByDescending(s => s.Id).FirstOrDefault() ?? new ShopSetting();

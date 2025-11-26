@@ -1,54 +1,21 @@
 ﻿@using System.Text.Json
 @model StockAdjustment
+
 @{
     ViewBag.Title = "Stock Adjustment";
     var userName = ViewBag.UserName as string ?? "Admin";
 }
 
+<link rel="stylesheet" href="~/css/Stock-Adjustment.css" />
 
-<link rel="stylesheet" href="~/css/stockadjustment.css" />
-<style>
-    .suggestion-item {
-    padding: 6px 10px;
-    cursor: pointer;
-    display: flex;
-    gap: 3px;
-    align-items: center;
-    font-size: 16px;
-    border-bottom: 1px solid #eee;
-    transition: background 0.2s ease, color 0.2s ease;
-    border-radius: 6px;
-    margin: 2px 2px;
-    }
-
-    .suggestion-item:hover,
-    .suggestion-item.active {
-    background-color: #FFEB99;
-    color: #fff;
-    }
-
-    .suggestions-list {
-    max-width: 320px; /* control overall width */
-    width: 100%;
-    background: #DFF2FE;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    margin-top: 4px;
-    overflow: hidden;
-    font-family: Arial, sans-serif;
-    font-size: 16px;
-    }
-</style>
-
-<div class="gpos-stockadj-modal" style="min-height:93vh; max-width:1120px; margin:28px auto; background:#fafdff; border-radius:1.5rem; box-shadow:0 6px 32px #10427413;">
+<div class="gpos-stockadj-modal">
 
     <!-- HEADER BAR -->
     <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px;gap:10px;">
         <!-- LEFT: Ref Navigation -->
         <div style="display:flex;align-items:center;gap:8px;">
             <span class="ref-label refno">Ref#:</span>
-            <span class="ref-value" id="autoRefNo"> @(string.IsNullOrWhiteSpace(Model?.RefNo) ? "ref-0001" : Model.RefNo)</span>
+            <span class="ref-value" id="autoRefNo">@(string.IsNullOrWhiteSpace(Model?.RefNo) ? "ref-0001" : Model.RefNo)</span>
             <button class="ref-btn" onclick="prevRef()" title="Previous Ref"><i class="fa fa-chevron-left"></i></button>
             <button class="ref-btn" onclick="openRefSearch()" title="Search Ref"><i class="fa fa-search"></i></button>
             <button class="ref-btn" id="nextBtn" onclick="nextRef()" title="Next Ref"><i class="fa fa-chevron-right"></i></button>
@@ -65,19 +32,19 @@
     </div>
 
     <!-- SCAN & REMARKS ROW -->
-    <div class="gpos-stockadj-header-v2" style="margin-bottom:28px;gap:24px;">
+    <div class="gpos-stockadj-header-v2">
         <!-- Scan Box (Barcode/Item Code) -->
         <div style="display:flex;flex-direction:column;gap:8px;min-width:260px;">
             <label for="barcodeInput" style="font-weight:700;color:#104274;">Scan Item Code / Name</label>
             <div style="display:flex;align-items:center;gap:9px;">
                 <input list="itemList"
-                type="text"
-                id="barcodeInput"
-                class="gpos-stockadj-barcode blink"
-                placeholder="Scan code or enter..."
-                autocomplete="off"
-                autofocus
-                style="width:220px;font-size:1.11rem;font-weight:600;border:2px solid #ff9100;box-shadow:0 0 5px #ffd6a0;border-radius:9px;transition:border 0.14s;" />
+                       type="text"
+                       id="barcodeInput"
+                       class="gpos-stockadj-barcode blink"
+                       placeholder="Scan code or enter..."
+                       autocomplete="off"
+                       autofocus
+                       style="width:220px;font-size:1.11rem;font-weight:600;border-radius:9px;transition:border 0.14s;" />
 
                 <a asp-action="Add" asp-controller="Item" target="_blank" class="gpos-stockadj-add-btn" title="New Item (F2)" style="padding:2px 11px;background:#2562a8;">
                     <i class="fa fa-plus"></i>
@@ -85,7 +52,6 @@
             </div>
 
             <div class="item-search-box">
-
                 <div id="itemSuggestions" class="suggestions-list"></div>
             </div>
         </div>
@@ -93,23 +59,52 @@
         <!-- Remarks/Notes -->
         <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
             <label for="remarks" style="font-weight:700;color:#1760b7;">Remarks / Note</label>
-            <textarea id="remarks" class="gpos-stockadj-remarks" style="min-width:280px;max-width:460px;min-height:40px;max-height:74px;border-radius:0.8rem;border:1.2px solid #b1d2fa;font-size:1.03rem;color:#146098;padding:7px 13px;background:#fafdff;" placeholder="Any note or reason..."></textarea>
+            <textarea id="remarks"
+                      class="gpos-stockadj-remarks"
+                      style="min-width:280px;max-width:460px;min-height:40px;max-height:74px;border-radius:0.8rem;border:1.2px solid #b1d2fa;font-size:1.03rem;color:#146098;padding:7px 13px;background:#fafdff;"
+                      placeholder="Any note or reason..."></textarea>
         </div>
     </div>
 
     <!-- ENTRY ROW: Details -->
-    <div class="gpos-stockadj-entry-row" style="margin-bottom:13px;gap:7px;">
-        <div class="entry-cell"><label>Item Code</label><input type="text" id="itemCode" class="gpos-stockadj-barcode" readonly style="width:112px;" /></div>
-        <div class="entry-cell"><label>Item Name</label><input type="text" id="itemName" class="gpos-stockadj-barcode" readonly style="width:242px;" /></div>
-        <div class="entry-cell"><label>Purchase Price</label><input type="number" id="purchasePrice" class="gpos-stockadj-barcode" style="width:94px;" /></div>
-        <div class="entry-cell"><label>MRP/Sale Price</label><input type="number" id="mrp" class="gpos-stockadj-barcode" style="width:93px;" /></div>
-        <div class="entry-cell"><label>Computer Stock</label><input type="number" id="compStock" class="gpos-stockadj-barcode" readonly style="width:90px;" /></div>
-        <div class="entry-cell"><label>Physical Stock</label><input type="number" id="phyStock" class="gpos-stockadj-barcode" style="width:93px;" /></div>
-        <div class="entry-cell"><label>Difference</label><input type="number" id="diffStock" class="gpos-stockadj-barcode" readonly style="width:66px;" /></div>
-        <div class="entry-cell" style="align-self:flex-end;"><button class="gpos-stockadj-add-btn" onclick="addToGrid()" style="width:42px;"><i class="fa fa-plus"></i></button></div>
+    <div class="gpos-stockadj-entry-row">
+        <div class="entry-cell">
+            <label>Item Code</label>
+            <input type="text" id="itemCode" class="gpos-stockadj-barcode" readonly style="width:112px;" />
+        </div>
+        <div class="entry-cell">
+            <label>Item Name</label>
+            <input type="text" id="itemName" class="gpos-stockadj-barcode" readonly style="width:242px;" />
+        </div>
+        <div class="entry-cell">
+            <label>Purchase Price</label>
+            <input type="number" id="purchasePrice" class="gpos-stockadj-barcode" style="width:94px;" />
+        </div>
+        <div class="entry-cell">
+            <label>MRP/Sale Price</label>
+            <input type="number" id="mrp" class="gpos-stockadj-barcode" style="width:93px;" />
+        </div>
+        <div class="entry-cell">
+            <label>Computer Stock</label>
+            <input type="number" id="compStock" class="gpos-stockadj-barcode" readonly style="width:90px;" />
+        </div>
+        <div class="entry-cell">
+            <label>Physical Stock</label>
+            <input type="number" id="phyStock" class="gpos-stockadj-barcode" style="width:93px;" />
+        </div>
+        <div class="entry-cell">
+            <label>Difference</label>
+            <input type="number" id="diffStock" class="gpos-stockadj-barcode" readonly style="width:66px;" />
+        </div>
+        <div class="entry-cell" style="align-self:flex-end;">
+            <button class="gpos-stockadj-add-btn" onclick="addToGrid()" style="width:42px;">
+                <i class="fa fa-plus"></i>
+            </button>
+        </div>
     </div>
+
     <!-- DATA GRID -->
-    <div class="gpos-stockadj-tablewrap" style="margin-bottom:34px;">
+    <div class="gpos-stockadj-tablewrap">
         <table class="gpos-stockadj-table" id="adjGrid" style="margin:0 auto;">
             <thead>
                 <tr>
@@ -126,311 +121,413 @@
                 </tr>
             </thead>
             <tbody>
-                @{
-                    var i = 1;
-                }
-                @if(Model.StockAdjustmentItems != null)
-                {
-                    @foreach (var item in Model.StockAdjustmentItems)
-                    {
-                            <tr>
-                                <td>@i</td>
-                                <td>@item.ItemCode</td>
-                                <td>@item.ItemName</td>
-                                <td>@item.PurchasePrice</td>
-                                <td>@item.SalePrice</td>
-                                <td>@item.ComputerStock</td>
-                                <td>@item.PhysicalStock</td>
-                                <td>@item.Difference</td>
-                                <td>@item.TotalDifference</td>
-                            </tr>
-
-                        i++;
-                    }
-                }
+                <!-- JS se rows add hongi, start hamesha empty -->
             </tbody>
         </table>
     </div>
 
     <!-- TOTALS & ACTIONS -->
     <div style="width:100%;display:flex;justify-content:center;align-items:center;gap:23px;margin:26px 0;">
-        <div class="gpos-stockadj-total" style="font-size:1.15rem;padding:10px 35px;">
+        <div class="gpos-stockadj-total">
             Total Diff Amount: <span id="totalDiffAmount">0.00</span>
         </div>
         <div class="gpos-stockadj-actions">
-            <button class="gpos-stockadj-load-btn" onclick="saveStockAdjustment()" style="padding:10px 33px;font-size:1.1rem;">
+            <button class="gpos-stockadj-load-btn" type="button" onclick="clearGrid()" style="padding:10px 20px;font-size:1.05rem;">
+                <i class="fa fa-trash"></i> Clear
+            </button>
+            <button class="gpos-stockadj-load-btn" type="button" onclick="saveStockAdjustment()" style="padding:10px 33px;font-size:1.1rem;">
                 <i class="fa fa-check"></i> Save Only
             </button>
-            <button class="gpos-stockadj-add-btn newbtn" style="padding:10px 33px;font-size:1.1rem;">
+            <button class="gpos-stockadj-add-btn newbtn" type="button" style="padding:10px 33px;font-size:1.1rem;">
                 <i class="fa fa-plus"></i> New
             </button>
-
-        </div>
-        <div id="smsMsg" style="display:none;margin-top:15px;font-weight:bold;color:#17a14b;">SMS Sent Successfully!</div>
-
-    </div>
-
-    <!-- Save Modal: same as previous code ... -->
-    <div id="saveModal" style="display:none; position:fixed; left:0;top:0;width:100vw;height:100vh;z-index:9999;justify-content:center;align-items:center;background:rgba(48,74,92,0.15)">
-        <div class="modal-content" style="background:#fff;min-width:320px;max-width:97vw;border-radius:1.3rem;box-shadow:0 6px 32px #1042742b;padding:24px 28px 20px 28px;display:flex;flex-direction:column;align-items:stretch;gap:15px;position:relative;">
-            <div class="modal-header" style="font-size:1.18rem;font-weight:700;color:#1a549c;margin-bottom:12px;text-align:center;">Stock Adjustment Saved!</div>
-            <div class="modal-body" style="font-size:1.08rem;">
-                <div>Reference #: <b id="modalRef"></b></div>
-                <div>Total Diff Amount: <b id="modalTotalDiff"></b></div>
-            </div>
-            <div class="modal-actions" style="display:flex;gap:13px;margin-top:19px;justify-content:flex-end;">
-                <button onclick="closeModal()" style="background:#fae4e4;color:#e0491b;border:none;border-radius:1.3rem;padding:8px 28px;font-size:1.08rem;font-weight:700;cursor:pointer;box-shadow:0 1px 8px #b7daff16;">OK (F12)</button>
-                <button onclick="window.print()" style="background:#2ea97f;color:#fff;border:none;border-radius:1.3rem;padding:8px 28px;font-size:1.08rem;font-weight:700;cursor:pointer;box-shadow:0 1px 8px #b7daff16;">Print</button>
-            </div>
         </div>
     </div>
 
-    <!-- BLINK & SCRIPTS -->
-    @section Scripts {
-        <script>
-            let serverRef = "@(string.IsNullOrWhiteSpace(ViewBag.Reference) ? "ref-0001" : ViewBag.Reference)";
+</div>
 
-            function extractNumber(ref) {
-                let match = ref.match(/(\d+)$/);
-                return match ? parseInt(match[1]) : 0;
-            }
-            function prevRef() {
-                let currentRef = document.getElementById("autoRefNo").textContent.trim(); // e.g. ref-0005
-                let match = currentRef.match(/(\d+)$/);
+<!-- CENTER TOAST -->
+<div id="stockToast" class="stockadj-toast">
+    Stock adjusted successfully
+</div>
 
-                if (match) {
-                    let num = parseInt(match[1]) - 1;
-                    if (num > 0) {
-                        let newRef = "ref-" + num.toString().padStart(4, "0");
-                        // redirect to Index with new refNo
-                        window.location.href = `/StockAdjustment/Index?refNo=${newRef}`;
-                    } else {
-                        alert("No previous reference!");
-                    }
-                }
-            }
+<!-- Save Modal (same styling you had) -->
+<div id="saveModal" style="display:none; position:fixed; left:0;top:0;width:100vw;height:100vh;z-index:9999;justify-content:center;align-items:center;background:rgba(48,74,92,0.15)">
+    <div class="modal-content" style="background:#fff;min-width:320px;max-width:97vw;border-radius:1.3rem;box-shadow:0 6px 32px #1042742b;padding:24px 28px 20px 28px;display:flex;flex-direction:column;align-items:stretch;gap:15px;position:relative;">
+        <div class="modal-header" style="font-size:1.18rem;font-weight:700;color:#1a549c;margin-bottom:12px;text-align:center;">Stock Adjustment Saved!</div>
+        <div class="modal-body" style="font-size:1.08rem;">
+            <div>Reference #: <b id="modalRef"></b></div>
+            <div>Total Diff Amount: <b id="modalTotalDiff"></b></div>
+        </div>
+        <div class="modal-actions" style="display:flex;gap:13px;margin-top:19px;justify-content:flex-end;">
+            <button onclick="closeModal()" style="background:#fae4e4;color:#e0491b;border:none;border-radius:1.3rem;padding:8px 28px;font-size:1.08rem;font-weight:700;cursor:pointer;box-shadow:0 1px 8px #b7daff16;">OK (F12)</button>
+            <button onclick="window.print()" style="background:#2ea97f;color:#fff;border:none;border-radius:1.3rem;padding:8px 28px;font-size:1.08rem;font-weight:700;cursor:pointer;box-shadow:0 1px 8px #b7daff16;">Print</button>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        let serverRef = "@(string.IsNullOrWhiteSpace(ViewBag.Reference) ? "ref-0001" : ViewBag.Reference)";
+        let refNo = serverRef;
 
-           function nextRef() {
-                let currentRef = document.getElementById("autoRefNo").textContent.trim();
-                let nextNum = extractNumber(currentRef) + 1;
-                let newRef = "ref-" + nextNum.toString().padStart(4, "0");
+        // ---------------- REF NO PREV / NEXT ----------------
+        function extractNumber(ref) {
+            let match = ref.match(/(\d+)$/);
+            return match ? parseInt(match[1]) : 0;
+        }
 
-                // compare with server-side ref
-                if (nextNum > extractNumber(serverRef)) {
-                    // trigger New button
-                    document.querySelector(".newbtn").click();
-                    document.getElementById("nextBtn").disabled = true;
+        function prevRef() {
+            let currentRef = document.getElementById("autoRefNo").textContent.trim();
+            let match = currentRef.match(/(\d+)$/);
+
+            if (match) {
+                let num = parseInt(match[1]) - 1;
+                if (num > 0) {
+                    let newRef = "ref-" + num.toString().padStart(4, "0");
+                    window.location.href = `/StockAdjustment/Index?refNo=${newRef}`;
                 } else {
-                     window.location.href = `/StockAdjustment/Index?refNo=${newRef}`;
+                    alert("No previous reference!");
                 }
             }
-        </script>
+        }
 
-        <script>
-            let refNo = "@(string.IsNullOrWhiteSpace(ViewBag.Reference) ? "ref-0001" : ViewBag.Reference)";
-            document.querySelector(".newbtn").addEventListener("click", function () {
-                // ---- Handle RefNo auto increment ----
+        function nextRef() {
+            let currentRef = document.getElementById("autoRefNo").textContent.trim();
+            let nextNum = extractNumber(currentRef) + 1;
+            let newRef = "ref-" + nextNum.toString().padStart(4, "0");
 
-                let match = refNo.match(/(\d+)$/); // extract last digits
-                let nextNum = 1;
+            if (nextNum > extractNumber(serverRef)) {
+                document.querySelector(".newbtn").click();
+                document.getElementById("nextBtn").disabled = true;
+            } else {
+                window.location.href = `/StockAdjustment/Index?refNo=${newRef}`;
+            }
+        }
 
-                    if (match) {
-                    nextNum = parseInt(match[1]) + 1;
-                }
+        document.querySelector(".newbtn").addEventListener("click", function () {
+            let match = refNo.match(/(\d+)$/);
+            let nextNum = 1;
 
-                // build new ref
-                refNo = "ref-" + nextNum.toString().padStart(4, "0");
-                document.getElementById("autoRefNo").textContent = refNo;
+            if (match) {
+                nextNum = parseInt(match[1]) + 1;
+            }
 
-                // ---- Replace table row (clear first then insert one row) ----
-                let tbody = document.querySelector(".gpos-stockadj-table tbody");
-                tbody.innerHTML = ""; // remove existing rows
+            refNo = "ref-" + nextNum.toString().padStart(4, "0");
+            document.getElementById("autoRefNo").textContent = refNo;
+
+            let tbody = document.querySelector(".gpos-stockadj-table tbody");
+            tbody.innerHTML = "";
+            document.getElementById("totalDiffAmount").innerText = "0.00";
+            clearFields();
+        });
+
+        // ---------------- BASIC ELEMENTS ----------------
+        const barcodeInput   = document.getElementById("barcodeInput");
+        const suggestionsDiv = document.getElementById("itemSuggestions");
+        const purchasePrice  = document.getElementById("purchasePrice");
+        const mrp            = document.getElementById("mrp");
+        const compStock      = document.getElementById("compStock");
+        const phyStock       = document.getElementById("phyStock");
+        const diffStock      = document.getElementById("diffStock");
+
+        // blinking box
+        setInterval(() => {
+            if (barcodeInput) barcodeInput.classList.toggle('blink');
+        }, 900);
+
+        // Date/time update
+        function updateDateTime() {
+            var d = new Date();
+            document.getElementById('stockAdjDateTime').innerText =
+                d.toLocaleDateString() + " " + d.toLocaleTimeString();
+        }
+        setInterval(updateDateTime, 1000); updateDateTime();
+
+        // serialize items into JS
+        var items = @Html.Raw(JsonSerializer.Serialize(ViewBag.Items));
+
+        // ---------------- HELPERS ----------------
+        function clearFields() {
+            barcodeInput.value = "";
+            document.getElementById("itemCode").value = "";
+            document.getElementById("itemName").value = "";
+            purchasePrice.value = "";
+            mrp.value = "";
+            compStock.value = "";
+            phyStock.value = "";
+            diffStock.value = "";
+            suggestionsDiv.innerHTML = "";
+            barcodeInput.focus();
+        }
+
+        function showStockToast(message) {
+            const toast = document.getElementById("stockToast");
+            toast.textContent = message || "Stock adjusted successfully";
+            toast.style.display = "block";
+            setTimeout(() => {
+                toast.style.display = "none";
+            }, 1000); // 👈 sirf 1 second
+        }
+
+        function fillItemFields(item) {
+            barcodeInput.value = item.ItemCode || item.ItemName || "";
+            document.getElementById("itemCode").value = item.ItemCode || "";
+            document.getElementById("itemName").value = item.ItemName || "";
+            purchasePrice.value = item.PurchasePrice || "";
+            mrp.value           = item.SalePrice || "";
+            compStock.value     = item.Quantity || 0;
+            phyStock.value      = "";
+            diffStock.value     = "";
+            // scanner / manual ke baad cursor Purchase Price pe
+            setTimeout(() => { purchasePrice.focus(); purchasePrice.select(); }, 50);
+        }
+
+        // ---------------- SUGGESTION LIST (MANUAL SELECT) ----------------
+        barcodeInput.addEventListener("input", function () {
+            let val = this.value.trim().toLowerCase();
+            suggestionsDiv.innerHTML = "";
+            if (!val) return;
+
+            let matches = items.filter(x =>
+                (x.ItemCode && x.ItemCode.toLowerCase().includes(val)) ||
+                (x.ItemName && x.ItemName.toLowerCase().includes(val))
+            );
+
+            if (matches.length === 0) {
+                suggestionsDiv.innerHTML = "<div style='padding:4px;color:#999;'>No match found</div>";
+                return;
+            }
+
+            matches.forEach(item => {
+                let div = document.createElement("div");
+                div.className = "suggestion-item";
+                div.textContent = `${item.ItemCode} - ${item.ItemName}`;
+                div.onclick = () => {
+                    fillItemFields(item);
+                    suggestionsDiv.innerHTML = "";
+                };
+                suggestionsDiv.appendChild(div);
             });
-        </script>
-        <script>
+        });
 
-            // blinking box
-            setInterval(() => {
-                let b = document.getElementById('barcodeInput');
-                if (b) b.classList.toggle('blink');
-            }, 900);
-
-                        // Date/time update
-            function updateDateTime() {
-                var d = new Date();
-                document.getElementById('stockAdjDateTime').innerText =
-                    d.toLocaleDateString() + " " + d.toLocaleTimeString();
-            }
-            setInterval(updateDateTime, 1000); updateDateTime();
-
-                    // serialize items into JS
-            var items = @Html.Raw(JsonSerializer.Serialize(ViewBag.Items));
-
-            const barcodeInput = document.getElementById("barcodeInput");
-            const suggestionsDiv = document.getElementById("itemSuggestions");
-
-            barcodeInput.addEventListener("input", function () {
-                let val = this.value.trim().toLowerCase();
-                suggestionsDiv.innerHTML = ""; // clear old list
-
+        // ---------------- BARCODE SCANNER: ENTER -> DIRECT PICK ----------------
+        barcodeInput.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                let val = barcodeInput.value.trim().toLowerCase();
                 if (!val) return;
 
-                // filter items (code or name contains typed text)
-                let matches = items.filter(x =>
-                    (x.ItemCode && x.ItemCode.toLowerCase().includes(val)) ||
-                    (x.ItemName && x.ItemName.toLowerCase().includes(val))
-                );
+                let match =
+                    items.find(x => x.ItemCode &&
+                        x.ItemCode.toLowerCase() === val) ||
+                    items.find(x => x.ItemName &&
+                        x.ItemName.toLowerCase() === val);
 
-                if (matches.length === 0) {
-                    suggestionsDiv.innerHTML = "<div style='padding:4px;color:#999;'>No match found</div>";
-                    return;
+                if (match) {
+                    fillItemFields(match);
+                    suggestionsDiv.innerHTML = "";
                 }
+            }
+        });
 
-                matches.forEach(item => {
-                    let div = document.createElement("div");
-                    div.textContent = `${item.ItemCode} - ${item.ItemName}`;
-                    div.style.padding = "4px";
-                    div.style.cursor = "pointer";
-                    div.style.fontSize = "16px";
-                    div.style.color = "black";
-                    div.onmouseover = () => div.style.background = "#ffffe0"; // light yellow
-                    div.onmouseout = () => div.style.background = "";
-                    div.onclick = () => {
-                        // set selected values
-                        barcodeInput.value = item.ItemName;
-                        document.getElementById("itemCode").value = item.ItemCode || "";
-                        document.getElementById("itemName").value = item.ItemName || "";
-                        document.getElementById("purchasePrice").value = item.PurchasePrice || "";
-                        document.getElementById("mrp").value = item.SalePrice || "";
-                        document.getElementById("compStock").value = item.Quantity || 0;
-                        document.getElementById("phyStock").value = "";
-                        document.getElementById("diffStock").value = "";
-                        suggestionsDiv.innerHTML = ""; // clear after selection
-                        setTimeout(() => { document.getElementById("purchasePrice").focus(); }, 50);
-                    };
-                    suggestionsDiv.appendChild(div);
+        // ---------------- KEYBOARD FLOW: PURCHASE -> MRP -> PHY -> DIFF -> ADD ----------------
+
+        // Purchase Price: Enter -> MRP
+        purchasePrice.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                mrp.focus();
+                mrp.select();
+            }
+        });
+
+        // MRP: Enter -> Physical Stock
+        mrp.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                phyStock.focus();
+                phyStock.select();
+            }
+        });
+
+        // Physical Stock: auto diff
+        phyStock.addEventListener('input', function () {
+            let cs = parseInt(compStock.value) || 0;
+            let ps = parseInt(phyStock.value) || 0;
+            diffStock.value = ps - cs;
+        });
+
+        // Physical Stock: Enter -> Difference field
+        phyStock.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                diffStock.focus();
+            }
+        });
+
+        // Difference: Enter -> row add (same as plus)
+        diffStock.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                addToGrid();
+            }
+        });
+
+        // ---------------- GRID LOGIC ----------------
+        function addToGrid() {
+            let table = document.getElementById("adjGrid").getElementsByTagName('tbody')[0];
+            let itemCode = document.getElementById("itemCode").value || "";
+            let itemName = document.getElementById("itemName").value || "";
+            let purPrice = parseFloat(purchasePrice.value) || 0;
+            let mrpVal   = parseFloat(mrp.value) || 0;
+            let compVal  = parseInt(compStock.value) || 0;
+            let phyVal   = parseInt(phyStock.value) || 0;
+            let diffVal  = phyVal - compVal;
+            let total    = diffVal * purPrice;
+
+            if (!itemCode || !itemName) {
+                alert("Scan item code and select item name!");
+                barcodeInput.focus();
+                return;
+            }
+
+            let rowCount = table.rows.length + 1;
+
+            let tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${rowCount}</td>
+                <td>${itemCode}</td>
+                <td>${itemName}</td>
+                <td>${purPrice.toFixed(2)}</td>
+                <td>${mrpVal.toFixed(2)}</td>
+                <td>${compVal}</td>
+                <td>${phyVal}</td>
+                <td>${diffVal}</td>
+                <td class="rowTotal">${total.toFixed(2)}</td>
+                <td><button class="gpos-stockadj-del-btn" onclick="deleteRow(this)">🗑️</button></td>`;
+
+            table.appendChild(tr);
+
+            updateTotalDiffAmount();
+            clearFields(); // sab clear + focus barcode pe
+        }
+
+        function deleteRow(btn) {
+            let row = btn.closest("tr");
+            row.remove();
+            updateRowNumbers();
+            updateTotalDiffAmount();
+        }
+
+        function updateRowNumbers() {
+            let table = document.getElementById("adjGrid").getElementsByTagName('tbody')[0];
+            Array.from(table.rows).forEach((row, index) => {
+                row.cells[0].innerText = index + 1;
+            });
+        }
+
+        function updateTotalDiffAmount() {
+            let totals = document.querySelectorAll("#adjGrid tbody .rowTotal");
+            let sum = 0;
+            totals.forEach(td => {
+                sum += parseFloat(td.innerText) || 0;
+            });
+            document.getElementById("totalDiffAmount").innerText = sum.toFixed(2);
+        }
+
+        function clearGrid() {
+            let tbody = document.querySelector("#adjGrid tbody");
+            tbody.innerHTML = "";
+            document.getElementById("totalDiffAmount").innerText = "0.00";
+            clearFields();
+        }
+
+        // ---------------- SAVE LOGIC + AUTO REF INCREMENT ----------------
+        function getGridRows() {
+            let table = document.getElementById("adjGrid").getElementsByTagName('tbody')[0];
+            let rows = [];
+            for (let i = 0; i < table.rows.length; i++) {
+                let r = table.rows[i].children;
+                rows.push({
+                    itemCode: r[1].innerText,
+                    itemName: r[2].innerText,
+                    purchasePrice: parseFloat(r[3].innerText),
+                    salePrice: parseFloat(r[4].innerText),
+                    computerStock: parseInt(r[5].innerText),
+                    physicalStock: parseInt(r[6].innerText),
+                    difference: parseInt(r[7].innerText),
+                    totalDifference: parseFloat(r[8].innerText)
                 });
+            }
+            return rows;
+        }
+
+        function incrementRefAfterSave() {
+            let currentRef = document.getElementById("autoRefNo").textContent.trim();
+            let match = currentRef.match(/(\d+)$/);
+            let nextNum = 1;
+
+            if (match) {
+                nextNum = parseInt(match[1]) + 1;
+            }
+
+            let newRef = "ref-" + nextNum.toString().padStart(4, "0");
+            document.getElementById("autoRefNo").textContent = newRef;
+            refNo = newRef;
+            serverRef = newRef; // taake nextRef logic bhi sath chale
+        }
+
+        async function saveStockAdjustment() {
+            let adjustment = {
+                refNo: document.getElementById("autoRefNo").innerText,
+                note: document.getElementById("remarks").value,
+                date: new Date().toISOString(),
+                stockAdjustmentItems: getGridRows()
+            };
+
+            if (adjustment.stockAdjustmentItems.length === 0) {
+                alert("Please select at least one item first.");
+                return;
+            }
+
+            let response = await fetch('/StockAdjustment/Index', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(adjustment)
             });
 
-            // auto difference calculation
-            document.getElementById("phyStock").addEventListener('input', function () {
-                let compStock = parseInt(document.getElementById("compStock").value) || 0;
-                let phyStock = parseInt(this.value) || 0;
-                let diff = phyStock - compStock;
-                document.getElementById("diffStock").value = diff;
-            });
-
-            function addToGrid() {
-                let table = document.getElementById("adjGrid").getElementsByTagName('tbody')[0];
-                let itemCode = document.getElementById("itemCode").value || "";
-                let itemName = document.getElementById("itemName").value || "";
-                let purPrice = parseFloat(document.getElementById("purchasePrice").value) || 0;
-                let mrp = parseFloat(document.getElementById("mrp").value) || 0;
-                let compStock = parseInt(document.getElementById("compStock").value) || 0;
-                let phyStock = parseInt(document.getElementById("phyStock").value) || 0;
-                let diff = phyStock - compStock;
-                let total = diff * purPrice;
-
-                let rowCount = table.rows.length + 1;
-                if (!itemCode || !itemName) { alert("Scan item code and select item name!"); return; }
-
-                let tr = document.createElement("tr");
-                tr.innerHTML = `<td>${rowCount}</td>
-                                <td>${itemCode}</td>
-                                <td>${itemName}</td>
-                                <td>${purPrice.toFixed(2)}</td>
-                                <td>${mrp.toFixed(2)}</td>
-                                <td>${compStock}</td>
-                                <td>${phyStock}</td>
-                                <td>${diff}</td>
-                                <td class="rowTotal">${total.toFixed(2)}</td>
-                                <td><button class="gpos-stockadj-del-btn" onclick="deleteRow(this)">🗑️</button></td>`;
-                table.appendChild(tr);
-
-                updateTotalDiffAmount();
-
-                // reset fields
-                document.getElementById("barcodeInput").value = "";
-                document.getElementById("itemCode").value = "";
-                document.getElementById("itemName").value = "";
-                document.getElementById("purchasePrice").value = "";
-                document.getElementById("mrp").value = "";
-                document.getElementById("compStock").value = "";
-                document.getElementById("phyStock").value = "";
-                document.getElementById("diffStock").value = "";
-                setTimeout(()=>{document.getElementById("barcodeInput").focus();},100);
+            let result = await response.json();
+            if (result.success) {
+                showStockToast("Stock adjusted successfully");
+                clearGrid();
+                incrementRefAfterSave(); // 👈 save ke baad ref-0005 → ref-0006
+            } else {
+                alert("Error while saving.");
             }
+        }
 
-            function deleteRow(btn) {
-                let row = btn.closest("tr");
-                row.remove();
-                updateRowNumbers();
-                updateTotalDiffAmount();
+        function closeModal() {
+            document.getElementById("saveModal").style.display = "none";
+        }
+
+        function openRefSearch() {
+            // TODO: ref search modal
+        }
+
+        // ---------------- GLOBAL SHORTCUTS (F2 = SAVE ONLY) ----------------
+        window.addEventListener("keydown", function (e) {
+            if (e.key === "F2") {
+                e.preventDefault();
+                saveStockAdjustment(); // 👈 Save Only shortcut
             }
+        });
 
-            function updateRowNumbers() {
-                let table = document.getElementById("adjGrid").getElementsByTagName('tbody')[0];
-                Array.from(table.rows).forEach((row, index) => {
-                    row.cells[0].innerText = index + 1;
-                });
-            }
+        // ---------------- ON PAGE LOAD ----------------
+        window.addEventListener("load", function () {
+            barcodeInput.focus();
+            // ensure empty start
+            // clearGrid();  // agar view me server-side rows nahi render kar rahe ho to ye optional hai
+        });
+    </script>
+}
 
-            function updateTotalDiffAmount() {
-                let totals = document.querySelectorAll("#adjGrid tbody .rowTotal");
-                let sum = 0;
-                totals.forEach(td => {
-                    sum += parseFloat(td.innerText) || 0;
-                });
-                document.getElementById("totalDiffAmount").innerText = sum.toFixed(2);
-            }
-
-
-            function getGridRows() {
-                let table = document.getElementById("adjGrid").getElementsByTagName('tbody')[0];
-                let rows = [];
-                for (let i = 0; i < table.rows.length; i++) {
-                    let r = table.rows[i].children;
-                    rows.push({
-                        itemCode: r[1].innerText,
-                        itemName: r[2].innerText,
-                        purchasePrice: parseFloat(r[3].innerText),
-                        salePrice: parseFloat(r[4].innerText),
-                        computerStock: parseInt(r[5].innerText),
-                        physicalStock: parseInt(r[6].innerText),
-                        difference: parseInt(r[7].innerText),
-                        totalDifference: parseFloat(r[8].innerText)
-                    });
-                }
-                return rows;
-            }
-
-            async function saveStockAdjustment() {
-                let adjustment = {
-                    refNo: document.getElementById("autoRefNo").innerText,
-                    note: document.getElementById("remarks").value,
-                    date: new Date().toISOString(),
-                    stockAdjustmentItems: getGridRows()
-                };
-
-                if (adjustment.stockAdjustmentItems.length === 0) {
-                    alert("Please select at least one item first.");
-                    return; // stop execution
-                }
-
-                let response = await fetch('/StockAdjustment/Index', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(adjustment)
-                });
-
-                let result = await response.json();
-                if (result.success) {
-                    alert("Saved successfully! ID: " + result.id);
-                    window.location.reload();
-                } else {
-                    alert("Error while saving.");
-                }
-            }
-
-        </script>
-    }

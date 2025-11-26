@@ -103,7 +103,24 @@ namespace GSoftPosNew.Controllers
                                 existingProduct.PurchasePrice = item.UnitCost;   // update cost price if needed
                                 var q = existingProduct.Quantity - item.Quantity; // ✅ add to existing stock
 
-                                existingProduct.Quantity = q;
+                                if (!string.IsNullOrEmpty(existingProduct.PackSize))
+                                {
+                                    int packSize;
+                                    if (int.TryParse(existingProduct.PackSize, out packSize))
+                                    {
+                                        existingProduct.Quantity = existingProduct.Quantity - (item.Quantity * packSize);
+                                    }
+                                    else
+                                    {
+                                        // fallback if PackSize is not a valid number
+                                        existingProduct.Quantity = q;
+                                    }
+                                }
+                                else
+                                {
+                                    existingProduct.Quantity = q;
+                                }
+
 
                                 _context.Items.Update(existingProduct);
 

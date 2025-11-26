@@ -1,4 +1,6 @@
-﻿@model GSoftPosNew.ViewModels.SalesFilterViewModel
+﻿@using System
+@using System.Linq
+@model GSoftPosNew.ViewModels.SalesFilterViewModel
 
 @{
     ViewData["Title"] = "Sales Report";
@@ -8,53 +10,237 @@
 }
 
 <style>
-    /* ===== Screen polish ===== */
-    .page-header {
-        background: linear-gradient(90deg, #f5f9ff, #f8fffb);
-        border: 1px solid #ecf2ff;
-        border-radius: 14px;
-        padding: 14px 18px;
+    /* ========= PAGE BACKGROUND & LAYOUT ========= */
+    .sales-page-wrapper {
+        background: radial-gradient(circle at top left, #e0f2fe 0, #eef2ff 40%, #f9fafb 100%);
+        min-height: 100vh;
+        padding: 1.5rem 0 2.5rem;
     }
 
-        .page-header h2 {
-            letter-spacing: .2px;
-        }
+    .card {
+        border-radius: 1.1rem;
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        box-shadow: 0 14px 35px rgba(15, 23, 42, 0.12);
+    }
+
+    /* ========= PAGE HEADER ========= */
+    .page-header {
+        background: linear-gradient(120deg, #0ea5e9 0%, #6366f1 50%, #22c55e 100%);
+        border-radius: 1.1rem;
+        padding: 0.9rem 1.3rem;
+        color: #eff6ff;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.4);
+    }
+
+    .page-header-main {
+        display: flex;
+        align-items: center;
+        gap: .8rem;
+    }
+
+    .page-header-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.18);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .page-header h2 {
+        letter-spacing: .3px;
+        margin-bottom: .1rem;
+    }
+
+    .page-header-sub {
+        font-size: .8rem;
+        opacity: .9;
+    }
 
     .btn-soft {
-        border-radius: 10px;
-        box-shadow: 0 6px 14px rgba(0,0,0,.04);
+        border-radius: 999px;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, .15);
+        border: none;
+    }
+
+    .btn-soft-outline {
+        border-radius: 999px;
+    }
+
+    /* ========= FILTER CARD ========= */
+    .filter-card {
+        border: none;
+        background: linear-gradient(135deg, #eff6ff 0, #e0f2fe 60%, #ecfdf5 100%);
+    }
+
+        .filter-card .card-body {
+            padding: 1.1rem 1.3rem 0.8rem;
+        }
+
+    .filter-label {
+        font-size: .8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: #6b7280;
+    }
+
+        .filter-label i {
+            font-size: .95rem;
+        }
+
+    .filter-card .form-control {
+        border-radius: .8rem;
+        border-color: rgba(148, 163, 184, 0.7);
+    }
+
+    .filter-card .btn-success {
+        box-shadow: 0 10px 28px rgba(22, 163, 74, 0.36);
+    }
+
+    .filter-card .btn-outline-secondary {
+        border-width: 1px;
+    }
+
+    /* ========= KPI BADGES ========= */
+    .kpi-row {
+        gap: .6rem;
     }
 
     .kpi-badge {
         display: inline-flex;
         align-items: center;
-        gap: .5rem;
-        background: linear-gradient(90deg,#eef7ff,#f5fff2);
-        border: 1px solid #e6eef8;
-        border-radius: 12px;
-        padding: .5rem .75rem;
+        gap: .55rem;
+        border-radius: .9rem;
+        padding: .5rem .9rem;
         font-size: .9rem;
+        border: 1px solid rgba(148, 163, 184, 0.45);
+        background: #ffffff;
+        box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
     }
+
+        .kpi-badge .icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .95rem;
+        }
+
+        .kpi-badge .label {
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            font-size: .7rem;
+        }
 
         .kpi-badge .val {
             font-weight: 700;
+            font-size: .9rem;
         }
 
+    .kpi-primary .icon {
+        background: rgba(59, 130, 246, 0.12);
+        color: #1d4ed8;
+    }
+
+    .kpi-tax .icon {
+        background: rgba(248, 113, 113, 0.15);
+        color: #b91c1c;
+    }
+
+    .kpi-discount .icon {
+        background: rgba(251, 191, 36, 0.16);
+        color: #b45309;
+    }
+
+    .kpi-total .icon {
+        background: rgba(34, 197, 94, 0.15);
+        color: #15803d;
+    }
+
+    /* ========= TABLE ========= */
+    .table-card {
+        border-radius: 1.1rem;
+        overflow: hidden;
+    }
+
     .table.compact > :not(caption) > * > * {
-        padding: .45rem .55rem;
+        padding: .45rem .6rem;
     }
 
     .table thead th {
-        letter-spacing: .3px;
+        letter-spacing: .4px;
+        font-size: .78rem;
+        text-transform: uppercase;
     }
 
-    /* ===== Default Print (A4) ===== */
+        .table thead th i {
+            font-size: .85rem;
+        }
+
+    .table-hover tbody tr:hover {
+        background: #eff6ff;
+    }
+
+    .badge-invoice {
+        background: rgba(37, 99, 235, 0.1);
+        color: #1d4ed8;
+        border-radius: 999px;
+        padding: .15rem .6rem;
+        font-size: .78rem;
+        font-weight: 600;
+    }
+
+    .cashier-chip {
+        border-radius: 999px;
+        background: rgba(15, 23, 42, .04);
+        font-size: .8rem;
+        padding: .15rem .5rem;
+    }
+
+    .action-btn-group .btn {
+        border-radius: 999px;
+        padding-inline: .6rem;
+    }
+
+    /* ========= ITEMS MODAL ========= */
+    .items-modal-title {
+        font-weight: 600;
+        letter-spacing: .03em;
+        text-transform: uppercase;
+        font-size: .8rem;
+        color: #6b7280;
+    }
+
+    .items-modal-header {
+        border-bottom: 1px solid rgba(148, 163, 184, .3);
+    }
+
+    .items-table thead th {
+        background-color: #111827;
+        color: #f9fafb;
+        font-size: .78rem;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+    }
+
+    .items-table tfoot td {
+        font-weight: 700;
+        background: #f3f4f6;
+    }
+
+    /* ========= PRINT (base A4) ========= */
     @@media print {
         @@page {
             size: A4;
             margin: 12mm;
         }
-        /* NOTE: @@page for Razor escape */
+
         body {
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
@@ -66,9 +252,10 @@
             display: none !important;
         }
 
-        .container-fluid {
+        .container-fluid, .sales-page-wrapper {
             padding: 0 !important;
             margin: 0 !important;
+            background: #ffffff !important;
         }
 
         .card, .page-header {
@@ -86,244 +273,481 @@
         a.btn, button.btn {
             display: none !important;
         }
-
-        .print-title {
-            font-weight: 700;
-            font-size: 18px;
-            margin-bottom: 6px;
-        }
-
-        .print-sub {
-            font-size: 12px;
-            margin-bottom: 10px;
-        }
     }
 </style>
 
-<div class="container-fluid py-4">
-    <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-3 page-header no-print">
-        <div>
-            <h2 class="fw-bold mb-1 text-primary">
-                <i class="fa fa-chart-line me-2"></i> @ViewData["Title"]
-            </h2>
-            <div class="text-muted" style="font-size:.85rem">
-                <i class="fa fa-info-circle me-1"></i> Filter results ko A4 ya Thermal (80mm) par print karein.
+<div class="sales-page-wrapper">
+    <div class="container-fluid py-3">
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-3 page-header no-print">
+            <div class="page-header-main">
+                <div class="page-header-icon">
+                    <i class="fa fa-chart-line"></i>
+                </div>
+                <div>
+                    <h2 class="fw-bold mb-1">
+                        @ViewData["Title"]
+                    </h2>
+                    <div class="page-header-sub">
+                        <i class="fa fa-info-circle me-1"></i>
+                        Filter results ko A4 ya Thermal (80mm) par print karein.
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <a asp-action="POS" class="btn btn-light btn-soft px-3">
+                    <i class="fa fa-plus me-1"></i> New Sale
+                </a>
             </div>
         </div>
-        <div class="d-flex gap-2">
-            <a asp-action="POS" class="btn btn-primary btn-soft px-3">
-                <i class="fa fa-plus me-1"></i> New Sale
-            </a>
+
+        <!-- Filters -->
+        <div class="card shadow-sm mb-3 border-0 rounded-3 no-print filter-card">
+            <div class="card-body">
+                <form method="get" asp-action="Index" class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label filter-label">
+                            <i class="fa fa-calendar-day me-1 text-primary"></i>From Date
+                        </label>
+                        <input id="fromDate" type="date" name="fromDate" class="form-control"
+                               value="@Model.FromDate?.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label filter-label">
+                            <i class="fa fa-calendar-day me-1 text-primary"></i>To Date
+                        </label>
+                        <input id="toDate" type="date" name="toDate" class="form-control"
+                               value="@Model.ToDate?.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label filter-label">
+                            <i class="fa fa-magnifying-glass me-1 text-primary"></i>Search (Invoice / Cashier)
+                        </label>
+                        <input id="search" type="text" name="search" class="form-control"
+                               placeholder="Invoice # or Cashier" value="@Model.Search" />
+                    </div>
+                    <div class="col-md-3 text-end">
+                        <button type="submit" class="btn btn-success px-4 btn-soft">
+                            <i class="fa fa-search me-1"></i> Filter
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary px-3 ms-2 btn-soft-outline" title="Reset">
+                            <i class="fa fa-sync"></i>
+                        </a>
+                    </div>
+
+                    <!-- Print toolbar -->
+                    <div class="col-12 d-flex justify-content-end gap-2 mt-2">
+                        <!-- Items + Qty button (Bootstrap modal) -->
+                        <button type="button" id="itemQty"
+                                onclick="toggleItems()"
+                                class="btn btn-secondary btn-soft"
+                                data-bs-toggle="modal"
+                                data-bs-target="#itemsSummaryModal">
+                            <i class="fa fa-list-ul me-2"></i> Items Qty
+                        </button>
+
+                        <button type="button" class="btn btn-dark btn-soft" onclick="printA4()">
+                            <i class="fa fa-print me-2"></i> Print (A4)
+                        </button>
+                        <a asp-action="LastDaySales" asp-controller="Sales" type="button"
+                           class="btn btn-outline-dark btn-soft-outline">
+                            <i class="fa fa-receipt me-2"></i> Thermal Print (80mm)
+                        </a>
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
 
-    <!-- Filters -->
-    <div class="card shadow-sm mb-3 border-0 rounded-3 no-print">
-        <div class="card-body">
-            <form method="get" asp-action="Index" class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label"><i class="fa fa-calendar-day me-1 text-primary"></i>From Date</label>
-                    <input id="fromDate" type="date" name="fromDate" class="form-control" value="@Model.FromDate?.ToString("yyyy-MM-dd")" />
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label"><i class="fa fa-calendar-day me-1 text-primary"></i>To Date</label>
-                    <input id="toDate" type="date" name="toDate" class="form-control" value="@Model.ToDate?.ToString("yyyy-MM-dd")" />
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label"><i class="fa fa-magnifying-glass me-1 text-primary"></i>Search (Invoice / Cashier)</label>
-                    <input id="search" type="text" name="search" class="form-control" placeholder="Invoice # or Cashier" value="@Model.Search" />
-                </div>
-                <div class="col-md-3 text-end">
-                    <button type="submit" class="btn btn-success px-4 btn-soft">
-                        <i class="fa fa-search me-1"></i> Filter
-                    </button>
-                    <a asp-action="Index" class="btn btn-outline-secondary px-3 ms-2 btn-soft" title="Reset">
-                        <i class="fa fa-sync"></i>
-                    </a>
-                </div>
+        <!-- KPIs -->
+        @if (Model?.Sales != null && Model.Sales.Any())
+        {
+            var grandSubtotal = Model.Sales.Sum(s => s.SubTotal);
+            var grandTax = Model.Sales.Sum(s => s.Tax);
+            var grandDiscount = Model.Sales.Sum(s => s.Discount);
+            var grandTotal = Model.Sales.Sum(s => s.Total);
 
-                <!-- Print toolbar -->
-                <div class="col-12 d-flex justify-content-end gap-2 mt-2">
-                    <button type="button" class="btn btn-dark btn-soft" onclick="printA4()">
-                        <i class="fa fa-print me-2"></i> Print (A4)
-                    </button>
-                    <a asp-action="LastDaySales" asp-controller="Sales" type="button" class="btn btn-outline-dark btn-soft">
-                        <i class="fa fa-receipt me-2"></i> Thermal Print (80mm)
-                    </a>
-                </div>
-            </form>
-        </div>
-    </div>
+            <div class="d-flex flex-wrap kpi-row mb-3 no-print">
+                <span class="kpi-badge kpi-primary">
+                    <span class="icon"><i class="fa fa-receipt"></i></span>
+                    <span>
+                        <div class="label">Invoices</div>
+                        <div class="val">@Model.Sales.Count()</div>
+                    </span>
+                </span>
+                <span class="kpi-badge kpi-primary">
+                    <span class="icon"><i class="fa fa-calculator"></i></span>
+                    <span>
+                        <div class="label">Subtotal</div>
+                        <div class="val">@grandSubtotal.ToString("N2")</div>
+                    </span>
+                </span>
+                <span class="kpi-badge kpi-tax">
+                    <span class="icon"><i class="fa fa-percent"></i></span>
+                    <span>
+                        <div class="label">Tax</div>
+                        <div class="val">@grandTax.ToString("N2")</div>
+                    </span>
+                </span>
+                <span class="kpi-badge kpi-discount">
+                    <span class="icon"><i class="fa fa-tag"></i></span>
+                    <span>
+                        <div class="label">Discount</div>
+                        <div class="val">-@grandDiscount.ToString("N2")</div>
+                    </span>
+                </span>
+                <span class="kpi-badge kpi-total">
+                    <span class="icon"><i class="fa fa-wallet"></i></span>
+                    <span>
+                        <div class="label">Total</div>
+                        <div class="val">@grandTotal.ToString("N2")</div>
+                    </span>
+                </span>
+            </div>
+        }
 
-    <!-- KPIs -->
-    @if (Model?.Sales != null && Model.Sales.Any())
-    {
-        var grandSubtotal = Model.Sales.Sum(s => s.SubTotal);
-        var grandTax = Model.Sales.Sum(s => s.Tax);
-        var grandDiscount = Model.Sales.Sum(s => s.Discount);
-        var grandTotal = Model.Sales.Sum(s => s.Total);
-
-        <div class="d-flex flex-wrap gap-2 mb-3 no-print">
-            <span class="kpi-badge"><i class="fa fa-receipt text-primary"></i> Invoices: <span class="val">@Model.Sales.Count()</span></span>
-            <span class="kpi-badge"><i class="fa fa-calculator text-primary"></i> Subtotal: <span class="val">@grandSubtotal.ToString("N2")</span></span>
-            <span class="kpi-badge"><i class="fa fa-percent text-primary"></i> Tax: <span class="val">@grandTax.ToString("N2")</span></span>
-            <span class="kpi-badge"><i class="fa fa-tag text-danger"></i> Discount: <span class="val">-@grandDiscount.ToString("N2")</span></span>
-            <span class="kpi-badge"><i class="fa fa-wallet text-success"></i> Total: <span class="val">@grandTotal.ToString("N2")</span></span>
-        </div>
-    }
-
-    <!-- Report Table (screen / A4) -->
-    <div class="card shadow-lg border-0 rounded-3">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover table-striped mb-0 align-middle compact">
-                    <thead class="table-dark text-uppercase small">
-                        <tr>
-                            <th>#</th>
-                            <th>Invoice</th>
-                            <th>Date</th>
-                            <th>Cashier</th>
-                            <th class="text-end">Subtotal</th>
-                            <th class="text-end">Tax</th>
-                            <th class="text-end">Discount</th>
-                            <th class="text-end">Total</th>
-                            <th class="text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model.Sales != null && Model.Sales.Any())
-                        {
-                            var grandSubtotal = 0m;
-                            var grandTax = 0m;
-                            var grandDiscount = 0m;
-                            var grandTotal = 0m;
-                            foreach (var sale in Model.Sales)
+        <!-- Report Table (screen / A4) -->
+        <div class="card shadow-lg border-0 rounded-3 table-card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped mb-0 align-middle compact">
+                        <thead class="table-dark text-uppercase small">
+                            <tr>
+                                <th>#</th>
+                                <th><i class="fa fa-receipt me-1"></i>Invoice</th>
+                                <th><i class="fa fa-calendar-alt me-1"></i>Date</th>
+                                <th><i class="fa fa-user me-1"></i>Cashier</th>
+                                <th class="text-end"><i class="fa fa-layer-group me-1"></i>Subtotal</th>
+                                <th class="text-end"><i class="fa fa-percent me-1"></i>Tax</th>
+                                <th class="text-end"><i class="fa fa-tag me-1"></i>Discount</th>
+                                <th class="text-end"><i class="fa fa-wallet me-1"></i>Total</th>
+                                <th class="text-center"><i class="fa fa-cogs"></i></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Sales != null && Model.Sales.Any())
                             {
-                                grandSubtotal += sale.SubTotal;
-                                grandTax += sale.Tax;
-                                grandDiscount += sale.Discount;
-                                grandTotal += sale.Total;
+                                var grandSubtotal = 0m;
+                                var grandTax = 0m;
+                                var grandDiscount = 0m;
+                                var grandTotal = 0m;
+                                @foreach (var sale in Model.Sales)
+                                {
+                                    grandSubtotal += sale.SubTotal;
+                                    grandTax += sale.Tax;
+                                    grandDiscount += sale.Discount;
+                                    grandTotal += sale.Total;
 
+                                    <!-- MAIN SALE ROW -->
+                                    <tr>
+                                        <td class="fw-semibold text-muted">@sale.Id</td>
+                                        <td>
+                                            <span class="badge-invoice">
+                                                <i class="fa fa-hashtag me-1"></i>@sale.InvoiceNumber
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <i class="fa fa-clock me-1 text-muted"></i>
+                                            @sale.SaleDate.ToString("g")
+                                        </td>
+                                        <td>
+                                            <span class="cashier-chip">
+                                                <i class="fa fa-user-gear me-1 text-primary"></i>@sale.CashierId
+                                            </span>
+                                        </td>
+                                        <td class="text-end">@sale.SubTotal.ToString("N2")</td>
+                                        <td class="text-end">@sale.Tax.ToString("N2")</td>
+                                        <td class="text-end text-danger">-@sale.Discount.ToString("N2")</td>
+                                        <td class="text-end fw-bold text-success">@sale.Total.ToString("N2")</td>
+                                        <td class="text-center">
+                                            <div class="action-btn-group d-inline-flex">
+                                                <a asp-action="Receipt" asp-route-id="@sale.Id"
+                                                   class="btn btn-sm btn-outline-secondary me-1"
+                                                   title="View Receipt">
+                                                    <i class="fa fa-file-invoice"></i>
+                                                </a>
+                                                <a asp-action="Edit" asp-route-id="@sale.Id"
+                                                   class="btn btn-sm btn-outline-primary me-1"
+                                                   title="Edit">
+                                                    <i class="fa fa-edit"></i>
+                                                </a>
+                                                <button onclick="deleteSale(@sale.Id)"
+                                                        class="btn btn-sm btn-outline-danger"
+                                                        type="button"
+                                                        title="Delete">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    <!-- ITEMS TABLE BELOW THE SALE -->
+                                    <tr class="sale-items-row saleItemsTbl" style="display:none;">
+                                        <td colspan="9" class="p-0">
+                                            <table class="table table-bordered mb-3" style="background:#fcfcfc;">
+                                                <thead style="background:#f1f1f1;">
+                                                    <tr>
+                                                        <th style="width:40%;">Item Name</th>
+                                                        <th class="text-center" style="width:10%;">Qty</th>
+                                                        <th class="text-end" style="width:15%;">Unit Price</th>
+                                                        <th class="text-end" style="width:15%;">Total</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @{
+                                                        decimal saleItemTotal = 0;
+                                                        foreach (var item in sale.SaleItems)
+                                                        {
+                                                            var itemTotal = item.Quantity * item.UnitPrice;
+                                                            saleItemTotal += itemTotal;
+                                                        }
+                                                    }
+                                                    @foreach (var item in sale.SaleItems)
+                                                    {
+                                                        var itemTotal = item.Quantity * item.UnitPrice;
+                                                        <tr>
+                                                            <td>@item.Item?.ItemName</td>
+                                                            <td class="text-center">@item.Quantity</td>
+                                                            <td class="text-end">@item.UnitPrice.ToString("N2")</td>
+                                                            <td class="text-end fw-semibold">@itemTotal.ToString("N2")</td>
+                                                        </tr>
+                                                    }
+
+                                                    <tr class="table-light fw-bold">
+                                                        <td colspan="3" class="text-end">Items Total:</td>
+                                                        <td class="text-end text-success">@saleItemTotal.ToString("N2")</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                }
+
+
+                                <!-- Totals Row -->
+                                <tr class="table-light fw-bold">
+                                    <td colspan="4" class="text-end">Totals:</td>
+                                    <td class="text-end">@grandSubtotal.ToString("N2")</td>
+                                    <td class="text-end">@grandTax.ToString("N2")</td>
+                                    <td class="text-end text-danger">-@grandDiscount.ToString("N2")</td>
+                                    <td class="text-end text-success">@grandTotal.ToString("N2")</td>
+                                    <td></td>
+                                </tr>
+                            }
+                            else
+                            {
                                 <tr>
-                                    <td class="fw-semibold text-muted">@sale.Id</td>
-                                    <td class="fw-bold"><i class="fa fa-hashtag text-muted me-1"></i>@sale.InvoiceNumber</td>
-                                    <td><i class="fa fa-clock me-1 text-muted"></i>@sale.SaleDate.ToString("g")</td>
-                                    <td><i class="fa fa-user-gear me-1 text-muted"></i>@sale.CashierId</td>
-                                    <td class="text-end">@sale.SubTotal.ToString("N2")</td>
-                                    <td class="text-end">@sale.Tax.ToString("N2")</td>
-                                    <td class="text-end text-danger">-@sale.Discount.ToString("N2")</td>
-                                    <td class="text-end fw-bold text-success">@sale.Total.ToString("N2")</td>
-                                    <td class="text-center">
-                                        <a asp-action="Receipt" asp-route-id="@sale.Id" class="btn btn-sm btn-outline-secondary me-1" title="View Receipt">
-                                            <i class="fa fa-file-invoice"></i>
-                                        </a>
-                                        <a asp-action="Edit" asp-route-id="@sale.Id" class="btn btn-sm btn-outline-primary me-1" title="Edit">
-                                            <i class="fa fa-edit"></i>
-                                        </a>
-                                        <button onclick="deleteSale(@sale.Id)"
-                                                class="btn btn-sm btn-outline-danger">
-  
-                                            <i class="fa fa-trash"></i>
-                                        </button>
+                                    <td colspan="9" class="text-center text-muted py-4">
+                                        <i class="fa fa-info-circle me-1"></i> No sales records found.
                                     </td>
                                 </tr>
                             }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-                            <!-- Totals Row -->
-                            <tr class="table-light fw-bold">
-                                <td colspan="4" class="text-end">Totals:</td>
-                                <td class="text-end">@grandSubtotal.ToString("N2")</td>
-                                <td class="text-end">@grandTax.ToString("N2")</td>
-                                <td class="text-end text-danger">-@grandDiscount.ToString("N2")</td>
-                                <td class="text-end text-success">@grandTotal.ToString("N2")</td>
-                                <td></td>
-                            </tr>
-                        }
-                        else
+        <!-- ===== Hidden A4 PRINT TEMPLATE ===== -->
+        <div id="a4Area" class="d-none">
+            <div style="text-align:center;margin-bottom:8px;">
+                <div style="font-size:18px;font-weight:700;">Sales Report</div>
+                <div style="font-size:12px;">
+                    Range: @((Model.FromDate?.ToString("yyyy-MM-dd") ?? "--")) → @((Model.ToDate?.ToString("yyyy-MM-dd") ?? "--"))
+                    <br />Printed: @DateTime.Now.ToString("yyyy-MM-dd HH:mm")
+                </div>
+            </div>
+            <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                <thead>
+                    <tr>
+                        <th style="padding:6px;border:1px solid #333;text-align:left;">Invoice</th>
+                        <th style="padding:6px;border:1px solid #333;text-align:left;">Date</th>
+                        <th style="padding:6px;border:1px solid #333;text-align:left;">Cashier</th>
+                        <th style="padding:6px;border:1px solid #333;text-align:right;">Subtotal</th>
+                        <th style="padding:6px;border:1px solid #333;text-align:right;">Tax</th>
+                        <th style="padding:6px;border:1px solid #333;text-align:right;">Discount</th>
+                        <th style="padding:6px;border:1px solid #333;text-align:right;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Sales != null && Model.Sales.Any())
+                    {
+                        decimal tSub = 0, tTax = 0, tDis = 0, tTot = 0;
+                        foreach (var s in Model.Sales)
                         {
+                            tSub += s.SubTotal; tTax += s.Tax; tDis += s.Discount; tTot += s.Total;
                             <tr>
-                                <td colspan="9" class="text-center text-muted py-4">
-                                    <i class="fa fa-info-circle me-1"></i> No sales records found.
+                                <td style="padding:6px;border:1px solid #ddd;">@s.InvoiceNumber</td>
+                                <td style="padding:6px;border:1px solid #ddd;">@s.SaleDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td style="padding:6px;border:1px solid #ddd;">@s.CashierId</td>
+                                <td style="padding:6px;border:1px solid #ddd;text-align:right;">@s.SubTotal.ToString("N2")</td>
+                                <td style="padding:6px;border:1px solid #ddd;text-align:right;">@s.Tax.ToString("N2")</td>
+                                <td style="padding:6px;border:1px solid #ddd;text-align:right;">-@s.Discount.ToString("N2")</td>
+                                <td style="padding:6px;border:1px solid #ddd;text-align:right;">
+                                    <strong>@s.Total.ToString("N2")</strong>
                                 </td>
                             </tr>
                         }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===== Hidden PRINT TEMPLATES (root level, no nesting) ===== -->
-    <!-- A4 PRINT TEMPLATE -->
-    <div id="a4Area" class="d-none">
-        <div style="text-align:center;margin-bottom:8px;">
-            <div style="font-size:18px;font-weight:700;">Sales Report</div>
-            <div style="font-size:12px;">
-                Range: @((Model.FromDate?.ToString("yyyy-MM-dd") ?? "--")) → @((Model.ToDate?.ToString("yyyy-MM-dd") ?? "--"))
-                <br />Printed: @DateTime.Now.ToString("yyyy-MM-dd HH:mm")
-            </div>
-        </div>
-        <table style="width:100%;border-collapse:collapse;font-size:12px;">
-            <thead>
-                <tr>
-                    <th style="padding:6px;border:1px solid #333;text-align:left;">Invoice</th>
-                    <th style="padding:6px;border:1px solid #333;text-align:left;">Date</th>
-                    <th style="padding:6px;border:1px solid #333;text-align:left;">Cashier</th>
-                    <th style="padding:6px;border:1px solid #333;text-align:right;">Subtotal</th>
-                    <th style="padding:6px;border:1px solid #333;text-align:right;">Tax</th>
-                    <th style="padding:6px;border:1px solid #333;text-align:right;">Discount</th>
-                    <th style="padding:6px;border:1px solid #333;text-align:right;">Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model.Sales != null && Model.Sales.Any())
-                {
-                    decimal tSub = 0, tTax = 0, tDis = 0, tTot = 0;
-                    foreach (var s in Model.Sales)
-                    {
-                        tSub += s.SubTotal; tTax += s.Tax; tDis += s.Discount; tTot += s.Total;
                         <tr>
-                            <td style="padding:6px;border:1px solid #ddd;">@s.InvoiceNumber</td>
-                            <td style="padding:6px;border:1px solid #ddd;">@s.SaleDate.ToString("yyyy-MM-dd HH:mm")</td>
-                            <td style="padding:6px;border:1px solid #ddd;">@s.CashierId</td>
-                            <td style="padding:6px;border:1px solid #ddd;text-align:right;">@s.SubTotal.ToString("N2")</td>
-                            <td style="padding:6px;border:1px solid #ddd;text-align:right;">@s.Tax.ToString("N2")</td>
-                            <td style="padding:6px;border:1px solid #ddd;text-align:right;">-@s.Discount.ToString("N2")</td>
-                            <td style="padding:6px;border:1px solid #ddd;text-align:right;"><strong>@s.Total.ToString("N2")</strong></td>
+                            <td colspan="4" style="padding:8px;border-top:2px solid #333;text-align:right;"><strong>Totals</strong></td>
+                            <td style="padding:8px;border-top:2px solid #333;text-align:right;"><strong>@tSub.ToString("N2")</strong></td>
+                            <td style="padding:8px;border-top:2px solid #333;text-align:right;"><strong>@tTax.ToString("N2")</strong></td>
+                            <td style="padding:8px;border-top:2px solid #333;text-align:right;"><strong>-@tDis.ToString("N2")</strong></td>
+                            <td style="padding:8px;border-top:2px solid #333;text-align:right;"><strong>@tTot.ToString("N2")</strong></td>
                         </tr>
                     }
-                    <tr>
-                        <td colspan="4" style="padding:8px;border-top:2px solid #333;text-align:right;"><strong>Totals</strong></td>
-                        <td style="padding:8px;border-top:2px solid #333;text-align:right;"><strong>@tSub.ToString("N2")</strong></td>
-                        <td style="padding:8px;border-top:2px solid #333;text-align:right;"><strong>@tTax.ToString("N2")</strong></td>
-                        <td style="padding:8px;border-top:2px solid #333;text-align:right;"><strong>-@tDis.ToString("N2")</strong></td>
-                        <td style="padding:8px;border-top:2px solid #333;text-align:right;"><strong>@tTot.ToString("N2")</strong></td>
-                    </tr>
-                }
-                else
-                {
-                    <tr><td colspan="8" style="text-align:center;padding:10px;">No sales records</td></tr>
-                }
-            </tbody>
-        </table>
+                    else
+                    {
+                        <tr><td colspan="8" style="text-align:center;padding:10px;">No sales records</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ===== SIMPLE ITEMS SUMMARY MODAL (ITEM NAME + TOTAL QTY) ===== -->
+        <div class="modal fade" id="itemsSummaryModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header items-modal-header">
+                        <div>
+                            <div class="items-modal-title">Sales Items Summary</div>
+                            <div class="small text-muted">
+                                Items with total quantity sold in current filter.
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        @if (Model.ItemsSummary != null && Model.ItemsSummary.Any())
+                        {
+                            var totalQtyAll = Model.ItemsSummary.Sum(x => x.TotalQty);
+                            <div class="table-responsive">
+                                <table class="table table-sm items-table align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">#</th>
+                                            <th scope="col">Item Name</th>
+                                            <th scope="col" class="text-center">Total Qty</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @{
+                                            var idx = 1;
+                                        }
+                                        @foreach (var row in Model.ItemsSummary)
+                                        {
+                                            <tr>
+                                                <td>@idx</td>
+                                                <td>@row.ItemName</td>
+                                                <td class="text-center fw-semibold">@row.TotalQty</td>
+                                            </tr>
+                                            idx++;
+                                        }
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="2" class="text-end">Total Qty:</td>
+                                            <td class="text-center">@totalQtyAll</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-muted text-center py-3">
+                                No item details found for current filter.
+                            </div>
+                        }
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button"
+                                class="btn btn-outline-secondary btn-soft-outline"
+                                data-bs-dismiss="modal">
+                            Close
+                        </button>
+                        <button type="button"
+                                class="btn btn-dark btn-soft"
+                                onclick="printItemsSummary()">
+                            <i class="fa fa-print me-1"></i> Print Items Qty
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRINT AREA FOR ITEMS SUMMARY (NEW WINDOW) -->
+        <div id="itemsPrintArea" class="d-none">
+            <div style="text-align:center;margin-bottom:8px;">
+                <div style="font-size:18px;font-weight:700;">Sales Items Summary</div>
+                <div style="font-size:12px;">
+                    Range: @((Model.FromDate?.ToString("yyyy-MM-dd") ?? "--")) → @((Model.ToDate?.ToString("yyyy-MM-dd") ?? "--"))
+                    <br />Printed: @DateTime.Now.ToString("yyyy-MM-dd HH:mm")
+                </div>
+            </div>
+
+            @if (Model.ItemsSummary != null && Model.ItemsSummary.Any())
+            {
+                var totalQtyAllPrint = Model.ItemsSummary.Sum(x => x.TotalQty);
+
+                <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                    <thead>
+                        <tr>
+                            <th style="padding:6px;border:1px solid #333;text-align:left;">#</th>
+                            <th style="padding:6px;border:1px solid #333;text-align:left;">Item Name</th>
+                            <th style="padding:6px;border:1px solid #333;text-align:right;">Total Qty</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var pIdx = 1;
+                        }
+                        @foreach (var row in Model.ItemsSummary)
+                        {
+                            <tr>
+                                <td style="padding:6px;border:1px solid #ddd;">@pIdx</td>
+                                <td style="padding:6px;border:1px solid #ddd;">@row.ItemName</td>
+                                <td style="padding:6px;border:1px solid #ddd;text-align:right;">@row.TotalQty</td>
+                            </tr>
+                            pIdx++;
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="2"
+                                style="padding:8px;border-top:2px solid #333;text-align:right;">
+                                <strong>Total Qty</strong>
+                            </td>
+                            <td style="padding:8px;border-top:2px solid #333;text-align:right;">
+                                <strong>@totalQtyAllPrint</strong>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            }
+            else
+            {
+                <div style="text-align:center;padding:10px;">No sales records</div>
+            }
+        </div>
+
     </div>
 </div>
 
 <style>
+    /* PRINT OVERRIDE: sirf A4 template dikhayega (items modal alag window se print ho gi) */
     @@media print {
-
-        /* Hide everything by default */
         body * {
             visibility: hidden !important;
         }
 
-        /* Show only the print area */
         #a4Area, #a4Area * {
             visibility: visible !important;
         }
 
-        /* Position the print area at top left */
         #a4Area {
             display: block !important;
             position: absolute;
@@ -341,9 +765,23 @@
     }
 </style>
 
-
 <link href="~/lib/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
 <script src="~/lib/sweetalert2/sweetalert2.min.js"></script>
+<script>
+    function toggleItems() {
+        var rows = document.querySelectorAll(".saleItemsTbl");
+
+        rows.forEach(function (row) {
+            if (row.style.display === "none" || row.style.display === "") {
+                row.style.display = "table-row";
+            } else {
+                row.style.display = "none";
+            }
+        });
+    }
+</script>
+
+
 
 <script>
     function deleteSale(saleId) {
@@ -359,51 +797,59 @@
                 fetch(`/Sales/Delete/${saleId}`, {
                     method: "POST"
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire({
-                            title: "Deleted!",
-                            text: data.message,
-                            icon: "success",
-                            showConfirmButton: false,
-                            timer: 1500, // 🕒 Auto close after 1.5 seconds
-                            timerProgressBar: true
-                        });
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: "Deleted!",
+                                text: data.message,
+                                icon: "success",
+                                showConfirmButton: false,
+                                timer: 1500,
+                                timerProgressBar: true
+                            });
 
-                        // Auto reload after alert closes
-                        setTimeout(() => {
-                            location.reload();
-                        }, 1500);
-                    } else {
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1500);
+                        } else {
+                            Swal.fire({
+                                title: "Access Denied",
+                                text: data.message,
+                                icon: "error",
+                                showConfirmButton: false,
+                                timer: 2000
+                            });
+                        }
+                    })
+                    .catch(() => {
                         Swal.fire({
-                            title: "Access Denied",
-                            text: data.message,
+                            title: "Error",
+                            text: "Something went wrong!",
                             icon: "error",
                             showConfirmButton: false,
                             timer: 2000
                         });
-                    }
-                })
-                .catch(() => {
-                    Swal.fire({
-                        title: "Error",
-                        text: "Something went wrong!",
-                        icon: "error",
-                        showConfirmButton: false,
-                        timer: 2000
                     });
-                });
             }
         });
     }
+
+    // Items Qty print: new window with only items summary
+    @* function printItemsSummary() {
+        var area = document.getElementById('itemsPrintArea');
+        if (!area) return;
+
+        var w = window.open('', '_blank', 'width=900,height=700');
+        w.document.write('<html><head><title>Items Qty Summary</title>');
+        w.document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />');
+        w.document.write('</head><body class="p-3">' + area.innerHTML + '</body></html>');
+        w.document.close();
+        w.focus();
+        w.print();
+    } *@
+
+    function printA4() {
+        window.print();
+    }
 </script>
-
-@section Scripts {
-    <script>
-        function printA4() {
-            window.print();
-        }
-    </script>
-
-}

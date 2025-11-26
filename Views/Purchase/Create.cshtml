@@ -477,11 +477,38 @@
             @Html.HiddenFor(m => m.ItemsJson, new { id = "ItemsJson" })
 
             <!-- =============== STAGE 1: SUPPLIER → ATTACH PIC =============== -->
-            <div class="stage">
-                <div class="stage-header">
-                    <span class="num">1</span>
-                    <span class="title">Supplier & Invoice Details (with Attachment)</span>
-                </div>
+        <div class="stage">
+                <div style="display:flex; justify-content:space-between; align-items:center;
+                    background:#f8f9fa; border-left:5px solid #28a745; padding:12px 18px;
+                    border-radius:8px; margin-bottom:15px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
+
+                    <!-- LEFT SIDE -->
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <span style="background:#28a745; color:white; padding:6px 12px; border-radius:50%;
+                        font-weight:bold; width:32px; height:32px; display:flex; justify-content:center; align-items:center;">
+                            1
+                        </span>
+
+                        <span style="font-weight:700; font-size:18px; color:#333;">
+                            Supplier & Invoice Details (with Attachment)
+                        </span>
+                    </div>
+
+                    <!-- RIGHT SIDE (RADIO: NEW / RETURN) -->
+                    <div style="display:flex; align-items:center; gap:10px; font-weight:500;">
+
+                            @Html.RadioButtonFor(m => m.PurchaseType, "New",
+                            new { id = "PurchaseTypeNew", style = "cursor:pointer;" })
+                        <label for="PurchaseTypeNew" style="cursor:pointer;">New</label>
+
+                        @Html.RadioButtonFor(m => m.PurchaseType, "Return",
+                                            new { id = "PurchaseTypeReturn", style = "cursor:pointer;" })
+                        <label for="PurchaseTypeReturn" style="cursor:pointer;">Return</label>
+
+                    </div>
+
+                 </div>
+
                 <div class="stage-body">
                     <div class="row g-3 align-items-end">
                         <!-- Supplier -->
@@ -544,6 +571,7 @@
                     </div>
                 </div>
             </div>
+        
         </div>
 
         <!-- =============== STAGE 2: BARCODE/ENTRY/GRID =============== -->

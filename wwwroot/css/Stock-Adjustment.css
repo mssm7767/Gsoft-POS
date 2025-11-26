@@ -1,0 +1,301 @@
+﻿/* ===== PAGE BASE ===== */
+body {
+    background: #f4c1c1 !important;
+    font-family: 'Inter', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+/* ===== MAIN WRAPPER ===== */
+.gpos-stockadj-modal {
+    background: #fff;
+    border-radius: 1.5rem;
+    box-shadow: 0 6px 32px #10427413;
+    padding: 30px 30px 18px 30px;
+    max-width: 1120px;
+    min-height: 93vh;
+    margin: 28px auto;
+}
+
+/* ===== HEADER / REF BAR ===== */
+.ref-label {
+    font-size: 1.05rem;
+    color: #1b62b7;
+    font-weight: 700;
+}
+
+.ref-value {
+    font-size: 1.12rem;
+    color: #dc5710;
+    font-weight: 800;
+    letter-spacing: 1.1px;
+}
+
+.ref-btn {
+    background: #f7fafd;
+    color: #2279c9;
+    border: 1px solid #cbe7fd;
+    border-radius: 0.7rem;
+    padding: 3px 9px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    margin-left: 2px;
+    transition: background 0.12s, color 0.12s;
+}
+
+    .ref-btn:hover {
+        background: #ffd6a0;
+        color: #c05200;
+    }
+
+/* HEADER WRAPPER */
+.gpos-stockadj-header-v2 {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    gap: 24px;
+}
+
+/* USER / DATETIME */
+.gpos-stockadj-user {
+    font-size: 1.03rem;
+    color: #146098;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+#stockAdjDateTime {
+    font-family: 'Consolas', monospace;
+    font-size: 1.04rem;
+    color: #146098;
+    font-weight: 700;
+}
+
+/* ===== INPUTS / ENTRY ROWS ===== */
+.gpos-stockadj-barcode {
+    padding: 5px 12px;
+    font-size: 1rem;
+    border-radius: 0.6rem;
+    border: 1.1px solid #bedafc;
+    background: #f7fafd;
+    color: #134372;
+}
+
+    .gpos-stockadj-barcode:focus {
+        outline: 2px solid #ffb85e;
+    }
+
+.gpos-stockadj-entry-row {
+    display: flex;
+    gap: 7px;
+    margin-bottom: 13px;
+    align-items: flex-end;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+}
+
+.entry-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+    .entry-cell label {
+        font-size: 0.91rem;
+        color: #1760b7;
+        margin-bottom: 2px;
+        font-weight: 700;
+    }
+
+/* TEXTAREA / REMARKS */
+.gpos-stockadj-remarks {
+    transition: border 0.13s, background 0.13s;
+}
+
+    .gpos-stockadj-remarks:focus {
+        border: 1.6px solid #29a4e0 !important;
+        background: #e9f7ff !important;
+    }
+
+/* ===== BUTTON STYLES ===== */
+.gpos-stockadj-add-btn {
+    background: #2ea97f;
+    color: #fff;
+    border: none;
+    border-radius: 1.2rem;
+    padding: 6px 22px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 1px 7px #b7daff15;
+    margin-left: 4px;
+    transition: background 0.13s, transform 0.11s;
+}
+
+    .gpos-stockadj-add-btn:hover {
+        background: #168625;
+    }
+
+.gpos-stockadj-load-btn {
+    background: #e9f4ff;
+    color: #2279c9;
+    border: 1px solid #cbe7fd;
+    border-radius: 0.7rem;
+    padding: 6px 18px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.12s, color 0.12s;
+}
+
+    .gpos-stockadj-load-btn:hover {
+        background: #d0eaff;
+        color: #1760b7;
+    }
+
+/* ===== TABLE ===== */
+.gpos-stockadj-tablewrap {
+    margin-bottom: 34px;
+}
+
+.gpos-stockadj-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    box-shadow: 0 3px 12px #b7daff11;
+    background: #fff;
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+    .gpos-stockadj-table th,
+    .gpos-stockadj-table td {
+        padding: 10px 7px;
+        text-align: center;
+        font-size: 1.01rem;
+    }
+
+    .gpos-stockadj-table th {
+        color: #1760b7;
+        font-weight: 800;
+        border-bottom: 2px solid #b7daff;
+        background: #f7fafd;
+    }
+
+    .gpos-stockadj-table td {
+        color: #16528d;
+        font-weight: 520;
+    }
+
+/* DELETE BUTTON IN GRID */
+.gpos-stockadj-del-btn {
+    background: none;
+    color: #e0524a;
+    border: none;
+    font-size: 1.1rem;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.12s, color 0.12s;
+}
+
+    .gpos-stockadj-del-btn:hover {
+        background: #ffe2e0;
+        color: #b31217;
+    }
+
+/* ===== FOOTER / TOTAL / ACTIONS ===== */
+.gpos-stockadj-total {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #e0491b;
+    background: #fbe7dd;
+    border-radius: 0.8rem;
+    padding: 10px 35px;
+}
+
+.gpos-stockadj-actions {
+    display: flex;
+    gap: 15px;
+}
+
+/* ===== BLINKING BARCODE FIELD ===== */
+.blink {
+    animation: blinkfield 1s infinite;
+}
+
+@keyframes blinkfield {
+    0%, 100% {
+        box-shadow: 0 0 5px #ffd6a0, 0 0 0 #fff;
+        border-color: #ff9100;
+    }
+
+    40% {
+        box-shadow: 0 0 15px #ff9100, 0 0 0 #fff;
+        border-color: #ff9100;
+    }
+
+    80% {
+        box-shadow: 0 0 5px #ffd6a0, 0 0 0 #fff;
+        border-color: #ff9100;
+    }
+}
+
+.blink::placeholder {
+    color: #ffb85e;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    opacity: 1;
+}
+
+/* ===== CENTER TOAST MESSAGE ===== */
+.stockadj-toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(15, 23, 42, 0.96);
+    color: #f9fafb;
+    padding: 14px 28px;
+    border-radius: 999px;
+    font-size: 14px;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, .7);
+    display: none;
+    z-index: 9999;
+}
+
+/* ===== SUGGESTION LIST ===== */
+.suggestions-list {
+    max-width: 320px;
+    width: 100%;
+    background: #DFF2FE;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 4px;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+}
+
+.suggestion-item {
+    padding: 6px 10px;
+    cursor: pointer;
+    display: flex;
+    gap: 3px;
+    align-items: center;
+    font-size: 16px;
+    border-bottom: 1px solid #eee;
+    transition: background 0.2s ease, color 0.2s ease;
+    border-radius: 6px;
+    margin: 2px 2px;
+    background: transparent;
+    color: #222;
+}
+
+    .suggestion-item:hover,
+    .suggestion-item.active {
+        background-color: #FFEB99;
+        color: #000;
+    }

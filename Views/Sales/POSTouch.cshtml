@@ -17,15 +17,15 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <style>
         :root {
-            --bg: #f6f8fb;
-            --panel: #fff;
-            --line: #e7ecf3;
+            --bg: #f3f4f6; /* light neutral */
+            --panel: #ffffff;
+            --line: #e2e8f0;
             --ink: #0f172a;
-            --muted: #667085;
-            --shadow: 0 10px 28px rgba(2,6,23,.06);
-            --hdrBlue1: #0ea5e9;
-            --hdrBlue2: #3b82f6;
-            --hdrBlue3: #60a5fa;
+            --muted: #64748b;
+            --shadow: 0 14px 35px rgba(15,23,42,.12);
+            --accent: #0E8FEA;
+            --accent-soft: #eff6ff;
+            --accent-strong: #1d4ed8;
             --yellow-50: #fffbeb;
             --rose-600: #b91c1c;
             --rose-50: #fef2f2;
@@ -33,12 +33,14 @@
         }
 
         * {
-            box-sizing: border-box
+            box-sizing: border-box;
         }
 
         body {
-            background: var(--bg);
-            color: var(--ink)
+            background: radial-gradient(circle at top left,#e5f2ff 0,#f6f8fb 40%,#edf2f7 100%);
+            color: var(--ink);
+            margin: 0;
+            padding: 0;
         }
 
         .card {
@@ -48,7 +50,7 @@
             box-shadow: var(--shadow);
             min-height: 0;
             display: flex;
-            flex-direction: column
+            flex-direction: column;
         }
 
         .soft-input {
@@ -57,12 +59,12 @@
             border-radius: 12px;
             background: #fff;
             padding: 0 .65rem;
-            outline: none
+            outline: none;
         }
 
             .soft-input:focus {
                 box-shadow: 0 0 0 3px #bfdbfe55;
-                border-color: #bfdbfe
+                border-color: #bfdbfe;
             }
 
         .icon-btn {
@@ -74,21 +76,42 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer
+            cursor: pointer;
         }
 
-        /* Layout */
+        /* Layout root (posApp has this class) */
         .pos-root {
             display: grid;
             grid-template-columns: 40% 60%;
             gap: 16px;
-            min-height: calc(100vh - 80px)
+            min-height: calc(100vh - 80px);
         }
+
+        /* fullscreen helper + background fix */
+        #posApp {
+            max-width: 100vw;
+            margin: 0 auto;
+            padding: 8px 10px;
+            background: radial-gradient(circle at top left,#e5f2ff 0,#f6f8fb 40%,#edf2f7 100%);
+        }
+
+            #posApp.is-fullscreen {
+                width: 100vw;
+                height: 100vh;
+                padding: 8px 10px;
+                box-sizing: border-box;
+                background: radial-gradient(circle at top left,#e5f2ff 0,#f6f8fb 40%,#edf2f7 100%);
+            }
+
+                #posApp.is-fullscreen .pos-right.card,
+                #posApp.is-fullscreen .left-col > .card {
+                    border-radius: 16px;
+                }
 
         .left-col {
             display: grid;
             grid-template-rows: 1fr 1fr;
-            gap: 10px
+            gap: 10px;
         }
 
         /* Header */
@@ -104,10 +127,10 @@
             border: 1px solid #e5e7eb;
             border-top-left-radius: 16px;
             border-top-right-radius: 16px;
-            background: radial-gradient(1200px 400px at -10% -50%, #e0f2fe 0%, transparent 50%), radial-gradient(1200px 500px at 110% -90%, #dbeafe 0%, transparent 55%), linear-gradient(180deg, #ffffffcc, #ffffffdd);
-            backdrop-filter: blur(8px);
-            box-shadow: 0 10px 28px rgba(2,6,23,.06);
-            border-bottom: 1px solid #e7ecf3
+            background: radial-gradient(1200px 400px at -10% -50%, #dbeafe 0%, transparent 50%), radial-gradient(1200px 500px at 110% -90%, #bfdbfe 0%, transparent 55%), linear-gradient(180deg, #ffffffee, #ffffff);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 28px rgba(15,23,42,.12);
+            border-bottom: 1px solid #e7ecf3;
         }
 
         .brand {
@@ -115,21 +138,21 @@
             align-items: center;
             gap: .6rem;
             font-weight: 900;
-            color: #0b1324
+            color: #0b1324;
         }
 
             .brand i {
-                color: #0ea5e9
+                color: var(--accent);
             }
 
         .menu-label {
             margin-left: 8px;
             font-weight: 900;
-            color: #0b1324;
-            border: 1px dashed #cbd5e1;
-            border-radius: 10px;
-            padding: .35rem .6rem;
-            background: #f8fafc
+            color: var(--accent-strong);
+            border: 1px dashed #bfdbfe;
+            border-radius: 999px;
+            padding: .35rem .8rem;
+            background: var(--accent-soft);
         }
 
         /* Top search */
@@ -143,11 +166,11 @@
             border: 1px solid #e5e7eb;
             border-radius: 14px;
             min-width: 280px;
-            box-shadow: 0 6px 18px rgba(2,6,23,.05)
+            box-shadow: 0 6px 18px rgba(2,6,23,.05);
         }
 
             .search-pro i {
-                color: #64748b
+                color: #64748b;
             }
 
             .search-pro input {
@@ -156,11 +179,10 @@
                 background: transparent;
                 height: 36px;
                 flex: 1;
-                color: #0b1220
+                color: #0b1220;
             }
 
-        /* Categories */
-        /* Main layout */
+        /* Main layout override for left */
         .left-col {
             display: flex;
             flex-direction: column;
@@ -202,8 +224,8 @@
             }
 
         .cat-thumb {
-            width: 68px;
-            height: 68px;
+            width: 56px;
+            height: 56px;
             border-radius: 12px;
             object-fit: cover;
             border: 1px solid var(--line);
@@ -282,8 +304,8 @@
             }
 
         .li-thumb {
-            width: 68px;
-            height: 68px;
+            width: 56px;
+            height: 56px;
             border-radius: 12px;
             object-fit: cover;
             border: 1px solid var(--line);
@@ -305,9 +327,9 @@
         }
 
         .price-badge {
-            background: var(--yellow-50);
-            color: #7c2d12;
-            border: 1px solid #fde68a;
+            background: var(--accent-soft);
+            color: #075985;
+            border: 1px solid #bae6fd;
             border-radius: 999px;
             padding: .05rem .45rem;
             font-weight: 800;
@@ -315,7 +337,7 @@
 
         /* Right */
         .pos-right.card {
-            display: flex
+            display: flex;
         }
 
         .topbar {
@@ -325,14 +347,14 @@
             gap: 8px;
             padding: 10px 12px;
             border-bottom: 1px dashed var(--line);
-            flex-wrap: wrap
+            flex-wrap: wrap;
         }
 
         .order-meta {
             display: flex;
             gap: 8px;
             align-items: center;
-            flex-wrap: wrap
+            flex-wrap: wrap;
         }
 
         .order-no {
@@ -341,7 +363,7 @@
             border: 1px dashed #cbd5e1;
             border-radius: 10px;
             padding: .35rem .6rem;
-            background: #f8fafc
+            background: #f8fafc;
         }
 
         .fs-btn {
@@ -351,11 +373,11 @@
             background: #fff;
             padding: 0 .65rem;
             font-weight: 800;
-            cursor: pointer
+            cursor: pointer;
         }
 
         #runningBtn.active {
-            box-shadow: 0 0 0 2px #bfdbfe inset
+            box-shadow: 0 0 0 2px #bfdbfe inset;
         }
 
         /* --- New Order button: modern/pro states --- */
@@ -404,7 +426,7 @@
             display: flex;
             flex-direction: column;
             min-height: 0;
-            padding: 10px 12px 0
+            padding: 10px 12px 0;
         }
 
         .cart-head {
@@ -417,7 +439,7 @@
             border: 1px solid var(--line);
             border-radius: 10px;
             padding: .55rem .6rem;
-            font-weight: 800
+            font-weight: 800;
         }
 
         .cart-body {
@@ -428,7 +450,7 @@
             padding: 4px;
             background: #fff;
             min-height: 220px;
-            max-height: 38vh
+            max-height: 38vh;
         }
 
         .cart-row {
@@ -437,18 +459,18 @@
             gap: 8px;
             align-items: center;
             border-bottom: 1px dashed #eef2f7;
-            padding: .5rem .4rem
+            padding: .5rem .4rem;
         }
 
         .cart-name {
             font-weight: 800;
-            color: #0f172a
+            color: #0f172a;
         }
 
         .qty-wrap {
             display: flex;
             align-items: center;
-            gap: 6px
+            gap: 6px;
         }
 
         .qty-btn {
@@ -457,12 +479,12 @@
             border-radius: 8px;
             border: 1px solid var(--line);
             background: #fff;
-            font-weight: 900
+            font-weight: 900;
         }
 
         .qty-input {
             width: 50px;
-            text-align: center
+            text-align: center;
         }
 
         .price-input, .line-total {
@@ -471,7 +493,7 @@
             border-radius: 10px;
             padding: 0 .5rem;
             text-align: right;
-            background: #fff
+            background: #fff;
         }
 
         .remove-btn {
@@ -480,18 +502,18 @@
             border-radius: 10px;
             border: 1px solid var(--line);
             background: #fff;
-            color: #b91c1c
+            color: #b91c1c;
         }
 
             .remove-btn:hover {
-                background: #fef2f2
+                background: #fef2f2;
             }
 
         .totals {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
-            padding: 10px 12px
+            padding: 10px 12px;
         }
 
         .t-row {
@@ -502,44 +524,44 @@
             background: #fff;
             border: 1px solid var(--line);
             border-radius: 12px;
-            padding: .55rem .6rem
+            padding: .55rem .6rem;
         }
 
         .t-inline {
             display: flex;
             gap: 6px;
-            align-items: center
+            align-items: center;
         }
 
         .t-input {
             height: 36px;
-            min-width: 90px
+            min-width: 90px;
         }
 
         .t-val {
             font-weight: 900;
-            color: #0f172a
+            color: #0f172a;
         }
 
         .grand {
             background: linear-gradient(90deg,#e0f2fe,#dbeafe);
-            border-color: #bfdbfe
+            border-color: #bfdbfe;
         }
 
         .keypad {
-            padding: 2px 12px 10px
+            padding: 2px 12px 10px;
         }
 
         .keypad-head {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 6px 0 10px
+            padding: 6px 0 10px;
         }
 
         .keypad-title {
             font-weight: 800;
-            color: #0f172a
+            color: #0f172a;
         }
 
         .pad-targets {
@@ -547,19 +569,19 @@
             align-items: center;
             gap: 10px;
             color: #64748b;
-            font-weight: 700
+            font-weight: 700;
         }
 
             .pad-targets label {
                 display: flex;
                 align-items: center;
-                gap: 6px
+                gap: 6px;
             }
 
         .pad-grid {
             display: grid;
             grid-template-columns: repeat(4,1fr);
-            gap: 8px
+            gap: 8px;
         }
 
             .pad-grid button {
@@ -568,12 +590,12 @@
                 background: #fff;
                 border-radius: 10px;
                 font-weight: 800;
-                font-size: 1.05rem
+                font-size: 1.05rem;
             }
 
                 .pad-grid button.accent {
                     background: #fffaf0;
-                    border-color: #fde68a
+                    border-color: #fde68a;
                 }
 
         .actions-cards {
@@ -584,7 +606,7 @@
             border-top: 1px dashed var(--line);
             position: sticky;
             bottom: 0;
-            background: var(--panel)
+            background: var(--panel);
         }
 
         .act-card {
@@ -601,52 +623,89 @@
             font-weight: 800;
             color: #0f172a;
             text-align: center;
-            transition: transform .06s, box-shadow .15s
+            transition: transform .06s, box-shadow .15s;
         }
 
             .act-card i {
-                font-size: 18px
+                font-size: 18px;
             }
 
             .act-card:hover {
                 transform: translateY(-1px);
-                box-shadow: 0 0 0 2px #e2e8f0 inset
+                box-shadow: 0 0 0 2px #e2e8f0 inset;
             }
 
             .act-card.primary {
-                background: #eff6ff;
-                border-color: #bfdbfe
+                background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+                border-color: transparent;
+                color: #fff;
             }
 
             .act-card.warn {
                 background: #fffbeb;
-                border-color: #fde68a
+                border-color: #fde68a;
             }
 
             .act-card.danger {
-                background: #ffeef0;
-                border-color: #fecdd3
+                background: #fef2f2;
+                border-color: #fecdd3;
             }
 
             .act-card.info {
                 background: #f0fdf4;
-                border-color: #bbf7d0
+                border-color: #bbf7d0;
+            }
+
+        /* EXIT / BACK TO DASHBOARD BUTTON */
+        .exit-wrap {
+            display: flex;
+            justify-content: flex-end;
+            padding: 0 12px 12px;
+        }
+
+        .exit-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: .55rem 1.1rem;
+            border-radius: 999px;
+            border: 1px solid #fecaca;
+            background: linear-gradient(135deg,#fee2e2,#fef2f2);
+            color: #b91c1c;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(248,113,113,.35);
+            transition: transform .05s, box-shadow .15s, background .2s;
+        }
+
+            .exit-btn i {
+                font-size: 16px;
+            }
+
+            .exit-btn:hover {
+                background: linear-gradient(135deg,#fecaca,#fee2e2);
+                box-shadow: 0 8px 20px rgba(248,113,113,.45);
+            }
+
+            .exit-btn:active {
+                transform: translateY(1px);
+                box-shadow: 0 4px 12px rgba(248,113,113,.35);
             }
 
         .modal[hidden] {
-            display: none
+            display: none;
         }
 
         .modal {
             position: fixed;
             inset: 0;
-            z-index: 10000
+            z-index: 10000;
         }
 
         .modal-backdrop {
             position: absolute;
             inset: 0;
-            background: rgba(2,6,23,.35)
+            background: rgba(2,6,23,.35);
         }
 
         .modal-card {
@@ -656,7 +715,7 @@
             background: #fff;
             border: 1px solid var(--line);
             border-radius: 16px;
-            box-shadow: var(--shadow)
+            box-shadow: var(--shadow);
         }
 
         .modal-head {
@@ -664,7 +723,7 @@
             align-items: center;
             justify-content: space-between;
             padding: 12px 14px;
-            border-bottom: 1px solid var(--line)
+            border-bottom: 1px solid var(--line);
         }
 
             .modal-head h3 {
@@ -673,7 +732,7 @@
                 color: #0f172a;
                 display: flex;
                 gap: 8px;
-                align-items: center
+                align-items: center;
             }
 
         .modal-close {
@@ -683,13 +742,13 @@
             border: 1px solid var(--line);
             background: #fff;
             font-size: 20px;
-            cursor: pointer
+            cursor: pointer;
         }
 
         .modal-body {
             padding: 14px;
             max-height: 60vh;
-            overflow: auto
+            overflow: auto;
         }
 
         .retrieve-modal {
@@ -700,7 +759,7 @@
             max-width: 96vw;
             max-height: 92vh;
             overflow: auto;
-            border: 1px solid #e5e7eb
+            border: 1px solid #e5e7eb;
         }
 
         .retrieve-head {
@@ -709,7 +768,7 @@
             justify-content: space-between;
             padding: 12px 16px;
             border-bottom: 1px solid #e5e7eb;
-            background: #fcfcfd
+            background: #fcfcfd;
         }
 
             .retrieve-head .title {
@@ -717,7 +776,7 @@
                 color: #0b1324;
                 display: flex;
                 gap: 8px;
-                align-items: center
+                align-items: center;
             }
 
         .retrieve-toolbar {
@@ -725,13 +784,13 @@
             gap: 8px;
             padding: 10px 16px;
             border-bottom: 1px solid #eef2f7;
-            background: #fcfcfd
+            background: #fcfcfd;
         }
 
         .table-hold th {
             position: sticky;
             top: 0;
-            background: #f1f5f9
+            background: #f1f5f9;
         }
 
         #centerFlash {
@@ -742,7 +801,7 @@
             justify-content: center;
             z-index: 41000;
             background: rgba(15,23,42,.15);
-            pointer-events: none
+            pointer-events: none;
         }
 
             #centerFlash .box {
@@ -755,12 +814,12 @@
                 color: #0b1324;
                 display: flex;
                 align-items: center;
-                gap: 10px
+                gap: 10px;
             }
 
                 #centerFlash .box i {
                     color: #22c55e;
-                    font-size: 20px
+                    font-size: 20px;
                 }
 
         #runningDrawer {
@@ -773,7 +832,7 @@
             border-left: 1px solid #e5e7eb;
             box-shadow: -10px 0 30px rgba(2,6,23,.08);
             z-index: 12000;
-            transition: right .25s ease
+            transition: right .25s ease;
         }
 
         .running-card {
@@ -782,12 +841,12 @@
             border: 1px solid var(--line);
             border-radius: 12px;
             transition: background .15s,border-color .15s;
-            cursor: pointer
+            cursor: pointer;
         }
 
             .running-card:hover {
                 background: #f8fafc;
-                border-color: #bfdbfe
+                border-color: #bfdbfe;
             }
 
         /* SweetAlert on top of fullscreen */
@@ -804,11 +863,11 @@
 
         @@media print {
             body * {
-                visibility: hidden !important
+                visibility: hidden !important;
             }
 
             #printArea, #printArea * {
-                visibility: visible !important
+                visibility: visible !important;
             }
 
             #printArea {
@@ -816,31 +875,31 @@
                 left: 0;
                 top: 0;
                 width: 100%;
-                padding: 16px
+                padding: 16px;
             }
         }
 
         @@media (max-width:1280px) {
             .cat-grid {
-                grid-template-columns: repeat(3,1fr)
+                grid-template-columns: repeat(3,1fr);
             }
         }
 
         @@media (max-width:980px) {
             .pos-root {
-                grid-template-columns: 1fr
+                grid-template-columns: 1fr;
             }
 
             .cat-grid {
-                grid-template-columns: repeat(2,1fr)
+                grid-template-columns: repeat(2,1fr);
             }
 
             .cart-head, .cart-row {
-                grid-template-columns: 1fr 90px 100px 100px 40px
+                grid-template-columns: 1fr 90px 100px 100px 40px;
             }
 
             .actions-cards {
-                grid-template-columns: repeat(3,1fr)
+                grid-template-columns: repeat(3,1fr);
             }
         }
     </style>
@@ -851,13 +910,12 @@
         display: flex;
         align-items: center;
         gap: 10px;
-        flex-wrap: nowrap; /* 👈 keeps everything in one row */
-        overflow-x: auto; /* 👈 allows horizontal scrolling if content too wide */
+        flex-wrap: nowrap; /* keeps everything in one row */
+        overflow-x: auto; /* allows horizontal scrolling if content too wide */
         white-space: nowrap;
         padding: 4px 0;
     }
 
-        /* Optional: make scroll look nice */
         .left-items-controls::-webkit-scrollbar {
             height: 6px;
         }
@@ -911,7 +969,6 @@
             color: white;
             border-color: #0E8FEA;
         }
-
 </style>
 
 <div id="posApp" class="pos-root">
@@ -920,12 +977,10 @@
         <div class="card cat-pane">
             <div class="pos-left-header">
                 <div class="brand">
-                    <i class="fa-solid fa-burger"></i>
+                    <i class="fa-solid fa-bowl-food"></i>
                     <span>@(ViewBag.ShopName ?? "G-Soft")</span>
                 </div>
 
-
-                <!-- UPDATED: add .pro -->
                 <button id="newOrderBtn" class="fs-btn pro" title="Start New Order">
                     <i class="fa-solid fa-wand-magic-sparkles"></i> New Order
                 </button>
@@ -937,7 +992,9 @@
                 </div>
             </div>
 
-            <div class="cat-pane card"><div id="catGrid" class="cat-grid"></div></div>
+            <div class="cat-pane card">
+                <div id="catGrid" class="cat-grid"></div>
+            </div>
         </div>
 
         <!-- LEFT ITEMS -->
@@ -980,7 +1037,7 @@
                         <option value="delivery">Delivery</option>
                     </select>
 
-                    <input id="tableNo" class="soft-input" placeholder="Table # / Token">
+                    <input id="tableNo" class="soft-input" placeholder="Table # / Token" />
                     <select id="customer" class="soft-input">
                         <option value="">Customer / Phone"</option>
                         @if (ViewBag.Customer != null)
@@ -991,22 +1048,28 @@
                             }
                         }
                     </select>
-                    <button id="addCustomerBtn" class="icon-btn" title="Add/Quick customer"><i class="fa-solid fa-user-plus"></i></button>
+                    <button id="addCustomerBtn" class="icon-btn" title="Add/Quick customer">
+                        <i class="fa-solid fa-user-plus"></i>
+                    </button>
 
                     <select id="waiterSel" class="soft-input">
                         <option value="">Select Waiter</option>
                     </select>
-                    <button id="addWaiterBtn" class="icon-btn" title="Add new waiter"><i class="fa-solid fa-plus"></i></button>
+                    <button id="addWaiterBtn" class="icon-btn" title="Add new waiter">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
                 </div>
 
                 <button id="runningBtn" class="fs-btn" title="Running Orders">
-                    <i class="fa-solid fa-list-check"></i>
+                    <i class="fa-solid fa-receipt"></i>
                     <span>Running Orders</span>
                     <span id="runningCount" class="badge text-bg-light" style="margin-left:6px;">0</span>
                 </button>
 
                 <div class="now" style="display:flex;align-items:center;gap:8px">
-                    <button id="fsBtn" class="fs-btn" title="Full Screen"><i class="fa-solid fa-up-right-and-down-left-from-center"></i></button>
+                    <button id="fsBtn" class="fs-btn" title="Full Screen">
+                        <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
+                    </button>
                     <span id="nowTime"></span><span class="sep">•</span><span id="nowDate"></span>
                 </div>
             </div>
@@ -1086,16 +1149,45 @@
             </div>
 
             <div class="actions-cards">
-                <div id="acModify" class="act-card info" title="Modify Order"><i class="fa-regular fa-pen-to-square"></i><div>Modify</div></div>
-                <div id="acDelete" class="act-card danger" title="Delete Order"><i class="fa-regular fa-trash-can"></i><div>Delete</div></div>
+                <div id="acModify" class="act-card info" title="Modify Order">
+                    <i class="fa-regular fa-pen-to-square"></i><div>Modify</div>
+                </div>
+                <div id="acDelete" class="act-card danger" title="Delete Order">
+                    <i class="fa-regular fa-trash-can"></i><div>Delete</div>
+                </div>
 
-                <div id="acKOT" class="act-card warn" title="KOT (Kitchen Only)"><i class="fa-solid fa-utensils"></i><div>KOT</div></div>
+                <div id="acKOT" class="act-card warn" title="KOT (Kitchen Only)">
+                    <i class="fa-solid fa-bell-concierge"></i><div>KOT</div>
+                </div>
 
-                <div id="acSaveOnly" class="act-card warn" title="Save Only (no print)"><i class="fa-solid fa-floppy-disk"></i><div>Save Only</div></div>
-                <div id="acPrint" class="act-card primary" title="Save & Print"><i class="fa-solid fa-print"></i><div>Save & Print</div></div>
+                <div id="acSaveOnly" class="act-card warn" title="Save Only (no print)">
+                    <i class="fa-solid fa-cloud-arrow-down"></i><div>Save Only</div>
+                </div>
+                <div id="acPrint" class="act-card primary" title="Save & Print">
+                    <i class="fa-solid fa-print"></i><div>Save & Print</div>
+                </div>
 
-                <div id="acHold" class="act-card" title="Hold Invoice"><i class="fa-regular fa-bookmark"></i><div>Hold</div></div>
-                <div id="acRetrieve" class="act-card" title="Retrieve Held"><i class="fa-regular fa-folder-open"></i><div>Retrieve</div></div>
+                <div id="acHold" class="act-card" title="Hold Invoice">
+                    <i class="fa-solid fa-pause-circle"></i><div>Hold</div>
+                </div>
+
+                <!-- 🔹 NEW: TEMP PRINT BUTTON -->
+                <div id="acTempPrint" class="act-card" title="Temporary Bill / Proforma">
+                    <i class="fa-solid fa-file-invoice"></i><div>Temp Print</div>
+                </div>
+                <div id="acRetrieve" class="act-card" title="Retrieve Held">
+                    <i class="fa-regular fa-folder-open"></i><div>Retrieve</div>
+                </div>
+            </div>
+
+
+
+            <!-- EXIT / BACK TO DASHBOARD BUTTON (RIGHT BOTTOM CORNER) -->
+            <div class="exit-wrap">
+                <button id="exitBtn" class="exit-btn" title="Back to Dashboard / Exit">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Back to Dashboard</span>
+                </button>
             </div>
         </section>
     </main>
@@ -1103,8 +1195,12 @@
     <!-- Running Orders Drawer -->
     <div id="runningDrawer">
         <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid #eef2f7; background:#fcfcfd;">
-            <div style="font-weight:900; display:flex; gap:8px; align-items:center;"><i class="fa-solid fa-kitchen-set"></i> Running Orders</div>
-            <button id="runningClose" class="icon-btn" title="Close"><i class="fa-solid fa-xmark"></i></button>
+            <div style="font-weight:900; display:flex; gap:8px; align-items:center;">
+                <i class="fa-solid fa-kitchen-set"></i> Running Orders
+            </div>
+            <button id="runningClose" class="icon-btn" title="Close">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
 
         <div style="padding:10px 12px; border-bottom:1px solid #f1f5f9; display:flex; gap:8px;">
@@ -1112,467 +1208,975 @@
                 <i class="fa-solid fa-magnifying-glass"></i>
                 <input id="runningSearch" type="text" placeholder="Search by invoice # or table…" autocomplete="off">
             </div>
-            <button id="runningSortTime" class="fs-btn" title="Latest first"><i class="fa-regular fa-clock"></i></button>
+            <button id="runningSortTime" class="fs-btn" title="Latest first">
+                <i class="fa-regular fa-clock"></i>
+            </button>
         </div>
 
         <div id="runningList" style="padding:10px 12px; overflow:auto; height:calc(100vh - 130px);"></div>
     </div>
+
+    <!-- Hidden print container -->
+    <div id="printArea" style="display:none"></div>
+
+    <!-- CENTER FLASH NOW INSIDE posApp -->
+    <div id="centerFlash">
+        <div class="box">
+            <i class="fa-solid fa-circle-check"></i>
+            <span id="centerFlashMsg">Done</span>
+        </div>
+    </div>
 </div>
 
-<!-- Hidden print container -->
-<div id="printArea" style="display:none"></div>
-<div id="centerFlash"><div class="box"><i class="fa-solid fa-circle-check"></i><span id="centerFlashMsg">Done</span></div></div>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        (function(){
-          "use strict";
-          /* ========== SERVER DATA ========== */
-          const items = @Html.Raw(itemsJson);
-          const categories = @Html.Raw(Json.Serialize(ViewBag.CategoriesForJs));
-          const basePath = '@Url.Content("~")';
+        (function () {
+            "use strict";
 
-          /* ========== DOM (LEFT) ========== */
-          const catGrid=document.getElementById('catGrid');
-          const leftItemsTitle=document.getElementById('leftItemsTitle');
-          const leftItemsGrid=document.getElementById('leftItemsGrid');
-          const sortSel=document.getElementById('sortSel');
-          const itemSearchTop=document.getElementById('itemSearchTop');
-          const itemSearchBottom=document.getElementById('itemSearchBottom');
+            /* ========== SERVER DATA ========== */
+            const items = @Html.Raw(itemsJson);
+            const categories = @Html.Raw(Json.Serialize(ViewBag.CategoriesForJs));
+            const basePath = '@Url.Content("~")';
 
-          /* ========== DOM (RIGHT) ========== */
-          const cartBody=document.getElementById('cartBody');
-          const tGrand=document.getElementById('tGrand');
-          const tCash=document.getElementById('tCash');
-          const tChange=document.getElementById('tChange');
-          const tTax=document.getElementById('tTax');
-          const tTaxType=document.getElementById('tTaxType');
-          const tDisc=document.getElementById('tDisc');
-          const tDiscType=document.getElementById('tDiscType');
-          const orderNoEl=document.getElementById('orderNo');
-          const fsBtn=document.getElementById('fsBtn');
-          const posApp=document.getElementById('posApp');
-          const newOrderBtn=document.getElementById('newOrderBtn');
-          const acSaveOnly=document.getElementById('acSaveOnly');
-          const acPrint=document.getElementById('acPrint');
-          const acKOT=document.getElementById('acKOT');
-          const acHold=document.getElementById('acHold');
-          const acRetrieve=document.getElementById('acRetrieve');
-          const payMode=document.getElementById('payMode');
-          const customer=document.getElementById('customer');
-          const waiterSel=document.getElementById('waiterSel');
-          const addWaiterBtn=document.getElementById('addWaiterBtn');
-          const addCustomerBtn=document.getElementById('addCustomerBtn');
-          const orderType=document.getElementById('orderType');
-          const tableNo=document.getElementById('tableNo');
-          const nowTime=document.getElementById('nowTime');
-          const nowDate=document.getElementById('nowDate');
-          const runningBtn=document.getElementById('runningBtn');
-          const runningDrawer=document.getElementById('runningDrawer');
-          const runningClose=document.getElementById('runningClose');
-          const runningList=document.getElementById('runningList');
-          const runningSearch=document.getElementById('runningSearch');
-          const runningSortTime=document.getElementById('runningSortTime');
-          const runningCount=document.getElementById('runningCount');
-          const centerFlash=document.getElementById('centerFlash');
-          const centerFlashMsg=document.getElementById('centerFlashMsg');
+            /* ========== DOM (LEFT) ========== */
+            const catGrid = document.getElementById('catGrid');
+            const leftItemsTitle = document.getElementById('leftItemsTitle');
+            const leftItemsGrid = document.getElementById('leftItemsGrid');
+            const sortSel = document.getElementById('sortSel');
+            const itemSearchTop = document.getElementById('itemSearchTop');
+            const itemSearchBottom = document.getElementById('itemSearchBottom');
 
-          /* ========== UTIL ========== */
-          function debounce(fn, ms=150){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; }
-          function money(n){ return `₨${(n||0).toFixed(2)}`; }
-          function flashCenter(msg='Done', ms=900){
-            if(centerFlash&&centerFlashMsg){ centerFlashMsg.textContent=msg; centerFlash.style.display='flex'; setTimeout(()=>{centerFlash.style.display='none';}, ms); }
-          }
-          // UPDATED: ensure top z-index class on container
-          function toast(msg, icon='info', ms=1500){
-            Swal.fire({
-              toast:true,
-              icon,
-              title: msg,
-              position:'top-end',
-              showConfirmButton:false,
-              timer: ms,
-              timerProgressBar:true,
-              customClass: { container: 'swal2-top-end' }
-            });
-          }
+            /* ========== DOM (RIGHT) ========== */
+            const cartBody = document.getElementById('cartBody');
+            const tGrand = document.getElementById('tGrand');
+            const tCash = document.getElementById('tCash');
+            const tChange = document.getElementById('tChange');
+            const tTax = document.getElementById('tTax');
+            const tTaxType = document.getElementById('tTaxType');
+            const tDisc = document.getElementById('tDisc');
+            const tDiscType = document.getElementById('tDiscType');
+            const orderNoEl = document.getElementById('orderNo');
+            const fsBtn = document.getElementById('fsBtn');
+            const posApp = document.getElementById('posApp');
+            const newOrderBtn = document.getElementById('newOrderBtn');
+            const acSaveOnly = document.getElementById('acSaveOnly');
+            const acPrint = document.getElementById('acPrint');
+            const acKOT = document.getElementById('acKOT');
+            const acHold = document.getElementById('acHold');
+            const acRetrieve = document.getElementById('acRetrieve');
+            const payMode = document.getElementById('payMode');
+            const customer = document.getElementById('customer');
+            const waiterSel = document.getElementById('waiterSel');
+            const addWaiterBtn = document.getElementById('addWaiterBtn');
+            const addCustomerBtn = document.getElementById('addCustomerBtn');
+            const orderType = document.getElementById('orderType');
+            const tableNo = document.getElementById('tableNo');
+            const nowTime = document.getElementById('nowTime');
+            const nowDate = document.getElementById('nowDate');
+            const runningBtn = document.getElementById('runningBtn');
+            const runningDrawer = document.getElementById('runningDrawer');
+            const runningClose = document.getElementById('runningClose');
+            const runningList = document.getElementById('runningList');
+            const runningSearch = document.getElementById('runningSearch');
+            const runningSortTime = document.getElementById('runningSortTime');
+            const runningCount = document.getElementById('runningCount');
+            const centerFlash = document.getElementById('centerFlash');
+            const centerFlashMsg = document.getElementById('centerFlashMsg');
+            const exitBtn = document.getElementById('exitBtn');
 
-          /* ========== CLOCK ========== */
-          function tick(){ const n=new Date(); nowTime.textContent=n.toLocaleTimeString(); nowDate.textContent=n.toLocaleDateString(); }
-          setInterval(tick,1000); tick();
+            /* ========== KEYPAD DOM ========== */
+            const padGrid = document.getElementById('padGrid');
+            const padHeading = document.getElementById('padHeading');
+            const padTargetRadios = document.querySelectorAll('input[name="padTarget"]');
 
-          /* ========== LEFT: CATEGORIES & ITEMS ========== */
-          function renderCats(){
-            catGrid.innerHTML = (categories||[]).map(c=>`
-              <button class="cat-btn" data-id="${c.id}">
-                <img class="cat-thumb" src="${c.imagePath ? basePath + c.imagePath : '/images/default.png'}" alt="${c.name}" width="68" height="68" decoding="async" fetchpriority="high" />
-                <div class="cat-meta">
-                  <div class="cat-name">${c.name}</div>
-                  <div class="cat-count">${(c.items||[]).length||0}</div>
-                </div>
-              </button>
-            `).join('');
-          }
-          renderCats();
+            const swalTarget = posApp || document.body;
 
-          let currentCat = (categories&&categories[0]) ? categories[0].id : '';
-          function applySort(arr){
-            const v=sortSel.value;
-            if(v==='name') arr.sort((a,b)=> (a.itemName||'').localeCompare(b.itemName||''));
-            if(v==='price_asc') arr.sort((a,b)=>(a.salePrice||0)-(b.salePrice||0));
-            if(v==='price_desc') arr.sort((a,b)=>(b.salePrice||0)-(a.salePrice||0));
-          }
-          let searchMode='name';
-          function bindChipGroup(root){
-            if(!root) return;
-            root.addEventListener('click', e=>{
-              const btn=e.target.closest('.chip'); if(!btn) return;
-              [...root.querySelectorAll('.chip')].forEach(c=>c.classList.toggle('active', c===btn));
-              searchMode=btn.dataset.mode; renderLeftItems();
-            });
-          }
-          bindChipGroup(document.getElementById('bottomChips'));
+            /* ========== STATE ========== */
+            window.cart = Array.isArray(window.cart) ? window.cart : [];
+            let cart = window.cart;
+            let orderActive = false;      // NEW: New Order press required
+            let padTarget = 'qty';        // keypad default
+            let lastQtyInput = null;      // last selected row qty input
 
-          function renderLeftItems(){
-            const q=(itemSearchBottom?.value||'').toLowerCase().trim();
-            const cat = (categories||[]).find(c=>c.id===currentCat);
-            if(!cat){ leftItemsTitle.textContent='Items'; leftItemsGrid.innerHTML=''; return; }
-            leftItemsTitle.textContent=cat.name;
-            let list=(cat.items||[]).filter(it=>{
-              if(!q) return true;
-              const name=(it.itemName||'').toLowerCase(), code=(it.itemCode||'').toLowerCase();
-              return (searchMode==='name')? name.includes(q) : code.includes(q);
-            });
-            applySort(list);
-            leftItemsGrid.innerHTML = list.map(it=>`
-              <div class="li-card" data-id="${it.id}" title="${(it.itemName||'')}${it.itemCode ? ' • '+it.itemCode : ''}">
-                <img class="li-thumb" src="${it.imagePath ? basePath + it.imagePath : '/images/default.png'}" alt="${it.itemName}" width="82" height="82" decoding="async" loading="lazy" />
-                <div style="min-width:0">
-                  <div class="li-name">${it.itemName}</div>
-                  <div class="cat-count">${it.itemCode ? ` <small style="color:#64748b">(${it.itemCode})</small>` : ''}</div>
-                  <div class="li-meta">
-                    <span class="price-badge"><i class="fa-solid fa-sack-dollar"></i> ${Number(it.salePrice||0).toFixed(0)}</span>
-                    <span class="muted">#${it.quantity}</span>
-                  </div>
-                </div>
-              </div>
-            `).join('');
-          }
-          renderLeftItems();
+            function syncCartRef() { window.cart = cart; }
 
-          catGrid.addEventListener('click', e=>{
-            const b=e.target.closest('.cat-btn'); if(!b) return;
-            currentCat=parseInt(b.dataset.id); renderLeftItems();
-          });
-
-          const doSearchTop = debounce(()=>{
-            const q=(itemSearchTop?.value||'').trim().toLowerCase();
-            if(!q){ return; }
-            const match=(categories||[]).find(c=> (c.name||'').toLowerCase().includes(q) || String(c.id)===q || (c.code&&String(c.code).toLowerCase()===q) );
-            if(match){ currentCat=match.id; renderLeftItems(); }
-          },150);
-          itemSearchTop?.addEventListener('input', doSearchTop);
-
-          document.addEventListener('keydown', (e)=>{
-            if(e.key==='/' && !/input|textarea/i.test(document.activeElement.tagName)){ e.preventDefault(); itemSearchTop?.focus(); }
-          });
-
-          const doSearchBottom = debounce(()=>{ renderLeftItems(); },150);
-          itemSearchBottom?.addEventListener('input', doSearchBottom);
-          sortSel.addEventListener('change', renderLeftItems);
-
-          /* ========== RIGHT: CART ========== */
-          window.cart = Array.isArray(window.cart)? window.cart : [];
-          let cart = window.cart; function syncCartRef(){ window.cart = cart; }
-
-          function renderCart(){
-            if(!cart.length){
-              cartBody.innerHTML = `<div class="muted" style="padding:.6rem;">No items yet. Select from left to add.</div>`;
-              return;
+            /* ========== UTIL ========== */
+            function debounce(fn, ms = 150) {
+                let t;
+                return (...a) => {
+                    clearTimeout(t);
+                    t = setTimeout(() => fn(...a), ms);
+                };
             }
-            cartBody.innerHTML = cart.map((l,idx)=>`
-              <div class="cart-row" data-idx="${idx}" data-item-id="${l.id}" data-code="${l.code||''}">
-                <div class="cart-name">${l.name}</div>
-                <div class="qty-wrap">
-                  <button class="qty-btn" data-op="dec">−</button>
-                  <input class="soft-input qty-input" type="number" step="1" min="1" value="${l.qty}">
-                  <button class="qty-btn" data-op="inc">+</button>
-                </div>
-                <input class="price-input" type="number" step="0.01" value="${Number(l.price||0).toFixed(2)}">
-                <div class="line-total">${(l.qty*l.price).toFixed(2)}</div>
-                <button class="remove-btn" title="Remove line"><i class="fa-regular fa-trash-can"></i></button>
-              </div>`).join('');
-          }
+            function money(n) { return `₨${(n || 0).toFixed(2)}`; }
 
-          function recalc(){
-            const sub=cart.reduce((a,b)=>a+(b.qty*b.price),0);
-            const d=parseFloat(tDisc.value||'0')||0; const dType=tDiscType.value; const dAmt=(dType==='percent')?(sub*d/100):d;
-            const tx=parseFloat(tTax.value||'0')||0; const txType=tTaxType.value; const txBase=Math.max(0, sub - dAmt); const txAmt=(txType==='percent')?(txBase*tx/100):tx;
-            const grand=Math.max(0, txBase + txAmt); tGrand.textContent=grand.toFixed(2);
-            const cash=parseFloat(tCash.value||'0')||0; tChange.textContent=Math.max(0, cash - grand).toFixed(2);
-          }
-
-          leftItemsGrid.addEventListener('click', e=>{
-            const card=e.target.closest('.li-card'); if(!card) return;
-            const itemId=+card.dataset.id;
-            const cat=(categories||[]).find(c=>c.id===currentCat); if(!cat) return;
-            const it=(cat.items||[]).find(x=>x.id===itemId); if(!it) return;
-            const ex=cart.find(x=>x.id===itemId);
-            if(ex) ex.qty += 1; else cart.push({ id:itemId, code:it.itemCode, name:it.itemName, price:Number(it.salePrice||0), qty:1 });
-            syncCartRef(); renderCart(); recalc();
-          });
-
-          cartBody.addEventListener('click', e=>{
-            const row=e.target.closest('.cart-row'); if(!row) return;
-            const idx=+row.dataset.idx;
-            if(e.target.matches('.remove-btn, .remove-btn *')){ cart.splice(idx,1); syncCartRef(); renderCart(); recalc(); return; }
-            if(e.target.matches('.qty-btn')){
-              const op=e.target.dataset.op;
-              if(op==='inc') cart[idx].qty+=1;
-              if(op==='dec') cart[idx].qty=Math.max(1,cart[idx].qty-1);
-              syncCartRef(); renderCart(); recalc();
+            function flashCenter(msg = 'Done', ms = 500) {
+                if (centerFlash && centerFlashMsg) {
+                    centerFlashMsg.textContent = msg;
+                    centerFlash.style.display = 'flex';
+                    setTimeout(() => { centerFlash.style.display = 'none'; }, ms);
+                }
             }
-          });
 
-          cartBody.addEventListener('input', e=>{
-            const row=e.target.closest('.cart-row'); if(!row) return; const idx=+row.dataset.idx;
-            if(e.target.matches('.qty-input')){
-              cart[idx].qty=Math.max(1, parseInt(e.target.value||'1',10));
-              row.querySelector('.line-total').textContent=(cart[idx].qty*cart[idx].price).toFixed(2);
-              syncCartRef(); recalc();
+            // toast now targets posApp (works in fullscreen)
+            function toast(msg, icon = 'info', ms = 700) {
+                Swal.fire({
+                    toast: true,
+                    icon,
+                    title: msg,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: ms,
+                    timerProgressBar: true,
+                    target: swalTarget,
+                    customClass: { container: 'swal2-top-end' }
+                });
             }
-            if(e.target.matches('.price-input')){
-              cart[idx].price=Math.max(0, parseFloat(e.target.value||'0'));
-              row.querySelector('.line-total').textContent=(cart[idx].qty*cart[idx].price).toFixed(2);
-              syncCartRef(); recalc();
+
+            /* ========== CLOCK ========== */
+            function tick() {
+                const n = new Date();
+                if (nowTime) nowTime.textContent = n.toLocaleTimeString();
+                if (nowDate) nowDate.textContent = n.toLocaleDateString();
             }
-          });
+            setInterval(tick, 1000); tick();
 
-          [tDisc,tCash,tTax].forEach(el=> el.addEventListener('input', recalc));
-          [tDiscType,tTaxType,payMode].forEach(el=>{ el.addEventListener('input',recalc); el.addEventListener('change',recalc); });
+            /* ========== LEFT: CATEGORIES & ITEMS ========== */
+            function renderCats() {
+                if (!catGrid) return;
+                catGrid.innerHTML = (categories || []).map(c => `
+                  <button class="cat-btn" data-id="${c.id}">
+                    <img class="cat-thumb"
+                         src="${c.imagePath ? basePath + c.imagePath : '/images/default.png'}"
+                         alt="${c.name}"
+                         width="56"
+                         height="56"
+                         decoding="async"
+                         fetchpriority="high" />
+                    <div class="cat-meta">
+                      <div class="cat-name">${c.name}</div>
+                      <div class="cat-count">${(c.items || []).length || 0}</div>
+                    </div>
+                  </button>
+                `).join('');
+            }
+            renderCats();
 
-          /* ========== FULLSCREEN ========== */
-          fsBtn?.addEventListener('click', async ()=>{
-            try{
-              if(!document.fullscreenElement){ await posApp.requestFullscreen(); fsBtn.innerHTML='<i class="fa-solid fa-down-left-and-up-right-to-center"></i>'; fsBtn.title='Exit Full Screen'; }
-              else{ await document.exitFullscreen(); fsBtn.innerHTML='<i class="fa-solid fa-up-right-and-down-left-from-center"></i>'; fsBtn.title='Full Screen'; }
-            }catch{}
-          });
+            let currentCat = (categories && categories[0]) ? categories[0].id : '';
 
-          /* ========== NEW ORDER ========== */
-          let invoiceCounter = @((invoiceNo ?? 0));
-          function generateInvoiceNumber(){ invoiceCounter=(parseInt(invoiceCounter)||0)+1; const counterStr=String(invoiceCounter).padStart(4,'0'); return `${counterStr}`; }
-          orderNoEl.innerText = generateInvoiceNumber();
+            function applySort(arr) {
+                const v = sortSel ? sortSel.value : 'name';
+                if (v === 'name') arr.sort((a, b) => (a.itemName || '').localeCompare(b.itemName || ''));
+                if (v === 'price_asc') arr.sort((a, b) => (a.salePrice || 0) - (b.salePrice || 0));
+                if (v === 'price_desc') arr.sort((a, b) => (b.salePrice || 0) - (a.salePrice || 0));
+            }
 
-          // NEW: pressed visual state
-          if (newOrderBtn){
-            newOrderBtn.addEventListener('mousedown', ()=> newOrderBtn.classList.add('is-pressed'));
-            newOrderBtn.addEventListener('mouseup',   ()=> newOrderBtn.classList.remove('is-pressed'));
-            newOrderBtn.addEventListener('mouseleave',()=> newOrderBtn.classList.remove('is-pressed'));
-          }
+            let searchMode = 'name';
+            function bindChipGroup(root) {
+                if (!root) return;
+                root.addEventListener('click', e => {
+                    const btn = e.target.closest('.chip'); if (!btn) return;
+                    [...root.querySelectorAll('.chip')].forEach(c => c.classList.toggle('active', c === btn));
+                    searchMode = btn.dataset.mode;
+                    renderLeftItems();
+                });
+            }
+            bindChipGroup(document.getElementById('bottomChips'));
 
-          newOrderBtn?.addEventListener('click', ()=>{
-            cart = []; syncCartRef(); renderCart(); tGrand.textContent='0.00'; tChange.textContent='0.00'; tTax.value='0'; tDisc.value='0'; tCash.value='0';
-            itemSearchTop.value=''; itemSearchBottom.value='';
-            tableNo.value=''; customer.value=''; waiterSel.value='';
-            orderNoEl.innerText = generateInvoiceNumber();
-            toast('New order ready','success'); itemSearchTop.focus();
-          });
-
-          /* ========== QUICK ADD WAITER/CUSTOMER ========== */
-          const WAITERS=['Ali','Bilal','Hamza','Imran','Sara','Waqas'];
-          function refreshWaiters(){ waiterSel.innerHTML='<option value="">Select Waiter</option>'+WAITERS.map(w=>`<option value="${w}">${w}</option>`).join(''); }
-          refreshWaiters();
-          addWaiterBtn?.addEventListener('click',()=>{ const name=prompt('New waiter name?'); if(!name) return; WAITERS.push(name); refreshWaiters(); waiterSel.value=name; });
-          addCustomerBtn?.addEventListener('click',()=>{ const name=prompt('Customer name?'); if(!name) return; customer.value=name; });
-
-          /* ========== HOLD / RUNNING ========== */
-          const HOLD_KEY='touchHeldInvoices';
-          function getAllHeld(){ try{ return JSON.parse(localStorage.getItem(HOLD_KEY)||'[]'); }catch{ return []; } }
-          function saveAllHeld(list){ localStorage.setItem(HOLD_KEY, JSON.stringify(list)); updateRunningBadge(); }
-          function updateRunningBadge(){ const c=(getAllHeld()||[]).length; if(runningCount) runningCount.textContent=c; }
-          function nowIso(){ return new Date().toISOString(); }
-          function cryptoRandomId(){ try{ return [...crypto.getRandomValues(new Uint8Array(8))].map(x=>x.toString(16).padStart(2,'0')).join(''); }catch{ return String(Date.now()); } }
-
-          function holdCurrentInvoice(){
-            if(!document.querySelector('.cart-row')){ toast('No items to hold','warning'); return; }
-            const saleItems = Array.from(document.querySelectorAll('.cart-row')).map(row=>{
-              const qty = parseInt(row.querySelector('.qty-input')?.value||0);
-              const price = parseFloat(row.querySelector('.price-input')?.value||0);
-              return { ItemId: parseInt(row.dataset.itemId), Quantity: qty, UnitPrice: price, LineTotal: +(qty*price).toFixed(2) };
-            });
-            const invoiceNumber=orderNoEl?.textContent||'';
-            const tax=parseFloat(tTax?.value||0); const disc=parseFloat(tDisc?.value||0); const grand=parseFloat(tGrand?.textContent.replace(/,/g,'')||0);
-            const held={ id: cryptoRandomId(), invoiceNumber, items:saleItems, grandTotal: grand, discount: disc, tax: tax, heldAt: nowIso(), tableNo: tableNo?.value||'', waiter: waiterSel?.value||'' };
-            const list=getAllHeld(); list.unshift(held); saveAllHeld(list);
-            toast('Invoice held','success',600); flashCenter('Invoice held',600);
-            // next invoice & clear
-            cart=[]; syncCartRef(); renderCart(); tGrand.textContent='0.00'; tChange.textContent='0.00'; tTax.value='0'; tDisc.value='0'; tCash.value='0';
-            orderNoEl.textContent = generateInvoiceNumber();
-            renderRunning();
-          }
-
-          function renderRunning(){
-            const list=getAllHeld();
-            const q=(runningSearch?.value||'').trim().toLowerCase();
-            const view=list.filter(r=> !q || (r.invoiceNumber||'').toLowerCase().includes(q) || (r.tableNo||'').toLowerCase().includes(q));
-            runningList.innerHTML = view.length ? view.map(r=>{
-              const namesAll=(r.items||[]).map(it=> (items.find(x=>x.Id===it.ItemId)?.ItemName) || it.ItemName || (`Item#${it.ItemId}`) );
-              const namesShort=namesAll.slice(0,6).map((nm,i)=>`${i+1}. ${nm}`).join(', ');
-              const namesTitle=namesAll.map((nm,i)=>`${i+1}. ${nm}`).join(', ');
-              return `
-                <div class="running-card" data-id="${r.id}" title="${namesTitle}">
-                  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-                    <div style="font-weight:900;">#${r.invoiceNumber}</div>
-                    <div class="t-inline" style="gap:6px;">
-                      <span class="badge text-bg-light"><i class="fa-regular fa-user"></i> ${r.waiter||'-'}</span>
-                      <span class="badge text-bg-light"><i class="fa-solid fa-table"></i> ${r.tableNo||'-'}</span>
-                      <span class="badge text-bg-success"><i class="fa-solid fa-pizza-slice"></i> ${r.items?.length||0}</span>
+            function renderLeftItems() {
+                if (!leftItemsGrid) return;
+                const q = (itemSearchBottom?.value || '').toLowerCase().trim();
+                const cat = (categories || []).find(c => c.id === currentCat);
+                if (!cat) {
+                    if (leftItemsTitle) leftItemsTitle.textContent = 'Items';
+                    leftItemsGrid.innerHTML = '';
+                    return;
+                }
+                if (leftItemsTitle) leftItemsTitle.textContent = cat.name;
+                let list = (cat.items || []).filter(it => {
+                    if (!q) return true;
+                    const name = (it.itemName || '').toLowerCase();
+                    const code = (it.itemCode || '').toLowerCase();
+                    return (searchMode === 'name') ? name.includes(q) : code.includes(q);
+                });
+                applySort(list);
+                leftItemsGrid.innerHTML = list.map(it => `
+                  <div class="li-card" data-id="${it.id}" title="${(it.itemName || '')}${it.itemCode ? ' • ' + it.itemCode : ''}">
+                    <img class="li-thumb"
+                         src="${it.imagePath ? basePath + it.imagePath : '/images/default.png'}"
+                         alt="${it.itemName}"
+                         width="56"
+                         height="56"
+                         decoding="async"
+                         loading="lazy" />
+                    <div style="min-width:0">
+                      <div class="li-name">${it.itemName}</div>
+                      <div class="cat-count">${it.itemCode ? ` <small style="color:#64748b">(${it.itemCode})</small>` : ''}</div>
+                      <div class="li-meta">
+                        <span class="price-badge"><i class="fa-solid fa-sack-dollar"></i> ${Number(it.salePrice || 0).toFixed(0)}</span>
+                        <span class="muted">#${it.quantity}</span>
+                      </div>
                     </div>
                   </div>
-                  <div style="color:#64748b;font-size:.9rem;margin:.35rem 0;"><i class="fa-regular fa-clock"></i> ${new Date(r.heldAt).toLocaleString()}</div>
-                  <div class="text-truncate">${namesShort||'—'}</div>
-                  <div style="display:flex;gap:8px;margin-top:8px;">
-                    <button class="fs-btn" data-action="load" data-id="${r.id}"><i class="fa-solid fa-arrow-turn-down"></i> Load</button>
-                    <button class="fs-btn" data-action="delete" data-id="${r.id}"><i class="fa-regular fa-trash-can"></i></button>
-                  </div>
-                </div>`;
-            }).join('') : `<div class="text-muted" style="padding:12px;">No running orders</div>`;
-          }
+                `).join('');
+            }
+            renderLeftItems();
 
-          // Make selectRunning available & stable
-          window.selectRunning = function(id){
-            const list = getAllHeld();
-            const r = list.find(x=>x.id===id);
-            if (!r) { toast('Not found','error'); return; }
+            if (catGrid) {
+                catGrid.addEventListener('click', e => {
+                    if (!orderActive) {
+                        toast('Press "New Order" first', 'warning');
+                        flashCenter('Press New Order first', 400);
+                        return;
+                    }
+                    const b = e.target.closest('.cat-btn'); if (!b) return;
+                    currentCat = parseInt(b.dataset.id);
+                    renderLeftItems();
+                });
+            }
 
-            cart = (r.items||[]).map(it => ({
-              id: it.ItemId,
-              code: it.ItemCode || '',
-              name: (items.find(x=>x.Id === it.ItemId)?.ItemName) || it.ItemName || 'Item',
-              price: Number(it.UnitPrice)||0,
-              qty: Number(it.Quantity)||1
-            }));
-            syncCartRef();
+            const doSearchTop = debounce(() => {
+                if (!itemSearchTop) return;
+                const q = (itemSearchTop.value || '').trim().toLowerCase();
+                if (!q) { return; }
+                const match = (categories || []).find(c =>
+                    (c.name || '').toLowerCase().includes(q) ||
+                    String(c.id) === q ||
+                    (c.code && String(c.code).toLowerCase() === q)
+                );
+                if (match) { currentCat = match.id; renderLeftItems(); }
+            }, 150);
+            itemSearchTop?.addEventListener('input', doSearchTop);
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === '/' && !/input|textarea/i.test(document.activeElement.tagName)) {
+                    e.preventDefault(); itemSearchTop?.focus();
+                }
+            });
+
+            const doSearchBottom = debounce(() => { renderLeftItems(); }, 150);
+            itemSearchBottom?.addEventListener('input', doSearchBottom);
+            sortSel?.addEventListener('change', renderLeftItems);
+
+            /* ========== CART RENDER + RECALC ========== */
+            function renderCart() {
+                if (!cartBody) return;
+                if (!cart.length) {
+                    cartBody.innerHTML = `<div class="muted" style="padding:.6rem;">No items yet. Select from left to add.</div>`;
+                    return;
+                }
+                cartBody.innerHTML = cart.map((l, idx) => `
+                  <div class="cart-row" data-idx="${idx}" data-item-id="${l.id}" data-code="${l.code || ''}">
+                    <div class="cart-name">${l.name}</div>
+                    <div class="qty-wrap">
+                      <button class="qty-btn" data-op="dec">−</button>
+                      <input class="soft-input qty-input" type="number" step="1" min="1" value="${l.qty}">
+                      <button class="qty-btn" data-op="inc">+</button>
+                    </div>
+                    <input class="price-input" type="number" step="0.01" value="${Number(l.price || 0).toFixed(2)}">
+                    <div class="line-total">${(l.qty * l.price).toFixed(2)}</div>
+                    <button class="remove-btn" title="Remove line"><i class="fa-regular fa-trash-can"></i></button>
+                  </div>`).join('');
+
+                // 🔒 PRICE ko keyboard / keypad se lock: readOnly
+                cartBody.querySelectorAll('.price-input').forEach(inp => {
+                    inp.readOnly = true;
+                });
+            }
+
+            function recalc() {
+                const sub = cart.reduce((a, b) => a + (b.qty * b.price), 0);
+                const d = parseFloat(tDisc?.value || '0') || 0;
+                const dType = tDiscType?.value || 'flat';
+                const dAmt = (dType === 'percent') ? (sub * d / 100) : d;
+                const tx = parseFloat(tTax?.value || '0') || 0;
+                const txType = tTaxType?.value || 'flat';
+                const txBase = Math.max(0, sub - dAmt);
+                const txAmt = (txType === 'percent') ? (txBase * tx / 100) : tx;
+                const grand = Math.max(0, txBase + txAmt);
+                if (tGrand) tGrand.textContent = grand.toFixed(2);
+                const cash = parseFloat(tCash?.value || '0') || 0;
+                if (tChange) tChange.textContent = Math.max(0, cash - grand).toFixed(2);
+            }
+
+            /* ========== ADD ITEMS TO CART (LEFT ITEMS) ========== */
+            leftItemsGrid?.addEventListener('click', e => {
+                if (!orderActive) {
+                    toast('Press "New Order" first', 'warning');
+                    flashCenter('Press New Order first', 400);
+                    return;
+                }
+                const card = e.target.closest('.li-card'); if (!card) return;
+                const itemId = +card.dataset.id;
+                const cat = (categories || []).find(c => c.id === currentCat); if (!cat) return;
+                const it = (cat.items || []).find(x => x.id === itemId); if (!it) return;
+                const ex = cart.find(x => x.id === itemId);
+                if (ex) ex.qty += 1;
+                else cart.push({ id: itemId, code: it.itemCode, name: it.itemName, price: Number(it.salePrice || 0), qty: 1 });
+                syncCartRef(); renderCart(); recalc();
+            });
+
+            /* ========== CART CLICK HANDLERS ========== */
+            cartBody?.addEventListener('click', e => {
+                const row = e.target.closest('.cart-row'); if (!row) return;
+
+                // row select + last qty input track
+                document.querySelectorAll('.cart-row').forEach(r => r.classList.remove('active'));
+                row.classList.add('active');
+                const qInp = row.querySelector('.qty-input');
+                if (qInp) lastQtyInput = qInp;
+
+                const idx = +row.dataset.idx;
+                if (e.target.matches('.remove-btn, .remove-btn *')) {
+                    cart.splice(idx, 1); syncCartRef(); renderCart(); recalc(); return;
+                }
+                if (e.target.matches('.qty-btn')) {
+                    const op = e.target.dataset.op;
+                    if (op === 'inc') cart[idx].qty += 1;
+                    if (op === 'dec') cart[idx].qty = Math.max(1, cart[idx].qty - 1);
+                    syncCartRef(); renderCart(); recalc();
+                }
+            });
+
+            cartBody?.addEventListener('input', e => {
+                const row = e.target.closest('.cart-row'); if (!row) return;
+                const idx = +row.dataset.idx;
+                if (e.target.matches('.qty-input')) {
+                    cart[idx].qty = Math.max(1, parseInt(e.target.value || '1', 10));
+                    row.querySelector('.line-total').textContent = (cart[idx].qty * cart[idx].price).toFixed(2);
+                    syncCartRef(); recalc();
+                }
+                if (e.target.matches('.price-input')) {
+                    // price locked: revert to actual price
+                    e.target.value = Number(cart[idx].price || 0).toFixed(2);
+                }
+            });
+
+            [tDisc, tCash, tTax].forEach(el => el?.addEventListener('input', recalc));
+            [tDiscType, tTaxType, payMode].forEach(el => {
+                el?.addEventListener('input', recalc);
+                el?.addEventListener('change', recalc);
+            });
+
+            /* ========== FULLSCREEN (UPDATED) ========== */
+            fsBtn?.addEventListener('click', async () => {
+                try {
+                    if (!document.fullscreenElement) {
+                        await posApp.requestFullscreen();
+                        posApp.classList.add('is-fullscreen');
+                        fsBtn.innerHTML = '<i class="fa-solid fa-down-left-and-up-right-to-center"></i>';
+                        fsBtn.title = 'Exit Full Screen';
+                    } else {
+                        await document.exitFullscreen();
+                        posApp.classList.remove('is-fullscreen');
+                        fsBtn.innerHTML = '<i class="fa-solid fa-up-right-and-down-left-from-center"></i>';
+                        fsBtn.title = 'Full Screen';
+                    }
+                } catch { }
+            });
+
+            document.addEventListener('fullscreenchange', () => {
+                if (!document.fullscreenElement) {
+                    posApp?.classList.remove('is-fullscreen');
+                    if (fsBtn) {
+                        fsBtn.innerHTML = '<i class="fa-solid fa-up-right-and-down-left-from-center"></i>';
+                        fsBtn.title = 'Full Screen';
+                    }
+                }
+            });
+
+            /* ========== INVOICE NUMBERS ========== */
+            let invoiceCounter = @((invoiceNo ?? 0));
+            function generateInvoiceNumber() {
+                invoiceCounter = (parseInt(invoiceCounter) || 0) + 1;
+                const counterStr = String(invoiceCounter).padStart(4, '0');
+                return `${counterStr}`;
+            }
+            if (orderNoEl) orderNoEl.innerText = generateInvoiceNumber();
+
+            /* ========== CLEAR SCREEN HELPER ========== */
+            function clearScreenForNewOrder() {
+                cart = []; syncCartRef(); renderCart();
+                if (tGrand) tGrand.textContent = '0.00';
+                if (tChange) tChange.textContent = '0.00';
+                if (tTax) tTax.value = '0';
+                if (tDisc) tDisc.value = '0';
+                if (tCash) tCash.value = '0';
+                if (itemSearchTop) itemSearchTop.value = '';
+                if (itemSearchBottom) itemSearchBottom.value = '';
+                if (tableNo) tableNo.value = '';
+                if (customer) customer.value = '';
+                if (waiterSel) waiterSel.value = '';
+                orderActive = false;
+            }
+
+            /* ========== NEW ORDER BUTTON ========== */
+            if (newOrderBtn) {
+                newOrderBtn.addEventListener('mousedown', () => newOrderBtn.classList.add('is-pressed'));
+                newOrderBtn.addEventListener('mouseup', () => newOrderBtn.classList.remove('is-pressed'));
+                newOrderBtn.addEventListener('mouseleave', () => newOrderBtn.classList.remove('is-pressed'));
+            }
+
+            newOrderBtn?.addEventListener('click', () => {
+                clearScreenForNewOrder();
+                if (orderNoEl) orderNoEl.innerText = generateInvoiceNumber();
+                orderActive = true;
+                toast('New order ready', 'success');
+                flashCenter('New order ready', 400);
+                itemSearchTop?.focus();
+            });
+
+            /* ========== QUICK ADD WAITER/CUSTOMER ========== */
+            const WAITERS = ['Ali', 'Bilal', 'Hamza', 'Imran', 'Sara', 'Waqas'];
+            function refreshWaiters() {
+                if (!waiterSel) return;
+                waiterSel.innerHTML = '<option value="">Select Waiter</option>' + WAITERS.map(w => `<option value="${w}">${w}</option>`).join('');
+            }
+            refreshWaiters();
+
+            addWaiterBtn?.addEventListener('click', () => {
+                const name = prompt('New waiter name?'); if (!name) return;
+                WAITERS.push(name); refreshWaiters(); waiterSel.value = name;
+            });
+            addCustomerBtn?.addEventListener('click', () => {
+                const name = prompt('Customer name?'); if (!name) return; customer.value = name;
+            });
+
+            /* ========== HOLD / RUNNING ========== */
+            const HOLD_KEY = 'touchHeldInvoices';
+            function getAllHeld() {
+                try { return JSON.parse(localStorage.getItem(HOLD_KEY) || '[]'); }
+                catch { return []; }
+            }
+            function saveAllHeld(list) {
+                localStorage.setItem(HOLD_KEY, JSON.stringify(list));
+                updateRunningBadge();
+            }
+            function updateRunningBadge() {
+                const c = (getAllHeld() || []).length;
+                if (runningCount) runningCount.textContent = c;
+            }
+            function nowIso() { return new Date().toISOString(); }
+            function cryptoRandomId() {
+                try {
+                    return [...crypto.getRandomValues(new Uint8Array(8))]
+                        .map(x => x.toString(16).padStart(2, '0')).join('');
+                } catch { return String(Date.now()); }
+            }
+
+            // 🔁 SINGLE ENTRY PER INVOICE
+            function holdCurrentInvoice() {
+                if (!document.querySelector('.cart-row')) {
+                    toast('No items to hold', 'warning');
+                    return;
+                }
+
+                const saleItems = Array.from(document.querySelectorAll('.cart-row')).map(row => {
+                    const qty = parseInt(row.querySelector('.qty-input')?.value || 0);
+                    const price = parseFloat(row.querySelector('.price-input')?.value || 0);
+                    return {
+                        ItemId: parseInt(row.dataset.itemId),
+                        Quantity: qty,
+                        UnitPrice: price,
+                        LineTotal: +(qty * price).toFixed(2)
+                    };
+                });
+
+                const invoiceNumber = orderNoEl?.textContent || '';
+                const tax = parseFloat(tTax?.value || 0);
+                const disc = parseFloat(tDisc?.value || 0);
+                const grand = parseFloat(tGrand?.textContent?.replace(/,/g, '') || 0);
+
+                const held = {
+                    invoiceNumber,
+                    items: saleItems,
+                    grandTotal: grand,
+                    discount: disc,
+                    tax: tax,
+                    heldAt: nowIso(),
+                    tableNo: tableNo?.value || '',
+                    waiter: waiterSel?.value || ''
+                };
+
+                let list = getAllHeld();
+                const idx = list.findIndex(x => x.invoiceNumber === invoiceNumber);
+
+                if (idx >= 0) {
+                    // Update existing entry (same id)
+                    held.id = list[idx].id;
+                    list[idx] = held;
+                } else {
+                    // New held invoice
+                    held.id = cryptoRandomId();
+                    list.unshift(held);
+                }
+
+                saveAllHeld(list);
+                updateRunningBadge();
+                renderRunning();
+
+                toast('Invoice held', 'success');
+                flashCenter('Invoice held', 400);
+
+                clearScreenForNewOrder();
+                if (orderNoEl) orderNoEl.textContent = generateInvoiceNumber();
+            }
+
+            function renderRunning() {
+                if (!runningList) return;
+                const list = getAllHeld();
+                const q = (runningSearch?.value || '').trim().toLowerCase();
+                const view = list.filter(r =>
+                    !q ||
+                    (r.invoiceNumber || '').toLowerCase().includes(q) ||
+                    (r.tableNo || '').toLowerCase().includes(q)
+                );
+                runningList.innerHTML = view.length ? view.map(r => {
+                    const namesAll = (r.items || []).map(it =>
+                        (items.find(x => x.Id === it.ItemId)?.ItemName) ||
+                        it.ItemName ||
+                        (`Item#${it.ItemId}`)
+                    );
+                    const namesShort = namesAll.slice(0, 6).map((nm, i) => `${i + 1}. ${nm}`).join(', ');
+                    const namesTitle = namesAll.map((nm, i) => `${i + 1}. ${nm}`).join(', ');
+                    return `
+                    <div class="running-card" data-id="${r.id}" title="${namesTitle}">
+                      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                        <div style="font-weight:900;">#${r.invoiceNumber}</div>
+                        <div class="t-inline" style="gap:6px;">
+                          <span class="badge text-bg-light"><i class="fa-regular fa-user"></i> ${r.waiter || '-'}</span>
+                          <span class="badge text-bg-light"><i class="fa-solid fa-table"></i> ${r.tableNo || '-'}</span>
+                          <span class="badge text-bg-success"><i class="fa-solid fa-pizza-slice"></i> ${r.items?.length || 0}</span>
+                        </div>
+                      </div>
+                      <div style="color:#64748b;font-size:.9rem;margin:.35rem 0;">
+                        <i class="fa-regular fa-clock"></i> ${new Date(r.heldAt).toLocaleString()}
+                      </div>
+                      <div class="text-truncate">${namesShort || '—'}</div>
+                      <div style="display:flex;gap:8px;margin-top:8px;">
+                        <button class="fs-btn" data-action="load" data-id="${r.id}">
+                          <i class="fa-solid fa-arrow-turn-down"></i> Load
+                        </button>
+                        <button class="fs-btn" data-action="delete" data-id="${r.id}">
+                          <i class="fa-regular fa-trash-can"></i>
+                        </button>
+                      </div>
+                    </div>`;
+                }).join('') : `<div class="text-muted" style="padding:12px;">No running orders</div>`;
+            }
+
+            window.selectRunning = function (id) {
+                const list = getAllHeld();
+                const r = list.find(x => x.id === id);
+                if (!r) { toast('Not found', 'error'); return; }
+
+                cart = (r.items || []).map(it => ({
+                    id: it.ItemId,
+                    code: it.ItemCode || '',
+                    name: (items.find(x => x.Id === it.ItemId)?.ItemName) || it.ItemName || 'Item',
+                    price: Number(it.UnitPrice) || 0,
+                    qty: Number(it.Quantity) || 1
+                }));
+                syncCartRef();
+                renderCart();
+                recalc();
+                if (orderNoEl) orderNoEl.textContent = r.invoiceNumber || orderNoEl.textContent;
+
+                orderActive = true; // running load ke baad order active
+
+                renderRunning();
+                updateRunningBadge();
+                closeRunning();
+                toast('Running order loaded', 'success');
+                flashCenter('Running loaded', 400);
+            };
+
+            function deleteRunning(id) {
+                let list = getAllHeld();
+                list = list.filter(x => x.id !== id);
+                saveAllHeld(list);
+                renderRunning();
+                updateRunningBadge();
+                toast('Removed', 'success');
+            }
+
+            let RUNNING_OPEN = false;
+            function openRunning() {
+                if (!runningDrawer) return;
+                runningDrawer.style.right = '0';
+                RUNNING_OPEN = true;
+                runningBtn?.classList.add('active');
+                renderRunning();
+            }
+            function closeRunning() {
+                if (!runningDrawer) return;
+                runningDrawer.style.right = '-420px';
+                RUNNING_OPEN = false;
+                runningBtn?.classList.remove('active');
+            }
+            runningBtn?.addEventListener('click', () => { RUNNING_OPEN ? closeRunning() : openRunning(); });
+            runningClose?.addEventListener('click', closeRunning);
+            document.addEventListener('keydown', e => { if (e.key === 'Escape' && RUNNING_OPEN) closeRunning(); });
+            runningSearch?.addEventListener('input', renderRunning);
+            runningSortTime?.addEventListener('click', () => {
+                let list = getAllHeld().sort((a, b) => new Date(b.heldAt) - new Date(a.heldAt));
+                saveAllHeld(list); renderRunning();
+            });
+
+            runningList?.addEventListener('click', (e) => {
+                const delBtn = e.target.closest('button[data-action="delete"]');
+                if (delBtn) { deleteRunning(delBtn.getAttribute('data-id')); return; }
+                const loadBtn = e.target.closest('button[data-action="load"]');
+                if (loadBtn) { window.selectRunning(loadBtn.getAttribute('data-id')); return; }
+                const card = e.target.closest('.running-card');
+                if (card) { window.selectRunning(card.getAttribute('data-id')); }
+            });
+
+            /* ========== SAVE / PRINT ========== */
+            async function savePOS(mode) {
+                const wantPrint = (mode === 'print');
+                const cashStr = (tCash?.value || '').trim();
+                const cashVal = parseFloat(cashStr);
+                if (!cashStr || isNaN(cashVal) || cashVal <= 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Required Field',
+                        text: 'Please enter cash amount!',
+                        target: swalTarget,
+                        timer: 900,
+                        showConfirmButton: false
+                    });
+                    try { tCash.focus(); } catch { }
+                    return;
+                }
+                const grandTotal = parseFloat(tGrand?.textContent.replace(/,/g, '') || 0);
+                const tax = parseFloat(tTax?.value || 0);
+                const discount = parseFloat(tDisc?.value || 0);
+                const cash = cashVal;
+                const payModeVal = payMode?.value || 'cash';
+                const custId = parseInt(customer?.value || 0);
+                const orderTypeVal = orderType?.value || 'dinein';
+                const tableNoVal = tableNo?.value || '';
+                const waiterVal = waiterSel?.value || null;
+                const orderNo = orderNoEl?.textContent || '';
+
+                const saleItems = Array.from(document.querySelectorAll('.cart-row')).map(row => {
+                    const qty = parseInt(row.querySelector('.qty-input')?.value || 0);
+                    const price = parseFloat(row.querySelector('.price-input')?.value || 0);
+                    return {
+                        ItemId: parseInt(row.dataset.itemId),
+                        Quantity: qty,
+                        UnitPrice: price,
+                        DiscountPercent: discount,
+                        TaxAmount: tax,
+                        LineTotal: +(qty * price).toFixed(2)
+                    };
+                });
+
+                if (!saleItems.length) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'No Items',
+                        text: 'Please add at least one item to the cart!',
+                        target: swalTarget,
+                        timer: 900,
+                        showConfirmButton: false
+                    });
+                    return;
+                }
+
+                const payload = {
+                    InvoiceNumber: orderNo,
+                    SubTotal: grandTotal,
+                    Tax: tax,
+                    Discount: discount,
+                    DiscountPercent: discount,
+                    DiscountLessAmount: discount,
+                    SaleType: 'Sale',
+                    Total: grandTotal,
+                    custId: custId,
+                    tender_amount: cash,
+                    OrderType: orderTypeVal,
+                    TableNo: tableNoVal,
+                    Waiter: waiterVal,
+                    Payment: {
+                        Amount: cash,
+                        PaymentMethod: payModeVal,
+                        Change: Math.max(cash - grandTotal, 0)
+                    },
+                    SaleItems: saleItems
+                };
+
+                try {
+                    const res = await fetch('/Sales/SaveSale', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (res.ok) {
+                        const result = await res.json();
+
+                        if (wantPrint) {
+                            window.open(`/Sales/Receipt/${result.id}`, '_blank');
+                            toast('Invoice saved & printing…', 'success');
+                        } else {
+                            toast('Invoice saved (no print)', 'success');
+                        }
+
+                        // ✅ Sale complete → running se iss invoice ko hata do
+                        const orderNoNow = orderNoEl?.textContent || '';
+                        let list = getAllHeld();
+                        list = list.filter(x => x.invoiceNumber !== orderNoNow);
+                        saveAllHeld(list);
+                        updateRunningBadge();
+                        renderRunning();
+
+                        flashCenter('Invoice cleared successfully', 400);
+                        setTimeout(() => { window.location.reload(); }, 500);
+                    } else {
+                        const error = await res.json().catch(() => ({}));
+                        toast(error?.Message || 'Failed to save order', 'error', 2000);
+                    }
+                } catch (err) {
+                    console.error(err);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Something went wrong while saving the order.',
+                        target: swalTarget
+                    });
+                }
+            }
+
+            /* ========== KOT (NO CASH REQUIRED) + RUNNING UPDATE ========== */
+            async function saveKOT() {
+                const grandTotal = parseFloat(tGrand?.textContent.replace(/,/g, '') || 0);
+                const tax = parseFloat(tTax?.value || 0);
+                const discount = parseFloat(tDisc?.value || 0);
+                const cash = parseFloat(tCash?.value || 0) || 0;
+                const payModeVal = payMode?.value || 'cash';
+                const custId = parseInt(customer?.value || 0);
+                const orderTypeVal = orderType?.value || 'dinein';
+                const tableNoVal = tableNo?.value || '';
+                const waiterVal = waiterSel?.value || null;
+                const orderNo = orderNoEl?.textContent || '';
+
+                const saleItems = Array.from(document.querySelectorAll('.cart-row')).map(row => {
+                    const qty = parseInt(row.querySelector('.qty-input')?.value || 0);
+                    const price = parseFloat(row.querySelector('.price-input')?.value || 0);
+                    return {
+                        ItemId: parseInt(row.dataset.itemId),
+                        Quantity: qty,
+                        UnitPrice: price,
+                        DiscountPercent: discount,
+                        TaxAmount: tax,
+                        LineTotal: +(qty * price).toFixed(2)
+                    };
+                });
+
+                if (!saleItems.length) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'No Items',
+                        text: 'Please add at least one item to the cart!',
+                        target: swalTarget,
+                        timer: 900,
+                        showConfirmButton: false
+                    });
+                    return;
+                }
+
+                const payload = {
+                    InvoiceNumber: orderNo,
+                    SubTotal: grandTotal,
+                    Tax: tax,
+                    Discount: discount,
+                    DiscountPercent: discount,
+                    DiscountLessAmount: discount,
+                    SaleType: 'Sale',
+                    Total: grandTotal,
+                    custId: custId,
+                    tender_amount: cash,
+                    OrderType: orderTypeVal,
+                    TableNo: tableNoVal,
+                    Waiter: waiterVal,
+                    Payment: {
+                        Amount: cash,
+                        PaymentMethod: payModeVal,
+                        Change: Math.max(cash - grandTotal, 0)
+                    },
+                    SaleItems: saleItems
+                };
+
+                try {
+                    const res = await fetch('/Sales/KOTSale', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!res.ok) {
+                        let errText = 'Failed to send KOT.';
+                        try { const e = await res.json(); if (e?.Message) errText = e.Message; } catch { }
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: errText,
+                            target: swalTarget
+                        });
+                        return;
+                    }
+
+                    const result = await res.json();
+
+                    // ✅ KOT ko bhi Running Orders me add/update karo (single per invoice)
+                    const held = {
+                        invoiceNumber: orderNo,
+                        items: saleItems,
+                        grandTotal: grandTotal,
+                        discount: discount,
+                        tax: tax,
+                        heldAt: nowIso(),
+                        tableNo: tableNoVal,
+                        waiter: waiterVal || ''
+                    };
+
+                    let list = getAllHeld();
+                    const idx = list.findIndex(x => x.invoiceNumber === orderNo);
+
+                    if (idx >= 0) {
+                        held.id = list[idx].id;   // update
+                        list[idx] = held;
+                    } else {
+                        held.id = cryptoRandomId(); // new
+                        list.unshift(held);
+                    }
+
+                    saveAllHeld(list);
+                    renderRunning();
+                    updateRunningBadge();
+
+                    // thermal 80mm receipt
+                    window.open(`/Sales/KOTReceipt/${result.id}`, '_blank');
+
+                    toast('KOT sent & added to running', 'success');
+                    flashCenter('KOT sent, screen cleared', 400);
+
+                    clearScreenForNewOrder();
+                    if (orderNoEl) orderNoEl.textContent = generateInvoiceNumber();
+
+                } catch (err) {
+                    console.error('KOT error:', err);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Something went wrong while sending KOT.',
+                        target: swalTarget
+                    });
+                }
+            }
+
+            /* ========== EXIT / BACK TO DASHBOARD ========== */
+            exitBtn?.addEventListener('click', () => {
+                Swal.fire({
+                    icon: 'question',
+                    title: 'Exit POS?',
+                    text: 'Do you want to go back to dashboard?',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, exit',
+                    cancelButtonText: 'Stay here',
+                    target: swalTarget
+                }).then(res => {
+                    if (res.isConfirmed) {
+                        window.location.href = '@Url.Action("Index", "Home")';
+                    }
+                });
+            });
+
+            /* ========== KEYPAD LOGIC ========== */
+            function getPadInput() {
+                if (padTarget === 'qty') return lastQtyInput;
+                if (padTarget === 'disc') return tDisc;
+                if (padTarget === 'cash') return tCash;
+                if (padTarget === 'tax') return tTax;
+                if (padTarget === 'price') {
+                    toast('Price change disabled', 'warning');
+                    return null;
+                }
+                return null;
+            }
+
+            padTargetRadios.forEach(r => {
+                r.addEventListener('change', () => {
+                    if (!r.checked) return;
+                    padTarget = r.value;
+                    if (padHeading) {
+                        padHeading.textContent =
+                            padTarget === 'qty' ? 'Qty' :
+                                padTarget === 'price' ? 'Price' :
+                                    padTarget === 'disc' ? 'Discount' :
+                                        padTarget === 'cash' ? 'Cash' : 'Tax';
+                    }
+                    const inp = getPadInput();
+                    if (inp && inp.focus) { inp.focus(); if (inp.select) inp.select(); }
+                });
+            });
+
+            padGrid?.addEventListener('click', e => {
+                const btn = e.target.closest('button[data-key]');
+                if (!btn) return;
+                const key = btn.dataset.key;
+                const input = getPadInput();
+                if (!input) return;
+
+                let v = input.value || '';
+
+                if (key === 'C') v = '';
+                else if (key === '⌫') v = v.slice(0, -1);
+                else if (key === '100' || key === '200') {
+                    v = String((parseFloat(v) || 0) + parseFloat(key));
+                } else {
+                    if (key === '.' && v.includes('.')) {
+                        // ignore second dot
+                    } else {
+                        v += key;
+                    }
+                }
+
+                input.value = v;
+
+                if (padTarget === 'qty') {
+                    const row = input.closest('.cart-row');
+                    if (row) {
+                        const idx = +row.dataset.idx;
+                        cart[idx].qty = Math.max(1, parseInt(v || '1', 10));
+                        row.querySelector('.line-total').textContent = (cart[idx].qty * cart[idx].price).toFixed(2);
+                    }
+                    recalc();
+                } else if (padTarget === 'disc' || padTarget === 'cash' || padTarget === 'tax') {
+                    recalc();
+                }
+            });
+
+            /* ========== BIND ACTIONS ========== */
+            acSaveOnly?.addEventListener('click', () => savePOS('save'));
+            acPrint?.addEventListener('click', () => savePOS('print'));
+            acKOT?.addEventListener('click', saveKOT);
+            acHold?.addEventListener('click', () => { holdCurrentInvoice(); });
+            acRetrieve?.addEventListener('click', () => { openRunning(); });
+
+            // initial render
             renderCart();
             recalc();
-            if (orderNoEl) orderNoEl.textContent = r.invoiceNumber || orderNoEl.textContent;
-
-            // NOTE: We DO NOT remove from pending here (per your rule). Only delete if user deletes.
-            // saveAllHeld(list.filter(x=>x.id!==id));  <-- removed
-            renderRunning();
             updateRunningBadge();
-            closeRunning();
-            toast('Running order loaded','success');
-          };
-
-          function deleteRunning(id){
-            let list=getAllHeld(); list=list.filter(x=>x.id!==id); saveAllHeld(list);
-            renderRunning(); updateRunningBadge(); toast('Removed','success');
-          }
-
-          let RUNNING_OPEN=false;
-          function openRunning(){ runningDrawer.style.right='0'; RUNNING_OPEN=true; runningBtn?.classList.add('active'); renderRunning(); }
-          function closeRunning(){ runningDrawer.style.right='-420px'; RUNNING_OPEN=false; runningBtn?.classList.remove('active'); }
-          runningBtn?.addEventListener('click', ()=>{ RUNNING_OPEN? closeRunning(): openRunning(); });
-          runningClose?.addEventListener('click', closeRunning);
-          document.addEventListener('keydown', e=>{ if(e.key==='Escape'&&RUNNING_OPEN) closeRunning(); });
-          runningSearch?.addEventListener('input', renderRunning);
-          runningSortTime?.addEventListener('click', ()=>{
-            let list=getAllHeld().sort((a,b)=> new Date(b.heldAt)-new Date(a.heldAt));
-            saveAllHeld(list); renderRunning();
-          });
-
-          // Delegate: load / delete buttons and card click
-          runningList?.addEventListener('click', (e)=>{
-            const delBtn = e.target.closest('button[data-action="delete"]');
-            if (delBtn){ deleteRunning(delBtn.getAttribute('data-id')); return; }
-            const loadBtn = e.target.closest('button[data-action="load"]');
-            if (loadBtn){ window.selectRunning(loadBtn.getAttribute('data-id')); return; }
-            const card = e.target.closest('.running-card');
-            if (card){ window.selectRunning(card.getAttribute('data-id')); }
-          });
-
-          /* ========== SAVE / PRINT / KOT ========== */
-          async function savePOS(mode){
-            const wantPrint=(mode==='print');
-            const cashStr=(tCash?.value||'').trim(); const cashVal=parseFloat(cashStr);
-            if(!cashStr || isNaN(cashVal) || cashVal<=0){ Swal.fire({icon:'warning', title:'Required Field', text:'Please enter cash amount!'}); try{ tCash.focus(); }catch{} return; }
-            const grandTotal=parseFloat(tGrand?.textContent.replace(/,/g,'')||0);
-            const tax=parseFloat(tTax?.value||0); const discount=parseFloat(tDisc?.value||0); const cash=cashVal;
-            const payModeVal=payMode?.value||'cash'; const custId=parseInt(customer?.value||0); const orderTypeVal=orderType?.value||'dinein'; const tableNoVal=tableNo?.value||''; const waiterVal=waiterSel?.value||null; const orderNo=orderNoEl?.textContent||'';
-            const saleItems=Array.from(document.querySelectorAll('.cart-row')).map(row=>{
-              const qty=parseInt(row.querySelector('.qty-input')?.value||0);
-              const price=parseFloat(row.querySelector('.price-input')?.value||0);
-              return { ItemId: parseInt(row.dataset.itemId), Quantity: qty, UnitPrice: price, DiscountPercent: discount, TaxAmount: tax, LineTotal: +(qty*price).toFixed(2) };
-            });
-            if(!saleItems.length){ Swal.fire({icon:'warning', title:'No Items', text:'Please add at least one item to the cart!'}); return; }
-            const payload={ InvoiceNumber:orderNo, SubTotal:grandTotal, Tax:tax, Discount:discount, DiscountPercent:discount, DiscountLessAmount:discount, SaleType:'Sale', Total:grandTotal, custId:custId, tender_amount:cash, OrderType:orderTypeVal, TableNo:tableNoVal, Waiter:waiterVal, Payment:{ Amount:cash, PaymentMethod:payModeVal, Change: Math.max(cash-grandTotal,0) }, SaleItems:saleItems };
-            try{
-              const res=await fetch('/Sales/SaveSale', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
-              if(res.ok){
-                const result=await res.json();
-                if(wantPrint) window.open(`/Sales/Receipt/${result.id}`,'_blank');
-                cart=[]; syncCartRef(); renderCart(); tGrand.textContent='0.00'; tChange.textContent='0.00'; tTax.value='0'; tDisc.value='0'; tCash.value='0';
-                flashCenter('Invoice cleared successfully',1000);
-                setTimeout(()=>{ window.location.reload(); }, 1000);
-              }else{
-                const error=await res.json().catch(()=>({}));
-                toast(error?.Message||'Failed to save order','error',3000);
-              }
-            }catch(err){ console.error(err); Swal.fire({icon:'error', title:'Error', text:'Something went wrong while saving the order.'}); }
-          }
-
-          async function saveKOT(){
-
-            // const payModeVal=payMode?.value||'cash'; const custId=parseInt(customer?.value||0); const orderTypeVal=orderType?.value||'dinein'; const tableNoVal=tableNo?.value||''; const waiterVal=waiterSel?.value||null; const orderNo=orderNoEl?.textContent||'';
-            // const saleItems=Array.from(document.querySelectorAll('.cart-row')).map(row=>{
-            //   const qty=parseInt(row.querySelector('.qty-input')?.value||0);
-            //   const price=parseFloat(row.querySelector('.price-input')?.value||0);
-            //   return { ItemId: parseInt(row.dataset.itemId), Quantity: qty, UnitPrice: price, LineTotal: +(qty*price).toFixed(2) };
-            // });
-            // if(!saleItems.length){ Swal.fire({icon:'warning', title:'No Items', text:'Please add at least one item to the cart!'}); return; }
-            // const payload={ InvoiceNumber: orderNoEl?.textContent?.trim()||'', TableNo: tableNo?.value?.trim()||'', Waiter: waiterSel?.value||'', SaleItems: saleItems };
-            const cashStr=(tCash?.value||'').trim(); const cashVal=parseFloat(cashStr);
-            if(!cashStr || isNaN(cashVal) || cashVal<=0){ Swal.fire({icon:'warning', title:'Required Field', text:'Please enter cash amount!'}); try{ tCash.focus(); }catch{} return; }
-            const grandTotal=parseFloat(tGrand?.textContent.replace(/,/g,'')||0);
-            const tax=parseFloat(tTax?.value||0); const discount=parseFloat(tDisc?.value||0); const cash=cashVal;
-            const payModeVal=payMode?.value||'cash'; const custId=parseInt(customer?.value||0); 
-            const orderTypeVal=orderType?.value||'dinein'; const tableNoVal=tableNo?.value||''; 
-            const waiterVal=waiterSel?.value||null; const orderNo=orderNoEl?.textContent||'';
-            const saleItems=Array.from(document.querySelectorAll('.cart-row')).map(row=>{
-              const qty=parseInt(row.querySelector('.qty-input')?.value||0);
-              const price=parseFloat(row.querySelector('.price-input')?.value||0);
-              return { ItemId: parseInt(row.dataset.itemId), Quantity: qty, UnitPrice: price, DiscountPercent: discount, TaxAmount: tax, LineTotal: +(qty*price).toFixed(2) };
-            });
-            if(!saleItems.length){ Swal.fire({icon:'warning', title:'No Items', text:'Please add at least one item to the cart!'}); return; }
-            const payload={ InvoiceNumber:orderNo, SubTotal:grandTotal, Tax:tax, Discount:discount, DiscountPercent:discount, DiscountLessAmount:discount, SaleType:'Sale', Total:grandTotal, custId:custId, tender_amount:cash, OrderType:orderTypeVal, TableNo:tableNoVal, Waiter:waiterVal, Payment:{ Amount:cash, PaymentMethod:payModeVal, Change: Math.max(cash-grandTotal,0) }, SaleItems:saleItems };
-            console.log(payload);
-
-            try{
-              const res=await fetch('/Sales/KOTSale', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
-              
-              if(!res.ok){
-                let errText='Failed to send KOT.'; try{ const e=await res.json(); if (e?.Message) errText=e.Message; }catch{}
-                Swal.fire({icon:'error', title:'Error', text:errText}); return;
-              }
-              const result=await res.json();
-              window.open(`/Sales/KOTReceipt/${result.id}`,'_blank'); window.location.reload();
-            }catch(err){ console.error('KOT error:',err); Swal.fire({icon:'error', title:'Error', text:'Something went wrong while sending KOT.'}); }
-          }
-
-          /* ========== BIND ACTIONS ========== */
-          acSaveOnly?.addEventListener('click', ()=> savePOS('save'));
-          acPrint?.addEventListener('click', ()=> savePOS('print'));
-          acKOT?.addEventListener('click', saveKOT);
-          acHold?.addEventListener('click', holdCurrentInvoice);
-          acRetrieve?.addEventListener('click', ()=>{ openRunning(); });
-
-          // initial render
-          renderCart(); recalc(); updateRunningBadge(); renderRunning();
-
-        })(); // IIFE
+            renderRunning();
+        })();
     </script>
 }
+
+
+
+
+
+
