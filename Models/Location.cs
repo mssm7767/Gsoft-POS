@@ -11,5 +11,7 @@ namespace GSoftPosNew.Models
 
         [Display(Name = "Description")]
         public string Description { get; set; }
+
+        public List<PosTable> Tables { get; set; }
     }
 }

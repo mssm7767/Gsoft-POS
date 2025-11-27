@@ -2,12 +2,13 @@
 using GSoftPosNew.Models;
 using GSoftPosNew.ViewModels;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
-using System.Drawing.Printing;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using System.Drawing.Printing;
+using System.Text.Json;
 
 namespace GSoftPosNew.Controllers
 {
@@ -26,10 +27,10 @@ namespace GSoftPosNew.Controllers
             var query = _context.Sales.AsQueryable();
 
             if (fromDate.HasValue)
-                query = query.Where(s => s.SaleDate >= fromDate.Value);
+                query = query.Where(s => s.SaleDate.Date >= fromDate.Value);
 
             if (toDate.HasValue)
-                query = query.Where(s => s.SaleDate <= toDate.Value);
+                query = query.Where(s => s.SaleDate.Date <= toDate.Value);
 
             if (!string.IsNullOrEmpty(search))
                 query = query.Where(s => s.InvoiceNumber.Contains(search) || s.CashierId.Contains(search));
@@ -67,7 +68,7 @@ namespace GSoftPosNew.Controllers
             return View(items);
         }
 
-        public async Task <IActionResult> POSTouch()
+        public async Task<IActionResult> POSTouch()
         {
             var items = _context.Items.ToList();
 
@@ -120,7 +121,7 @@ namespace GSoftPosNew.Controllers
 
             return View(items);
         }
-        
+
         public IActionResult POSTouchNew()
         {
             var items = _context.Items.ToList();
@@ -441,8 +442,8 @@ namespace GSoftPosNew.Controllers
                 return StatusCode(500, "Error saving sale: " + errorMessage);
             }
         }
-        
-        
+
+
         [HttpPost]
         public async Task<IActionResult> KOTSale([FromBody] Sale sale)
         {
@@ -1023,7 +1024,7 @@ namespace GSoftPosNew.Controllers
 
             var customers = new List<Customer>();
 
-            if(customerId != 0)
+            if (customerId != 0)
             {
                 customers = await _context.Customers.Where(c => c.Id == customerId).ToListAsync();
             }
@@ -1087,7 +1088,7 @@ namespace GSoftPosNew.Controllers
         {
             try
             {
-                var saleItems = JsonSerializer.Deserialize<List<SaleItemModel>>(ItemsJson)
+                var saleItems = System.Text.Json.JsonSerializer.Deserialize<List<SaleItemModel>>(ItemsJson)
                     ?? new List<SaleItemModel>();
 
                 var sale = new Sale
@@ -1185,7 +1186,76 @@ namespace GSoftPosNew.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // Add this model class to your project
+        [HttpPost]
+        public IActionResult TempReceipt(string jsonData)
+        {
+            ViewBag.Setting = _context.ShopSettings
+                .OrderByDescending(s => s.Id)
+                .FirstOrDefault() ?? new ShopSetting();
+            if (string.IsNullOrEmpty(jsonData))
+                return BadRequest();
+
+            var vm = JsonConvert.DeserializeObject<SaleReceiptViewModel>(jsonData);
+            return View(vm);
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> TempPrint([FromBody] Sale sale)
+        {
+
+
+            // Extract ItemIds from SaleItems
+            var saleItemIds = sale.SaleItems.Select(si => si.ItemId).ToList();
+
+            // Fetch Items from DB that match these ItemIds
+            var items = (from si in sale.SaleItems
+                         join i in _context.Items on si.ItemId equals i.Id
+                         select new SaleItemReceiptVM
+                         {
+                             SrNo = 0,
+                             ItemName = i.ItemName,
+                             UnitPrice = si.UnitPrice,
+                             Quantity = si.Quantity,
+                             LineTotal = si.LineTotal
+                         })
+                        .ToList();
+
+            var vm = new SaleReceiptViewModel
+            {
+                SaleId = sale.Id,
+                InvoiceNumber = sale.InvoiceNumber,
+                SaleDate = sale.SaleDate,
+                CashierName = sale.CashierId,
+                SubTotal = sale.SubTotal,
+                Tax = sale.Tax,
+                Discount = sale.Discount,
+                Total = sale.Total,
+                PaymentMethod = sale.Payment?.PaymentMethod ?? "Cash",
+                Waiter = sale.Waiter,
+                TableNo = sale.TableNo,
+
+                Items = items
+            };
+
+
+            // assign SrNo
+            for (int i = 0; i < vm.Items.Count; i++)
+            {
+                vm.Items[i].SrNo = i + 1;
+            }
+
+            return Ok(new
+            {
+                Success = true,
+                Message = "Sale saved successfully",
+
+                Data = vm  // <-- Sending full VM
+            });
+
+
+        }
+
         public class SaleItemModel
         {
             public int ItemId { get; set; }
@@ -1195,6 +1265,7 @@ namespace GSoftPosNew.Controllers
             public decimal TaxAmount { get; set; }
             public decimal LineTotal { get; set; }
         }
+
         public IActionResult Receipt(int id)
         {
             var sale = _context.Sales
@@ -1442,6 +1513,90 @@ namespace GSoftPosNew.Controllers
             return Json(items);
         }
 
+        public IActionResult Details(int id)
+        {
+            var sale = _context.Sales
+                               .Include(s => s.Payment)
+                               .Include(s => s.SaleItems)
+                               .Include(s => s.Payment)
+                               .FirstOrDefault(s => s.Id == id);
+
+            ViewBag.Setting = _context.ShopSettings.OrderByDescending(s => s.Id).FirstOrDefault() ?? new ShopSetting();
+
+            if (sale == null)
+                return NotFound();
+            ViewBag.Balance = _context.Customers.Where(c => c.Id == sale.CustomerId).Select(c => c.OpeningBalance).FirstOrDefault();
+
+            var vm = new SaleReceiptViewModel
+            {
+                SaleId = sale.Id,
+                InvoiceNumber = sale.InvoiceNumber,
+                SaleDate = sale.SaleDate,
+                CashierName = sale.CashierId,
+                SubTotal = sale.SubTotal,
+                Tax = sale.Tax,
+                Discount = sale.Discount,
+                Total = sale.Total,
+
+                // client-side fetching
+                CustomerId = sale.CustomerId,
+                CustomerName = _context.Customers
+                                       .AsEnumerable()
+                                       .Where(c => c.Id == sale.CustomerId)
+                                       .Select(c => c.CustomerName)
+                                       .FirstOrDefault() ?? "Walk-in Customer",
+                CustomerPhone = _context.Customers
+                                        .AsEnumerable()
+                                        .Where(c => c.Id == sale.CustomerId)
+                                        .Select(c => c.ContactNumber)
+                                        .FirstOrDefault(),
+
+                PaymentMethod = sale.Payment?.PaymentMethod ?? "Cash",
+                PaidAmount = sale.Payment?.Amount ?? sale.Total,
+                Change = (sale.Payment?.Amount ?? sale.Total) - sale.Total,
+
+                Items = (from si in _context.SaleItems
+                         join i in _context.Items on si.ItemId equals i.Id
+                         where si.SaleId == sale.Id
+                         select new SaleItemReceiptVM
+                         {
+                             SrNo = 0,
+                             ItemName = i.ItemName,
+                             UnitPrice = si.UnitPrice,
+                             Quantity = si.Quantity,
+                             LineTotal = si.LineTotal
+                         }).ToList()
+            };
+
+            // assign SrNo
+            for (int i = 0; i < vm.Items.Count; i++)
+            {
+                vm.Items[i].SrNo = i + 1;
+            }
+            return View(vm);
+        }
+
+        [HttpGet]
+        public IActionResult GetFloorsWithTables()
+        {
+            var floors = _context.Locations
+                .Select(loc => new 
+                {
+                    id = loc.Id,
+                    name = loc.Name,
+                    totalTables = loc.Tables.Count(),
+                    tables = loc.Tables.Select(t => new 
+                    {
+                        id = t.Id,
+                        name = t.TableName ?? t.TableCode,
+                        capacity = t.Capacity ?? 0,
+                        status = t.Status   
+                    }).ToList()
+                })
+                .ToList();
+
+            return Json(floors);
+        }
 
         [HttpPost]
         public async Task<IActionResult> Delete(int id)

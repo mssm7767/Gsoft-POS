@@ -4,6 +4,7 @@ using GSoftPosNew.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GSoftPosNew.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251127025753__table")]
+    partial class _table
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -473,9 +476,6 @@ namespace GSoftPosNew.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Notes")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Status")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TableCode")
@@ -1176,7 +1176,7 @@ namespace GSoftPosNew.Migrations
             modelBuilder.Entity("GSoftPosNew.Models.PosTable", b =>
                 {
                     b.HasOne("GSoftPosNew.Models.Location", "Location")
-                        .WithMany("Tables")
+                        .WithMany()
                         .HasForeignKey("LocationId");
 
                     b.Navigation("Location");
@@ -1265,11 +1265,6 @@ namespace GSoftPosNew.Migrations
             modelBuilder.Entity("GSoftPosNew.Models.Category", b =>
                 {
                     b.Navigation("Items");
-                });
-
-            modelBuilder.Entity("GSoftPosNew.Models.Location", b =>
-                {
-                    b.Navigation("Tables");
                 });
 
             modelBuilder.Entity("GSoftPosNew.Models.Purchase", b =>

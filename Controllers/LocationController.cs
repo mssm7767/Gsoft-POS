@@ -25,19 +25,18 @@ namespace GSoftPosNew.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Create(Location location)
         {
-            if (ModelState.IsValid)
-            {
+
                 _context.Locations.Add(location);
                 _context.SaveChanges();
                 TempData["Message"] = "Location saved successfully.";
 
                 ViewBag.Locations = _context.Locations.ToList();
                 return View(new Location());
-            }
 
-            // اگر Validation Error ہو
-            ViewBag.Locations = _context.Locations.ToList();
-            return View(location);
+
+            //// اگر Validation Error ہو
+            //ViewBag.Locations = _context.Locations.ToList();
+            //return View(location);
         }
 
         // ✅ Edit - GET

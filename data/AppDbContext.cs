@@ -36,6 +36,7 @@ namespace GSoftPosNew.Data
         public DbSet<StockAdjustmentItem> StockAdjustmentItems { get; set; }
         public DbSet<CustomerVanStock> CustomerVanStocks { get; set; }
         public DbSet<VanStockSale> VanStockSales { get; set; }
+        public DbSet<PosTable> PosTables { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
