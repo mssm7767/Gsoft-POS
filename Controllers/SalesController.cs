@@ -22,6 +22,7 @@ namespace GSoftPosNew.Controllers
             _context = context;
             _viewEngine = viewEngine;
         }
+
         public IActionResult Index(DateTime? fromDate, DateTime? toDate, string search)
         {
             var query = _context.Sales.AsQueryable();
@@ -40,7 +41,11 @@ namespace GSoftPosNew.Controllers
                 FromDate = fromDate,
                 ToDate = toDate,
                 Search = search,
-                Sales = query.OrderByDescending(s => s.SaleDate).Include(s => s.SaleItems).ThenInclude(s => s.Item).ToList()
+                Sales = query
+                    .OrderByDescending(s => s.SaleDate)
+                    .Include(s => s.SaleItems)
+                    .ThenInclude(s => s.Item)
+                    .ToList()
             };
 
             return View(model);
@@ -56,14 +61,19 @@ namespace GSoftPosNew.Controllers
             ViewBag.Categories = categories;
             ViewBag.CashierId = User.Identity?.Name ?? "Unknown";
 
-            var saleInvNo = _context.Sales.OrderByDescending(s => s.Id).Select(s => s.InvoiceNumber).FirstOrDefault();
+            var saleInvNo = _context.Sales
+                .OrderByDescending(s => s.Id)
+                .Select(s => s.InvoiceNumber)
+                .FirstOrDefault();
 
             ViewBag.InvoiceLastDigit = !string.IsNullOrEmpty(saleInvNo)
-                                            ? int.Parse(saleInvNo[saleInvNo.Length - 1].ToString())
-                                            : 0;
+                ? int.Parse(saleInvNo[saleInvNo.Length - 1].ToString())
+                : 0;
 
-
-            ViewBag.ShopName = _context.ShopSettings.OrderByDescending(s => s.Id).Select(s => s.ShopName).FirstOrDefault();
+            ViewBag.ShopName = _context.ShopSettings
+                .OrderByDescending(s => s.Id)
+                .Select(s => s.ShopName)
+                .FirstOrDefault();
 
             return View(items);
         }
@@ -73,51 +83,60 @@ namespace GSoftPosNew.Controllers
             var items = _context.Items.ToList();
 
             ViewBag.Customer = await _context.Customers.ToListAsync();
+
             var categoriesForJs = _context.Categories
-                        .Select(c => new
-                        {
-                            c.Id,
-                            c.Name,
-                            c.ImagePath,
-                            c.Description,
-                            c.Discount,
-                            Items = c.Items.Select(i => new
-                            {
-                                i.Id,
-                                i.ItemCode,
-                                i.ReferenceCode,
-                                i.ItemName,
-                                i.Flavour,
-                                i.GenericName,
-                                i.SupplierId,
-                                SupplierName = i.Supplier != null ? i.Supplier.SupplierName : "",
-                                i.Unit,
-                                i.UnitPrice,
-                                i.LocationId,
-                                i.SalePrice,
-                                i.PurchasePrice,
-                                i.PackPrice,
-                                i.PackSize,
-                                i.Quantity,
-                                i.MarkupPercentage,
-                                i.CostPrice,
-                                i.TaxRate,
-                                i.StockQuantity,
-                                i.LowStockThreshold,
-                                i.ExpiryDate,
-                                i.ImagePath
-                            }).ToList()
-                        })
-                        .OrderBy(c => c.Name)
-                        .ToList();
+                .Select(c => new
+                {
+                    c.Id,
+                    c.Name,
+                    c.ImagePath,
+                    c.Description,
+                    c.Discount,
+                    Items = c.Items.Select(i => new
+                    {
+                        i.Id,
+                        i.ItemCode,
+                        i.ReferenceCode,
+                        i.ItemName,
+                        i.Flavour,
+                        i.GenericName,
+                        i.SupplierId,
+                        SupplierName = i.Supplier != null ? i.Supplier.SupplierName : "",
+                        i.Unit,
+                        i.UnitPrice,
+                        i.LocationId,
+                        i.SalePrice,
+                        i.PurchasePrice,
+                        i.PackPrice,
+                        i.PackSize,
+                        i.Quantity,
+                        i.MarkupPercentage,
+                        i.CostPrice,
+                        i.TaxRate,
+                        i.StockQuantity,
+                        i.LowStockThreshold,
+                        i.ExpiryDate,
+                        i.ImagePath
+                    }).ToList()
+                })
+                .OrderBy(c => c.Name)
+                .ToList();
 
             ViewBag.CategoriesForJs = categoriesForJs;
 
-            var saleInvNo = _context.Sales.OrderByDescending(s => s.Id).Select(s => s.InvoiceNumber).FirstOrDefault();
+            var saleInvNo = _context.Sales
+                .OrderByDescending(s => s.Id)
+                .Select(s => s.InvoiceNumber)
+                .FirstOrDefault();
+
             ViewBag.InvoiceLastDigit = !string.IsNullOrEmpty(saleInvNo)
-                                            ? int.Parse(saleInvNo[saleInvNo.Length - 1].ToString())
-                                            : 0;
-            ViewBag.ShopName = _context.ShopSettings.OrderByDescending(s => s.Id).Select(s => s.ShopName).FirstOrDefault();
+                ? int.Parse(saleInvNo[saleInvNo.Length - 1].ToString())
+                : 0;
+
+            ViewBag.ShopName = _context.ShopSettings
+                .OrderByDescending(s => s.Id)
+                .Select(s => s.ShopName)
+                .FirstOrDefault();
 
             return View(items);
         }
@@ -132,14 +151,19 @@ namespace GSoftPosNew.Controllers
             ViewBag.Categories = categories;
             ViewBag.CashierId = User.Identity?.Name ?? "Unknown";
 
-            var saleInvNo = _context.Sales.OrderByDescending(s => s.Id).Select(s => s.InvoiceNumber).FirstOrDefault();
+            var saleInvNo = _context.Sales
+                .OrderByDescending(s => s.Id)
+                .Select(s => s.InvoiceNumber)
+                .FirstOrDefault();
 
             ViewBag.InvoiceLastDigit = !string.IsNullOrEmpty(saleInvNo)
-                                            ? int.Parse(saleInvNo[saleInvNo.Length - 1].ToString())
-                                            : 0;
+                ? int.Parse(saleInvNo[saleInvNo.Length - 1].ToString())
+                : 0;
 
-
-            ViewBag.ShopName = _context.ShopSettings.OrderByDescending(s => s.Id).Select(s => s.ShopName).FirstOrDefault();
+            ViewBag.ShopName = _context.ShopSettings
+                .OrderByDescending(s => s.Id)
+                .Select(s => s.ShopName)
+                .FirstOrDefault();
 
             return View(items);
         }
@@ -174,7 +198,6 @@ namespace GSoftPosNew.Controllers
                     foreach (var item in sale.SaleItems)
                         item.Id = 0;
 
-                    // Save Sale
                     _context.Sales.Add(sale);
                     await _context.SaveChangesAsync();
 
@@ -185,6 +208,7 @@ namespace GSoftPosNew.Controllers
                         sale.Payment.SaleId = sale.Id;
 
                     await _context.SaveChangesAsync();
+
                     if (sale.Payment?.PaymentMethod?.ToLower() == "credit")
                     {
                         var customer = await _context.Customers.FindAsync(sale.custId);
@@ -209,16 +233,14 @@ namespace GSoftPosNew.Controllers
                                 }
                                 else if (balance < 0)
                                 {
-                                    // Customer overpaid → Advance
                                     decimal extraAdvance = Math.Abs(balance);
 
                                     if (existingPayment.Remaining > 0)
                                     {
-                                        // Use remaining to offset advance first
                                         if (existingPayment.Remaining >= extraAdvance)
                                         {
                                             existingPayment.Remaining += extraAdvance;
-                                            extraAdvance = 0; // fully covered
+                                            extraAdvance = 0;
                                         }
                                         else
                                         {
@@ -239,7 +261,6 @@ namespace GSoftPosNew.Controllers
                             }
                             else
                             {
-                                // First-time payment
                                 var paymentEntry = new CustomerPayment
                                 {
                                     CustomerId = sale.custId,
@@ -255,7 +276,6 @@ namespace GSoftPosNew.Controllers
                                 _context.CustomerPayments.Add(paymentEntry);
                             }
 
-                            // Update customer's balance → store only Remaining (what customer owes)
                             customer.OpeningBalance = (existingPayment?.Remaining ?? (balance > 0 ? balance : 0));
 
                             await _context.SaveChangesAsync();
@@ -267,15 +287,12 @@ namespace GSoftPosNew.Controllers
                         var dbItem = await _context.Items.FindAsync(item.ItemId);
                         if (dbItem != null)
                         {
-                            //if (dbItem.Quantity < item.Quantity)
-                            //    throw new Exception($"Not enough stock for item {dbItem.ItemName}");
-
                             dbItem.Quantity += item.Quantity;
                             _context.Items.Update(dbItem);
                         }
                     }
-                    await _context.SaveChangesAsync();
 
+                    await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
 
                     return Ok(new
@@ -294,7 +311,6 @@ namespace GSoftPosNew.Controllers
                     foreach (var item in sale.SaleItems)
                         item.Id = 0;
 
-                    // Save Sale
                     _context.Sales.Add(sale);
                     await _context.SaveChangesAsync();
 
@@ -310,7 +326,6 @@ namespace GSoftPosNew.Controllers
 
                     foreach (var item in sale.SaleItems)
                     {
-                        // ❗ Skip if CustomerId is null or 0
                         if (sale.CustomerId == null || sale.CustomerId == 0)
                             continue;
 
@@ -318,7 +333,7 @@ namespace GSoftPosNew.Controllers
                         {
                             CustomerId = sale.CustomerId,
                             ItemId = item.ItemId,
-                            Quantity = item.Quantity,
+                            Quantity = item.Quantity
                         };
 
                         vanStockList.Add(vanStock);
@@ -337,7 +352,7 @@ namespace GSoftPosNew.Controllers
                         {
                             decimal paidAmount = sale.tender_amount;
                             decimal totalAmount = sale.Total;
-                            decimal balance = totalAmount - paidAmount; // +ve = Remaining, -ve = Advance
+                            decimal balance = totalAmount - paidAmount;
 
                             var existingPayment = await _context.CustomerPayments
                                 .FirstOrDefaultAsync(p => p.CustomerId == sale.custId);
@@ -350,22 +365,19 @@ namespace GSoftPosNew.Controllers
 
                                 if (balance > 0)
                                 {
-
                                     existingPayment.Remaining -= balance;
                                     existingPayment.Sale = (existingPayment.Sale ?? 0) + totalAmount;
                                 }
                                 else if (balance < 0)
                                 {
-                                    // Customer overpaid → Advance
                                     decimal extraAdvance = Math.Abs(balance);
 
                                     if (existingPayment.Remaining > 0)
                                     {
-                                        // Use remaining to offset advance first
                                         if (existingPayment.Remaining >= extraAdvance)
                                         {
                                             existingPayment.Remaining += extraAdvance;
-                                            extraAdvance = 0; // fully covered
+                                            extraAdvance = 0;
                                         }
                                         else
                                         {
@@ -386,7 +398,6 @@ namespace GSoftPosNew.Controllers
                             }
                             else
                             {
-                                // First-time payment
                                 var paymentEntry = new CustomerPayment
                                 {
                                     CustomerId = sale.custId,
@@ -402,7 +413,6 @@ namespace GSoftPosNew.Controllers
                                 _context.CustomerPayments.Add(paymentEntry);
                             }
 
-                            // Update customer's balance → store only Remaining (what customer owes)
                             customer.OpeningBalance = (existingPayment?.Remaining ?? (balance > 0 ? balance : 0));
 
                             await _context.SaveChangesAsync();
@@ -414,15 +424,12 @@ namespace GSoftPosNew.Controllers
                         var dbItem = await _context.Items.FindAsync(item.ItemId);
                         if (dbItem != null)
                         {
-                            //if (dbItem.Quantity < item.Quantity)
-                            //    throw new Exception($"Not enough stock for item {dbItem.ItemName}");
-
                             dbItem.Quantity -= item.Quantity;
                             _context.Items.Update(dbItem);
                         }
                     }
-                    await _context.SaveChangesAsync();
 
+                    await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
 
                     return Ok(new
@@ -442,7 +449,6 @@ namespace GSoftPosNew.Controllers
                 return StatusCode(500, "Error saving sale: " + errorMessage);
             }
         }
-
 
         [HttpPost]
         public async Task<IActionResult> KOTSale([FromBody] Sale sale)
@@ -474,7 +480,6 @@ namespace GSoftPosNew.Controllers
                     foreach (var item in sale.SaleItems)
                         item.Id = 0;
 
-                    // Save Sale
                     _context.Sales.Add(sale);
                     await _context.SaveChangesAsync();
 
@@ -485,6 +490,7 @@ namespace GSoftPosNew.Controllers
                         sale.Payment.SaleId = sale.Id;
 
                     await _context.SaveChangesAsync();
+
                     if (sale.Payment?.PaymentMethod?.ToLower() == "credit")
                     {
                         var customer = await _context.Customers.FindAsync(sale.custId);
@@ -492,7 +498,7 @@ namespace GSoftPosNew.Controllers
                         {
                             decimal paidAmount = sale.tender_amount;
                             decimal totalAmount = sale.Total;
-                            decimal balance = totalAmount + paidAmount; // +ve = Remaining, -ve = Advance
+                            decimal balance = totalAmount + paidAmount;
 
                             var existingPayment = await _context.CustomerPayments
                                 .FirstOrDefaultAsync(p => p.CustomerId == sale.custId);
@@ -509,16 +515,14 @@ namespace GSoftPosNew.Controllers
                                 }
                                 else if (balance < 0)
                                 {
-                                    // Customer overpaid → Advance
                                     decimal extraAdvance = Math.Abs(balance);
 
                                     if (existingPayment.Remaining > 0)
                                     {
-                                        // Use remaining to offset advance first
                                         if (existingPayment.Remaining >= extraAdvance)
                                         {
                                             existingPayment.Remaining += extraAdvance;
-                                            extraAdvance = 0; // fully covered
+                                            extraAdvance = 0;
                                         }
                                         else
                                         {
@@ -539,7 +543,6 @@ namespace GSoftPosNew.Controllers
                             }
                             else
                             {
-                                // First-time payment
                                 var paymentEntry = new CustomerPayment
                                 {
                                     CustomerId = sale.custId,
@@ -555,7 +558,6 @@ namespace GSoftPosNew.Controllers
                                 _context.CustomerPayments.Add(paymentEntry);
                             }
 
-                            // Update customer's balance → store only Remaining (what customer owes)
                             customer.OpeningBalance = (existingPayment?.Remaining ?? (balance > 0 ? balance : 0));
 
                             await _context.SaveChangesAsync();
@@ -567,15 +569,12 @@ namespace GSoftPosNew.Controllers
                         var dbItem = await _context.Items.FindAsync(item.ItemId);
                         if (dbItem != null)
                         {
-                            //if (dbItem.Quantity < item.Quantity)
-                            //    throw new Exception($"Not enough stock for item {dbItem.ItemName}");
-
                             dbItem.Quantity += item.Quantity;
                             _context.Items.Update(dbItem);
                         }
                     }
-                    await _context.SaveChangesAsync();
 
+                    await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
 
                     return Ok(new
@@ -594,7 +593,6 @@ namespace GSoftPosNew.Controllers
                     foreach (var item in sale.SaleItems)
                         item.Id = 0;
 
-                    // Save Sale
                     _context.Sales.Add(sale);
                     await _context.SaveChangesAsync();
 
@@ -605,6 +603,7 @@ namespace GSoftPosNew.Controllers
                         sale.Payment.SaleId = sale.Id;
 
                     await _context.SaveChangesAsync();
+
                     if (sale.Payment?.PaymentMethod?.ToLower() == "credit")
                     {
                         var customer = await _context.Customers.FindAsync(sale.custId);
@@ -612,7 +611,7 @@ namespace GSoftPosNew.Controllers
                         {
                             decimal paidAmount = sale.tender_amount;
                             decimal totalAmount = sale.Total;
-                            decimal balance = totalAmount - paidAmount; // +ve = Remaining, -ve = Advance
+                            decimal balance = totalAmount - paidAmount;
 
                             var existingPayment = await _context.CustomerPayments
                                 .FirstOrDefaultAsync(p => p.CustomerId == sale.custId);
@@ -625,22 +624,19 @@ namespace GSoftPosNew.Controllers
 
                                 if (balance > 0)
                                 {
-
                                     existingPayment.Remaining -= balance;
                                     existingPayment.Sale = (existingPayment.Sale ?? 0) + totalAmount;
                                 }
                                 else if (balance < 0)
                                 {
-                                    // Customer overpaid → Advance
                                     decimal extraAdvance = Math.Abs(balance);
 
                                     if (existingPayment.Remaining > 0)
                                     {
-                                        // Use remaining to offset advance first
                                         if (existingPayment.Remaining >= extraAdvance)
                                         {
                                             existingPayment.Remaining += extraAdvance;
-                                            extraAdvance = 0; // fully covered
+                                            extraAdvance = 0;
                                         }
                                         else
                                         {
@@ -661,7 +657,6 @@ namespace GSoftPosNew.Controllers
                             }
                             else
                             {
-                                // First-time payment
                                 var paymentEntry = new CustomerPayment
                                 {
                                     CustomerId = sale.custId,
@@ -677,7 +672,6 @@ namespace GSoftPosNew.Controllers
                                 _context.CustomerPayments.Add(paymentEntry);
                             }
 
-                            // Update customer's balance → store only Remaining (what customer owes)
                             customer.OpeningBalance = (existingPayment?.Remaining ?? (balance > 0 ? balance : 0));
 
                             await _context.SaveChangesAsync();
@@ -689,15 +683,12 @@ namespace GSoftPosNew.Controllers
                         var dbItem = await _context.Items.FindAsync(item.ItemId);
                         if (dbItem != null)
                         {
-                            //if (dbItem.Quantity < item.Quantity)
-                            //    throw new Exception($"Not enough stock for item {dbItem.ItemName}");
-
                             dbItem.Quantity -= item.Quantity;
                             _context.Items.Update(dbItem);
                         }
                     }
-                    await _context.SaveChangesAsync();
 
+                    await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
 
                     return Ok(new
@@ -748,7 +739,6 @@ namespace GSoftPosNew.Controllers
                     foreach (var item in sale.SaleItems)
                         item.Id = 0;
 
-                    // Save Sale
                     _context.Sales.Add(sale);
                     await _context.SaveChangesAsync();
 
@@ -767,7 +757,7 @@ namespace GSoftPosNew.Controllers
                         {
                             decimal paidAmount = sale.tender_amount;
                             decimal totalAmount = sale.Total;
-                            decimal balance = totalAmount + paidAmount; // +ve = Remaining, -ve = Advance
+                            decimal balance = totalAmount + paidAmount;
 
                             var existingPayment = await _context.CustomerPayments
                                 .FirstOrDefaultAsync(p => p.CustomerId == sale.custId);
@@ -784,16 +774,14 @@ namespace GSoftPosNew.Controllers
                                 }
                                 else if (balance < 0)
                                 {
-                                    // Customer overpaid → Advance
                                     decimal extraAdvance = Math.Abs(balance);
 
                                     if (existingPayment.Remaining > 0)
                                     {
-                                        // Use remaining to offset advance first
                                         if (existingPayment.Remaining >= extraAdvance)
                                         {
                                             existingPayment.Remaining += extraAdvance;
-                                            extraAdvance = 0; // fully covered
+                                            extraAdvance = 0;
                                         }
                                         else
                                         {
@@ -814,7 +802,6 @@ namespace GSoftPosNew.Controllers
                             }
                             else
                             {
-                                // First-time payment
                                 var paymentEntry = new CustomerPayment
                                 {
                                     CustomerId = sale.custId,
@@ -830,7 +817,6 @@ namespace GSoftPosNew.Controllers
                                 _context.CustomerPayments.Add(paymentEntry);
                             }
 
-                            // Update customer's balance → store only Remaining (what customer owes)
                             customer.OpeningBalance = (existingPayment?.Remaining ?? (balance > 0 ? balance : 0));
 
                             await _context.SaveChangesAsync();
@@ -842,15 +828,12 @@ namespace GSoftPosNew.Controllers
                         var dbItem = await _context.Items.FindAsync(item.ItemId);
                         if (dbItem != null)
                         {
-                            //if (dbItem.Quantity < item.Quantity)
-                            //    throw new Exception($"Not enough stock for item {dbItem.ItemName}");
-
                             dbItem.Quantity += item.Quantity;
                             _context.Items.Update(dbItem);
                         }
                     }
-                    await _context.SaveChangesAsync();
 
+                    await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
 
                     return Ok(new
@@ -868,7 +851,6 @@ namespace GSoftPosNew.Controllers
                     foreach (var item in sale.SaleItems)
                         item.Id = 0;
 
-                    // Save Sale
                     _context.Sales.Add(sale);
                     await _context.SaveChangesAsync();
 
@@ -884,7 +866,6 @@ namespace GSoftPosNew.Controllers
 
                     foreach (var item in sale.SaleItems)
                     {
-                        // ❗ Skip if CustomerId is null or 0
                         if (sale.CustomerId == null || sale.CustomerId == 0)
                             continue;
 
@@ -892,7 +873,7 @@ namespace GSoftPosNew.Controllers
                         {
                             CustomerId = sale.CustomerId,
                             ItemId = item.ItemId,
-                            Quantity = item.Quantity,
+                            Quantity = item.Quantity
                         };
 
                         vanStockList.Add(vanStock);
@@ -904,7 +885,6 @@ namespace GSoftPosNew.Controllers
                         await _context.SaveChangesAsync();
                     }
 
-
                     if (sale.Payment?.PaymentMethod?.ToLower() == "credit")
                     {
                         var customer = await _context.Customers.FindAsync(sale.custId);
@@ -912,7 +892,7 @@ namespace GSoftPosNew.Controllers
                         {
                             decimal paidAmount = sale.tender_amount;
                             decimal totalAmount = sale.Total;
-                            decimal balance = totalAmount - paidAmount; // +ve = Remaining, -ve = Advance
+                            decimal balance = totalAmount - paidAmount;
 
                             var existingPayment = await _context.CustomerPayments
                                 .FirstOrDefaultAsync(p => p.CustomerId == sale.custId);
@@ -925,22 +905,19 @@ namespace GSoftPosNew.Controllers
 
                                 if (balance > 0)
                                 {
-
                                     existingPayment.Remaining -= balance;
                                     existingPayment.Sale = (existingPayment.Sale ?? 0) + totalAmount;
                                 }
                                 else if (balance < 0)
                                 {
-                                    // Customer overpaid → Advance
                                     decimal extraAdvance = Math.Abs(balance);
 
                                     if (existingPayment.Remaining > 0)
                                     {
-                                        // Use remaining to offset advance first
                                         if (existingPayment.Remaining >= extraAdvance)
                                         {
                                             existingPayment.Remaining += extraAdvance;
-                                            extraAdvance = 0; // fully covered
+                                            extraAdvance = 0;
                                         }
                                         else
                                         {
@@ -961,7 +938,6 @@ namespace GSoftPosNew.Controllers
                             }
                             else
                             {
-                                // First-time payment
                                 var paymentEntry = new CustomerPayment
                                 {
                                     CustomerId = sale.custId,
@@ -977,7 +953,6 @@ namespace GSoftPosNew.Controllers
                                 _context.CustomerPayments.Add(paymentEntry);
                             }
 
-                            // Update customer's balance → store only Remaining (what customer owes)
                             customer.OpeningBalance = (existingPayment?.Remaining ?? (balance > 0 ? balance : 0));
 
                             await _context.SaveChangesAsync();
@@ -996,8 +971,8 @@ namespace GSoftPosNew.Controllers
                             _context.Items.Update(dbItem);
                         }
                     }
-                    await _context.SaveChangesAsync();
 
+                    await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
 
                     return Ok(new
@@ -1016,17 +991,17 @@ namespace GSoftPosNew.Controllers
             }
         }
 
-
         public async Task<IActionResult> CustomerReport()
         {
             int customerId = int.Parse(User.FindFirst("CustomerId")?.Value ?? "0");
-
 
             var customers = new List<Customer>();
 
             if (customerId != 0)
             {
-                customers = await _context.Customers.Where(c => c.Id == customerId).ToListAsync();
+                customers = await _context.Customers
+                    .Where(c => c.Id == customerId)
+                    .ToListAsync();
             }
             else
             {
@@ -1048,13 +1023,8 @@ namespace GSoftPosNew.Controllers
 
                 foreach (var p in customerPayments)
                 {
-                    // Sales
                     debit += p.Sale ?? 0;
-
-                    // Payments received
-                    credit += p.Amount;   // ensure you have this field
-
-                    // Advance / overpaid
+                    credit += p.Amount;
                     advance += p.Advance;
                 }
 
@@ -1074,10 +1044,8 @@ namespace GSoftPosNew.Controllers
             return View(dto);
         }
 
-
         [HttpPost]
         [ValidateAntiForgeryToken]
-
         public async Task<IActionResult> ProcessPayment(
             [FromForm] decimal SubTotal,
             [FromForm] decimal Tax,
@@ -1088,7 +1056,8 @@ namespace GSoftPosNew.Controllers
         {
             try
             {
-                var saleItems = System.Text.Json.JsonSerializer.Deserialize<List<SaleItemModel>>(ItemsJson)
+                var saleItems = System.Text.Json.JsonSerializer
+                    .Deserialize<List<SaleItemModel>>(ItemsJson)
                     ?? new List<SaleItemModel>();
 
                 var sale = new Sale
@@ -1107,7 +1076,7 @@ namespace GSoftPosNew.Controllers
                     SaleItems = saleItems.Select(item => new SaleItem
                     {
                         ItemId = item.ItemId,
-                        Quantity = item.Quantity,
+                        Quantity = item.Quantity,        // decimal -> decimal
                         UnitPrice = item.UnitPrice,
                         DiscountPercent = item.DiscountPercent,
                         TaxAmount = item.TaxAmount,
@@ -1120,14 +1089,13 @@ namespace GSoftPosNew.Controllers
 
                 return RedirectToAction(nameof(Receipt), new { id = sale.Id });
             }
-            catch (Exception ex)
+            catch
             {
                 ModelState.AddModelError("", "An error occurred while processing your payment.");
                 return RedirectToAction(nameof(POS));
             }
         }
 
-        // GET: /Sale/Edit/{id}
         public IActionResult Edit(int id)
         {
             var sale = _context.Sales
@@ -1142,8 +1110,6 @@ namespace GSoftPosNew.Controllers
             return View(sale);
         }
 
-
-        // POST: /Sale/Edit
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Edit(int id, Sale model)
@@ -1162,7 +1128,6 @@ namespace GSoftPosNew.Controllers
             if (existing == null)
                 return NotFound();
 
-            // Update main fields
             existing.InvoiceNumber = model.InvoiceNumber;
             existing.SaleDate = model.SaleDate;
             existing.CashierId = model.CashierId;
@@ -1170,16 +1135,6 @@ namespace GSoftPosNew.Controllers
             existing.Tax = model.Tax;
             existing.Discount = model.Discount;
             existing.Total = model.Total;
-
-            // Update Payment details
-            //if (existing.Payment != null && model.Payment != null)
-            //{
-            //    existing.Payment.AmountPaid = model.Payment.AmountPaid;
-            //    existing.Payment.Method = model.Payment.Method;
-            //    // add other payment-related updates
-            //}
-
-            // Optionally: update SaleItems if you're editing line items in the same view
 
             _context.SaveChanges();
             TempData["Message"] = "Sale updated successfully!";
@@ -1192,6 +1147,7 @@ namespace GSoftPosNew.Controllers
             ViewBag.Setting = _context.ShopSettings
                 .OrderByDescending(s => s.Id)
                 .FirstOrDefault() ?? new ShopSetting();
+
             if (string.IsNullOrEmpty(jsonData))
                 return BadRequest();
 
@@ -1199,16 +1155,9 @@ namespace GSoftPosNew.Controllers
             return View(vm);
         }
 
-
         [HttpPost]
         public async Task<IActionResult> TempPrint([FromBody] Sale sale)
         {
-
-
-            // Extract ItemIds from SaleItems
-            var saleItemIds = sale.SaleItems.Select(si => si.ItemId).ToList();
-
-            // Fetch Items from DB that match these ItemIds
             var items = (from si in sale.SaleItems
                          join i in _context.Items on si.ItemId equals i.Id
                          select new SaleItemReceiptVM
@@ -1216,7 +1165,7 @@ namespace GSoftPosNew.Controllers
                              SrNo = 0,
                              ItemName = i.ItemName,
                              UnitPrice = si.UnitPrice,
-                             Quantity = si.Quantity,
+                             Quantity = si.Quantity,   // SaleItemReceiptVM.Quantity should be decimal
                              LineTotal = si.LineTotal
                          })
                         .ToList();
@@ -1234,12 +1183,9 @@ namespace GSoftPosNew.Controllers
                 PaymentMethod = sale.Payment?.PaymentMethod ?? "Cash",
                 Waiter = sale.Waiter,
                 TableNo = sale.TableNo,
-
                 Items = items
             };
 
-
-            // assign SrNo
             for (int i = 0; i < vm.Items.Count; i++)
             {
                 vm.Items[i].SrNo = i + 1;
@@ -1249,17 +1195,14 @@ namespace GSoftPosNew.Controllers
             {
                 Success = true,
                 Message = "Sale saved successfully",
-
-                Data = vm  // <-- Sending full VM
+                Data = vm
             });
-
-
         }
 
         public class SaleItemModel
         {
             public int ItemId { get; set; }
-            public int Quantity { get; set; }
+            public decimal Quantity { get; set; }      // ✅ important: decimal
             public decimal UnitPrice { get; set; }
             public decimal DiscountPercent { get; set; }
             public decimal TaxAmount { get; set; }
@@ -1269,16 +1212,21 @@ namespace GSoftPosNew.Controllers
         public IActionResult Receipt(int id)
         {
             var sale = _context.Sales
-                               .Include(s => s.Payment)
-                               .Include(s => s.SaleItems)
-                               .Include(s => s.Payment)
-                               .FirstOrDefault(s => s.Id == id);
+                .Include(s => s.Payment)
+                .Include(s => s.SaleItems)
+                .FirstOrDefault(s => s.Id == id);
 
-            ViewBag.Setting = _context.ShopSettings.OrderByDescending(s => s.Id).FirstOrDefault() ?? new ShopSetting();
+            ViewBag.Setting = _context.ShopSettings
+                .OrderByDescending(s => s.Id)
+                .FirstOrDefault() ?? new ShopSetting();
 
             if (sale == null)
                 return NotFound();
-            ViewBag.Balance = _context.Customers.Where(c => c.Id == sale.CustomerId).Select(c => c.OpeningBalance).FirstOrDefault();
+
+            ViewBag.Balance = _context.Customers
+                .Where(c => c.Id == sale.CustomerId)
+                .Select(c => c.OpeningBalance)
+                .FirstOrDefault();
 
             var vm = new SaleReceiptViewModel
             {
@@ -1290,24 +1238,20 @@ namespace GSoftPosNew.Controllers
                 Tax = sale.Tax,
                 Discount = sale.Discount,
                 Total = sale.Total,
-
-                // client-side fetching
                 CustomerId = sale.CustomerId,
                 CustomerName = _context.Customers
-                                       .AsEnumerable()
-                                       .Where(c => c.Id == sale.CustomerId)
-                                       .Select(c => c.CustomerName)
-                                       .FirstOrDefault() ?? "Walk-in Customer",
+                    .AsEnumerable()
+                    .Where(c => c.Id == sale.CustomerId)
+                    .Select(c => c.CustomerName)
+                    .FirstOrDefault() ?? "Walk-in Customer",
                 CustomerPhone = _context.Customers
-                                        .AsEnumerable()
-                                        .Where(c => c.Id == sale.CustomerId)
-                                        .Select(c => c.ContactNumber)
-                                        .FirstOrDefault(),
-
+                    .AsEnumerable()
+                    .Where(c => c.Id == sale.CustomerId)
+                    .Select(c => c.ContactNumber)
+                    .FirstOrDefault(),
                 PaymentMethod = sale.Payment?.PaymentMethod ?? "Cash",
                 PaidAmount = sale.Payment?.Amount ?? sale.Total,
                 Change = (sale.Payment?.Amount ?? sale.Total) - sale.Total,
-
                 Items = (from si in _context.SaleItems
                          join i in _context.Items on si.ItemId equals i.Id
                          where si.SaleId == sale.Id
@@ -1316,12 +1260,11 @@ namespace GSoftPosNew.Controllers
                              SrNo = 0,
                              ItemName = i.ItemName,
                              UnitPrice = si.UnitPrice,
-                             Quantity = si.Quantity,
+                             Quantity = si.Quantity,   // SaleItemReceiptVM.Quantity = decimal
                              LineTotal = si.LineTotal
                          }).ToList()
             };
 
-            // assign SrNo
             for (int i = 0; i < vm.Items.Count; i++)
             {
                 vm.Items[i].SrNo = i + 1;
@@ -1332,23 +1275,20 @@ namespace GSoftPosNew.Controllers
 
         public IActionResult LastDaySales()
         {
-            // Step 1: Get the last sale date
             var lastSaleDate = _context.Sales
-                                       .OrderByDescending(s => s.SaleDate)
-                                       .Select(s => s.SaleDate.Date) // only date part
-                                       .FirstOrDefault();
+                .OrderByDescending(s => s.SaleDate)
+                .Select(s => s.SaleDate.Date)
+                .FirstOrDefault();
 
             if (lastSaleDate == default)
                 return NotFound("No sales found.");
 
-            // Step 2: Get all sales on that date
             var sales = _context.Sales
-                                .Include(s => s.Payment)
-                                .Include(s => s.SaleItems)
-                                .Where(s => s.SaleDate.Date == lastSaleDate)
-                                .ToList();
+                .Include(s => s.Payment)
+                .Include(s => s.SaleItems)
+                .Where(s => s.SaleDate.Date == lastSaleDate)
+                .ToList();
 
-            // Optional: Map to view models
             var vmList = sales.Select(sale => new SaleReceiptViewModel
             {
                 SaleId = sale.Id,
@@ -1361,17 +1301,16 @@ namespace GSoftPosNew.Controllers
                 Total = sale.Total,
                 CustomerId = sale.CustomerId,
                 CustomerName = _context.Customers
-                                       .Where(c => c.Id == sale.CustomerId)
-                                       .Select(c => c.CustomerName)
-                                       .FirstOrDefault() ?? "Walk-in Customer",
+                    .Where(c => c.Id == sale.CustomerId)
+                    .Select(c => c.CustomerName)
+                    .FirstOrDefault() ?? "Walk-in Customer",
                 CustomerPhone = _context.Customers
-                                        .Where(c => c.Id == sale.CustomerId)
-                                        .Select(c => c.ContactNumber)
-                                        .FirstOrDefault(),
+                    .Where(c => c.Id == sale.CustomerId)
+                    .Select(c => c.ContactNumber)
+                    .FirstOrDefault(),
                 PaymentMethod = sale.Payment?.PaymentMethod ?? "Cash",
                 PaidAmount = sale.Payment?.Amount ?? sale.Total,
                 Change = (sale.Payment?.Amount ?? sale.Total) - sale.Total,
-
                 Items = (from si in _context.SaleItems
                          join i in _context.Items on si.ItemId equals i.Id
                          where si.SaleId == sale.Id
@@ -1380,34 +1319,38 @@ namespace GSoftPosNew.Controllers
                              SrNo = 0,
                              ItemName = i.ItemName,
                              UnitPrice = si.UnitPrice,
-                             Quantity = si.Quantity,
+                             Quantity = si.Quantity,   // SaleItemReceiptVM.Quantity = decimal
                              LineTotal = si.LineTotal
                          }).ToList()
             }).ToList();
 
-            // assign SrNo for each sale's items
             foreach (var vm in vmList)
             {
                 for (int i = 0; i < vm.Items.Count; i++)
                     vm.Items[i].SrNo = i + 1;
             }
 
-            return View(vmList); // send list of sales for the last date
+            return View(vmList);
         }
-
 
         public IActionResult KOTReceipt(int id)
         {
             var sale = _context.Sales
-                               .Include(s => s.Payment)
-                               .Include(s => s.SaleItems)
-                               .FirstOrDefault(s => s.Id == id);
+                .Include(s => s.Payment)
+                .Include(s => s.SaleItems)
+                .FirstOrDefault(s => s.Id == id);
 
-            ViewBag.Setting = _context.ShopSettings.OrderByDescending(s => s.Id).FirstOrDefault() ?? new ShopSetting();
+            ViewBag.Setting = _context.ShopSettings
+                .OrderByDescending(s => s.Id)
+                .FirstOrDefault() ?? new ShopSetting();
 
             if (sale == null)
                 return NotFound();
-            ViewBag.Balance = _context.Customers.Where(c => c.Id == sale.CustomerId).Select(c => c.OpeningBalance).FirstOrDefault();
+
+            ViewBag.Balance = _context.Customers
+                .Where(c => c.Id == sale.CustomerId)
+                .Select(c => c.OpeningBalance)
+                .FirstOrDefault();
 
             var vm = new SaleReceiptViewModel
             {
@@ -1421,24 +1364,20 @@ namespace GSoftPosNew.Controllers
                 Tax = sale.Tax,
                 Discount = sale.Discount,
                 Total = sale.Total,
-
-                // client-side fetching
                 CustomerId = sale.CustomerId,
                 CustomerName = _context.Customers
-                                       .AsEnumerable()
-                                       .Where(c => c.Id == sale.CustomerId)
-                                       .Select(c => c.CustomerName)
-                                       .FirstOrDefault() ?? "Walk-in Customer",
+                    .AsEnumerable()
+                    .Where(c => c.Id == sale.CustomerId)
+                    .Select(c => c.CustomerName)
+                    .FirstOrDefault() ?? "Walk-in Customer",
                 CustomerPhone = _context.Customers
-                                        .AsEnumerable()
-                                        .Where(c => c.Id == sale.CustomerId)
-                                        .Select(c => c.ContactNumber)
-                                        .FirstOrDefault(),
-
+                    .AsEnumerable()
+                    .Where(c => c.Id == sale.CustomerId)
+                    .Select(c => c.ContactNumber)
+                    .FirstOrDefault(),
                 PaymentMethod = sale.Payment?.PaymentMethod ?? "Cash",
                 PaidAmount = sale.Payment?.Amount ?? sale.Total,
                 Change = (sale.Payment?.Amount ?? sale.Total) - sale.Total,
-
                 Items = (from si in _context.SaleItems
                          join i in _context.Items on si.ItemId equals i.Id
                          where si.SaleId == sale.Id
@@ -1447,12 +1386,11 @@ namespace GSoftPosNew.Controllers
                              SrNo = 0,
                              ItemName = i.ItemName,
                              UnitPrice = si.UnitPrice,
-                             Quantity = si.Quantity,
+                             Quantity = si.Quantity,   // SaleItemReceiptVM.Quantity = decimal
                              LineTotal = si.LineTotal
                          }).ToList()
             };
 
-            // assign SrNo
             for (int i = 0; i < vm.Items.Count; i++)
             {
                 vm.Items[i].SrNo = i + 1;
@@ -1460,7 +1398,6 @@ namespace GSoftPosNew.Controllers
 
             return View(vm);
         }
-
 
         private string GenerateInvoiceNumber()
         {
@@ -1471,25 +1408,16 @@ namespace GSoftPosNew.Controllers
         [HttpGet]
         public IActionResult GetProductsJson()
         {
-            // Maan ke chaliye aapke DbContext mein Products DbSet hai:
-            // var list = _context.Products.Select(p => new {
-            //     id = p.Id,
-            //     name = p.Name,
-            //     price = p.SalePrice,
-            //     imageUrl = string.IsNullOrEmpty(p.ImagePath) ? "/images/default.png" : p.ImagePath
-            // }).ToList();
-            // return Json(list);
-
-            // Agar abhi Products table nahi hai, to dummy data return karo:
-            var dummy = new[] {
+            var dummy = new[]
+            {
                 new { id = 1, name = "Jeans", price = 35.00m, imageUrl = "/images/products/jeans.jpg" },
                 new { id = 2, name = "T-Shirt", price = 15.00m, imageUrl = "/images/products/tshirt.jpg" },
                 new { id = 3, name = "Sunglasses", price = 199.00m, imageUrl = "/images/products/sunglasses.jpg" },
                 new { id = 4, name = "Watch", price = 350.00m, imageUrl = "/images/products/watch.jpg" },
-                // add more dummy items or fetch real once DB ready
             };
             return Json(dummy);
         }
+
         [HttpGet]
         public IActionResult SearchItems(string term)
         {
@@ -1516,16 +1444,21 @@ namespace GSoftPosNew.Controllers
         public IActionResult Details(int id)
         {
             var sale = _context.Sales
-                               .Include(s => s.Payment)
-                               .Include(s => s.SaleItems)
-                               .Include(s => s.Payment)
-                               .FirstOrDefault(s => s.Id == id);
+                .Include(s => s.Payment)
+                .Include(s => s.SaleItems)
+                .FirstOrDefault(s => s.Id == id);
 
-            ViewBag.Setting = _context.ShopSettings.OrderByDescending(s => s.Id).FirstOrDefault() ?? new ShopSetting();
+            ViewBag.Setting = _context.ShopSettings
+                .OrderByDescending(s => s.Id)
+                .FirstOrDefault() ?? new ShopSetting();
 
             if (sale == null)
                 return NotFound();
-            ViewBag.Balance = _context.Customers.Where(c => c.Id == sale.CustomerId).Select(c => c.OpeningBalance).FirstOrDefault();
+
+            ViewBag.Balance = _context.Customers
+                .Where(c => c.Id == sale.CustomerId)
+                .Select(c => c.OpeningBalance)
+                .FirstOrDefault();
 
             var vm = new SaleReceiptViewModel
             {
@@ -1537,24 +1470,20 @@ namespace GSoftPosNew.Controllers
                 Tax = sale.Tax,
                 Discount = sale.Discount,
                 Total = sale.Total,
-
-                // client-side fetching
                 CustomerId = sale.CustomerId,
                 CustomerName = _context.Customers
-                                       .AsEnumerable()
-                                       .Where(c => c.Id == sale.CustomerId)
-                                       .Select(c => c.CustomerName)
-                                       .FirstOrDefault() ?? "Walk-in Customer",
+                    .AsEnumerable()
+                    .Where(c => c.Id == sale.CustomerId)
+                    .Select(c => c.CustomerName)
+                    .FirstOrDefault() ?? "Walk-in Customer",
                 CustomerPhone = _context.Customers
-                                        .AsEnumerable()
-                                        .Where(c => c.Id == sale.CustomerId)
-                                        .Select(c => c.ContactNumber)
-                                        .FirstOrDefault(),
-
+                    .AsEnumerable()
+                    .Where(c => c.Id == sale.CustomerId)
+                    .Select(c => c.ContactNumber)
+                    .FirstOrDefault(),
                 PaymentMethod = sale.Payment?.PaymentMethod ?? "Cash",
                 PaidAmount = sale.Payment?.Amount ?? sale.Total,
                 Change = (sale.Payment?.Amount ?? sale.Total) - sale.Total,
-
                 Items = (from si in _context.SaleItems
                          join i in _context.Items on si.ItemId equals i.Id
                          where si.SaleId == sale.Id
@@ -1563,16 +1492,16 @@ namespace GSoftPosNew.Controllers
                              SrNo = 0,
                              ItemName = i.ItemName,
                              UnitPrice = si.UnitPrice,
-                             Quantity = si.Quantity,
+                             Quantity = si.Quantity,    // SaleItemReceiptVM.Quantity = decimal
                              LineTotal = si.LineTotal
                          }).ToList()
             };
 
-            // assign SrNo
             for (int i = 0; i < vm.Items.Count; i++)
             {
                 vm.Items[i].SrNo = i + 1;
             }
+
             return View(vm);
         }
 
@@ -1580,17 +1509,17 @@ namespace GSoftPosNew.Controllers
         public IActionResult GetFloorsWithTables()
         {
             var floors = _context.Locations
-                .Select(loc => new 
+                .Select(loc => new
                 {
                     id = loc.Id,
                     name = loc.Name,
                     totalTables = loc.Tables.Count(),
-                    tables = loc.Tables.Select(t => new 
+                    tables = loc.Tables.Select(t => new
                     {
                         id = t.Id,
                         name = t.TableName ?? t.TableCode,
                         capacity = t.Capacity ?? 0,
-                        status = t.Status   
+                        status = t.Status
                     }).ToList()
                 })
                 .ToList();
@@ -1601,17 +1530,15 @@ namespace GSoftPosNew.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
-            // ✅ Check if current user is Admin
             if (!User.IsInRole("Admin"))
             {
-                // Return a JSON result (handled by JS SweetAlert)
                 return Json(new { success = false, message = "Only Admin users can delete sales." });
             }
 
             var sale = _context.Sales
-                               .Include(s => s.Payment)
-                               .Include(s => s.SaleItems)
-                               .FirstOrDefault(s => s.Id == id);
+                .Include(s => s.Payment)
+                .Include(s => s.SaleItems)
+                .FirstOrDefault(s => s.Id == id);
 
             if (sale == null)
                 return Json(new { success = false, message = "Sale not found." });
@@ -1656,6 +1583,5 @@ namespace GSoftPosNew.Controllers
 
             return Json(new { success = true, message = "Sale deleted successfully." });
         }
-
     }
 }

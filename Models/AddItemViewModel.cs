@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using GSoftPosNew.ViewModels;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Collections.Generic;
 
 namespace GSoftPosNew.Models
@@ -17,5 +18,7 @@ namespace GSoftPosNew.Models
 
         // Existing items to display in table below form
         public List<ItemModel> ExistingItems { get; set; } = new List<ItemModel>();
+
+        public List<RecipeIngredientVM> RecipeIngredients { get; set; } = new();
     }
 }

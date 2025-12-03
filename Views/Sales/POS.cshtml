@@ -1228,17 +1228,17 @@
 
     function updateRowTotal(row){
       const p=parseFloat(row.querySelector('.price-cell').textContent.replace('₨',''))||0;
-      const q=parseInt(row.querySelector('.qty-input').value)||0;
+      const q=row.querySelector('.qty-input').value||0;
       row.querySelector('td:nth-child(7)').textContent = `₨${(p*q).toFixed(2)}`;
     }
     function qtyInputChanged(input){
-      if(input.value<1) input.value=1;
+      // if(input.value<1) input.value=1;
       const item=JSON.parse(input.dataset.item);
       const price=parseFloat(input.closest('tr').querySelector('.price-cell').textContent.replace('₨',''))||0;
-      document.getElementById(`salePrice-${item.ItemCode}`).textContent = `₨${(price * parseInt(input.value)).toFixed(2)}`;
+      document.getElementById(`salePrice-${item.ItemCode}`).textContent = `₨${(price * input.value).toFixed(2)}`;
       recalculateTotals();
     }
-    function changeQty(btn,d){ const inp=btn.parentNode.querySelector('.qty-input'); let v=parseInt(inp.value)||1; v=Math.max(1,v+d); inp.value=v; qtyInputChanged(inp); }
+    function changeQty(btn,d){ const inp=btn.parentNode.querySelector('.qty-input'); let v=inp.value||1; v=Math.max(1,v+d); inp.value=v; qtyInputChanged(inp); }
     function deleteRow(btn){
       btn.closest('tr').remove();
       const tb=document.querySelector('#salesTable tbody');
@@ -1267,7 +1267,7 @@
       let subtotal=0, itemCount=0;
       rows.forEach(r=>{
         const p=parseFloat(r.querySelector('.price-cell').textContent.replace('₨',''))||0;
-        const q=parseInt(r.querySelector('.qty-input').value)||0;
+        const q=r.querySelector('.qty-input').value||0;
         subtotal+=p*q; itemCount+=q;
       });
       const discP=Math.max(parseFloat(document.getElementById('invoiceDiscountPercent')?.value||0),0);

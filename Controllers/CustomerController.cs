@@ -298,7 +298,7 @@ namespace GSoftPosNew.Controllers
                 if (!vanStocks.Any())
                     continue; // no stock found for this item
 
-                int qtyToReduce = saleItem.Quantity;
+                decimal qtyToReduce = saleItem.Quantity;
 
                 foreach (var stock in vanStocks)
                 {

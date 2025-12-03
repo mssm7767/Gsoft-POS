@@ -144,9 +144,22 @@
                                 <i class="fa fa-balance-scale"></i> Units
                             </a>
                         </li>
+
+                        <!-- 🔹 NEW MENU ITEM: Ad Category/Ingredient -->
+                        <li>
+                            <a asp-controller="Ingredient" asp-action="Index">
+                                <i class="fa fa-bowl-food"></i> Ingredient Stock
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-controller="Ingredient" asp-action="Setup">
+                                <i class="fa fa-bowl-food"></i> Ad Category / Ingredient
+                            </a>
+                        </li>
                     </ul>
                 </li>
             }
+
             <!-- Purchase Submenu -->
             @if (permissions.TryGetValue("Purchase", out var canAccessPurchase) && canAccessPurchase)
             {
@@ -166,6 +179,7 @@
                     <ul class="submenu">
                         <li><a asp-controller="Purchase" asp-action="Create"><i class="fa fa-plus-circle"></i> New Purchase</a></li>
                         <li><a asp-controller="Purchase" asp-action="Index"><i class="fa fa-list"></i> Purchase List</a></li>
+                        <li><a asp-controller="Purchase" asp-action="IngredientIndex"><i class="fa fa-list"></i> Ingredient Purchase List</a></li>
                     </ul>
                 </li>
             }

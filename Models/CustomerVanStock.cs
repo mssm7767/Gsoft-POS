@@ -5,7 +5,7 @@
         public int Id { get; set; }
         public int CustomerId { get; set; }
         public int ItemId { get; set; }
-        public int Quantity { get; set; }
+        public decimal Quantity { get; set; }
         public DateTime PurchasedDate { get; set; } = DateTime.Now;
 
         public ItemModel Item { get; set; }

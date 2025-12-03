@@ -35,7 +35,7 @@
         public int SrNo { get; set; }
         public string ItemName { get; set; }
         public decimal UnitPrice { get; set; }
-        public int Quantity { get; set; }
+        public decimal Quantity { get; set; }
         public decimal LineTotal { get; set; }
     }
 

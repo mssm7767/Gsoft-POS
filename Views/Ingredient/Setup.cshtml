@@ -1,0 +1,667 @@
+﻿@model GSoftPosNew.ViewModels.IngredientSetupViewModel
+@using GSoftPosNew.Models
+
+@{
+    ViewData["Title"] = "Ingredients Setup";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var categories = Model.Categories ?? new List<IngredientCategory>();
+    var ingredients = Model.Ingredients ?? new List<Ingredient>();
+    // Units list from ViewBag (Unit table se)
+    var unitList = ViewBag.UnitList as List<Unit> ?? new List<Unit>();
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+<style>
+    body {
+        background: radial-gradient(circle at top, #eef2ff 0%, #f5f7fb 40%, #ffffff 100%);
+    }
+
+    .page-shell {
+        max-width: 1180px;
+        margin: 18px auto 40px auto;
+        padding: 0 12px;
+    }
+
+    .top-bar {
+        background: linear-gradient(90deg, #0ea5e9 0%, #6366f1 50%, #22c55e 100%);
+        color: #fff;
+        padding: 10px 18px;
+        border-radius: 18px;
+        box-shadow: 0 10px 28px rgba(15,23,42,.18);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+    }
+
+        .top-bar h4 {
+            margin: 0;
+            font-weight: 700;
+            letter-spacing: .04em;
+        }
+
+        .top-bar small {
+            opacity: .9;
+        }
+
+    .grid-two {
+        display: grid;
+        grid-template-columns: 1.1fr 1.4fr;
+        gap: 18px;
+        align-items: flex-start;
+    }
+
+    .card-soft {
+        background: #ffffff;
+        border-radius: 18px;
+        box-shadow: 0 8px 26px rgba(15,23,42,0.12);
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+    }
+
+    .card-head {
+        padding: 10px 16px;
+        background: linear-gradient(90deg, #e0f2fe 0%, #dbeafe 40%, #dcfce7 100%);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .card-head-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 700;
+        color: #0f172a;
+        letter-spacing: .03em;
+    }
+
+    .card-body {
+        padding: 14px 16px 16px 16px;
+    }
+
+    .row-g {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0,1fr));
+        gap: 10px 14px;
+    }
+
+    .form-label {
+        font-size: .88rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 4px;
+    }
+
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 1px solid #cbd5f5;
+        font-size: .9rem;
+        padding: 6px 10px;
+        background: #f9fbff;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37,99,235,.25);
+            background: #ffffff;
+        }
+
+    /* Icon + input combo (for units, etc.) */
+    .input-ico {
+        position: relative;
+        display: flex;
+        align-items: center;
+        background: #F0FFFF;
+        border-radius: 10px;
+        border: 1px solid #4f9eea;
+        min-height: 34px;
+        padding-left: 30px;
+    }
+
+        .input-ico > i {
+            position: absolute;
+            left: 9px;
+            font-size: .9rem;
+            color: #1d4ed8;
+            opacity: .9;
+        }
+
+    .type-input {
+        border: none;
+        outline: none;
+        background: transparent;
+        width: 100%;
+        height: 32px;
+        font-size: .9rem;
+        padding: 4px 8px 4px 2px;
+    }
+
+        .type-input:focus {
+            outline: none;
+        }
+
+    .btn-line {
+        border-radius: 999px;
+        padding: 6px 18px;
+        border: none;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+    }
+
+    .btn-save {
+        background: linear-gradient(90deg, #16a34a 0%, #22c55e 100%);
+        color: #fff;
+        box-shadow: 0 5px 16px rgba(22,163,74,.45);
+    }
+
+    .btn-clear {
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #facc15;
+    }
+
+    .btn-save:hover {
+        filter: brightness(.96);
+    }
+
+    .btn-clear:hover {
+        background: #fde68a;
+    }
+
+    .btn-row-center {
+        display: flex;
+        justify-content: center;
+        gap: 14px;
+        margin-top: 10px;
+    }
+
+    .table-wrap {
+        margin-top: 10px;
+        border-radius: 14px;
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+    }
+
+    table.t-soft {
+        width: 100%;
+        border-collapse: collapse;
+        background: #ffffff;
+        font-size: .86rem;
+    }
+
+    .t-soft thead {
+        background: #f1f5f9;
+    }
+
+    .t-soft th, .t-soft td {
+        padding: 6px 8px;
+        border-bottom: 1px solid #e5e7eb;
+        vertical-align: middle;
+    }
+
+    .t-soft tbody tr:hover {
+        background: #eff6ff;
+        cursor: pointer;
+    }
+
+    .badge-id {
+        display: inline-block;
+        min-width: 26px;
+        padding: 2px 6px;
+        border-radius: 999px;
+        background: #e0f2fe;
+        color: #1d4ed8;
+        font-weight: 700;
+        text-align: center;
+        font-size: .78rem;
+    }
+
+    .num {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .btn-del-row {
+        border-radius: 999px;
+        border: 1px solid #fecaca;
+        background: #fee2e2;
+        color: #b91c1c;
+        width: 32px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .78rem;
+    }
+
+        .btn-del-row:hover {
+            background: #fecaca;
+        }
+
+    .unit-inline {
+        font-size: .8rem;
+        color: #4b5563;
+    }
+
+    .toast-success {
+        position: fixed;
+        top: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(90deg,#16a34a,#22c55e);
+        color: #ffffff;
+        padding: 8px 20px;
+        border-radius: 999px;
+        font-size: .88rem;
+        font-weight: 600;
+        box-shadow: 0 12px 30px rgba(21,128,61,.6);
+        z-index: 9999;
+        opacity: 0;
+        animation: toastFade 1.2s ease-in-out forwards;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    @@keyframes toastFade {
+        0% {
+            opacity: 0;
+            transform: translate(-50%, -14px);
+        }
+
+        15% {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+
+        80% {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+
+        100% {
+            opacity: 0;
+            transform: translate(-50%, -14px);
+        }
+    }
+
+    @@media (max-width: 900px) {
+        .grid-two {
+            grid-template-columns: minmax(0,1fr);
+        }
+    }
+</style>
+
+<div class="page-shell">
+
+    <div class="top-bar">
+        <div>
+            <h4><i class="fa-solid fa-bowl-food me-2"></i>Ingredients Setup</h4>
+            <small>Left: Category • Right: Raw Material / Ingredients</small>
+        </div>
+        <div class="d-none d-md-block">
+            <small>
+                <i class="fa-regular fa-clock me-1"></i>@DateTime.Now.ToShortTimeString()
+                • @DateTime.Now.ToShortDateString()
+            </small>
+        </div>
+    </div>
+
+    @if (TempData["ToastMessage"] != null)
+    {
+        <div class="toast-success">
+            <i class="fa-solid fa-circle-check"></i>
+            @TempData["ToastMessage"]
+        </div>
+    }
+
+    <div class="grid-two">
+
+        <!-- =============== LEFT: CATEGORY WINDOW =============== -->
+        <div class="card-soft">
+            <div class="card-head">
+                <div class="card-head-title">
+                    <i class="fa-solid fa-layer-group text-primary"></i>
+                    <span>Ingredient Category</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <form asp-action="SaveCategory" asp-controller="Ingredient" method="post" id="catForm">
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden" name="Id" id="catId" />
+
+                    <div class="row-g">
+                        <div>
+                            <label class="form-label">Category Name</label>
+                            <input type="text" name="Name" id="catName" class="form-control"
+                                   placeholder="e.g. Dairy, Spices, Sauces..." />
+                        </div>
+                        <div>
+                            <label class="form-label">Description</label>
+                            <input type="text" name="Description" id="catDesc" class="form-control"
+                                   placeholder="Short note (optional)" />
+                        </div>
+                    </div>
+
+                    <div class="btn-row-center">
+                        <button type="submit" class="btn-line btn-save">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Category
+                        </button>
+                        <button type="button" class="btn-line btn-clear" id="btnCatClear">
+                            <i class="fa-solid fa-eraser"></i> Clear
+                        </button>
+                    </div>
+                </form>
+
+                <div class="table-wrap mt-2">
+                    <table class="t-soft" id="catTable">
+                        <thead>
+                            <tr>
+                                <th style="width:55px;">ID</th>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th style="width:70px; text-align:center;">Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (categories.Any())
+                            {
+                                foreach (var c in categories)
+                                {
+                                    <tr data-id="@c.Id" data-name="@c.Name" data-desc="@c.Description">
+                                        <td><span class="badge-id">@c.Id</span></td>
+                                        <td>@c.Name</td>
+                                        <td>@c.Description</td>
+                                        <td style="text-align:center;">
+                                            <form asp-action="DeleteCategory"
+                                                  asp-controller="Ingredient"
+                                                  method="post"
+                                                  style="display:inline;">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@c.Id" />
+                                                <button type="submit" class="btn-del-row"
+                                                        onclick="return confirm('Delete this category?');">
+                                                    <i class="fa-solid fa-trash-can"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-muted text-center py-2">No categories yet</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- =============== RIGHT: INGREDIENT WINDOW =============== -->
+        <div class="card-soft">
+            <div class="card-head">
+                <div class="card-head-title">
+                    <i class="fa-solid fa-jar-wheat text-success"></i>
+                    <span>Raw Material / Ingredients</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <form asp-action="SaveIngredient" asp-controller="Ingredient" method="post" id="ingForm">
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden" name="Id" id="ingId" />
+
+                    <div class="row-g">
+                        <div>
+                            <label class="form-label">Name</label>
+                            <input type="text" name="Name" id="ingName" class="form-control"
+                                   placeholder="e.g. Mozzarella Cheese" />
+                        </div>
+                        <div>
+                            <label class="form-label">Code</label>
+                            <input type="text" name="Code" id="ingCode" class="form-control"
+                                   placeholder="Internal code (optional)" />
+                        </div>
+                        <div>
+                            <label class="form-label">Category</label>
+                            <select name="CategoryId" id="ingCategoryId" class="form-select">
+                                <option value="">Select...</option>
+                                @foreach (var c in categories)
+                                {
+                                    <option value="@c.Id">@c.Name</option>
+                                }
+                            </select>
+                        </div>
+                       @*  <div>
+                            <label class="form-label">Purchase Qty</label>
+                            <input type="number" step="0.01" name="PurchaseQty" id="ingPQty"
+                                   class="form-control" placeholder="e.g. 1, 5, 10" />
+                        </div> *@
+
+                        <!-- Purchase Unit with Unit list suggest -->
+                        <div>
+                            <label class="form-label">Purchase Unit</label>
+                            <div class="input-ico">
+                                <i class="fa fa-balance-scale"></i>
+                                <input name="PurchaseUnit"
+                                       id="ingPUnit"
+                                       class="type-input"
+                                       list="unitList"
+                                       placeholder="kg, ltr, pcs..." />
+                            </div>
+                        </div>
+
+                       @*  <div>
+                            <label class="form-label">Consumption Qty</label>
+                            <input type="number" step="0.01" name="ConsumptionQty" id="ingCQty"
+                                   class="form-control" placeholder="e.g. 10 (gram/ml)" />
+                        </div> *@
+
+                        @* <!-- Consumption Unit with same Unit list suggest -->
+                        <div>
+                            <label class="form-label">Consumption Unit</label>
+                            <div class="input-ico">
+                                <i class="fa fa-utensils"></i>
+                                <input name="ConsumptionUnit"
+                                       id="ingCUnit"
+                                       class="type-input"
+                                       list="unitList"
+                                       placeholder="g, ml, pcs..." />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="form-label">Purchase Price (PKR)</label>
+                            <input type="number" step="0.01" name="PurchasePrice" id="ingPPrice"
+                                   class="form-control" placeholder="Total price" />
+                        </div>
+                        <div>
+                            <label class="form-label">Cost Per Unit (auto)</label>
+                            <input type="number" step="0.0001" name="CostPerUnit" id="ingCPU"
+                                   class="form-control" readonly />
+                        </div> *@
+                    </div>
+
+                    <!-- Unit suggest list (kg, pcs, ltr... from Unit table) -->
+                    <datalist id="unitList">
+                        @foreach (var u in unitList)
+                        {
+                            <option value="@u.Name"></option>
+                        }
+                    </datalist>
+
+                    <div class="btn-row-center">
+                        <button type="submit" class="btn-line btn-save">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Ingredient
+                        </button>
+                        <button type="button" class="btn-line btn-clear" id="btnIngClear">
+                            <i class="fa-solid fa-eraser"></i> Clear
+                        </button>
+                    </div>
+                </form>
+
+                <div class="table-wrap mt-2">
+                    <table class="t-soft" id="ingTable">
+                        <thead>
+                            <tr>
+                                <th style="width:55px;">ID</th>
+                                <th>Name</th>
+                                <th>Code</th>
+                                <th>Category</th>
+                                <th>Unit</th>
+                                <th class="num">QTY</th>
+                                <th class="num">Cost / Unit</th>
+                                <th style="width:70px; text-align:center;">Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (ingredients.Any())
+                            {
+                                foreach (var g in ingredients)
+                                {
+                                    var purchaseTxt = g.PurchasePrice.HasValue
+                                    ? g.PurchasePrice.Value.ToString("N2")
+                                    : "";
+                                    var cpuTxt = g.CostPerUnit.HasValue
+                                    ? g.CostPerUnit.Value.ToString("N4")
+                                    : "";
+                                    var unitText = !string.IsNullOrWhiteSpace(g.ConsumptionUnit)
+                                    ? g.ConsumptionUnit
+                                    : g.PurchaseUnit;
+
+                                    <tr data-id="@g.Id"
+                                        data-name="@g.Name"
+                                        data-code="@g.Code"
+                                        data-cat="@g.CategoryId"
+                                        data-pu="@g.PurchaseUnit"
+                                        data-cu="@g.ConsumptionUnit"
+                                        data-pqty="@(g.PurchaseQty ?? 0)"
+                                        data-cqty="@(g.ConsumptionQty ?? 0)"
+                                        data-pprice="@(g.PurchasePrice ?? 0)"
+                                        data-cpu="@(g.CostPerUnit ?? 0)">
+                                        <td><span class="badge-id">@g.Id</span></td>
+                                        <td>@g.Name</td>
+                                        <td>@g.Code</td>
+                                        <td>@(g.Category?.Name ?? "")</td>
+                                        <td>@unitText</td>
+                                        <td class="num">@g.PurchaseQty</td>
+                                        <td class="num">@cpuTxt</td>
+                                        <td style="text-align:center;">
+                                            <form asp-action="DeleteIngredient"
+                                                  asp-controller="Ingredient"
+                                                  method="post"
+                                                  style="display:inline;">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@g.Id" />
+                                                <button type="submit" class="btn-del-row"
+                                                        onclick="return confirm('Delete this ingredient?');">
+                                                    <i class="fa-solid fa-trash-can"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="8" class="text-muted text-center py-2">No ingredients yet</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // ================= CATEGORY ROW CLICK -> EDIT =================
+        document.querySelectorAll('#catTable tbody tr[data-id]').forEach(row => {
+            row.addEventListener('click', function (e) {
+                // agar delete button pe click hua to ignore
+                if (e.target.closest('form')) return;
+
+                const id = this.dataset.id;
+                const name = this.dataset.name || '';
+                const desc = this.dataset.desc || '';
+
+                document.getElementById('catId').value = id;
+                document.getElementById('catName').value = name;
+                document.getElementById('catDesc').value = desc;
+            });
+        });
+
+        document.getElementById('btnCatClear')?.addEventListener('click', () => {
+            document.getElementById('catId').value = '';
+            document.getElementById('catName').value = '';
+            document.getElementById('catDesc').value = '';
+        });
+
+        // ================= INGREDIENT ROW CLICK -> EDIT =================
+        document.querySelectorAll('#ingTable tbody tr[data-id]').forEach(row => {
+            row.addEventListener('click', function (e) {
+                if (e.target.closest('form')) return;
+
+                document.getElementById('ingId').value = this.dataset.id || '';
+                document.getElementById('ingName').value = this.dataset.name || '';
+                document.getElementById('ingCode').value = this.dataset.code || '';
+                document.getElementById('ingCategoryId').value = this.dataset.cat || '';
+
+                document.getElementById('ingPQty').value = this.dataset.pqty || '';
+                document.getElementById('ingPUnit').value = this.dataset.pu || '';
+                document.getElementById('ingCQty').value = this.dataset.cqty || '';
+                document.getElementById('ingCUnit').value = this.dataset.cu || '';
+                document.getElementById('ingPPrice').value = this.dataset.pprice || '';
+                document.getElementById('ingCPU').value = this.dataset.cpu || '';
+            });
+        });
+
+        document.getElementById('btnIngClear')?.addEventListener('click', () => {
+            ['ingId','ingName','ingCode','ingPQty','ingPUnit','ingCQty','ingCUnit','ingPPrice','ingCPU']
+                .forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = '';
+                });
+            const catSel = document.getElementById('ingCategoryId');
+            if (catSel) catSel.value = '';
+        });
+
+        // ================= COST PER UNIT CALC (FRONT END) ==============
+        function recalcCPU() {
+            const pQty = parseFloat(document.getElementById('ingPQty').value || '0');
+            const cQty = parseFloat(document.getElementById('ingCQty').value || '0');
+            const pPrice = parseFloat(document.getElementById('ingPPrice').value || '0');
+
+            if (pQty > 0 && cQty > 0 && pPrice > 0) {
+                const effectiveUnits = pQty / cQty;
+                if (effectiveUnits > 0) {
+                    const cpu = pPrice / effectiveUnits;
+                    document.getElementById('ingCPU').value = cpu.toFixed(4);
+                }
+            } else {
+                document.getElementById('ingCPU').value = '';
+            }
+        }
+
+        ['ingPQty', 'ingCQty', 'ingPPrice'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', recalcCPU);
+        });
+    </script>
+}

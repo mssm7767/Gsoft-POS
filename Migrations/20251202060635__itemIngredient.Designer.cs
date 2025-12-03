@@ -4,6 +4,7 @@ using GSoftPosNew.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GSoftPosNew.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251202060635__itemIngredient")]
+    partial class _itemIngredient
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -315,120 +318,6 @@ namespace GSoftPosNew.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("IngredientCategories");
-                });
-
-            modelBuilder.Entity("GSoftPosNew.Models.IngredientPurchase", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("BusinessLocation")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal>("DiscountAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("DiscountType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DocumentPath")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Notes")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("Paid")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("PayTerm")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PayTermUnit")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PurchaseType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ReferenceNo")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("Remaining")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("SupplierId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("TaxAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("TaxType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("TotalAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SupplierId");
-
-                    b.ToTable("IngredientPurchases");
-                });
-
-            modelBuilder.Entity("GSoftPosNew.Models.IngredientPurchaseItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("DiscountPercent")
-                        .HasColumnType("decimal(18,2)")
-                        .HasAnnotation("Relational:JsonPropertyName", "disPct");
-
-                    b.Property<int>("IngredientId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("IngredientPurchaseId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("LineTotal")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("PurchaseId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int")
-                        .HasAnnotation("Relational:JsonPropertyName", "qty");
-
-                    b.Property<decimal>("TaxPercent")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("UnitCost")
-                        .HasColumnType("decimal(18,2)")
-                        .HasAnnotation("Relational:JsonPropertyName", "mrp");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("IngredientPurchaseId");
-
-                    b.ToTable("IngredientPurchaseItems");
                 });
 
             modelBuilder.Entity("GSoftPosNew.Models.Item", b =>
@@ -740,9 +629,6 @@ namespace GSoftPosNew.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PayTermUnit")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PurchaseSource")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PurchaseType")
@@ -1358,24 +1244,6 @@ namespace GSoftPosNew.Migrations
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("GSoftPosNew.Models.IngredientPurchase", b =>
-                {
-                    b.HasOne("GSoftPosNew.Models.Supplier", "Supplier")
-                        .WithMany()
-                        .HasForeignKey("SupplierId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Supplier");
-                });
-
-            modelBuilder.Entity("GSoftPosNew.Models.IngredientPurchaseItem", b =>
-                {
-                    b.HasOne("GSoftPosNew.Models.IngredientPurchase", null)
-                        .WithMany("Items")
-                        .HasForeignKey("IngredientPurchaseId");
-                });
-
             modelBuilder.Entity("GSoftPosNew.Models.ItemBarcodeModel", b =>
                 {
                     b.HasOne("GSoftPosNew.Models.ItemModel", "Item")
@@ -1533,11 +1401,6 @@ namespace GSoftPosNew.Migrations
             modelBuilder.Entity("GSoftPosNew.Models.IngredientCategory", b =>
                 {
                     b.Navigation("Ingredients");
-                });
-
-            modelBuilder.Entity("GSoftPosNew.Models.IngredientPurchase", b =>
-                {
-                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("GSoftPosNew.Models.ItemModel", b =>

@@ -26,6 +26,14 @@ namespace GSoftPosNew.Controllers
 
             return View(purchases);
         }
+        public IActionResult IngredientIndex()
+        {
+            var purchases = _context.IngredientPurchases.Include(p => p.Supplier)
+                .OrderByDescending(p => p.Id)
+                .ToList();
+
+            return View(purchases);
+        }
 
         // GET: /Purchase/Create
         [HttpGet]
@@ -40,144 +48,263 @@ namespace GSoftPosNew.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Create(Purchase model, IFormFile DocumentFile)
         {
-            // Supplier & Country dropdowns
-            ViewBag.SupplierList = GetSupplierList();
-            ViewBag.CountryList = GetCountryList();
-            ViewBag.InvoiceNo = "";
-            ViewBag.PreviousBalance = "0.00";
-
-            // Ensure GenericName matches ItemName
-            if (model.Item != null)
-                model.Item.GenericName = model.Item.ItemName;
-
-            // Handle file upload
-            if (DocumentFile != null && DocumentFile.Length > 0)
+            if (model.PurchaseSource == "Ingredient")
             {
-                var uploads = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/purchase");
-                Directory.CreateDirectory(uploads);
-                var fileName = $"{Guid.NewGuid()}_{DocumentFile.FileName}";
-                var filePath = Path.Combine(uploads, fileName);
-                using var stream = new FileStream(filePath, FileMode.Create);
-                DocumentFile.CopyTo(stream);
-                model.DocumentPath = $"/uploads/purchase/{fileName}";
-            }
-
-            // Handle items from JSON
-            if (!string.IsNullOrWhiteSpace(model.ItemsJson))
-            {
-                model.Items = JsonSerializer.Deserialize<List<PurchaseItem>>(model.ItemsJson,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                if (model.Items != null && model.Items.Any())
+                IngredientPurchase ing = new IngredientPurchase
                 {
-                    foreach (var item in model.Items)
+                    SupplierId = model.SupplierId,
+                    Supplier = model.Supplier,
+                    ReferenceNo = model.ReferenceNo,
+                    Date = model.Date,
+                    Status = model.Status,
+                    DiscountType = model.DiscountType,
+                    DiscountAmount = model.DiscountAmount,
+                    TaxType = model.TaxType,
+                    TaxAmount = model.TaxAmount,
+                    Notes = model.Notes,
+                    PurchaseType = model.PurchaseType,
+                    TotalAmount = model.TotalAmount,
+                    Paid = model.Paid,
+                    Remaining = model.Remaining,
+                    BusinessLocation = model.BusinessLocation,
+                    PayTerm = model.PayTerm,
+                    PayTermUnit = model.PayTermUnit,
+                    DocumentPath = model.DocumentPath
+                };
+
+                // ------------------------------
+                // MAP LINE ITEMS (PurchaseItem → IngredientPurchaseItem)
+                // ------------------------------
+                ing.Items = model.Items.Select(i => new IngredientPurchaseItem
+                {
+                    IngredientId = i.ItemId,      // ItemId → IngredientId
+                    Quantity = i.Quantity,
+                    UnitCost = i.UnitCost,
+                    DiscountPercent = i.DiscountPercent,
+                    TaxPercent = i.TaxPercent,
+                    LineTotal = i.LineTotal
+                }).ToList();
+
+
+
+                // Supplier & Country dropdowns
+                ViewBag.SupplierList = GetSupplierList();
+                ViewBag.CountryList = GetCountryList();
+                ViewBag.InvoiceNo = "";
+                ViewBag.PreviousBalance = "0.00";
+
+                // Handle file upload
+                if (DocumentFile != null && DocumentFile.Length > 0)
+                {
+                    var uploads = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/purchase");
+                    Directory.CreateDirectory(uploads);
+                    var fileName = $"{Guid.NewGuid()}_{DocumentFile.FileName}";
+                    var filePath = Path.Combine(uploads, fileName);
+                    using var stream = new FileStream(filePath, FileMode.Create);
+                    DocumentFile.CopyTo(stream);
+                    model.DocumentPath = $"/uploads/purchase/{fileName}";
+                }
+
+                // Handle items from JSON
+                if (!string.IsNullOrWhiteSpace(model.ItemsJson))
+                {
+                    model.Items = JsonSerializer.Deserialize<List<PurchaseItem>>(model.ItemsJson,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    ing.Items = model.Items.Select(i => new IngredientPurchaseItem
                     {
-                        // Reset PK
-                        item.Id = 0;
+                        IngredientId = i.ItemId,      // ItemId → IngredientId
+                        Quantity = i.Quantity,
+                        ItemCode = i.ItemCode,
+                        IngredientName = i.ItemName,
+                        UnitCost = i.UnitCost,
+                        DiscountPercent = i.DiscountPercent,
+                        TaxPercent = i.TaxPercent,
+                        LineTotal = i.LineTotal
+                    }).ToList();
 
-                        var existingProduct = _context.Items.FirstOrDefault(p => p.ItemCode == item.ItemCode);
-
-                        if (existingProduct == null)
+                    if (ing.Items != null && ing.Items.Any())
+                    {
+                        foreach (var item in ing.Items)
                         {
-                            // New product case
-                            var newProduct = new Item
+                            // Reset PK
+                            item.Id = 0;
+
+                            var existingProduct = _context.Ingredients.FirstOrDefault(p => p.Code == item.ItemCode);
+                            if (model.PurchaseType == "Return")
                             {
-                                ItemName = item.ItemName,
-                                GenericName = item.ItemName,
-                                ItemCode = item.ItemCode,
-                            
-                                StockQuantity = item.Quantity
-                            };
-
-                            _context.Products.Add(newProduct);
-                            _context.SaveChanges(); // to get Id
-
-                            item.ItemId = newProduct.Id;
-                            item.UnitCost = newProduct.CostPrice;
-                        }
-                        else
-                        {
-                            if(model.PurchaseType == "Return")
-                            {
-                                // Existing product case → update stock & price
-                                existingProduct.PurchasePrice = item.UnitCost;   // update cost price if needed
-                                var q = existingProduct.Quantity - item.Quantity; // ✅ add to existing stock
-
-                                if (!string.IsNullOrEmpty(existingProduct.PackSize))
-                                {
-                                    int packSize;
-                                    if (int.TryParse(existingProduct.PackSize, out packSize))
-                                    {
-                                        existingProduct.Quantity = existingProduct.Quantity - (item.Quantity * packSize);
-                                    }
-                                    else
-                                    {
-                                        // fallback if PackSize is not a valid number
-                                        existingProduct.Quantity = q;
-                                    }
-                                }
-                                else
-                                {
-                                    existingProduct.Quantity = q;
-                                }
-
-
-                                _context.Items.Update(existingProduct);
-
-                                item.ItemId = existingProduct.Id;
-                                item.UnitCost = existingProduct.SalePrice;
+                                
                             }
                             else
                             {
                                 // Existing product case → update stock & price
-                                existingProduct.SalePrice = item.UnitCost;
-                                existingProduct.MarkupPercentage = item.DiscountPercent;
+                                existingProduct.CostPerUnit = item.UnitCost;
 
-                                // Calculate percentage deduction
-                                existingProduct.PurchasePrice = item.UnitCost - (item.UnitCost * (item.DiscountPercent / 100m));
+                                var q =  existingProduct.PurchaseQty ?? 0 +item.Quantity; 
 
-                                var q = existingProduct.Quantity + item.Quantity; // ✅ add to existing stock
 
-                                if (!string.IsNullOrEmpty(existingProduct.PackSize))
+                                    existingProduct.PurchaseQty = q;
+
+
+                                _context.Ingredients.Update(existingProduct);
+
+                                item.IngredientId = existingProduct.Id;
+                                item.UnitCost = existingProduct.CostPerUnit ?? 0.00m;
+                                item.LineTotal = item.UnitCost * item.Quantity;
+                            }
+                        }
+                    }
+                }
+
+
+                // Save purchase with items
+                _context.IngredientPurchases.Add(ing);
+                AddSupplierPayment(model);
+                _context.SaveChanges();
+
+                TempData["Message"] = "Purchase saved successfully!";
+                return RedirectToAction(nameof(Create));
+            }
+            else
+            {
+                // Supplier & Country dropdowns
+                ViewBag.SupplierList = GetSupplierList();
+                ViewBag.CountryList = GetCountryList();
+                ViewBag.InvoiceNo = "";
+                ViewBag.PreviousBalance = "0.00";
+
+                // Ensure GenericName matches ItemName
+                if (model.Item != null)
+                    model.Item.GenericName = model.Item.ItemName;
+
+                // Handle file upload
+                if (DocumentFile != null && DocumentFile.Length > 0)
+                {
+                    var uploads = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/purchase");
+                    Directory.CreateDirectory(uploads);
+                    var fileName = $"{Guid.NewGuid()}_{DocumentFile.FileName}";
+                    var filePath = Path.Combine(uploads, fileName);
+                    using var stream = new FileStream(filePath, FileMode.Create);
+                    DocumentFile.CopyTo(stream);
+                    model.DocumentPath = $"/uploads/purchase/{fileName}";
+                }
+
+                // Handle items from JSON
+                if (!string.IsNullOrWhiteSpace(model.ItemsJson))
+                {
+                    model.Items = JsonSerializer.Deserialize<List<PurchaseItem>>(model.ItemsJson,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    if (model.Items != null && model.Items.Any())
+                    {
+                        foreach (var item in model.Items)
+                        {
+                            // Reset PK
+                            item.Id = 0;
+
+                            var existingProduct = _context.Items.FirstOrDefault(p => p.ItemCode == item.ItemCode);
+
+                            if (existingProduct == null)
+                            {
+                                // New product case
+                                var newProduct = new Item
                                 {
-                                    int packSize;
-                                    if (int.TryParse(existingProduct.PackSize, out packSize))
+                                    ItemName = item.ItemName,
+                                    GenericName = item.ItemName,
+                                    ItemCode = item.ItemCode,
+
+                                    StockQuantity = item.Quantity
+                                };
+
+                                _context.Products.Add(newProduct);
+                                _context.SaveChanges(); // to get Id
+
+                                item.ItemId = newProduct.Id;
+                                item.UnitCost = newProduct.CostPrice;
+                            }
+                            else
+                            {
+                                if (model.PurchaseType == "Return")
+                                {
+                                    // Existing product case → update stock & price
+                                    existingProduct.PurchasePrice = item.UnitCost;   // update cost price if needed
+                                    var q = existingProduct.Quantity - item.Quantity; // ✅ add to existing stock
+
+                                    if (!string.IsNullOrEmpty(existingProduct.PackSize))
                                     {
-                                        existingProduct.Quantity = existingProduct.Quantity + (item.Quantity * packSize);
+                                        int packSize;
+                                        if (int.TryParse(existingProduct.PackSize, out packSize))
+                                        {
+                                            existingProduct.Quantity = existingProduct.Quantity - (item.Quantity * packSize);
+                                        }
+                                        else
+                                        {
+                                            // fallback if PackSize is not a valid number
+                                            existingProduct.Quantity = q;
+                                        }
                                     }
                                     else
                                     {
-                                        // fallback if PackSize is not a valid number
                                         existingProduct.Quantity = q;
                                     }
+
+
+                                    _context.Items.Update(existingProduct);
+
+                                    item.ItemId = existingProduct.Id;
+                                    item.UnitCost = existingProduct.SalePrice;
                                 }
                                 else
                                 {
-                                    existingProduct.Quantity = q;
+                                    // Existing product case → update stock & price
+                                    existingProduct.SalePrice = item.UnitCost;
+                                    existingProduct.MarkupPercentage = item.DiscountPercent;
+
+                                    // Calculate percentage deduction
+                                    existingProduct.PurchasePrice = item.UnitCost - (item.UnitCost * (item.DiscountPercent / 100m));
+
+                                    var q = existingProduct.Quantity + item.Quantity; // ✅ add to existing stock
+
+                                    if (!string.IsNullOrEmpty(existingProduct.PackSize))
+                                    {
+                                        int packSize;
+                                        if (int.TryParse(existingProduct.PackSize, out packSize))
+                                        {
+                                            existingProduct.Quantity = existingProduct.Quantity + (item.Quantity * packSize);
+                                        }
+                                        else
+                                        {
+                                            // fallback if PackSize is not a valid number
+                                            existingProduct.Quantity = q;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        existingProduct.Quantity = q;
+                                    }
+
+                                    _context.Items.Update(existingProduct);
+
+                                    item.ItemId = existingProduct.Id;
+                                    item.UnitCost = existingProduct.SalePrice;
+                                    item.LineTotal = existingProduct.PurchasePrice * item.Quantity;
                                 }
 
-                                _context.Items.Update(existingProduct);
-
-                                item.ItemId = existingProduct.Id;
-                                item.UnitCost = existingProduct.SalePrice;
-                                item.LineTotal = existingProduct.PurchasePrice * item.Quantity;
                             }
-                                
                         }
                     }
-
-
                 }
+
+
+                // Save purchase with items
+                _context.Purchases.Add(model);
+                AddSupplierPayment(model);
+                _context.SaveChanges();
+
+                TempData["Message"] = "Purchase saved successfully!";
+                return RedirectToAction(nameof(Create));
             }
-           
 
-            // Save purchase with items
-            _context.Purchases.Add(model);
-            AddSupplierPayment(model);
-            _context.SaveChanges();
-
-            TempData["Message"] = "Purchase saved successfully!";
-            return RedirectToAction(nameof(Create));
         }
 
 
@@ -187,9 +314,9 @@ namespace GSoftPosNew.Controllers
 
             var previousPayment = _context.SupplierPayments.Where(p => p.SupplierId == purchase.SupplierId).OrderByDescending(p => p.Id).Select(p => p.Remaining).FirstOrDefault();
 
-            if(purchase.PurchaseType == "Return")
+            if (purchase.PurchaseType == "Return")
             {
-                var remaining =  (previousPayment ?? 0) - purchase.Remaining;
+                var remaining = (previousPayment ?? 0) - purchase.Remaining;
                 var advance = 0m;
 
                 // If paid more than total, shift extra to Advance
@@ -260,7 +387,7 @@ namespace GSoftPosNew.Controllers
                 _context.SaveChanges();
             }
 
-            
+
         }
 
 
@@ -271,7 +398,7 @@ namespace GSoftPosNew.Controllers
         }
 
 
-        
+
 
         public async Task<IActionResult> Details(int id)
         {
@@ -285,6 +412,29 @@ namespace GSoftPosNew.Controllers
                 foreach (var pi in purchase.Items)
                 {
                     pi.Item = await _context.Items.FindAsync(pi.ItemId);
+                }
+            }
+
+            if (purchase == null)
+            {
+                return NotFound();
+            }
+
+            return View(purchase); // ✅ Pass a single Purchase
+        }
+
+        public async Task<IActionResult> IngredientDetails(int id)
+        {
+            var purchase = await _context.IngredientPurchases
+                .Include(p => p.Supplier)
+                .Include(p => p.Items) // if you have a navigation property
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (purchase != null)
+            {
+                foreach (var pi in purchase.Items)
+                {
+                    pi.Ingredient = await _context.Ingredients.FindAsync(pi.IngredientId);
                 }
             }
 

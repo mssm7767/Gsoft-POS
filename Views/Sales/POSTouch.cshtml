@@ -484,7 +484,7 @@
     }
 
     .qty-input {
-        width: 50px;
+        width: 60px;
         text-align: center;
     }
 
@@ -810,7 +810,7 @@
             border: 1px solid #e5e7eb;
             border-radius: 16px;
             padding: 16px 22px;
-            box-shadow: 0 30px 70px rgba(2,6,23,.25);
+            box-shadow: 0 30px 70px rgba(15,23,42,.25);
             font-weight: 900;
             color: #0b1324;
             display: flex;
@@ -1116,7 +1116,6 @@
         transition: transform .05s, box-shadow .15s, border-color .15s, background .15s;
     }
 
-        /* hover state – thora lift + glow */
         .tb-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.35);
@@ -1243,7 +1242,6 @@
         position: relative;
         z-index: 1002; /* FRONT layer → interactable */
     }
-
 </style>
 
 
@@ -1609,7 +1607,7 @@
         const acKOT = document.getElementById('acKOT');
         const acHold = document.getElementById('acHold');
         const acRetrieve = document.getElementById('acRetrieve');
-        const acTempPrint = document.getElementById('acTempPrint'); // future use
+        const acTempPrint = document.getElementById('acTempPrint');
         const payMode = document.getElementById('payMode');
         const customer = document.getElementById('customer');
         const waiterSel = document.getElementById('waiterSel');
@@ -1639,7 +1637,8 @@
         const runningClose = document.getElementById('runningClose');
         const runningList = document.getElementById('runningList');
         const runningSearch = document.getElementById('runningSearch');
-        const runningSortTime = document.getElementById('runningSortTime');
+       const runningSortTime = document.getElementById('runningSortTime');
+
         const runningCount = document.getElementById('runningCount');
         const centerFlash = document.getElementById('centerFlash');
         const centerFlashMsg = document.getElementById('centerFlashMsg');
@@ -1704,218 +1703,194 @@
         tick();
 
         /* ========== TABLE / FLOOR STATE + HELPERS ========== */
+        let FLOORS = [];
+        let floorsLoaded = false;
+        let currentFloorId = null;
+        let selectedTable = null; // { id, name, capacity, status, floorId }
 
-            let FLOORS = [];          // server data
-    let floorsLoaded = false;
-    let currentFloorId = null;
-    let selectedTable = null; // { id, name, capacity, status, floorId }
+        async function loadFloorsOnce() {
+            if (floorsLoaded) return;
 
-            // ---------------------------------------------------
-    // LOAD FLOORS + TABLES (ONCE)
-    // ---------------------------------------------------
-    async function loadFloorsOnce() {
-        if (floorsLoaded) return;
+            try {
+                const res = await fetch('/Sales/GetFloorsWithTables');
+                if (!res.ok) throw new Error('Failed to load floors');
+                const data = await res.json();
 
-        try {
-            const res = await fetch('/Sales/GetFloorsWithTables');
-            if (!res.ok) throw new Error('Failed to load floors');
-            const data = await res.json();
+                FLOORS = Array.isArray(data) ? data : [];
+                floorsLoaded = true;
 
-            FLOORS = Array.isArray(data) ? data : [];
-            floorsLoaded = true;
-
-            if (FLOORS.length && !currentFloorId) {
-                currentFloorId = Number(FLOORS[0].id);
-            }
-
-            renderFloors();
-            renderTables();
-
-        } catch (err) {
-            console.error('Floor load error:', err);
-            toast('Unable to load tables', 'error', 1500);
-        }
-    }
-
-    // ---------------------------------------------------
-    // STATUS CLASS + LABEL
-    // ---------------------------------------------------
-    function statusClass(status) {
-        switch ((status || '').toLowerCase()) {
-            case 'free':
-            case 'empty': return 'tb-free';
-            case 'reserved': return 'tb-reserved';
-            case 'occupied':
-            case 'running': return 'tb-occupied';
-            case 'billed':
-            case 'closed': return 'tb-billed';
-            default: return '';
-        }
-    }
-
-    function statusLabel(status) {
-        switch ((status || '').toLowerCase()) {
-            case 'free':
-            case 'empty': return 'Empty';
-            case 'reserved': return 'Reserved';
-            case 'occupied':
-            case 'running': return 'Running';
-            case 'billed':
-            case 'closed': return 'Bill Clear';
-            default: return 'Unknown';
-        }
-    }
-
-    // ---------------------------------------------------
-    // BIND FLOOR CLICK EVENTS
-    // ---------------------------------------------------
-    function bindFloorEvents() {
-        const buttons = document.querySelectorAll('.floor-pill');
-
-        buttons.forEach(btn => {
-            btn.addEventListener('click', function () {
-                const id = Number(this.dataset.id);  // ensure number
-                currentFloorId = id;
-                selectedTable = null; // clear previous selection
+                if (FLOORS.length && !currentFloorId) {
+                    currentFloorId = Number(FLOORS[0].id);
+                }
 
                 renderFloors();
                 renderTables();
-                updateSelectedTableInfo();
-            });
-        });
-    }
 
-    // ---------------------------------------------------
-    // RENDER FLOORS LEFT PANEL
-    // ---------------------------------------------------
-    function renderFloors() {
-        if (!floorList) return;
-
-        if (!Array.isArray(FLOORS) || !FLOORS.length) {
-            floorList.innerHTML = '<div class="muted">No floors defined</div>';
-            floorCount.textContent = '';
-            return;
+            } catch (err) {
+                console.error('Floor load error:', err);
+                toast('Unable to load tables', 'error', 1500);
+            }
         }
 
-        floorList.innerHTML = FLOORS.map(f => {
-            const total = f.totalTables ?? (f.tables?.length || 0);
-            const running = f.occupiedCount ?? (f.tables?.filter(t => {
-                const s = (t.status || '').toLowerCase();
-                return s === 'occupied' || s === 'running';
-            }).length || 0);
-            const free = f.freeCount ?? (f.tables?.filter(t => {
-                const s = (t.status || '').toLowerCase();
-                return s === 'free' || s === 'empty';
-            }).length || 0);
+        function statusClass(status) {
+            switch ((status || '').toLowerCase()) {
+                case 'free':
+                case 'empty': return 'tb-free';
+                case 'reserved': return 'tb-reserved';
+                case 'occupied':
+                case 'running': return 'tb-occupied';
+                case 'billed':
+                case 'closed': return 'tb-billed';
+                default: return '';
+            }
+        }
 
-            return `
-                <button class="floor-pill ${Number(f.id) === Number(currentFloorId) ? 'active' : ''}"
-                        data-id="${f.id}">
-                    <span>${f.name || 'Floor'}</span>
-                    <small>${total} tables • ${free} free • ${running} running</small>
-                </button>`;
-        }).join('');
+        function statusLabel(status) {
+            switch ((status || '').toLowerCase()) {
+                case 'free':
+                case 'empty': return 'Empty';
+                case 'reserved': return 'Reserved';
+                case 'occupied':
+                case 'running': return 'Running';
+                case 'billed':
+                case 'closed': return 'Bill Clear';
+                default: return 'Unknown';
+            }
+        }
 
-        floorCount.textContent = `${FLOORS.length} floor(s)`;
+        function bindFloorEvents() {
+            const buttons = document.querySelectorAll('.floor-pill');
 
-        bindFloorEvents();
-    }
+            buttons.forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const id = Number(this.dataset.id);
+                    currentFloorId = id;
+                    selectedTable = null;
+                    renderFloors();
+                    renderTables();
+                    updateSelectedTableInfo();
+                });
+            });
+        }
 
-    // ---------------------------------------------------
-    // BIND TABLE CLICK EVENTS
-    // ---------------------------------------------------
-    function bindTableEvents() {
-        const cards = document.querySelectorAll('.tb-card');
+        function renderFloors() {
+            if (!floorList) return;
 
-        cards.forEach(card => {
-            card.addEventListener('click', function () {
+            if (!Array.isArray(FLOORS) || !FLOORS.length) {
+                floorList.innerHTML = '<div class="muted">No floors defined</div>';
+                floorCount.textContent = '';
+                return;
+            }
+
+            floorList.innerHTML = FLOORS.map(f => {
+                const total = f.totalTables ?? (f.tables?.length || 0);
+                const running = f.occupiedCount ?? (f.tables?.filter(t => {
+                    const s = (t.status || '').toLowerCase();
+                    return s === 'occupied' || s === 'running';
+                }).length || 0);
+                const free = f.freeCount ?? (f.tables?.filter(t => {
+                    const s = (t.status || '').toLowerCase();
+                    return s === 'free' || s === 'empty';
+                }).length || 0);
+
+                return `
+                    <button class="floor-pill ${Number(f.id) === Number(currentFloorId) ? 'active' : ''}"
+                            data-id="${f.id}">
+                        <span>${f.name || 'Floor'}</span>
+                        <small>${total} tables • ${free} free • ${running} running</small>
+                    </button>`;
+            }).join('');
+
+            floorCount.textContent = `${FLOORS.length} floor(s)`;
+
+            bindFloorEvents();
+        }
+
+        function bindTableEvents() {
+            const cards = document.querySelectorAll('.tb-card');
+
+            cards.forEach(card => {
+                card.addEventListener('click', function () {
+                    selectedTable = {
+                        id: this.dataset.id,
+                        name: this.dataset.name,
+                        capacity: this.dataset.capacity,
+                        status: this.dataset.status,
+                        floorId: this.dataset.floorId
+                    };
+
+                    renderTables();
+                    updateSelectedTableInfo();
+                });
+            });
+        }
+
+        function renderTables() {
+            if (!tableGrid) return;
+
+            const f = FLOORS.find(x => Number(x.id) === Number(currentFloorId));
+
+            if (!f) {
+                tableGrid.innerHTML = '<div class="muted">No tables for this floor</div>';
+                currentFloorName.textContent = 'Floor';
+                currentFloorMeta.textContent = '';
+                return;
+            }
+
+            const tables = Array.isArray(f.tables) ? f.tables : [];
+
+            currentFloorName.textContent = f.name || 'Floor';
+            currentFloorMeta.textContent = `${f.totalTables ?? tables.length} table(s)`;
+
+            if (!selectedTable && tables.length > 0) {
                 selectedTable = {
-                    id: this.dataset.id,
-                    name: this.dataset.name,
-                    capacity: this.dataset.capacity,
-                    status: this.dataset.status,
-                    floorId: this.dataset.floorId
+                    id: tables[0].id,
+                    name: tables[0].name,
+                    capacity: tables[0].capacity,
+                    status: tables[0].status,
+                    floorId: f.id
                 };
+            }
 
-                renderTables(); // refresh highlight
-                updateSelectedTableInfo();
-            });
-        });
-    }
+            if (!tables.length) {
+                tableGrid.innerHTML = '<div class="muted">No tables defined on this floor</div>';
+                return;
+            }
 
-    // ---------------------------------------------------
-    // RENDER TABLES RIGHT PANEL
-    // ---------------------------------------------------
-    function renderTables() {
-        if (!tableGrid) return;
+            tableGrid.innerHTML = tables.map(t => {
+                const isSel = selectedTable && String(selectedTable.id) === String(t.id);
 
-        const f = FLOORS.find(x => Number(x.id) === Number(currentFloorId));
+                return `
+                    <div class="tb-card ${statusClass(t.status)} ${isSel ? 'is-selected' : ''}"
+                         data-id="${t.id}"
+                         data-name="${t.name}"
+                         data-capacity="${t.capacity}"
+                         data-status="${t.status}"
+                         data-floor-id="${f.id}">
 
-        if (!f) {
-            tableGrid.innerHTML = '<div class="muted">No tables for this floor</div>';
-            currentFloorName.textContent = 'Floor';
-            currentFloorMeta.textContent = '';
-            return;
+                        <div class="tb-name">
+                            <i class="fa-solid fa-chair"></i>
+                            <span>${t.name}</span>
+                        </div>
+
+                        <div class="tb-cap">Capacity: ${t.capacity}</div>
+                        <div class="tb-status">${statusLabel(t.status)}</div>
+                    </div>`;
+            }).join('');
+
+            bindTableEvents();
         }
 
-        const tables = Array.isArray(f.tables) ? f.tables : [];
+        function updateSelectedTableInfo() {
+            if (!selectedTableInfo) return;
 
-        currentFloorName.textContent = f.name || 'Floor';
-        currentFloorMeta.textContent = `${f.totalTables ?? tables.length} table(s)`;
-
-        // Auto-select first table if none selected
-        if (!selectedTable && tables.length > 0) {
-            selectedTable = {
-                id: tables[0].id,
-                name: tables[0].name,
-                capacity: tables[0].capacity,
-                status: tables[0].status,
-                floorId: f.id
-            };
+            if (!selectedTable) {
+                selectedTableInfo.textContent = 'No table selected';
+            } else {
+                selectedTableInfo.textContent =
+                    `Selected: ${selectedTable.name || ('Table ' + selectedTable.id)} · Cap ${selectedTable.capacity || '-'} · ${statusLabel(selectedTable.status)}`;
+            }
         }
-
-        if (!tables.length) {
-            tableGrid.innerHTML = '<div class="muted">No tables defined on this floor</div>';
-            return;
-        }
-
-        tableGrid.innerHTML = tables.map(t => {
-            const isSel = selectedTable && String(selectedTable.id) === String(t.id);
-
-            return `
-                <div class="tb-card ${statusClass(t.status)} ${isSel ? 'is-selected' : ''}"
-                     data-id="${t.id}"
-                     data-name="${t.name}"
-                     data-capacity="${t.capacity}"
-                     data-status="${t.status}"
-                     data-floor-id="${f.id}">
-
-                    <div class="tb-name">
-                        <i class="fa-solid fa-chair"></i>
-                        <span>${t.name}</span>
-                    </div>
-
-                    <div class="tb-cap">Capacity: ${t.capacity}</div>
-                    <div class="tb-status">${statusLabel(t.status)}</div>
-                </div>`;
-        }).join('');
-
-        bindTableEvents();
-    }
-
-    // ---------------------------------------------------
-    // UPDATE SELECTED TABLE INFO
-    // ---------------------------------------------------
-    function updateSelectedTableInfo() {
-        if (!selectedTableInfo) return;
-
-        if (!selectedTable) {
-            selectedTableInfo.textContent = 'No table selected';
-        } else {
-            selectedTableInfo.textContent =
-                `Selected: ${selectedTable.name || ('Table ' + selectedTable.id)} · Cap ${selectedTable.capacity || '-'} · ${statusLabel(selectedTable.status)}`;
-        }
-    }
 
         function openTableModal() {
             if (!tableModal) return;
@@ -1935,7 +1910,6 @@
 
         /* ========== FLOOR & TABLE EVENTS + TABLE PICKER BUTTON ========== */
 
-        // Floor change
         floorList?.addEventListener('click', e => {
             const pill = e.target.closest('.floor-pill');
             if (!pill) return;
@@ -1944,7 +1918,6 @@
             renderTables();
         });
 
-        // Table card click → select + main screen fill + close modal
         tableGrid?.addEventListener('click', e => {
             const card = e.target.closest('.tb-card');
             if (!card) return;
@@ -1957,16 +1930,14 @@
                 floorId: card.getAttribute('data-floor-id')
             };
 
-            // Right side inputs fill
             if (tableNo) tableNo.value = selectedTable.name || ('Table ' + selectedTable.id);
             if (tableId) tableId.value = selectedTable.id;
 
             updateSelectedTableInfo();
-            renderTables();      // highlight
-            closeTableModal();   // close after select
+            renderTables();
+            closeTableModal();
         });
 
-        // Clear table
         clearTableBtn?.addEventListener('click', () => {
             selectedTable = null;
             if (tableNo) tableNo.value = '';
@@ -1975,7 +1946,6 @@
             renderTables();
         });
 
-        // Use Selected button (agar pehle card click kar ke selectedTable set kiya ho)
         useTableBtn?.addEventListener('click', () => {
             if (!selectedTable) {
                 toast('Please select a table', 'warning');
@@ -1987,11 +1957,9 @@
             closeTableModal();
         });
 
-        // 👉 Table button on main screen
         tablePickerBtn?.addEventListener('click', (e) => {
-            e.preventDefault(); // form submit block
+            e.preventDefault();
 
-            // New Order check + message (jo tum chah rahay thay)
             if (!orderActive) {
                 toast('Press "New Order" first', 'warning');
                 flashCenter('Press New Order first', 400);
@@ -2001,19 +1969,16 @@
             openTableModal();
         });
 
-        // Close (X) button
         tableModalClose?.addEventListener('click', (e) => {
             e.preventDefault();
             closeTableModal();
         });
 
-        // Backdrop click → close
         tableModal?.addEventListener('click', (e) => {
             if (e.target.classList.contains('modal-backdrop')) {
                 closeTableModal();
             }
         });
-
 
         /* ========== LEFT: CATEGORIES & ITEMS ========== */
         function renderCats() {
@@ -2085,7 +2050,7 @@
                      loading="lazy" />
                 <div style="min-width:0">
                   <div class="li-name">${it.itemName}</div>
-                  <div class="cat-count">${it.itemCode ? ` <small style="color:#64748b">(${it.itemCode})</small>` : ''}</div>
+                  <div class="cat-count">${it.itemCode ? `<small style="color:#64748b">(${it.itemCode})</small>` : ''}</div>
                   <div class="li-meta">
                     <span class="price-badge"><i class="fa-solid fa-sack-dollar"></i> ${Number(it.salePrice || 0).toFixed(0)}</span>
                     <span class="muted">#${it.quantity}</span>
@@ -2132,7 +2097,7 @@
         itemSearchBottom?.addEventListener('input', doSearchBottom);
         sortSel?.addEventListener('change', renderLeftItems);
 
-        /* ========== CART RENDER + RECALC ========== */
+        /* ========== CART RENDER + RECALC (DECIMAL QTY) ========== */
         function renderCart() {
             if (!cartBody) return;
             if (!cart.length) {
@@ -2144,7 +2109,7 @@
                 <div class="cart-name">${l.name}</div>
                 <div class="qty-wrap">
                   <button class="qty-btn" data-op="dec">−</button>
-                  <input class="soft-input qty-input" type="number" step="1" min="1" value="${l.qty}">
+                  <input class="soft-input qty-input" type="number" step="0.01" min="0.01" value="${l.qty}">
                   <button class="qty-btn" data-op="inc">+</button>
                 </div>
                 <input class="price-input" type="number" step="0.01" value="${Number(l.price || 0).toFixed(2)}">
@@ -2152,7 +2117,6 @@
                 <button class="remove-btn" title="Remove line"><i class="fa-regular fa-trash-can"></i></button>
               </div>`).join('');
 
-            // PRICE ko keyboard / keypad se lock: readOnly
             cartBody.querySelectorAll('.price-input').forEach(inp => {
                 inp.readOnly = true;
             });
@@ -2185,29 +2149,37 @@
             const cat = (categories || []).find(c => c.id === currentCat); if (!cat) return;
             const it = (cat.items || []).find(x => x.id === itemId); if (!it) return;
             const ex = cart.find(x => x.id === itemId);
-            if (ex) ex.qty += 1;
+            if (ex) ex.qty = +(ex.qty + 1).toFixed(2);
             else cart.push({ id: itemId, code: it.itemCode, name: it.itemName, price: Number(it.salePrice || 0), qty: 1 });
             syncCartRef(); renderCart(); recalc();
         });
 
-        /* ========== CART CLICK HANDLERS ========== */
+        /* ========== CART CLICK HANDLERS (DECIMAL) ========== */
         cartBody?.addEventListener('click', e => {
             const row = e.target.closest('.cart-row'); if (!row) return;
 
-            // row select + last qty input track
             document.querySelectorAll('.cart-row').forEach(r => r.classList.remove('active'));
             row.classList.add('active');
             const qInp = row.querySelector('.qty-input');
             if (qInp) lastQtyInput = qInp;
 
             const idx = +row.dataset.idx;
+
             if (e.target.matches('.remove-btn, .remove-btn *')) {
                 cart.splice(idx, 1); syncCartRef(); renderCart(); recalc(); return;
             }
+
             if (e.target.matches('.qty-btn')) {
                 const op = e.target.dataset.op;
-                if (op === 'inc') cart[idx].qty += 1;
-                if (op === 'dec') cart[idx].qty = Math.max(1, cart[idx].qty - 1);
+                const current = parseFloat(cart[idx].qty || 0) || 0;
+
+                if (op === 'inc') {
+                    cart[idx].qty = +(current + 0.1).toFixed(2);
+                }
+                if (op === 'dec') {
+                    cart[idx].qty = Math.max(0.1, +(current - 0.1).toFixed(2));
+                }
+
                 syncCartRef(); renderCart(); recalc();
             }
         });
@@ -2215,13 +2187,17 @@
         cartBody?.addEventListener('input', e => {
             const row = e.target.closest('.cart-row'); if (!row) return;
             const idx = +row.dataset.idx;
+
             if (e.target.matches('.qty-input')) {
-                cart[idx].qty = Math.max(1, parseInt(e.target.value || '1', 10));
-                row.querySelector('.line-total').textContent = (cart[idx].qty * cart[idx].price).toFixed(2);
-                syncCartRef(); recalc();
+                const q = parseFloat(e.target.value || '0') || 0;
+                cart[idx].qty = Math.max(0.01, q);
+                row.querySelector('.line-total').textContent =
+                    (cart[idx].qty * cart[idx].price).toFixed(2);
+                syncCartRef();
+                recalc();
             }
+
             if (e.target.matches('.price-input')) {
-                // price locked: revert to actual price
                 e.target.value = Number(cart[idx].price || 0).toFixed(2);
             }
         });
@@ -2339,7 +2315,6 @@
             } catch { return String(Date.now()); }
         }
 
-        // SINGLE ENTRY PER INVOICE
         function holdCurrentInvoice() {
             if (!document.querySelector('.cart-row')) {
                 toast('No items to hold', 'warning');
@@ -2347,8 +2322,12 @@
             }
 
             const saleItems = Array.from(document.querySelectorAll('.cart-row')).map(row => {
-                const qty = parseInt(row.querySelector('.qty-input')?.value || 0);
-                const price = parseFloat(row.querySelector('.price-input')?.value || 0);
+                const qtyInput = row.querySelector('.qty-input');
+                const priceInput = row.querySelector('.price-input');
+
+                const qty = parseFloat(qtyInput?.value || '0') || 0;
+                const price = parseFloat(priceInput?.value || '0') || 0;
+
                 return {
                     ItemId: parseInt(row.dataset.itemId),
                     Quantity: qty,
@@ -2505,7 +2484,7 @@
             if (card) { window.selectRunning(card.getAttribute('data-id')); }
         });
 
-        /* ========== SAVE / PRINT ========== */
+        /* ========== SAVE / PRINT (DECIMAL QTY) ========== */
         async function savePOS(mode) {
             const wantPrint = (mode === 'print');
             const cashStr = (tCash?.value || '').trim();
@@ -2534,8 +2513,12 @@
             const orderNo = orderNoEl?.textContent || '';
 
             const saleItems = Array.from(document.querySelectorAll('.cart-row')).map(row => {
-                const qty = parseInt(row.querySelector('.qty-input')?.value || 0);
-                const price = parseFloat(row.querySelector('.price-input')?.value || 0);
+                const qtyInput = row.querySelector('.qty-input');
+                const priceInput = row.querySelector('.price-input');
+
+                const qty = parseFloat(qtyInput?.value || '0') || 0;
+                const price = parseFloat(priceInput?.value || '0') || 0;
+
                 return {
                     ItemId: parseInt(row.dataset.itemId),
                     Quantity: qty,
@@ -2620,7 +2603,7 @@
             }
         }
 
-        /* ========== KOT (NO CASH REQUIRED) + RUNNING UPDATE ========== */
+        /* ========== KOT (DECIMAL QTY) ========== */
         async function saveKOT() {
             const grandTotal = parseFloat(tGrand?.textContent.replace(/,/g, '') || 0);
             const tax = parseFloat(tTax?.value || 0);
@@ -2634,8 +2617,12 @@
             const orderNo = orderNoEl?.textContent || '';
 
             const saleItems = Array.from(document.querySelectorAll('.cart-row')).map(row => {
-                const qty = parseInt(row.querySelector('.qty-input')?.value || 0);
-                const price = parseFloat(row.querySelector('.price-input')?.value || 0);
+                const qtyInput = row.querySelector('.qty-input');
+                const priceInput = row.querySelector('.price-input');
+
+                const qty = parseFloat(qtyInput?.value || '0') || 0;
+                const price = parseFloat(priceInput?.value || '0') || 0;
+
                 return {
                     ItemId: parseInt(row.dataset.itemId),
                     Quantity: qty,
@@ -2763,7 +2750,7 @@
             });
         });
 
-        /* ========== KEYPAD LOGIC ========== */
+        /* ========== KEYPAD LOGIC (DECIMAL) ========== */
         function getPadInput() {
             if (padTarget === 'qty') return lastQtyInput;
             if (padTarget === 'disc') return tDisc;
@@ -2783,9 +2770,9 @@
                 if (padHeading) {
                     padHeading.textContent =
                         padTarget === 'qty' ? 'Qty' :
-                            padTarget === 'price' ? 'Price' :
-                                padTarget === 'disc' ? 'Discount' :
-                                    padTarget === 'cash' ? 'Cash' : 'Tax';
+                        padTarget === 'price' ? 'Price' :
+                        padTarget === 'disc' ? 'Discount' :
+                        padTarget === 'cash' ? 'Cash' : 'Tax';
                 }
                 const inp = getPadInput();
                 if (inp && inp.focus) { inp.focus(); if (inp.select) inp.select(); }
@@ -2819,88 +2806,95 @@
                 const row = input.closest('.cart-row');
                 if (row) {
                     const idx = +row.dataset.idx;
-                    cart[idx].qty = Math.max(1, parseInt(v || '1', 10));
-                    row.querySelector('.line-total').textContent = (cart[idx].qty * cart[idx].price).toFixed(2);
+                    const q = parseFloat(v || '0') || 0;
+                    cart[idx].qty = Math.max(0.01, q);
+                    row.querySelector('.line-total').textContent =
+                        (cart[idx].qty * cart[idx].price).toFixed(2);
+                    syncCartRef();
+                    recalc();
                 }
-                recalc();
             } else if (padTarget === 'disc' || padTarget === 'cash' || padTarget === 'tax') {
                 recalc();
             }
         });
 
-    async function temPrint() {
+        /* ========== TEMP PRINT (DECIMAL) ========== */
+        async function temPrint() {
 
-        const cashStr = (tCash?.value || '').trim();
-        const cashVal = parseFloat(cashStr);
+            const cashStr = (tCash?.value || '').trim();
+            const cashVal = parseFloat(cashStr);
 
-        const grandTotal = parseFloat(tGrand?.textContent.replace(/,/g, '') || 0);
-        const tax = parseFloat(tTax?.value || 0);
-        const discount = parseFloat(tDisc?.value || 0);
-        const cash = cashVal;
-        const payModeVal = payMode?.value || 'cash';
-        const custId = parseInt(customer?.value || 0);
-        const orderTypeVal = orderType?.value || 'dinein';
-        const tableNoVal = tableNo?.value || '';
-        const waiterVal = waiterSel?.value || null;
-        const orderNo = orderNoEl?.textContent || '';
+            const grandTotal = parseFloat(tGrand?.textContent.replace(/,/g, '') || 0);
+            const tax = parseFloat(tTax?.value || 0);
+            const discount = parseFloat(tDisc?.value || 0);
+            const cash = cashVal;
+            const payModeVal = payMode?.value || 'cash';
+            const custId = parseInt(customer?.value || 0);
+            const orderTypeVal = orderType?.value || 'dinein';
+            const tableNoVal = tableNo?.value || '';
+            const waiterVal = waiterSel?.value || null;
+            const orderNo = orderNoEl?.textContent || '';
 
-        const saleItems = Array.from(document.querySelectorAll('.cart-row')).map(row => {
-            const qty = parseInt(row.querySelector('.qty-input')?.value || 0);
-            const price = parseFloat(row.querySelector('.price-input')?.value || 0);
-            return {
-                ItemId: parseInt(row.dataset.itemId),
-                Quantity: qty,
-                UnitPrice: price,
+            const saleItems = Array.from(document.querySelectorAll('.cart-row')).map(row => {
+                const qtyInput = row.querySelector('.qty-input');
+                const priceInput = row.querySelector('.price-input');
+
+                const qty = parseFloat(qtyInput?.value || '0') || 0;
+                const price = parseFloat(priceInput?.value || '0') || 0;
+
+                return {
+                    ItemId: parseInt(row.dataset.itemId),
+                    Quantity: qty,
+                    UnitPrice: price,
+                    DiscountPercent: discount,
+                    TaxAmount: tax,
+                    LineTotal: +(qty * price).toFixed(2)
+                };
+            });
+
+            if (!saleItems.length) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Items',
+                    text: 'Please add at least one item to the cart!',
+                    target: swalTarget,
+                    timer: 900,
+                    showConfirmButton: false
+                });
+                return;
+            }
+
+            const payload = {
+                InvoiceNumber: orderNo,
+                SubTotal: grandTotal,
+                Tax: tax,
+                Discount: discount,
                 DiscountPercent: discount,
-                TaxAmount: tax,
-                LineTotal: +(qty * price).toFixed(2)
+                DiscountLessAmount: discount,
+                SaleType: 'Sale',
+                Total: grandTotal,
+                custId: custId,
+                tender_amount: cash,
+                OrderType: orderTypeVal,
+                TableNo: tableNoVal,
+                Waiter: waiterVal,
+                Payment: {
+                    Amount: cash,
+                    PaymentMethod: payModeVal,
+                    Change: Math.max(cash - grandTotal, 0)
+                },
+                SaleItems: saleItems
             };
-        });
 
-        if (!saleItems.length) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'No Items',
-                text: 'Please add at least one item to the cart!',
-                target: swalTarget,
-                timer: 900,
-                showConfirmButton: false
-            });
-            return;
-        }
+            try {
+                const res = await fetch('/Sales/TempPrint', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    const result = await res.json();
 
-        const payload = {
-            InvoiceNumber: orderNo,
-            SubTotal: grandTotal,
-            Tax: tax,
-            Discount: discount,
-            DiscountPercent: discount,
-            DiscountLessAmount: discount,
-            SaleType: 'Sale',
-            Total: grandTotal,
-            custId: custId,
-            tender_amount: cash,
-            OrderType: orderTypeVal,
-            TableNo: tableNoVal,
-            Waiter: waiterVal,
-            Payment: {
-                Amount: cash,
-                PaymentMethod: payModeVal,
-                Change: Math.max(cash - grandTotal, 0)
-            },
-            SaleItems: saleItems
-        };
-
-        try {
-            const res = await fetch('/Sales/TempPrint', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            if (res.ok) {
-                    const result = await res.json(); // result should be your ViewModel data
-
-                    // Create a form to POST data to new tab
                     const form = document.createElement('form');
                     form.method = 'POST';
                     form.action = '/Sales/TempReceipt';
@@ -2909,7 +2903,7 @@
                     const input = document.createElement('input');
                     input.type = 'hidden';
                     input.name = 'jsonData';
-                    input.value = JSON.stringify(result.data); // your ViewModel
+                    input.value = JSON.stringify(result.data);
 
                     form.appendChild(input);
                     document.body.appendChild(form);
@@ -2923,30 +2917,20 @@
                     flashCenter('New order ready', 400);
                     itemSearchTop?.focus();
 
-                // ✅ Sale complete → running se iss invoice ko hata do
-                // const orderNoNow = orderNoEl?.textContent || '';
-                // let list = getAllHeld();
-                // list = list.filter(x => x.invoiceNumber !== orderNoNow);
-                // saveAllHeld(list);
-                // updateRunningBadge();
-                // renderRunning();
-
-                // flashCenter('Invoice cleared successfully', 400);
-                // setTimeout(() => { window.location.reload(); }, 500);
-            } else {
-                const error = await res.json().catch(() => ({}));
-                toast(error?.Message || 'Failed to save order', 'error', 2000);
+                } else {
+                    const error = await res.json().catch(() => ({}));
+                    toast(error?.Message || 'Failed to save order', 'error', 2000);
+                }
+            } catch (err) {
+                console.error(err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Something went wrong while saving the order.',
+                    target: swalTarget
+                });
             }
-        } catch (err) {
-            console.error(err);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Something went wrong while saving the order.',
-                target: swalTarget
-            });
         }
-    }
 
         /* ========== BIND ACTIONS ========== */
         acSaveOnly?.addEventListener('click', () => savePOS('save'));
@@ -2963,4 +2947,3 @@
         renderRunning();
     })();
 </script>
-

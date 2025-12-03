@@ -52,11 +52,18 @@
             background: radial-gradient(circle at top, #eef2ff 0%, #f5f7fb 40%, #ffffff 100%);
         }
 
-        /* full width container for POS style */
+        /* Global container */
         .container-fluid {
             max-width: 100% !important;
             padding-left: 12px;
             padding-right: 12px;
+        }
+
+        /* ITEM LIST WRAPPER – LEFT align */
+        .page-wrap-itemlist {
+            max-width: 900px; /* same width as Add Item */
+            margin: 12px 0 24px 0; /* left side */
+            padding-right: 0;
         }
 
         /* Top band */
@@ -71,7 +78,9 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 10px 12px;
+            padding: 10px 18px;
+            max-width: 900px; /* match list width */
+            margin: 0 0 0 12px; /* left side, thora andar */
         }
 
         .inv-hero-accent {
@@ -174,8 +183,8 @@
             position: relative;
             display: flex;
             align-items: center;
-            background: #F0FFFF; /* requested background */
-            border: 1px solid #4f9eea; /* darker border */
+            background: #F0FFFF;
+            border: 1px solid #4f9eea;
             border-radius: 10px;
             min-height: 36px;
             padding-left: 34px;
@@ -341,7 +350,7 @@
         }
 
         .table tbody tr:hover td {
-            background: #dbeafe; /* blue hover highlight */
+            background: #dbeafe;
         }
 
         .num {
@@ -421,15 +430,15 @@
                 background: #fee2e2;
             }
 
-        /* Pagination bar – yahan F0FFFF colour */
+        /* Pagination bar */
         .pager-bar {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 10px;
             padding: 10px 12px;
-            background: #F0FFFF; /* 👈 requested here */
-            border: 1px solid #e6eaf2; /* thora dark border */
+            background: #F0FFFF;
+            border: 1px solid #e6eaf2;
             border-radius: 16px;
             margin-top: 10px;
         }
@@ -525,9 +534,9 @@
     </style>
 }
 
-<!-- ===== Top Band (Premium) ===== -->
+<!-- ===== Top Band ===== -->
 <div class="inv-hero shadow-sm">
-    <div class="inv-hero-inner container-fluid">
+    <div class="inv-hero-inner">
         <div class="d-flex align-items-center gap-2">
             <i class="fa-solid fa-boxes-stacked text-white"></i>
             <h5 class="mb-0 text-white fw-bold">@ViewData["Title"]</h5>
@@ -537,7 +546,7 @@
     <div class="inv-hero-accent"></div>
 </div>
 
-<div class="container-fluid my-3">
+<div class="container-fluid my-3 page-wrap-itemlist">
     <!-- Row 1: Time/Date + KPIs + Low stock -->
     <div class="toolbar">
         <div class="row g-2">
@@ -717,8 +726,11 @@
                                 <a asp-action="Edit" asp-route-id="@item.Id" class="btn-icon btn-edit" title="Edit">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </a>
-                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn-icon btn-del"
-                                   title="Delete" onclick="return confirm('Are you sure to delete this item?');">
+                                <a asp-action="Delete"
+                                   asp-route-id="@item.Id"
+                                   class="btn-icon btn-del"
+                                   title="Delete"
+                                   onclick="return confirm('Are you sure to delete this item?');">
                                     <i class="fa-solid fa-trash-can"></i>
                                 </a>
                             </div>
@@ -871,7 +883,7 @@
                 renderPagination();
             }
 
-            // Filters + search (WITH flavour) – supplier/category partial match
+            // Filters + search
             function applyFilters() {
                 const q = (box.value || '').toLowerCase().trim();
                 const supp = (supplierSel.value || '').toLowerCase().trim();
@@ -1002,7 +1014,7 @@
                     const text = String(reader.result || '').trim();
                     const lines = text.split(/\r?\n/);
                     if (!lines.length) { return; }
-                    // yahan aap apni parsing / backend mapping laga sakte hain
+                    // backend mapping yahan lagani hai
                 };
                 reader.readAsText(file);
             });

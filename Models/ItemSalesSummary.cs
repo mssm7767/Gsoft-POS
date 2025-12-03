@@ -6,7 +6,7 @@
         public string ItemName { get; set; }
         public string ItemCode { get; set; }
         public string Category { get; set; }
-        public int QuantitySold { get; set; }
+        public decimal QuantitySold { get; set; }
         public decimal TotalAmount { get; set; }
         public decimal AveragePrice { get; set; }
     }

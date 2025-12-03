@@ -45,7 +45,8 @@ namespace GSoftPosNew.Models
         public string? PackSize { get; set; }
 
         [Range(0, int.MaxValue, ErrorMessage = "Quantity must be non-negative")]
-        public int Quantity { get; set; }
+        public decimal Quantity { get; set; }
+
 
         [Range(0, 100, ErrorMessage = "Markup % must be between 0 and 100")]
         public decimal MarkupPercentage { get; set; }
@@ -58,6 +59,8 @@ namespace GSoftPosNew.Models
         public DateTime? ExpiryDate { get; set; }
 
         public string? ImagePath { get; set; }
+
+        public ICollection<ItemIngredient> ItemIngredients { get; set; } = new List<ItemIngredient>();
 
     }
 }

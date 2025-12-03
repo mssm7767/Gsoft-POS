@@ -18,7 +18,7 @@ namespace GSoftPosNew.ViewModels
         public List<string> SalesMonths { get; set; } = new();
         public List<decimal> SalesData { get; set; } = new();
         public List<string> TopProducts { get; set; } = new();
-        public List<int> TopProductSales { get; set; } = new();
+        public List<decimal> TopProductSales { get; set; } = new();
     }
 
 }

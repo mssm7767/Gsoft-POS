@@ -129,7 +129,7 @@ namespace GSoftPosNew.Controllers
                 SalesMonths = salesMonths,
                 SalesData = salesData,
                 TopProducts = topProductNames,
-                TopProductSales = topProductSales
+                TopProductSales = topProductSales   // ✅ ab types match
             };
 
             return View(model);

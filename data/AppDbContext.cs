@@ -32,6 +32,13 @@ namespace GSoftPosNew.Data
         public DbSet<Unit> Units { get; set; }
         public DbSet<ShopSetting> ShopSettings { get; set; }
 
+        public DbSet<IngredientCategory> IngredientCategories { get; set; }
+        public DbSet<Ingredient> Ingredients { get; set; }
+        public DbSet<ItemIngredient> ItemIngredients { get; set; }
+        public DbSet<IngredientPurchase> IngredientPurchases { get; set; }
+        public DbSet<IngredientPurchaseItem> IngredientPurchaseItems { get; set; }
+
+
         public DbSet<StockAdjustment> StockAdjustments { get; set; }
         public DbSet<StockAdjustmentItem> StockAdjustmentItems { get; set; }
         public DbSet<CustomerVanStock> CustomerVanStocks { get; set; }
@@ -57,7 +64,12 @@ namespace GSoftPosNew.Data
                 .WithMany()
                 .HasForeignKey(si => si.ItemId);
 
-            // Aur relationships yahan add karen (agar zaroorat ho)
+            modelBuilder.Entity<ItemIngredient>()
+                .HasOne(ii => ii.Item)
+                .WithMany(i => i.ItemIngredients)
+                .HasForeignKey(ii => ii.ItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
         }
     }
 }

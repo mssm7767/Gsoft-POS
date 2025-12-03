@@ -1,12 +1,11 @@
 ﻿
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json.Serialization;
 
 
 namespace GSoftPosNew.Models
 {
-    public class Purchase
+    public class IngredientPurchase
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
@@ -14,7 +13,6 @@ namespace GSoftPosNew.Models
         [Required(ErrorMessage = "Supplier is required")]
         public int SupplierId { get; set; }
 
-        // اگر آپ نے Supplier اینٹیٹی بنائی ہے تو یہ navigation پراپرٹی بھی رکھ سکتے ہیں
         [ForeignKey("SupplierId")]
         public Supplier Supplier { get; set; }
 
@@ -32,18 +30,17 @@ namespace GSoftPosNew.Models
         public decimal TaxAmount { get; set; }
         public string Notes { get; set; } = "Notes";
         public string PurchaseType { get; set; } = "New";
-        public string? PurchaseSource { get; set; } = "Item";
 
         public decimal TotalAmount { get; set; }
         public decimal Paid { get; set; }
         public decimal Remaining { get; set; }
 
         // public ICollection<PurchaseLineItem> LineItems { get; set; }
-        public List<PurchaseItem> Items { get; set; } = new List<PurchaseItem>();
+        public List<IngredientPurchaseItem> Items { get; set; } = new List<IngredientPurchaseItem>();
         [NotMapped]
-        public List<ItemModel> ProductItems { get; set; } = new List<ItemModel>();
+        public List<Ingredient> ProductItems { get; set; } = new List<Ingredient>();
         [NotMapped]
-        public ItemModel Item { get;  set; } = new ItemModel();
+        public Ingredient Item { get;  set; } = new Ingredient();
         [NotMapped]
         public string ItemsJson { get; set; }  // Hidden field value
 
@@ -59,34 +56,6 @@ namespace GSoftPosNew.Models
 
         [Display(Name = "Document Path")]
         public string? DocumentPath { get; set; }
-    }
-
-    public class PurchaseItem
-    {
-        public int Id { get; set; }
-
-
-        public int ItemId { get; set; }
-        [NotMapped]
-        public ItemModel Item { get; set; }
-        [NotMapped]
-        public string ItemName { get; set; }
-        [NotMapped]
-        public string ItemCode { get; set; }
-
-
-        [JsonPropertyName("qty")] // ✅ maps "qty" → Quantity
-        public int Quantity { get; set; }
-
-        [JsonPropertyName("mrp")] // ✅ maps "qty" → Quantity
-        public decimal UnitCost { get; set; }
-        [JsonPropertyName("disPct")]
-        public decimal DiscountPercent { get; set; }
-        public decimal TaxPercent { get; set; }
-        public decimal LineTotal { get; set; }
-        [NotMapped]
-        public string GenericName { get; set; }
-        public int PurchaseId { get; set; }
     }
 
 }

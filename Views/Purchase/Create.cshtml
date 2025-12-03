@@ -213,6 +213,11 @@
             color: #fff
         }
 
+        .btn-recipe {
+            background: linear-gradient(90deg,#f59e0b,#f97316);
+            color: #fff;
+        }
+
         .scan-group.input-group {
             background: #e2edf9;
             border-radius: 10px;
@@ -453,6 +458,99 @@
             padding: 6px 12px;
             font-weight: 800
         }
+
+        /* ==== RECIPE MODAL STYLING ==== */
+        #recipeModal .modal-content {
+            border-radius: 18px;
+            border: 1px solid #cfd8e6;
+            box-shadow: 0 18px 45px rgba(15,23,42,.28);
+            background: radial-gradient(circle at top left,#e0f2fe 0,#f9fafb 50%,#ecfdf3 100%);
+        }
+
+        #recipeModal .modal-header {
+            border-bottom: 1px solid rgba(148,163,184,.35);
+            background: linear-gradient(90deg,#0f172a,#1d4ed8);
+            color: #e5e7eb;
+        }
+
+        #recipeModal .modal-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            letter-spacing: .2px;
+            font-size: 1.02rem;
+        }
+
+            #recipeModal .modal-title i {
+                font-size: 1.25rem;
+            }
+
+        .recipe-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(15,23,42,.12);
+            color: #e5e7eb;
+            font-size: .78rem;
+            font-weight: 600;
+        }
+
+            .recipe-pill i {
+                font-size: .8rem;
+            }
+
+        .recipe-helper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: rgba(37,99,235,.06);
+            border: 1px dashed rgba(37,99,235,.35);
+            font-size: .82rem;
+            color: #1e3a8a;
+            margin-bottom: 8px;
+        }
+
+            .recipe-helper i {
+                font-size: .9rem;
+            }
+
+        #recipeTable thead {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: linear-gradient(90deg,#eff6ff,#ecfeff);
+        }
+
+            #recipeTable thead th {
+                border-bottom: 1px solid #cbd5e1;
+                color: #0f172a;
+                font-size: .8rem;
+                text-transform: uppercase;
+                letter-spacing: .06em;
+            }
+
+        #recipeTable tbody tr:hover {
+            background: rgba(219,234,254,.65);
+        }
+
+        .ing-qty {
+            max-width: 70px;
+            text-align: right;
+        }
+
+        .btn-add-ing {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: .78rem;
+            border-radius: 999px;
+            padding-inline: 10px;
+        }
     </style>
 }
 
@@ -477,15 +575,15 @@
             @Html.HiddenFor(m => m.ItemsJson, new { id = "ItemsJson" })
 
             <!-- =============== STAGE 1: SUPPLIER → ATTACH PIC =============== -->
-        <div class="stage">
+            <div class="stage">
                 <div style="display:flex; justify-content:space-between; align-items:center;
-                    background:#f8f9fa; border-left:5px solid #28a745; padding:12px 18px;
-                    border-radius:8px; margin-bottom:15px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
+                            background:#f8f9fa; border-left:5px solid #28a745; padding:12px 18px;
+                            border-radius:8px; margin-bottom:15px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
 
                     <!-- LEFT SIDE -->
                     <div style="display:flex; align-items:center; gap:12px;">
                         <span style="background:#28a745; color:white; padding:6px 12px; border-radius:50%;
-                        font-weight:bold; width:32px; height:32px; display:flex; justify-content:center; align-items:center;">
+                                font-weight:bold; width:32px; height:32px; display:flex; justify-content:center; align-items:center;">
                             1
                         </span>
 
@@ -506,18 +604,30 @@
                         <label for="PurchaseTypeReturn" style="cursor:pointer;">Return</label>
 
                     </div>
+                    <!-- RIGHT SIDE (RADIO: NEW / RETURN) -->
+                    <div style="display:flex; align-items:center; gap:10px; font-weight:500;">
 
-                 </div>
+                            @Html.RadioButtonFor(m => m.PurchaseSource, "Item",
+                            new { id = "PurchaseSourceItem", style = "cursor:pointer;" })
+                        <label for="PurchaseSourceItem" style="cursor:pointer;">Item</label>
 
-                <div class="stage-body">
-                    <div class="row g-3 align-items-end">
-                        <!-- Supplier -->
-                        <div class="col-12 col-md-5">
-                            <label class="form-label form-label-sm mb-1">Supplier</label>
-                            <div class="input-group input-group-supplier input-group-sm">
-                                <span class="input-group-text"><i class="fa fa-truck"></i></span>
-                                @Html.DropDownListFor(
-                                m => m.SupplierId,
+                        @Html.RadioButtonFor(m => m.PurchaseSource, "Ingredient",
+                            new { id = "PurchaseSourceIngredient", style = "cursor:pointer;" })
+                    <label for="PurchaseSourceIngredient" style="cursor:pointer;">Ingredient</label>
+
+                    </div>
+
+            </div>
+
+            <div class="stage-body">
+                <div class="row g-3 align-items-end">
+                    <!-- Supplier -->
+                    <div class="col-12 col-md-5">
+                        <label class="form-label form-label-sm mb-1">Supplier</label>
+                        <div class="input-group input-group-supplier input-group-sm">
+                            <span class="input-group-text"><i class="fa fa-truck"></i></span>
+                            @Html.DropDownListFor(
+                                                        m => m.SupplierId,
                                                         (SelectList)ViewBag.SupplierList,
                                                         "— Select Supplier —",
                                                         new { @class = "form-select form-select-sm", @id = "SupplierId" }
@@ -561,7 +671,9 @@
                                 @Html.TextBoxFor(m => m.ReferenceNo, new { @class = "form-control form-control-sm", @readonly = "readonly", id = "ReferenceNo" })
                             </div>
                             <div class="col-12 col-sm-6 col-lg-4 d-flex flex-wrap align-items-center">
-                                <label for="DocumentFile" class="form-label form-label-sm mb-2 mb-lg-0 me-2 text-primary"><i class="fa fa-paperclip"></i> Attach</label>
+                                <label for="DocumentFile" class="form-label form-label-sm mb-2 mb-lg-0 me-2 text-primary">
+                                    <i class="fa fa-paperclip"></i> Attach
+                                </label>
                                 <input type="file" id="DocumentFile" name="DocumentFile" class="form-control form-control-sm me-2"
                                        style="max-width:150px;background:#e3f2fd;color:#1e88e5;border:1px solid #2196f3;"
                                        accept=".jpeg,.jpg,.png,.pdf,.xls,.xlsx" />
@@ -571,7 +683,6 @@
                     </div>
                 </div>
             </div>
-        
         </div>
 
         <!-- =============== STAGE 2: BARCODE/ENTRY/GRID =============== -->
@@ -583,7 +694,9 @@
             <div class="stage-body">
                 <!-- PRODUCTS ROW -->
                 <div class="products-row">
-                    <button type="button" class="btn-modern btn-import"><i class="fa fa-file-import"></i> Import</button>
+                    <button type="button" class="btn-modern btn-import">
+                        <i class="fa fa-file-import"></i> Import
+                    </button>
 
                     <div class="scan-group input-group position-relative">
                         <span class="input-group-text"><i class="fa fa-barcode"></i></span>
@@ -593,111 +706,193 @@
                     </div>
 
                     <button type="button" class="btn-modern btn-new"
-                            onclick="window.location.href='@Url.Action("add", "Item")'">
+                            onclick="window.location.href='@Url.Action("Add", "Item")'">
                         <i class="fa fa-plus"></i> Add New
                     </button>
+
+                    <button type="button" class="btn-modern btn-recipe" id="btnPurchaseRecipe">
+                        <i class="fa fa-bowl-food"></i> Purchase Recipe
+                    </button>
+                </div>
+            </div>
+
+            <hr class="hr-soft" />
+
+            <!-- ENTRY ROW -->
+            <div class="purchase-entry-row row align-items-end mb-2">
+                <div class="col-md-1">
+                    <label class="form-label-sm mb-1">Item Code</label>
+                    <input type="text" id="itemCode" class="form-control form-control-sm" placeholder="Barcode" readonly>
+                    <input type="hidden" id="itemId">
+                    <input type="hidden" id="itemCategory">
+                    <input type="hidden" id="itemUnit">
                 </div>
 
-                <hr class="hr-soft" />
+                <div class="col-md-2">
+                    <label class="form-label-sm mb-1">Item Name</label>
+                    <input type="text" id="itemName" class="form-control form-control-sm" placeholder="Name" readonly>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label-sm mb-1">Batch #</label>
+                    <input type="text" id="batchNo" class="form-control form-control-sm" placeholder="Batch">
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label-sm mb-1">Expiry</label>
+                    <input type="text" id="expiry" class="form-control form-control-sm" placeholder="MM/YYYY">
+                </div>
+                <div class="col-md-1">
+                    <small id="qtyMessage" class="text-muted d-block mt-1"></small>
+                    <label class="form-label-sm mb-1">Qty</label>
+                    <input type="number" id="qty" class="form-control form-control-sm" placeholder="Qty">
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label-sm mb-1">MRP</label>
+                    <input type="number" id="mrp" class="form-control form-control-sm" placeholder="MRP">
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label-sm mb-1">Dis %</label>
+                    <input type="number" id="disPct" class="form-control form-control-sm" placeholder="Discount %">
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label-sm mb-1">Cost</label>
+                    <input type="number" id="cost" class="form-control form-control-sm" placeholder="Purchase Price">
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label-sm mb-1">Ex. Dis</label>
+                    <input type="number" id="exDis" class="form-control form-control-sm" placeholder="Ex. Disc">
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label-sm mb-1">Tax %</label>
+                    <input type="number" id="taxPercent" class="form-control form-control-sm" placeholder="Tax %">
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label-sm mb-1">Tax Amt</label>
+                    <input type="number" id="taxAmt" class="form-control form-control-sm" placeholder="Tax Amount">
+                </div>
+                <div class="col-md-1 d-flex align-items-end pt-2">
+                    <button id="btnAddRow" class="btn btn-success btn-sm w-100" onclick="addToGrid()" type="button">
+                        <i class="fa fa-plus"></i> Add
+                    </button>
+                </div>
+            </div>
 
-                <!-- ENTRY ROW -->
-                <div class="purchase-entry-row row align-items-end mb-2">
-                    <div class="col-md-1">
-                        <label class="form-label-sm mb-1">Item Code</label>
-                        <input type="text" id="itemCode" class="form-control form-control-sm" placeholder="Barcode" readonly>
-                        <input type="hidden" id="itemId">
+            <hr class="hr-soft" />
+
+            <!-- GRID -->
+            <div class="purchase-items mb-3">
+                <table class="table purchase-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Item Code</th>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Unit</th>
+                            <th>Batch #</th>
+                            <th>Expiry</th>
+                            <th>Qty</th>
+                            <th>MRP</th>
+                            <th>Dis %</th>
+                            <th>Ex. Dis</th>
+                            <th>Cost</th>
+                            <th>Tax %</th>
+                            <th>Tax Amt</th>
+                            <th>Total</th>
+                            <th>Edit</th>
+                            <th>Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody id="purchaseLines"></tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="7"><b>Totals</b></td>
+                            <td id="tQty"></td>
+                            <td id="tMRP"></td>
+                            <td id="tDisPct"></td>
+                            <td id="tExDis"></td>
+                            <td id="tCost"></td>
+                            <td id="tTaxPercent"></td>
+                            <td id="tTaxAmt"></td>
+                            <td id="tGrand"></td>
+                            <td colspan="2"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========== RECIPE INGREDIENT MODAL ========== -->
+        <div class="modal fade" id="recipeModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <div class="d-flex flex-column">
+                            <div class="modal-title">
+                                <i class="fa fa-bowl-food"></i>
+                                <span>Purchase Recipe – Ingredients</span>
+                            </div>
+                            <div class="mt-1">
+                                <span class="recipe-pill">
+                                    <i class="fa fa-wand-magic-sparkles"></i>
+                                    Select ingredients & push to purchase grid
+                                </span>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"></button>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label-sm mb-1">Item Name</label>
-                        <input type="text" id="itemName" class="form-control form-control-sm" placeholder="Name" readonly>
+
+                    <div class="modal-body">
+                        <div class="recipe-helper">
+                            <i class="fa fa-circle-info"></i>
+                            <span>
+                                Search by <strong>name / code / category</strong>, set required
+                                <strong>Qty</strong> and click <strong>Add</strong>.
+                                Items will appear in the <strong>purchase grid</strong> with totals.
+                            </span>
+                        </div>
+
+                        <div class="mb-2">
+                            <input type="text" id="recipeSearch"
+                                   class="form-control form-control-sm"
+                                   placeholder="Search ingredient by name, code or category..." />
+                        </div>
+
+                        <div class="table-responsive" style="max-height:420px;">
+                            <table class="table table-sm table-hover align-middle" id="recipeTable">
+                                <thead>
+                                    <tr>
+                                        <th><i class="fa fa-barcode me-1"></i>Code</th>
+                                        <th><i class="fa fa-tag me-1"></i>Name</th>                                       
+                                        <th><i class="fa fa-layer-group me-1"></i>Category</th>
+                                        <th><i class="fa fa-ruler-combined me-1"></i>Unit</th>
+                                        <th class="text-end"><i class="fa fa-coins me-1"></i>Cost</th>
+                                        <th class="text-end" style="width:90px;"><i class="fa fa-scale-balanced me-1"></i>Qty</th>
+                                        <th style="width:90px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- rows JS se fill hongi -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div class="col-md-1">
-                        <label class="form-label-sm mb-1">Batch #</label>
-                        <input type="text" id="batchNo" class="form-control form-control-sm" placeholder="Batch">
-                    </div>
-                    <div class="col-md-1">
-                        <label class="form-label-sm mb-1">Expiry</label>
-                        <input type="text" id="expiry" class="form-control form-control-sm" placeholder="MM/YYYY">
-                    </div>
-                    <div class="col-md-1">
-                        <small id="qtyMessage" class="text-muted d-block mt-1"></small>
-                        <label class="form-label-sm mb-1">Qty</label>
-                        <input type="number" id="qty" class="form-control form-control-sm" placeholder="Qty">
-                    </div>
-                    <div class="col-md-1">
-                        <label class="form-label-sm mb-1">MRP</label>
-                        <input type="number" id="mrp" class="form-control form-control-sm" placeholder="MRP">
-                    </div>
-                    <div class="col-md-1">
-                        <label class="form-label-sm mb-1">Dis %</label>
-                        <input type="number" id="disPct" class="form-control form-control-sm" placeholder="Discount %">
-                    </div>
-                    <div class="col-md-1">
-                        <label class="form-label-sm mb-1">Cost</label>
-                        <input type="number" id="cost" class="form-control form-control-sm" placeholder="Purchase Price">
-                    </div>
-                    <div class="col-md-1">
-                        <label class="form-label-sm mb-1">Ex. Dis</label>
-                        <input type="number" id="exDis" class="form-control form-control-sm" placeholder="Ex. Disc">
-                    </div>
-                    <div class="col-md-1">
-                        <label class="form-label-sm mb-1">Tax %</label>
-                        <input type="number" id="taxPercent" class="form-control form-control-sm" placeholder="Tax %">
-                    </div>
-                    <div class="col-md-1">
-                        <label class="form-label-sm mb-1">Tax Amt</label>
-                        <input type="number" id="taxAmt" class="form-control form-control-sm" placeholder="Tax Amount">
-                    </div>
-                    <div class="col-md-1 d-flex align-items-end pt-2">
-                        <button id="btnAddRow" class="btn btn-success btn-sm w-100" onclick="addToGrid()" type="button">
-                            <i class="fa fa-plus"></i> Add
+
+                    <div class="modal-footer justify-content-between">
+                        <small class="text-muted">
+                            Tip: Recipe items bhi <strong>ItemsJson</strong> mein add ho kar
+                            same purchase save flow mein jayenge.
+                        </small>
+                        <button type="button" class="btn btn-sm btn-outline-secondary"
+                                data-bs-dismiss="modal">
+                            <i class="fa fa-xmark"></i> Close
                         </button>
                     </div>
                 </div>
-
-                <hr class="hr-soft" />
-
-                <!-- GRID -->
-                <div class="purchase-items mb-3">
-                    <table class="table purchase-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Item Code</th>
-                                <th>Name</th>
-                                <th>Batch #</th>
-                                <th>Expiry</th>
-                                <th>Qty</th>
-                                <th>MRP</th>
-                                <th>Dis %</th>
-                                <th>Ex. Dis</th>
-                                <th>Cost</th>
-                                <th>Tax %</th>
-                                <th>Tax Amt</th>
-                                <th>Total</th>
-                                <th>Edit</th>
-                                <th>Delete</th>
-                            </tr>
-                        </thead>
-                        <tbody id="purchaseLines"></tbody>
-                        <tfoot>
-                            <tr>
-                                <td colspan="5"><b>Totals</b></td>
-                                <td id="tQty"></td>
-                                <td id="tMRP"></td>
-                                <td id="tDisPct"></td>
-                                <td id="tExDis"></td>
-                                <td id="tCost"></td>
-                                <td id="tTaxPercent"></td>
-                                <td id="tTaxAmt"></td>
-                                <td id="tGrand"></td>
-                                <td colspan="2"></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
             </div>
         </div>
+
 
         <!-- =============== STAGE 3: PAYMENT + TOTALS + SAVE =============== -->
         <div class="stage">
@@ -707,9 +902,16 @@
             </div>
             <div class="stage-body">
                 <div class="payment-summary-box">
-                    <div class="summary-card"><i class="fa fa-receipt"></i> Total: <span id="sumTotal">0.00</span></div>
-                    <div class="summary-card"><i class="fa fa-hand-holding-dollar"></i> Paid: <input type="number" name="Paid" id="paidAmount" value="0" min="0" onchange="updatePaymentSummary()" /></div>
-                    <div class="summary-card"><i class="fa fa-scale-balanced"></i> Remaining: <span id="remainingAmount">0.00</span></div>
+                    <div class="summary-card">
+                        <i class="fa fa-receipt"></i> Total: <span id="sumTotal">0.00</span>
+                    </div>
+                    <div class="summary-card">
+                        <i class="fa fa-hand-holding-dollar"></i> Paid:
+                        <input type="number" name="Paid" id="paidAmount" value="0" min="0" onchange="updatePaymentSummary()" />
+                    </div>
+                    <div class="summary-card">
+                        <i class="fa fa-scale-balanced"></i> Remaining: <span id="remainingAmount">0.00</span>
+                    </div>
                 </div>
 
                 <input type="hidden" name="TotalAmount" id="hiddenTotalAmount" />
@@ -736,463 +938,651 @@
 <div id="successOverlay">
     <div class="succ-card">
         <div class="succ-title">Purchase Saved</div>
-        <div class="succ-chip"><i class="fa fa-circle-check"></i> <span id="successMsgText">Saved successfully</span></div>
+        <div class="succ-chip">
+            <i class="fa fa-circle-check"></i>
+            <span id="successMsgText">Saved successfully</span>
+        </div>
     </div>
 </div>
+
 @section Scripts {
     <script src="~/lib/jquery/dist/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap JS for modal -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
         (function () {
-          "use strict";
+            "use strict";
 
-          /* ===== UTIL ===== */
-          function setVal(id, v) { const el = document.getElementById(id); if (el) el.value = v; }
-          function getVal(id) { const el = document.getElementById(id); return el ? el.value : ""; }
-          function setText(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
-          function esc(v){ return (v==null?'':String(v)).replace(/[&<>"]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[s])); }
-
-          /* ===== CLOCK ===== */
-          function tick() {
-            const n = new Date();
-            const t = document.getElementById("currentTime");
-            const d = document.getElementById("currentDate");
-            if (t) t.textContent = n.toLocaleTimeString();
-            if (d) d.textContent = n.toLocaleDateString();
-          }
-          setInterval(tick, 1000); tick();
-
-          /* ===== LAYOUT TOGGLE ===== */
-          const root = document.getElementById('purchaseRoot');
-          const btn  = document.getElementById('toggleSizeBtn');
-          if (btn) {
-            btn.addEventListener('click', () => {
-              root.classList.toggle('expanded');
-              btn.innerHTML = root.classList.contains('expanded')
-                ? '<i class="fa fa-down-left-and-up-right-to-center"></i> Compact'
-                : '<i class="fa fa-up-right-and-down-left-from-center"></i> Expand';
-            });
-          }
-
-          /* ===== SUCCESS OVERLAY (server redirect ke baad hi) ===== */
-          document.addEventListener('DOMContentLoaded', () => {
-            const sel = document.getElementById('SupplierId'); if (sel) sel.focus();
-            generateReferenceNo();
-            var msg = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["Message"] as string ?? ""));
-            if (msg) { document.getElementById('successMsgText').textContent = msg; showSuccess(); }
-          });
-          function generateReferenceNo() {
-            let now = new Date(), y = now.getFullYear(),
-                m = String(now.getMonth() + 1).padStart(2, '0'),
-                d = String(now.getDate()).padStart(2, '0');
-            let r = Math.floor(100 + Math.random() * 900);
-            const el = document.getElementById('ReferenceNo');
-            if (el) el.value = 'REF-' + y + m + d + '-' + r;
-          }
-
-          /* ===== SUPPLIER BALANCE ===== */
-          $("#SupplierId").change(function () {
-            var supplierId = $(this).val();
-            if (!supplierId) { $("#OldBalance").val(0); return; }
-            $.get('@Url.Action("GetSupplierBalance", "SupplierPayment")', { supplierId })
-              .done(res => $("#OldBalance").val(parseFloat(res.balance) || 0))
-              .fail(() => { alert("Failed to fetch supplier balance."); $("#OldBalance").val(0); });
-          });
-          if ($("#SupplierId").val()) $("#SupplierId").trigger("change");
-
-          /* ===== PREVENT ACCIDENTAL SUBMITS ===== */
-          const form = document.querySelector('form');
-          if (form) {
-            form.addEventListener('click', function (e) {
-              const el = e.target.closest('button');
-              if (!el) return;
-              if (!el.hasAttribute('type')) el.setAttribute('type', 'button');
-            });
-            form.addEventListener('keydown', function (e) {
-              if (e.key === 'Enter') {
-                const active = document.activeElement;
-                const isSaveBtn = active && active.id === 'btnSave';
-                if (!isSaveBtn) e.preventDefault();
-              }
-            });
-          }
-
-          /* ===== ENTRY STATE (2-way binding) ===== */
-          // lastEdited: 'dis' | 'cost'  (kis field ki waja se recalc chalani hai)
-          const entryState = { lastEdited: 'dis' };
-
-          // Drivers
-          const qtyEl  = document.getElementById('qty');
-          const mrpEl  = document.getElementById('mrp');
-          const dEl    = document.getElementById('disPct');
-          const exEl   = document.getElementById('exDis');
-          const costEl = document.getElementById('cost');
-          const tpEl   = document.getElementById('taxPercent');
-          const taEl   = document.getElementById('taxAmt');
-          const qtyMsgEl = document.getElementById('qtyMessage');
-
-          function toNum(v){ const n = parseFloat(v); return isFinite(n) ? n : 0; }
-
-          // MRP/Dis/Ex change -> Cost recalc (unit)
-          function recalcFromDiscount() {
-            const mrp = toNum(getVal('mrp'));
-            const dis = toNum(getVal('disPct'));
-            const exd = toNum(getVal('exDis'));
-            const tp  = toNum(getVal('taxPercent'));
-            // unit cost before tax
-            const unitCost = mrp * (1 - ((dis + exd) / 100));
-            const taxUnit  = unitCost * (tp / 100);
-            setVal('cost', unitCost.toFixed(2));
-            setVal('taxAmt', taxUnit.toFixed(2));
-          }
-
-          // Cost change -> Dis% recalc (unit)
-          function recalcFromCost() {
-            const mrp = toNum(getVal('mrp'));
-            const cost = toNum(getVal('cost'));
-            if (mrp > 0) {
-              // effective discount% = (1 - cost/mrp) * 100
-              const eff = Math.max(0, (1 - (cost / mrp)) * 100);
-              setVal('disPct', eff.toFixed(2));
-            } else {
-              // no mrp → discount 0
-              setVal('disPct', '0');
+            /* ===== UTIL ===== */
+            function setVal(id, v) { const el = document.getElementById(id); if (el) el.value = v; }
+            function getVal(id) { const el = document.getElementById(id); return el ? el.value : ""; }
+            function setText(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
+            function esc(v) {
+                return (v == null ? '' : String(v)).replace(/[&<>"]/g, s => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;'
+                }[s]));
             }
-            // update tax amount from cost
-            const tp = toNum(getVal('taxPercent'));
-            const taxUnit = cost * (tp / 100);
-            setVal('taxAmt', taxUnit.toFixed(2));
-          }
+            function toNum(v) { const n = parseFloat(v); return isFinite(n) ? n : 0; }
 
-          function recalcEntry() {
-            if (entryState.lastEdited === 'cost') recalcFromCost();
-            else recalcFromDiscount(); // default 'dis'
-          }
+            /* ===== CLOCK ===== */
+            function tick() {
+                const n = new Date();
+                const t = document.getElementById("currentTime");
+                const d = document.getElementById("currentDate");
+                if (t) t.textContent = n.toLocaleTimeString();
+                if (d) d.textContent = n.toLocaleDateString();
+            }
+            setInterval(tick, 1000); tick();
 
-          // Bind drivers
-          if (mrpEl) mrpEl.addEventListener('input', () => { entryState.lastEdited = 'dis';  recalcEntry(); });
-          if (dEl)   dEl.addEventListener('input',   () => { entryState.lastEdited = 'dis';  recalcEntry(); });
-          if (exEl)  exEl.addEventListener('input',  () => { entryState.lastEdited = 'dis';  recalcEntry(); });
-          if (tpEl)  tpEl.addEventListener('input',  () => { /* tax affects only taxAmt */ recalcEntry(); });
-          if (costEl)costEl.addEventListener('input',() => { entryState.lastEdited = 'cost'; recalcEntry(); });
+            /* ===== LAYOUT TOGGLE ===== */
+            const root = document.getElementById('purchaseRoot');
+            const btn = document.getElementById('toggleSizeBtn');
+            if (btn) {
+                btn.addEventListener('click', () => {
+                    root.classList.toggle('expanded');
+                    btn.innerHTML = root.classList.contains('expanded')
+                        ? '<i class="fa fa-down-left-and-up-right-to-center"></i> Compact'
+                        : '<i class="fa fa-up-right-and-down-left-from-center"></i> Expand';
+                });
+            }
 
-          /* ===== ENTRY FILL (barcode suggestion choose) ===== */
-          function setValAndFocusNext() {
-            const bn = document.getElementById('batchNo');
-            if (bn) { bn.focus(); bn.select && bn.select(); }
-          }
-          function fillItem(found) {
-            const salePrice = (found.SalePrice != null) ? +found.SalePrice : 0;
-            const markupPct = (found.MarkupPercentage != null) ? +found.MarkupPercentage : 0;
-            const exDis     = (found.ExDis != null) ? +found.ExDis : 0;
+            /* ===== SUCCESS OVERLAY (server redirect ke baad hi) ===== */
+            let _succTO = null;
+            function showSuccess() {
+                const ov = document.getElementById('successOverlay'); if (!ov) return;
+                ov.style.display = 'flex';
+                if (_succTO) clearTimeout(_succTO);
+                _succTO = setTimeout(() => { ov.style.display = 'none'; }, 2000);
+            }
+            window.showSuccess = showSuccess;
 
-            setVal('itemCode', found.ItemCode || "");
-            setVal('itemName', found.ItemName || "");
-            setVal('batchNo',  found.BatchNo ?? "");
-            setVal('itemId',   found.Id || 0);
-            setVal('expiry',   found.Expiry || "");
-            setVal('qty',      found.Qty ?? 1);
+            function generateReferenceNo() {
+                let now = new Date(), y = now.getFullYear(),
+                    m = String(now.getMonth() + 1).padStart(2, '0'),
+                    d = String(now.getDate()).padStart(2, '0');
+                let r = Math.floor(100 + Math.random() * 900);
+                const el = document.getElementById('ReferenceNo');
+                if (el) el.value = 'REF-' + y + m + d + '-' + r;
+            }
 
-            if (found.PackSize) {
-              const m = String(found.PackSize).match(/\d+/);
-              if (m) {
-                const pack = +m[0];
-                const upd = () => {
-                  const q = +(getVal('qty') || 1);
-                  if (qtyMsgEl) qtyMsgEl.textContent = `Pack size ${pack}. Qty ${q} = ${pack * q} pcs.`;
+            /* ===== ENTRY STATE (2-way binding) ===== */
+            const entryState = { lastEdited: 'dis' };
+
+            const qtyEl = document.getElementById('qty');
+            const mrpEl = document.getElementById('mrp');
+            const dEl = document.getElementById('disPct');
+            const exEl = document.getElementById('exDis');
+            const costEl = document.getElementById('cost');
+            const tpEl = document.getElementById('taxPercent');
+            const taEl = document.getElementById('taxAmt');
+            const qtyMsgEl = document.getElementById('qtyMessage');
+
+            function recalcFromDiscount() {
+                const mrp = toNum(getVal('mrp'));
+                const dis = toNum(getVal('disPct'));
+                const exd = toNum(getVal('exDis'));
+                const tp = toNum(getVal('taxPercent'));
+                const unitCost = mrp * (1 - ((dis + exd) / 100));
+                const taxUnit = unitCost * (tp / 100);
+                setVal('cost', unitCost.toFixed(2));
+                setVal('taxAmt', taxUnit.toFixed(2));
+            }
+
+            function recalcFromCost() {
+                const mrp = toNum(getVal('mrp'));
+                const cost = toNum(getVal('cost'));
+                if (mrp > 0) {
+                    const eff = Math.max(0, (1 - (cost / mrp)) * 100);
+                    setVal('disPct', eff.toFixed(2));
+                } else {
+                    setVal('disPct', '0');
+                }
+                const tp = toNum(getVal('taxPercent'));
+                const taxUnit = cost * (tp / 100);
+                setVal('taxAmt', taxUnit.toFixed(2));
+            }
+
+            function recalcEntry() {
+                if (entryState.lastEdited === 'cost') recalcFromCost();
+                else recalcFromDiscount();
+            }
+
+            if (mrpEl) mrpEl.addEventListener('input', () => { entryState.lastEdited = 'dis'; recalcEntry(); });
+            if (dEl) dEl.addEventListener('input', () => { entryState.lastEdited = 'dis'; recalcEntry(); });
+            if (exEl) exEl.addEventListener('input', () => { entryState.lastEdited = 'dis'; recalcEntry(); });
+            if (tpEl) tpEl.addEventListener('input', () => { recalcEntry(); });
+            if (costEl) costEl.addEventListener('input', () => { entryState.lastEdited = 'cost'; recalcEntry(); });
+
+            function setValAndFocusNext() {
+                const bn = document.getElementById('batchNo');
+                if (bn) { bn.focus(); bn.select && bn.select(); }
+            }
+
+            /* ===== FILL ITEM (BARCODE / SEARCH SE) ===== */
+            function fillItem(found) {
+                const salePrice = (found.SalePrice != null) ? +found.SalePrice : 0;
+                const markupPct = (found.MarkupPercentage != null) ? +found.MarkupPercentage : 0;
+                const exDis = (found.ExDis != null) ? +found.ExDis : 0;
+
+                setVal('itemCode', found.ItemCode || "");
+                setVal('itemName', found.ItemName || "");
+                setVal('batchNo', found.BatchNo ?? "");
+                setVal('itemId', found.Id || 0);
+                setVal('expiry', found.Expiry || "");
+                setVal('qty', found.Qty ?? 1);
+
+                // category + unit (agar property exist nahi bhi hogi to "" set ho jayega)
+                setVal('itemCategory', found.CategoryName || found.Category || "");
+                setVal('itemUnit', found.Unit || found.UnitName || "");
+
+                // Pack size message
+                if (found.PackSize) {
+                    const m = String(found.PackSize).match(/\d+/);
+                    if (m) {
+                        const pack = +m[0];
+                        const upd = () => {
+                            const q = +(getVal('qty') || 1);
+                            if (qtyMsgEl) qtyMsgEl.textContent = `Pack size ${pack}. Qty ${q} = ${pack * q} pcs.`;
+                        };
+                        upd();
+                        const qEl = document.getElementById('qty');
+                        if (qEl) qEl.oninput = upd;
+                    } else {
+                        if (qtyMsgEl) qtyMsgEl.textContent = '';
+                    }
+                } else {
+                    if (qtyMsgEl) qtyMsgEl.textContent = '';
+                }
+
+                setVal('mrp', salePrice);
+                setVal('disPct', markupPct);
+                setVal('exDis', exDis);
+                setVal('taxPercent', found.TaxPercent ?? 0);
+                setVal('taxAmt', found.TaxAmt ?? 0);
+
+                entryState.lastEdited = 'dis';
+                recalcEntry();
+                setValAndFocusNext();
+            }
+
+            /* ===== SCAN / SUGGESTIONS ===== */
+            const itemsFromDb = @Html.Raw(itemsJson);
+            const barcodeInput = document.getElementById("barcodeInput");
+            const suggestionBox = document.getElementById("barcodeSuggestions");
+            let activeIndex = -1, currentList = [];
+
+            function renderSuggestions(list) {
+                if (!suggestionBox) return;
+                suggestionBox.innerHTML = "";
+                if (!list.length) {
+                    suggestionBox.style.display = 'none';
+                    activeIndex = -1; currentList = []; return;
+                }
+                suggestionBox.style.display = 'block';
+                currentList = list;
+                list.slice(0, 20).forEach((item, idx) => {
+                    const div = document.createElement('div');
+                    div.className = 'barcode-suggestion-item' + (idx === activeIndex ? ' active' : '');
+                    div.innerHTML = `<strong>${item.ItemCode || ""}</strong> - ${item.ItemName || ""} <small>(PKR ${(+(item.SalePrice) || 0).toFixed(2)})</small>`;
+                    div.addEventListener('mouseenter', () => setActive(idx));
+                    div.addEventListener('click', () => chooseItem(item));
+                    suggestionBox.appendChild(div);
+                });
+            }
+            function setActive(i) {
+                activeIndex = i;
+                suggestionBox.querySelectorAll('.barcode-suggestion-item')
+                    .forEach((el, ix) => el.classList.toggle('active', ix === i));
+            }
+            function chooseItem(item) { fillItem(item); suggestionBox.style.display = 'none'; }
+
+            if (barcodeInput) {
+                barcodeInput.addEventListener('input', function () {
+                    const q = (this.value || '').trim().toLowerCase();
+                    if (!q) { renderSuggestions([]); return; }
+                    const matches = (itemsFromDb || []).filter(it =>
+                        (String(it.ItemCode || "").toLowerCase().includes(q)) ||
+                        (String(it.ItemName || "").toLowerCase().includes(q))
+                    );
+                    activeIndex = 0; renderSuggestions(matches);
+                });
+                barcodeInput.addEventListener('keydown', function (e) {
+                    const visible = suggestionBox && suggestionBox.style.display === 'block';
+                    if (e.key === 'ArrowDown' && visible) {
+                        e.preventDefault();
+                        activeIndex = Math.min(activeIndex + 1, currentList.length - 1); setActive(activeIndex); return;
+                    }
+                    if (e.key === 'ArrowUp' && visible) {
+                        e.preventDefault();
+                        activeIndex = Math.max(activeIndex - 1, 0); setActive(activeIndex); return;
+                    }
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (visible && currentList.length) {
+                            const pick = currentList[Math.max(0, activeIndex)];
+                            if (pick) { chooseItem(pick); return; }
+                        }
+                        const v = (this.value || '').trim().toLowerCase(); if (!v) return;
+                        const found = (itemsFromDb || []).find(x =>
+                            (String(x.ItemCode || "")).toLowerCase() === v || (String(x.ItemName || "")).toLowerCase() === v
+                        ) || (itemsFromDb || []).find(x =>
+                            (String(x.ItemCode || "")).toLowerCase().includes(v) || (String(x.ItemName || "")).toLowerCase().includes(v)
+                        );
+                        if (found) chooseItem(found);
+                    }
+                    if (e.key === 'Escape' && suggestionBox) suggestionBox.style.display = 'none';
+                });
+                document.addEventListener('click', e => {
+                    if (!barcodeInput.contains(e.target) && !(suggestionBox && suggestionBox.contains(e.target))) {
+                        if (suggestionBox) suggestionBox.style.display = 'none';
+                    }
+                });
+            }
+
+            /* ===== GRID / TOTALS (COST-BASED) ===== */
+            let gridRows = [], editIndex = -1;
+            const addBtn = document.getElementById('btnAddRow');
+
+            function setEditingUI(on) {
+                const tbody = document.getElementById('purchaseLines');
+                if (tbody) {
+                    [...tbody.querySelectorAll('tr')].forEach((tr, idx) => {
+                        tr.style.backgroundColor = (on && idx === editIndex) ? '#fff8d6' : '';
+                    });
+                }
+                if (addBtn) {
+                    if (on) {
+                        addBtn.setAttribute('type', 'button');
+                        addBtn.classList.remove('btn-success'); addBtn.classList.add('btn-warning');
+                        addBtn.innerHTML = '<i class="fa fa-save"></i> Update';
+                    } else {
+                        addBtn.classList.remove('btn-warning'); addBtn.classList.add('btn-success');
+                        addBtn.innerHTML = '<i class="fa fa-plus"></i> Add';
+                    }
+                }
+            }
+
+            function computeRowTotals(row) {
+                const unitCost = (+row.mrp || 0) * (1 - ((+row.disPct || 0) + (+row.exDis || 0)) / 100);
+                const taxUnit = unitCost * ((+row.taxPercent || 0) / 100);
+                row.cost = unitCost;
+                row.taxAmt = taxUnit;
+                row.rowTotal = (unitCost + taxUnit) * (+row.qty || 0);
+            }
+
+            window.addToGrid = function () {
+                const row = {
+                    itemCode: getVal('itemCode').trim(),
+                    itemName: getVal('itemName').trim(),
+                    batchNo: getVal('batchNo').trim(),
+                    expiry: getVal('expiry').trim(),
+                    qty: +getVal('qty') || 0,
+                    mrp: +getVal('mrp') || 0,
+                    disPct: +getVal('disPct') || 0,
+                    exDis: +getVal('exDis') || 0,
+                    cost: +getVal('cost') || 0,
+                    taxPercent: +getVal('taxPercent') || 0,
+                    taxAmt: +getVal('taxAmt') || 0,
+                    id: +getVal('itemId') || 0,
+                    categoryName: getVal('itemCategory').trim(),
+                    unit: getVal('itemUnit').trim()
                 };
-                upd(); const qEl = document.getElementById('qty'); if (qEl) qEl.oninput = upd;
-              } else { if (qtyMsgEl) qtyMsgEl.textContent = ''; }
-            } else { if (qtyMsgEl) qtyMsgEl.textContent = ''; }
 
-            setVal('mrp', salePrice);
-            setVal('disPct', markupPct);
-            setVal('exDis', exDis);
-            setVal('taxPercent', found.TaxPercent ?? 0);
-            setVal('taxAmt', found.TaxAmt ?? 0);
+                if (!row.itemCode || !row.itemName || row.qty <= 0) {
+                    alert('Required fields are missing!');
+                    return;
+                }
 
-            entryState.lastEdited = 'dis';
-            recalcEntry();
-            setValAndFocusNext();
-          }
+                computeRowTotals(row);
 
-          /* ===== SCAN / SUGGESTIONS ===== */
-          const itemsFromDb = @Html.Raw(itemsJson);
-          const barcodeInput = document.getElementById("barcodeInput");
-          const suggestionBox = document.getElementById("barcodeSuggestions");
-          let activeIndex = -1, currentList = [];
+                if (editIndex === -1) gridRows.push(row);
+                else {
+                    gridRows[editIndex] = row;
+                    editIndex = -1;
+                    setEditingUI(false);
+                }
 
-          function renderSuggestions(list) {
-            if (!suggestionBox) return;
-            suggestionBox.innerHTML = "";
-            if (!list.length) { suggestionBox.style.display = 'none'; activeIndex = -1; currentList = []; return; }
-            suggestionBox.style.display = 'block';
-            currentList = list;
-            list.slice(0, 20).forEach((item, idx) => {
-              const div = document.createElement('div');
-              div.className = 'barcode-suggestion-item' + (idx === activeIndex ? ' active' : '');
-              div.innerHTML = `<strong>${item.ItemCode || ""}</strong> - ${item.ItemName || ""} <small>(PKR ${(+(item.SalePrice)||0).toFixed(2)})</small>`;
-              div.addEventListener('mouseenter', () => setActive(idx));
-              div.addEventListener('click', () => chooseItem(item));
-              suggestionBox.appendChild(div);
-            });
-          }
-          function setActive(i) {
-            activeIndex = i;
-            suggestionBox.querySelectorAll('.barcode-suggestion-item').forEach((el, ix) => el.classList.toggle('active', ix === i));
-          }
-          function chooseItem(item) { fillItem(item); suggestionBox.style.display = 'none'; }
-
-          if (barcodeInput) {
-            barcodeInput.addEventListener('input', function () {
-              const q = (this.value || '').trim().toLowerCase();
-              if (!q) { renderSuggestions([]); return; }
-              const matches = (itemsFromDb || []).filter(it =>
-                (String(it.ItemCode || "").toLowerCase().includes(q)) ||
-                (String(it.ItemName || "").toLowerCase().includes(q))
-              );
-              activeIndex = 0; renderSuggestions(matches);
-            });
-            barcodeInput.addEventListener('keydown', function (e) {
-              const visible = suggestionBox && suggestionBox.style.display === 'block';
-              if (e.key === 'ArrowDown' && visible) { e.preventDefault(); activeIndex = Math.min(activeIndex + 1, currentList.length - 1); setActive(activeIndex); return; }
-              if (e.key === 'ArrowUp' && visible) { e.preventDefault(); activeIndex = Math.max(activeIndex - 1, 0); setActive(activeIndex); return; }
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                if (visible && currentList.length) { const pick = currentList[Math.max(0, activeIndex)]; if (pick) { chooseItem(pick); return; } }
-                const v = (this.value || '').trim().toLowerCase(); if (!v) return;
-                const found = (itemsFromDb || []).find(x =>
-                  (String(x.ItemCode || "")).toLowerCase() === v || (String(x.ItemName || "")).toLowerCase() === v
-                ) || (itemsFromDb || []).find(x =>
-                  (String(x.ItemCode || "")).toLowerCase().includes(v) || (String(x.ItemName || "")).toLowerCase().includes(v)
-                );
-                if (found) chooseItem(found);
-              }
-              if (e.key === 'Escape' && suggestionBox) suggestionBox.style.display = 'none';
-            });
-            document.addEventListener('click', e => {
-              if (!barcodeInput.contains(e.target) && !(suggestionBox && suggestionBox.contains(e.target))) {
-                if (suggestionBox) suggestionBox.style.display = 'none';
-              }
-            });
-          }
-
-          /* ===== GRID / TOTALS (always COST-BASED) ===== */
-          let gridRows = [], editIndex = -1;
-          const addBtn = document.getElementById('btnAddRow');
-
-          function setEditingUI(on) {
-            const tbody = document.getElementById('purchaseLines');
-            if (tbody) {
-              [...tbody.querySelectorAll('tr')].forEach((tr, idx) => {
-                tr.style.backgroundColor = (on && idx === editIndex) ? '#fff8d6' : '';
-              });
-            }
-            if (addBtn) {
-              if (on) {
-                addBtn.setAttribute('type', 'button');
-                addBtn.classList.remove('btn-success'); addBtn.classList.add('btn-warning');
-                addBtn.innerHTML = '<i class="fa fa-save"></i> Update';
-              } else {
-                addBtn.classList.remove('btn-warning'); addBtn.classList.add('btn-success');
-                addBtn.innerHTML = '<i class="fa fa-plus"></i> Add';
-              }
-            }
-          }
-
-          function computeRowTotals(row) {
-            // HAMESHA COST par base:
-            // unitCost = MRP * (1 - (dis+ex)/100)
-            // taxUnit  = unitCost * tax%
-            // rowTotal = (unitCost + taxUnit) * qty
-            const unitCost = (+row.mrp || 0) * (1 - ((+row.disPct || 0) + (+row.exDis || 0)) / 100);
-            const taxUnit  = unitCost * ((+row.taxPercent || 0) / 100);
-            row.cost = unitCost;               // keep per-unit cost
-            row.taxAmt = taxUnit;              // per-unit tax (display purpose)
-            row.rowTotal = (unitCost + taxUnit) * (+row.qty || 0);
-          }
-
-          window.addToGrid = function () {
-            const row = {
-              itemCode: getVal('itemCode').trim(),
-              itemName: getVal('itemName').trim(),
-              batchNo:  getVal('batchNo').trim(),
-              expiry:   getVal('expiry').trim(),
-              qty:      +getVal('qty') || 0,
-              mrp:      +getVal('mrp') || 0,
-              disPct:   +getVal('disPct') || 0,
-              exDis:    +getVal('exDis') || 0,
-              cost:     +getVal('cost') || 0,      // will be overwritten by computeRowTotals
-              taxPercent:+getVal('taxPercent') || 0,
-              taxAmt:   +getVal('taxAmt') || 0,    // per-unit, will recompute
-              id:       +getVal('itemId') || 0
+                clearEntry();
+                renderGrid();
+                if (barcodeInput) { barcodeInput.focus(); barcodeInput.select && barcodeInput.select(); }
             };
 
-            if (!row.itemCode || !row.itemName || row.qty <= 0) { alert('Required fields are missing!'); return; }
+            function clearEntry() {
+                [
+                    'itemCode', 'itemName', 'batchNo', 'expiry',
+                    'qty', 'mrp', 'disPct', 'exDis', 'cost',
+                    'taxPercent', 'taxAmt', 'itemId',
+                    'itemCategory', 'itemUnit'
+                ].forEach(id => setVal(id, ''));
+                if (qtyMsgEl) qtyMsgEl.textContent = '';
+                entryState.lastEdited = 'dis';
+            }
 
-            // recompute totals cost-based
+            function renderGrid() {
+                const tbody = document.getElementById('purchaseLines'); if (!tbody) return;
+                let tQty = 0, tMRP = 0, tDisPct = 0, tExDis = 0, tCost = 0, tTaxPercent = 0, tTaxAmt = 0, tGrand = 0, html = '';
+
+                gridRows.forEach((r, i) => {
+                    computeRowTotals(r);
+
+                    tQty += r.qty;
+                    tMRP += r.mrp;
+                    tDisPct += r.disPct;
+                    tExDis += r.exDis;
+                    tCost += r.cost;
+                    tTaxPercent += r.taxPercent;
+                    tTaxAmt += r.taxAmt;
+                    tGrand += r.rowTotal;
+
+                    html += '<tr' + (i === editIndex ? ' style="background-color:#fff8d6"' : '') + '>'
+                        + '<td>' + (i + 1) + '</td>'
+                        + '<td>' + esc(r.itemCode) + '</td>'
+                        + '<td>' + esc(r.itemName) + '</td>'
+                        + '<td>' + esc(r.categoryName || '') + '</td>'
+                        + '<td>' + esc(r.unit || '') + '</td>'
+                        + '<td>' + esc(r.batchNo) + '</td>'
+                        + '<td>' + esc(r.expiry) + '</td>'
+                        + '<td>' + r.qty + '</td>'
+                        + '<td>' + r.mrp.toFixed(2) + '</td>'
+                        + '<td>' + r.disPct + '</td>'
+                        + '<td>' + r.exDis + '</td>'
+                        + '<td>' + r.cost.toFixed(2) + '</td>'
+                        + '<td>' + r.taxPercent + '</td>'
+                        + '<td>' + r.taxAmt.toFixed(2) + '</td>'
+                        + '<td>' + r.rowTotal.toFixed(2) + '</td>'
+                        + '<td><button type="button" class="btn btn-sm btn-warning" onclick="editRow(' + i + ')"><i class="fa fa-edit"></i></button></td>'
+                        + '<td><button type="button" class="btn btn-sm btn-danger" onclick="deleteRow(' + i + ')"><i class="fa fa-trash"></i></button></td>'
+                        + '</tr>';
+                });
+
+                tbody.innerHTML = html;
+
+                setText('tQty', tQty);
+                setText('tMRP', tMRP.toFixed(2));
+                setText('tDisPct', tDisPct);
+                setText('tExDis', tExDis);
+                setText('tCost', tCost.toFixed(2));
+                setText('tTaxPercent', tTaxPercent);
+                setText('tTaxAmt', tTaxAmt.toFixed(2));
+                setText('tGrand', tGrand.toFixed(2));
+                setText('sumTotal', tGrand.toFixed(2));
+
+                const paid = +(document.getElementById('paidAmount').value || 0),
+                    remaining = tGrand - paid;
+                setText('remainingAmount', remaining.toFixed(2));
+
+                const hT = document.getElementById('hiddenTotalAmount');
+                const hR = document.getElementById('hiddenRemainingAmount');
+                if (hT) hT.value = tGrand.toFixed(2);
+                if (hR) hR.value = remaining.toFixed(2);
+
+                const itemsJsonEl = document.getElementById('ItemsJson');
+                if (itemsJsonEl) itemsJsonEl.value = JSON.stringify(gridRows || []);
+            }
+
+            window.editRow = function (i) {
+                const r = gridRows[i]; if (!r) return;
+
+                setVal('itemCode', r.itemCode);
+                setVal('itemName', r.itemName);
+                setVal('batchNo', r.batchNo);
+                setVal('expiry', r.expiry);
+                setVal('qty', r.qty);
+                setVal('mrp', r.mrp);
+                setVal('disPct', r.disPct);
+                setVal('exDis', r.exDis);
+                setVal('cost', r.cost);
+                setVal('taxPercent', r.taxPercent);
+                setVal('taxAmt', r.taxAmt);
+                setVal('itemId', r.id);
+                setVal('itemCategory', r.categoryName || '');
+                setVal('itemUnit', r.unit || '');
+
+                editIndex = i; setEditingUI(true);
+                entryState.lastEdited = 'dis';
+                recalcEntry();
+                const q = document.getElementById('qty'); if (q) { q.focus(); q.select && q.select(); }
+            };
+
+            window.deleteRow = function (i) {
+                if (confirm('Delete this row?')) {
+                    gridRows.splice(i, 1);
+                    if (editIndex === i) { editIndex = -1; setEditingUI(false); }
+                    else if (editIndex > i) { editIndex--; }
+                    renderGrid();
+                }
+            };
+
+            /* ===== RECIPE INGREDIENTS INTEGRATION ===== */
+            let allIngredients = [];
+
+            function onPurchaseRecipeClick() {
+                if (!allIngredients.length) {
+                    fetch('@Url.Action("GetIngredientsForPurchase", "Ingredient")')
+                        .then(r => r.json())
+                        .then(data => {
+                            allIngredients = data || [];
+                            renderRecipeTable(allIngredients);
+                            const modalEl = document.getElementById('recipeModal');
+                            if (modalEl) {
+                                const modal = new bootstrap.Modal(modalEl);
+                                modal.show();
+                            }
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            alert('Error loading ingredients.');
+                        });
+                } else {
+                    renderRecipeTable(allIngredients);
+                    const modalEl = document.getElementById('recipeModal');
+                    if (modalEl) {
+                        const modal = new bootstrap.Modal(modalEl);
+                        modal.show();
+                    }
+                }
+            }
+
+                   function renderRecipeTable(list) {
+            const tbody = document.querySelector('#recipeTable tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (!list || list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-2">No ingredients found</td></tr>`;
+                return;
+            }
+
+            list.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.code || ''}</td>
+                    <td>${row.name || ''}</td>                    
+                    <td>${row.categoryName || ''}</td>
+                    <td>${row.unit || ''}</td>
+                    <td class="text-end">
+                         <input type="number" name="IngredientCost"
+                        class="form-control form-control-sm ing-cost"
+                        value="1" min="1" step="1">
+                    </td>
+                    </td>
+                    <td class="text-end">
+                        <input type="number"
+                               class="form-control form-control-sm ing-qty"
+                               value="1"
+                               min="0.001"
+                               step="0.001">
+                    </td>
+                    <td class="text-center">
+                        <button type="button"
+                                class="btn btn-sm btn-primary btn-add-ing"
+                                data-id="${row.id}">
+                            <i class="fa fa-plus"></i> Add
+                        </button>
+                    </td>`;
+                tbody.appendChild(tr);
+            });
+
+            // Add button click
+            tbody.querySelectorAll('.btn-add-ing').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const id = parseInt(this.dataset.id);
+                    const ing = allIngredients.find(x => x.id === id);
+                    const tr = this.closest('tr');
+                    const qtyInput = tr ? tr.querySelector('.ing-qty') : null;
+                    const costInput = tr ? tr.querySelector('.ing-cost') : null;
+                    const qty = qtyInput ? (parseFloat(qtyInput.value) || 1) : 1;
+                    const cost = costInput ? (parseFloat(costInput.value) || 1) : 1;
+
+                    if (ing) {
+                        addIngredientToGrid(ing, qty, cost);
+                        // modal close
+                        const modalEl = document.getElementById('recipeModal');
+                        if (modalEl) {
+                            const instance = bootstrap.Modal.getInstance(modalEl);
+                            if (instance) instance.hide();
+                        }
+                    }
+                });
+            });
+
+            // Qty pe Enter se bhi Add
+            tbody.querySelectorAll('.ing-qty').forEach(input => {
+                input.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const tr = this.closest('tr');
+                        const btn = tr ? tr.querySelector('.btn-add-ing') : null;
+                        if (btn) btn.click();
+                    }
+                });
+            });
+        }
+
+
+         function addIngredientToGrid(ing, qty, cost) {
+            const q = (qty && qty > 0) ? qty : 1;
+            const unitCost = +(ing.costPerUnit ?? 0);
+
+            const row = {
+                itemCode: ing.code || '',
+                itemName: ing.name || '',
+                batchNo: '',
+                expiry: '',
+                qty: q,
+                mrp: cost,
+                disPct: 0,
+                exDis: 0,
+                cost: cost,
+                taxPercent: 0,
+                taxAmt: 0,
+                id: 0,
+                categoryName: ing.categoryName || '',
+                unit: ing.unit || ''
+            };
+
             computeRowTotals(row);
+            gridRows.push(row);
+            editIndex = -1;
+            setEditingUI(false);
+            renderGrid();
 
-            if (editIndex === -1) gridRows.push(row);
-            else { gridRows[editIndex] = row; editIndex = -1; setEditingUI(false); }
+            // barcode input par focus back
+            if (barcodeInput) {
+                barcodeInput.focus();
+                if (barcodeInput.select) barcodeInput.select();
+            }
+        }
 
-            clearEntry(); renderGrid();
-            if (barcodeInput) { barcodeInput.focus(); barcodeInput.select && barcodeInput.select(); }
-          };
 
-          function clearEntry() {
-            ['itemCode','itemName','batchNo','expiry','qty','mrp','disPct','exDis','cost','taxPercent','taxAmt','itemId']
-              .forEach(id => setVal(id, ''));
-            if (qtyMsgEl) qtyMsgEl.textContent = '';
-            entryState.lastEdited = 'dis';
-          }
+            /* ===== PAYMENT SUMMARY ===== */
+            window.updatePaymentSummary = function () {
+                let g = 0; gridRows.forEach(r => { computeRowTotals(r); g += r.rowTotal; });
+                setText('sumTotal', g.toFixed(2));
+                const p = +(document.getElementById('paidAmount').value || 0);
+                setText('remainingAmount', (g - p).toFixed(2));
+                const hT = document.getElementById('hiddenTotalAmount');
+                const hR = document.getElementById('hiddenRemainingAmount');
+                if (hT) hT.value = g.toFixed(2);
+                if (hR) hR.value = (g - p).toFixed(2);
+            };
 
-          function renderGrid() {
-            const tbody = document.getElementById('purchaseLines'); if (!tbody) return;
-            let tQty=0, tMRP=0, tDisPct=0, tExDis=0, tCost=0, tTaxPercent=0, tTaxAmt=0, tGrand=0, html='';
+            /* ===== SAVE PACK ===== */
+            window.updateItemsJson = function () {
+                const el = document.getElementById('ItemsJson');
+                if (el) el.value = JSON.stringify(gridRows || []);
+            };
 
-            gridRows.forEach((r, i) => {
-              // ensure totals are consistent if something changed
-              computeRowTotals(r);
-
-              tQty += r.qty;
-              tMRP += r.mrp;
-              tDisPct += r.disPct;
-              tExDis += r.exDis;
-              tCost += r.cost;              // per-unit cost sum (display)
-              tTaxPercent += r.taxPercent;
-              tTaxAmt += r.taxAmt;          // per-unit tax sum (display)
-              tGrand += r.rowTotal;         // **COST-based grand total**
-
-              html += '<tr' + (i === editIndex ? ' style="background-color:#fff8d6"' : '') + '>'
-                + '<td>' + (i + 1) + '</td>'
-                + '<td>' + esc(r.itemCode) + '</td>'
-                + '<td>' + esc(r.itemName) + '</td>'
-                + '<td>' + esc(r.batchNo)  + '</td>'
-                + '<td>' + esc(r.expiry)   + '</td>'
-                + '<td>' + r.qty + '</td>'
-                + '<td>' + r.mrp.toFixed(2) + '</td>'
-                + '<td>' + r.disPct + '</td>'
-                + '<td>' + r.exDis + '</td>'
-                + '<td>' + r.cost.toFixed(2) + '</td>'
-                + '<td>' + r.taxPercent + '</td>'
-                + '<td>' + r.taxAmt.toFixed(2) + '</td>'
-                + '<td>' + r.rowTotal.toFixed(2) + '</td>'
-                + '<td><button type="button" class="btn btn-sm btn-warning" onclick="editRow(' + i + ')"><i class="fa fa-edit"></i></button></td>'
-                + '<td><button type="button" class="btn btn-sm btn-danger" onclick="deleteRow(' + i + ')"><i class="fa fa-trash"></i></button></td>'
-                + '</tr>';
+            /* ===== ENTER KEY FLOW ===== */
+            const flow = [
+                'SupplierId', 'OldBalance', 'SupplierInv', 'PurchaseDate', 'BusinessLocation', 'ReferenceNo',
+                'barcodeInput', 'batchNo', 'expiry', 'qty', 'mrp', 'disPct', 'cost', 'exDis', 'taxPercent', 'taxAmt',
+                'btnAddRow', 'paidAmount', 'btnSave'
+            ];
+            function focusNext(curr) {
+                const ix = flow.indexOf(curr);
+                if (ix >= 0 && ix < flow.length - 1) {
+                    const nx = document.getElementById(flow[ix + 1]);
+                    if (nx) { nx.focus(); if (nx.select && nx.tagName === 'INPUT') nx.select(); }
+                }
+            }
+            flow.forEach(id => {
+                const el = document.getElementById(id); if (!el) return;
+                el.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (id === 'btnAddRow') { window.addToGrid(); }
+                        else if (id === 'btnSave') { const s = document.getElementById('btnSave'); s && s.click(); }
+                        else { focusNext(id); }
+                    }
+                });
             });
 
-            tbody.innerHTML = html;
+            /* ===== DOMContentLoaded init ===== */
+            document.addEventListener('DOMContentLoaded', () => {
+                const sel = document.getElementById('SupplierId'); if (sel) sel.focus();
+                generateReferenceNo();
+                var msg = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["Message"] as string ?? ""));
+                if (msg) { document.getElementById('successMsgText').textContent = msg; showSuccess(); }
 
-            setText('tQty', tQty);
-            setText('tMRP', tMRP.toFixed(2));
-            setText('tDisPct', tDisPct);
-            setText('tExDis', tExDis);
-            setText('tCost', tCost.toFixed(2));              // sum of per-unit costs (info)
-            setText('tTaxPercent', tTaxPercent);
-            setText('tTaxAmt', tTaxAmt.toFixed(2));          // sum of per-unit tax (info)
-            setText('tGrand', tGrand.toFixed(2));            // ***** COST-based grand total *****
-            setText('sumTotal', tGrand.toFixed(2));
+                const btnRecipe = document.getElementById('btnPurchaseRecipe');
+                if (btnRecipe) {
+                    btnRecipe.addEventListener('click', onPurchaseRecipeClick);
+                }
 
-            const paid = +(document.getElementById('paidAmount').value || 0),
-                  remaining = tGrand - paid;
-            setText('remainingAmount', remaining.toFixed(2));
+                const recipeSearch = document.getElementById('recipeSearch');
+                if (recipeSearch) {
+                    recipeSearch.addEventListener('input', function () {
+                        const term = (this.value || '').toLowerCase();
+                        const filtered = allIngredients.filter(x =>
+                            (x.name && x.name.toLowerCase().includes(term)) ||
+                            (x.code && x.code.toLowerCase().includes(term)) ||
+                            (x.categoryName && x.categoryName.toLowerCase().includes(term))
+                        );
+                        renderRecipeTable(filtered);
+                    });
+                }
 
-            const hT = document.getElementById('hiddenTotalAmount');
-            const hR = document.getElementById('hiddenRemainingAmount');
-            if (hT) hT.value = tGrand.toFixed(2);
-            if (hR) hR.value = remaining.toFixed(2);
+                // Supplier balance load if already selected
+                if ($("#SupplierId").val()) $("#SupplierId").trigger("change");
 
-            const itemsJsonEl = document.getElementById('ItemsJson');
-            if (itemsJsonEl) itemsJsonEl.value = JSON.stringify(gridRows || []);
-          }
-
-          window.editRow = function (i) {
-            const r = gridRows[i]; if (!r) return;
-
-            setVal('itemCode', r.itemCode); setVal('itemName', r.itemName);
-            setVal('batchNo', r.batchNo);   setVal('expiry', r.expiry);
-            setVal('qty', r.qty);           setVal('mrp', r.mrp);
-            setVal('disPct', r.disPct);     setVal('exDis', r.exDis);
-            setVal('cost', r.cost);         setVal('taxPercent', r.taxPercent);
-            setVal('taxAmt', r.taxAmt);     setVal('itemId', r.id);
-
-            editIndex = i; setEditingUI(true);
-
-            // 🔁 Edit mode me bhi 2-way binding ON:
-            entryState.lastEdited = 'dis';   // default driver
-            recalcEntry();                   // sync values
-            const q = document.getElementById('qty'); if (q) { q.focus(); q.select && q.select(); }
-          };
-
-          window.deleteRow = function (i) {
-            if (confirm('Delete this row?')) {
-              gridRows.splice(i, 1);
-              if (editIndex === i) { editIndex = -1; setEditingUI(false); }
-              else if (editIndex > i) { editIndex--; }
-              renderGrid();
-            }
-          };
-
-          /* ===== PAYMENT SUMMARY ===== */
-          window.updatePaymentSummary = function () {
-            let g = 0; gridRows.forEach(r => { computeRowTotals(r); g += r.rowTotal; });
-            setText('sumTotal', g.toFixed(2));
-            const p = +(document.getElementById('paidAmount').value || 0);
-            setText('remainingAmount', (g - p).toFixed(2));
-            const hT = document.getElementById('hiddenTotalAmount');
-            const hR = document.getElementById('hiddenRemainingAmount');
-            if (hT) hT.value = g.toFixed(2);
-            if (hR) hR.value = (g - p).toFixed(2);
-          };
-
-          /* ===== SAVE PACK ===== */
-          window.updateItemsJson = function () {
-            const el = document.getElementById('ItemsJson');
-            if (el) el.value = JSON.stringify(gridRows || []);
-          };
-
-          /* ===== SUCCESS OVERLAY ===== */
-          let _succTO = null;
-          function showSuccess() {
-            const ov = document.getElementById('successOverlay'); if (!ov) return;
-            ov.style.display = 'flex';
-            if (_succTO) clearTimeout(_succTO);
-            _succTO = setTimeout(() => { ov.style.display = 'none'; }, 2000);
-          }
-          window.showSuccess = showSuccess;
-
-          /* ===== ENTER KEY FLOW ===== */
-          const flow = [
-            'SupplierId','OldBalance','SupplierInv','PurchaseDate','BusinessLocation','ReferenceNo',
-            'barcodeInput','batchNo','expiry','qty','mrp','disPct','cost','exDis','taxPercent','taxAmt',
-            'btnAddRow','paidAmount','btnSave'
-          ];
-          function focusNext(curr) {
-            const ix = flow.indexOf(curr);
-            if (ix >= 0 && ix < flow.length - 1) {
-              const nx = document.getElementById(flow[ix + 1]);
-              if (nx) { nx.focus(); if (nx.select && nx.tagName === 'INPUT') nx.select(); }
-            }
-          }
-          flow.forEach(id => {
-            const el = document.getElementById(id); if (!el) return;
-            el.addEventListener('keydown', e => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                if (id === 'btnAddRow') { window.addToGrid(); }
-                else if (id === 'btnSave') { const s = document.getElementById('btnSave'); s && s.click(); }
-                else { focusNext(id); }
-              }
+                // Initial render
+                renderGrid();
             });
-          });
 
-          // Initial render
-          renderGrid();
+            /* ===== SUPPLIER BALANCE ===== */
+            $("#SupplierId").change(function () {
+                var supplierId = $(this).val();
+                if (!supplierId) { $("#OldBalance").val(0); return; }
+                $.get('@Url.Action("GetSupplierBalance", "SupplierPayment")', { supplierId })
+                    .done(res => $("#OldBalance").val(parseFloat(res.balance) || 0))
+                    .fail(() => { alert("Failed to fetch supplier balance."); $("#OldBalance").val(0); });
+            });
+
         })();
     </script>
 }
-
-
-
-
