@@ -154,11 +154,6 @@ namespace GSoftPosNew.Controllers
 
                         _context.ItemIngredients.Add(itemIngredient);
 
-                        decimal currentStock = ingredient.PurchaseQty ?? 0;   // if null, treat as 0
-                        decimal newStock = currentStock - r.UseQty;
-
-                        ingredient.PurchaseQty = newStock;
-
                     }
                 }
 

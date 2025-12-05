@@ -421,11 +421,33 @@ namespace GSoftPosNew.Controllers
 
                     foreach (var item in sale.SaleItems)
                     {
-                        var dbItem = await _context.Items.FindAsync(item.ItemId);
+                        var dbItem = await _context.Items
+                            .Include(i => i.ItemIngredients)
+                            .Where(i => i.Id == item.ItemId)
+                            .FirstOrDefaultAsync();
                         if (dbItem != null)
                         {
                             dbItem.Quantity -= item.Quantity;
                             _context.Items.Update(dbItem);
+
+                            if(dbItem.ItemIngredients != null)
+                            {
+                                foreach(var ingItem  in dbItem.ItemIngredients)
+                                {
+                                    var ingredient = _context.Ingredients
+                                                        .FirstOrDefault(x => x.Id == ingItem.IngredientId);
+
+                                    if (ingredient != null)
+                                    {
+
+                                        decimal currentStock = ingredient.PurchaseQty ?? 0;
+                                        decimal newStock = currentStock - ingItem.UseQty;
+
+                                        ingredient.PurchaseQty = newStock;
+
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -961,7 +983,10 @@ namespace GSoftPosNew.Controllers
 
                     foreach (var item in sale.SaleItems)
                     {
-                        var dbItem = await _context.Items.FindAsync(item.ItemId);
+                        var dbItem = await _context.Items
+                                                .Include(i => i.ItemIngredients)
+                                                .Where(i => i.Id == item.ItemId)
+                                                .FirstOrDefaultAsync();
                         if (dbItem != null)
                         {
                             if (dbItem.Quantity < item.Quantity)
@@ -969,6 +994,25 @@ namespace GSoftPosNew.Controllers
 
                             dbItem.Quantity -= item.Quantity;
                             _context.Items.Update(dbItem);
+
+                            if (dbItem.ItemIngredients != null)
+                            {
+                                foreach (var ingItem in dbItem.ItemIngredients)
+                                {
+                                    var ingredient = _context.Ingredients
+                                                        .FirstOrDefault(x => x.Id == ingItem.IngredientId);
+
+                                    if (ingredient != null)
+                                    {
+
+                                        decimal currentStock = ingredient.PurchaseQty ?? 0;
+                                        decimal newStock = currentStock - ingItem.UseQty;
+
+                                        ingredient.PurchaseQty = newStock;
+
+                                    }
+                                }
+                            }
                         }
                     }
 

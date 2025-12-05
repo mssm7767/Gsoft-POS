@@ -9,6 +9,15 @@
     var toStr = Model.ToDate?.ToString("yyyy-MM-dd");
 }
 
+@{
+    var allSaleItems = Model.Sales
+        .SelectMany(s => s.SaleItems)
+        .ToList();
+
+    decimal grandItemTotal = allSaleItems.Sum(i => i.Quantity * i.UnitPrice);
+}
+
+
 <style>
     /* ========= PAGE BACKGROUND & LAYOUT ========= */
     .sales-page-wrapper {
@@ -410,7 +419,7 @@
         <div class="card shadow-lg border-0 rounded-3 table-card">
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover table-striped mb-0 align-middle compact">
+                    <table class="main-table table table-hover table-striped mb-0 align-middle compact">
                         <thead class="table-dark text-uppercase small">
                             <tr>
                                 <th>#</th>
@@ -481,46 +490,7 @@
                                         </td>
                                     </tr>
 
-                                    <!-- ITEMS TABLE BELOW THE SALE -->
-                                    <tr class="sale-items-row saleItemsTbl" style="display:none;">
-                                        <td colspan="9" class="p-0">
-                                            <table class="table table-bordered mb-3" style="background:#fcfcfc;">
-                                                <thead style="background:#f1f1f1;">
-                                                    <tr>
-                                                        <th style="width:40%;">Item Name</th>
-                                                        <th class="text-center" style="width:10%;">Qty</th>
-                                                        <th class="text-end" style="width:15%;">Unit Price</th>
-                                                        <th class="text-end" style="width:15%;">Total</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @{
-                                                        decimal saleItemTotal = 0;
-                                                        foreach (var item in sale.SaleItems)
-                                                        {
-                                                            var itemTotal = item.Quantity * item.UnitPrice;
-                                                            saleItemTotal += itemTotal;
-                                                        }
-                                                    }
-                                                    @foreach (var item in sale.SaleItems)
-                                                    {
-                                                        var itemTotal = item.Quantity * item.UnitPrice;
-                                                        <tr>
-                                                            <td>@item.Item?.ItemName</td>
-                                                            <td class="text-center">@item.Quantity</td>
-                                                            <td class="text-end">@item.UnitPrice.ToString("N2")</td>
-                                                            <td class="text-end fw-semibold">@itemTotal.ToString("N2")</td>
-                                                        </tr>
-                                                    }
 
-                                                    <tr class="table-light fw-bold">
-                                                        <td colspan="3" class="text-end">Items Total:</td>
-                                                        <td class="text-end text-success">@saleItemTotal.ToString("N2")</td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </td>
-                                    </tr>
                                 }
 
 
@@ -544,6 +514,38 @@
                             }
                         </tbody>
                     </table>
+
+
+                    <table class="table table-bordered mb-3 saleItemsTbl" style="background:#fcfcfc; display: none;">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width:40%;">Item Name</th>
+                                <th class="text-center" style="width:10%;">Qty</th>
+                                <th class="text-end" style="width:15%;">Unit Price</th>
+                                <th class="text-end" style="width:15%;">Total</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var item in allSaleItems.OrderBy(x => x.Item?.ItemName))
+                            {
+                                var itemTotal = item.Quantity * item.UnitPrice;
+
+                                <tr>
+                                    <td>@item.Item?.ItemName</td>
+                                    <td class="text-center">@item.Quantity</td>
+                                    <td class="text-end">@item.UnitPrice.ToString("N2")</td>
+                                    <td class="text-end fw-semibold">@itemTotal.ToString("N2")</td>
+                                </tr>
+                            }
+
+                            <tr class="table-light fw-bold">
+                                <td colspan="3" class="text-end">Grand Total:</td>
+                                <td class="text-end text-success">@grandItemTotal.ToString("N2")</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
                 </div>
             </div>
         </div>
@@ -769,16 +771,18 @@
 <script src="~/lib/sweetalert2/sweetalert2.min.js"></script>
 <script>
     function toggleItems() {
-        var rows = document.querySelectorAll(".saleItemsTbl");
+        var items = document.querySelector(".saleItemsTbl");
+        var sale = document.querySelector(".main-table");
 
-        rows.forEach(function (row) {
-            if (row.style.display === "none" || row.style.display === "") {
-                row.style.display = "table-row";
-            } else {
-                row.style.display = "none";
-            }
-        });
+        if (items.style.display === "none" || items.style.display === "") {
+            items.style.display = "table";
+            if (sale) sale.style.display = "none";
+        } else {
+            items.style.display = "none";
+            if (sale) sale.style.display = "table";
+        }
     }
+
 </script>
 
 
