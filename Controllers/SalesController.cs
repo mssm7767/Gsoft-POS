@@ -1,6 +1,7 @@
 ﻿using GSoftPosNew.Data;
 using GSoftPosNew.Models;
 using GSoftPosNew.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
@@ -9,9 +10,11 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System.Drawing.Printing;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace GSoftPosNew.Controllers
 {
+    [Authorize]
     public class SalesController : Controller
     {
         private readonly AppDbContext _context;
@@ -23,15 +26,24 @@ namespace GSoftPosNew.Controllers
             _viewEngine = viewEngine;
         }
 
-        public IActionResult Index(DateTime? fromDate, DateTime? toDate, string search)
+        public async Task<IActionResult> Index(DateTime? fromDate, DateTime? toDate, string search)
         {
             var query = _context.Sales.AsQueryable();
 
             if (fromDate.HasValue)
                 query = query.Where(s => s.SaleDate.Date >= fromDate.Value);
+            else
+            {
+                query = query.Where(s => s.SaleDate.Date == DateTime.Now.Date);
+            }
 
             if (toDate.HasValue)
                 query = query.Where(s => s.SaleDate.Date <= toDate.Value);
+
+            else
+            {
+                query = query.Where(s => s.SaleDate.Date == DateTime.Now.Date);
+            }
 
             if (!string.IsNullOrEmpty(search))
                 query = query.Where(s => s.InvoiceNumber.Contains(search) || s.CashierId.Contains(search));
@@ -45,8 +57,11 @@ namespace GSoftPosNew.Controllers
                     .OrderByDescending(s => s.SaleDate)
                     .Include(s => s.SaleItems)
                     .ThenInclude(s => s.Item)
+                    .ThenInclude(i => i.Category)
                     .ToList()
             };
+
+            ViewBag.Categories = await _context.Categories.ToListAsync();
 
             return View(model);
         }
@@ -62,13 +77,16 @@ namespace GSoftPosNew.Controllers
             ViewBag.CashierId = User.Identity?.Name ?? "Unknown";
 
             var saleInvNo = _context.Sales
+                 .Where(s => s.SaleDate.Date == DateTime.Now.Date)
                 .OrderByDescending(s => s.Id)
                 .Select(s => s.InvoiceNumber)
                 .FirstOrDefault();
 
-            ViewBag.InvoiceLastDigit = !string.IsNullOrEmpty(saleInvNo)
-                ? int.Parse(saleInvNo[saleInvNo.Length - 1].ToString())
-                : 0;
+            ViewBag.InvoiceLastDigits = !string.IsNullOrEmpty(saleInvNo) && saleInvNo.Length >= 4
+                ? saleInvNo.Substring(saleInvNo.Length - 4)
+                : "0000";
+
+
 
             ViewBag.ShopName = _context.ShopSettings
                 .OrderByDescending(s => s.Id)
@@ -989,8 +1007,6 @@ namespace GSoftPosNew.Controllers
                                                 .FirstOrDefaultAsync();
                         if (dbItem != null)
                         {
-                            if (dbItem.Quantity < item.Quantity)
-                                throw new Exception($"Not enough stock for item {dbItem.ItemName}");
 
                             dbItem.Quantity -= item.Quantity;
                             _context.Items.Update(dbItem);

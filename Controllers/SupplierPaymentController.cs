@@ -1,12 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using GSoftPosNew.Data;
+﻿using GSoftPosNew.Data;
 using GSoftPosNew.Models;
 using GSoftPosNew.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
 
 namespace GSoftPosNew.Controllers
 {
+    [Authorize]
     public class SupplierPaymentController : Controller
     {
         private readonly AppDbContext _context;

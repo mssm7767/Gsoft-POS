@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using GSoftPosNew.Data;
+﻿using GSoftPosNew.Data;
 using GSoftPosNew.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace GSoftPosNew.Controllers
 {
+    [Authorize]
     public class LocationController : Controller
     {
         private readonly AppDbContext _context;

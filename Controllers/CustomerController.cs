@@ -1,17 +1,19 @@
 ﻿// Controllers/CustomerController.cs
+using GSoftPosNew.Data;
+using GSoftPosNew.Models;
+using GSoftPosNew.Repositories;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.IO;
 using System.Linq;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using GSoftPosNew.Data;
-using GSoftPosNew.Models;
-using Microsoft.EntityFrameworkCore;
-using GSoftPosNew.Repositories;
 using System.Threading.Tasks;
 
 namespace GSoftPosNew.Controllers
 {
+    [Authorize]
     public class CustomerController : Controller
     {
         private readonly AppDbContext _context;

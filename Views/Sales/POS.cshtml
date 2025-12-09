@@ -10,7 +10,7 @@
     var cashierId = ViewBag.CashierId as string ?? "N/A";
     var shopName = ViewBag.ShopName as string ?? "GSoft POS";
 
-    var invoiceNo = ViewBag.InvoiceLastDigit;
+    var invoiceNo = ViewBag.InvoiceLastDigits;
     var customerPayments = ViewBag.CustomerPayments as List<CustomerPayment> ?? new List<CustomerPayment>();
 }
 
@@ -997,7 +997,7 @@
     let focusMode='qty'; let currentEditingPrice=null;
     const items = @Html.Raw(itemsJson);
     const TAX_PERCENT = 0;
-    let invoiceCounter = @((invoiceNo ?? 0));
+    var invoiceCounter = "@invoiceNo";
     let pendingAction = null;
 
     /* -------- UTILS -------- */
@@ -1536,7 +1536,11 @@
       focusBarcode();
     }
     function handlePrint(){ openTenderModal(null,handleSavePrint); }
-    function generateInvoiceNumber(){ const date=new Date().toISOString().slice(0,10).replace(/-/g,''); invoiceCounter=(parseInt(invoiceCounter)||0)+1; return `INV-${date}-${String(invoiceCounter).padStart(4,'0')}`; }
+    function generateInvoiceNumber(){ 
+        const date=new Date().toISOString().slice(0,10).replace(/-/g,''); 
+        invoiceCounter=(parseInt(invoiceCounter)||0)+1; 
+        return `INV-${date}-${String(invoiceCounter).padStart(4,'0')}`; 
+    }
     function updateLiveClock(){ const n=new Date(); const d=n.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'2-digit'}); const t=n.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); document.getElementById('liveClock').innerText=d+" | "+t; }
 
     /* -------- SHORTCUTS -------- */

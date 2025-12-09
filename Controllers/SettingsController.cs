@@ -1,14 +1,16 @@
 ﻿using GSoftPosNew.Data;
 using GSoftPosNew.Models;
+using GSoftPosNew.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Text;
 using Microsoft.EntityFrameworkCore.Metadata;
-using GSoftPosNew.Services;
+using System.Text;
 
 
 namespace GSoftPosNew.Controllers
 {
+    [Authorize]
     public class SettingsController : Controller
     {
         private readonly AppDbContext _context;

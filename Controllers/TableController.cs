@@ -1,12 +1,14 @@
 ﻿using GSoftPosNew.Data;
 using GSoftPosNew.Models;
 using GSoftPosNew.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace GSoftPosNew.Controllers
 {
+    [Authorize]
     public class TableController : Controller
     {
         private readonly AppDbContext _context;

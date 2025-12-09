@@ -1,12 +1,14 @@
 ﻿using GSoftPosNew.Data;
 using GSoftPosNew.Models;
 using GSoftPosNew.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Security.Claims;
 
 namespace GSoftPosNew.Controllers
 {
+    [Authorize]
     public class RoleController : Controller
     {
         private readonly AppDbContext _context;

@@ -1,11 +1,13 @@
 ﻿// Controllers/UnitController.cs
-using System.Linq;
-using Microsoft.AspNetCore.Mvc;
 using GSoftPosNew.Data;
 using GSoftPosNew.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 
 namespace GSoftPosNew.Controllers
 {
+    [Authorize]
     public class UnitController : Controller
     {
         private readonly AppDbContext _context;

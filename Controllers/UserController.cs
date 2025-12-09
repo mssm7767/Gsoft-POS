@@ -1,6 +1,7 @@
 ﻿using GSoftPosNew.Data;
 using GSoftPosNew.Models;
 using GSoftPosNew.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +11,7 @@ using System.Linq;
 
 namespace GSoftPosNew.Controllers
 {
+    [Authorize]
     public class UserController : Controller
     {
         private readonly AppDbContext _context;

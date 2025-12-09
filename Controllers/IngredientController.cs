@@ -1,6 +1,7 @@
 ﻿using GSoftPosNew.Data;
 using GSoftPosNew.Models;
 using GSoftPosNew.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace GSoftPosNew.Controllers
 {
+    [Authorize]
     public class IngredientController : Controller
     {
         private readonly AppDbContext _context;

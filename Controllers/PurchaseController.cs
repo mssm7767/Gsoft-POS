@@ -1,12 +1,14 @@
-﻿using System.Text.Json;
+﻿using GSoftPosNew.Data;
+using GSoftPosNew.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using GSoftPosNew.Data;
-using GSoftPosNew.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace GSoftPosNew.Controllers
 {
+    [Authorize]
     public class PurchaseController : Controller
     {
         private readonly AppDbContext _context;

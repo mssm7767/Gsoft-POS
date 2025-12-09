@@ -1,11 +1,13 @@
 ﻿using GSoftPosNew.Data;
 using GSoftPosNew.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 
 namespace GSoftPosNew.Controllers
 {
+    [Authorize]
     public class StockAdjustmentController : Controller
     {
         private readonly AppDbContext _context;

@@ -315,28 +315,46 @@
         <div class="card shadow-sm mb-3 border-0 rounded-3 no-print filter-card">
             <div class="card-body">
                 <form method="get" asp-action="Index" class="row g-3 align-items-end">
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label filter-label">
                             <i class="fa fa-calendar-day me-1 text-primary"></i>From Date
                         </label>
                         <input id="fromDate" type="date" name="fromDate" class="form-control"
                                value="@Model.FromDate?.ToString("yyyy-MM-dd")" />
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label filter-label">
                             <i class="fa fa-calendar-day me-1 text-primary"></i>To Date
                         </label>
                         <input id="toDate" type="date" name="toDate" class="form-control"
                                value="@Model.ToDate?.ToString("yyyy-MM-dd")" />
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label filter-label">
                             <i class="fa fa-magnifying-glass me-1 text-primary"></i>Search (Invoice / Cashier)
                         </label>
                         <input id="search" type="text" name="search" class="form-control"
                                placeholder="Invoice # or Cashier" value="@Model.Search" />
                     </div>
-                    <div class="col-md-3 text-end">
+                    <div id="category" class="col-md-2" style="display: none;">
+                        <label class="form-label filter-label">
+                            <i class="fa fa-list-alt me-1 text-primary"></i>
+                            Category
+                        </label>
+
+                        <select id="categoryInput" name="CategoryId" class="form-control">
+                            <option value="">-- Select Category --</option>
+
+                            @foreach (var cat in ViewBag.Categories)
+                            {
+                                <option value="@cat.Name">
+                                    @cat.Name
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 text-end">
                         <button type="submit" class="btn btn-success px-4 btn-soft">
                             <i class="fa fa-search me-1"></i> Filter
                         </button>
@@ -347,12 +365,10 @@
 
                     <!-- Print toolbar -->
                     <div class="col-12 d-flex justify-content-end gap-2 mt-2">
-                        <!-- Items + Qty button (Bootstrap modal) -->
+                        <!-- ✅ SIMPLE Items Qty button -->
                         <button type="button" id="itemQty"
                                 onclick="toggleItems()"
-                                class="btn btn-secondary btn-soft"
-                                data-bs-toggle="modal"
-                                data-bs-target="#itemsSummaryModal">
+                                class="btn btn-secondary btn-soft">
                             <i class="fa fa-list-ul me-2"></i> Items Qty
                         </button>
 
@@ -364,6 +380,7 @@
                             <i class="fa fa-receipt me-2"></i> Thermal Print (80mm)
                         </a>
                     </div>
+
                 </form>
             </div>
         </div>
@@ -371,10 +388,31 @@
         <!-- KPIs -->
         @if (Model?.Sales != null && Model.Sales.Any())
         {
-            var grandSubtotal = Model.Sales.Sum(s => s.SubTotal);
+
+            var grandSaleSubtotal = Model.Sales
+            .Where(s => s.SaleType == "Sale")
+            .Sum(s => s.SubTotal);
+
+            var grandReturnSubtotal = Model.Sales
+            .Where(s => s.SaleType == "Return")
+            .Sum(s => s.SubTotal);
+
+            var grandSubtotal = grandSaleSubtotal - grandReturnSubtotal;
+
+
             var grandTax = Model.Sales.Sum(s => s.Tax);
             var grandDiscount = Model.Sales.Sum(s => s.Discount);
-            var grandTotal = Model.Sales.Sum(s => s.Total);
+
+            var grandSaleTotal = Model.Sales
+            .Where(s => s.SaleType == "Sale")
+            .Sum(s => s.Total);
+
+            var grandReturnTotal = Model.Sales
+            .Where(s => s.SaleType == "Return")
+            .Sum(s => s.Total);
+
+            var grandTotal = grandSaleTotal - grandReturnTotal;
+
 
             <div class="d-flex flex-wrap kpi-row mb-3 no-print">
                 <span class="kpi-badge kpi-primary">
@@ -419,10 +457,12 @@
         <div class="card shadow-lg border-0 rounded-3 table-card">
             <div class="card-body p-0">
                 <div class="table-responsive">
+                    <!-- INVOICE-WISE TABLE -->
                     <table class="main-table table table-hover table-striped mb-0 align-middle compact">
                         <thead class="table-dark text-uppercase small">
                             <tr>
                                 <th>#</th>
+                                <th>Sale Type</th>
                                 <th><i class="fa fa-receipt me-1"></i>Invoice</th>
                                 <th><i class="fa fa-calendar-alt me-1"></i>Date</th>
                                 <th><i class="fa fa-user me-1"></i>Cashier</th>
@@ -436,61 +476,91 @@
                         <tbody>
                             @if (Model.Sales != null && Model.Sales.Any())
                             {
+
+                                var index = 1;
                                 var grandSubtotal = 0m;
                                 var grandTax = 0m;
                                 var grandDiscount = 0m;
                                 var grandTotal = 0m;
                                 @foreach (var sale in Model.Sales)
                                 {
-                                    grandSubtotal += sale.SubTotal;
-                                    grandTax += sale.Tax;
-                                    grandDiscount += sale.Discount;
-                                    grandTotal += sale.Total;
+                                    if (sale.SaleType == "Return")
+                                    {
+                                        grandSubtotal -= sale.SubTotal;
+                                        grandTax -= sale.Tax;
+                                        grandDiscount -= sale.Discount;
+                                        grandTotal -= sale.Total;
+                                    }
+                                    else
+                                    {
+                                        grandSubtotal += sale.SubTotal;
+                                        grandTax += sale.Tax;
+                                        grandDiscount += sale.Discount;
+                                        grandTotal += sale.Total;
+                                    }
 
-                                    <!-- MAIN SALE ROW -->
-                                    <tr>
-                                        <td class="fw-semibold text-muted">@sale.Id</td>
-                                        <td>
-                                            <span class="badge-invoice">
-                                                <i class="fa fa-hashtag me-1"></i>@sale.InvoiceNumber
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <i class="fa fa-clock me-1 text-muted"></i>
-                                            @sale.SaleDate.ToString("g")
-                                        </td>
-                                        <td>
-                                            <span class="cashier-chip">
-                                                <i class="fa fa-user-gear me-1 text-primary"></i>@sale.CashierId
-                                            </span>
-                                        </td>
-                                        <td class="text-end">@sale.SubTotal.ToString("N2")</td>
-                                        <td class="text-end">@sale.Tax.ToString("N2")</td>
-                                        <td class="text-end text-danger">-@sale.Discount.ToString("N2")</td>
-                                        <td class="text-end fw-bold text-success">@sale.Total.ToString("N2")</td>
-                                        <td class="text-center">
-                                            <div class="action-btn-group d-inline-flex">
-                                                <a asp-action="Receipt" asp-route-id="@sale.Id"
-                                                   class="btn btn-sm btn-outline-secondary me-1"
-                                                   title="View Receipt">
-                                                    <i class="fa fa-file-invoice"></i>
-                                                </a>
-                                                <a asp-action="Edit" asp-route-id="@sale.Id"
-                                                   class="btn btn-sm btn-outline-primary me-1"
-                                                   title="Edit">
-                                                    <i class="fa fa-edit"></i>
-                                                </a>
-                                                <button onclick="deleteSale(@sale.Id)"
-                                                        class="btn btn-sm btn-outline-danger"
-                                                        type="button"
-                                                        title="Delete">
-                                                    <i class="fa fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                <!-- MAIN SALE ROW -->
+                                <tr>
+                                    <td class="fw-semibold text-muted">@index</td>
+                                    <td class="fw-semibold @(sale.SaleType == "Return" ? "text-danger" : "text-success")">
+                                        @sale.SaleType
+                                    </td>
+
+                                    <td>
+                                        <span class="badge-invoice">
+                                            <i class="fa fa-hashtag me-1"></i>@sale.InvoiceNumber
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <i class="fa fa-clock me-1 text-muted"></i>
+                                        @sale.SaleDate.ToString("g")
+                                    </td>
+                                    <td>
+                                        <span class="cashier-chip">
+                                            <i class="fa fa-user-gear me-1 text-primary"></i>@sale.CashierId
+                                        </span>
+                                    </td>
+
+                                    <td class="text-end @(sale.SaleType == "Return" ? "text-danger" : "")">
+                                        @(sale.SaleType == "Return"
+                                                                            ? "-" + sale.SubTotal.ToString("N2")
+                                                                            : sale.SubTotal.ToString("N2"))
+                                                                                                       </td>
 
 
+                                    <td class="text-end">@sale.Tax.ToString("N2")</td>
+                                    <td class="text-end text-danger">-@sale.Discount.ToString("N2")</td>
+                                    <td class="text-end fw-bold @(sale.SaleType == "Return" ? "text-danger" : "text-success")">
+                                        @(sale.SaleType == "Return"
+                                                                            ? "-" + sale.Total.ToString("N2")
+                                                                            : sale.Total.ToString("N2"))
+                                </td>
+
+                                                                <td class="text-center">
+                                                                    <div class="action-btn-group d-inline-flex">
+                                                                        <a asp-action="Receipt" asp-route-id="@sale.Id"
+                                                                           class="btn btn-sm btn-outline-secondary me-1"
+                                                                           title="View Receipt">
+                                                                            <i class="fa fa-file-invoice"></i>
+                                                                        </a>
+                                                                        <a asp-action="Edit" asp-route-id="@sale.Id"
+                                                                           class="btn btn-sm btn-outline-primary me-1"
+                                                                           title="Edit">
+                                                                            <i class="fa fa-edit"></i>
+                                                                        </a>
+                                                                        <button onclick="deleteSale(@sale.Id)"
+                                                                                class="btn btn-sm btn-outline-danger"
+                                                                                type="button"
+                                                                                title="Delete">
+                                                                            <i class="fa fa-trash"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+
+
+
+                                                            index++;
                                 }
 
 
@@ -515,45 +585,225 @@
                         </tbody>
                     </table>
 
-
                     <table class="table table-bordered mb-3 saleItemsTbl" style="background:#fcfcfc; display: none;">
                         <thead class="table-light">
                             <tr>
-                                <th style="width:40%;">Item Name</th>
+                                <th style="width:5%;" class="text-center">#</th>
+                                <th style="width:10%;">Item Code</th>
+                                <th style="width:10%;">Category</th>
+                                <th style="width:30%;">Item Name</th>
                                 <th class="text-center" style="width:10%;">Qty</th>
                                 <th class="text-end" style="width:15%;">Unit Price</th>
                                 <th class="text-end" style="width:15%;">Total</th>
                             </tr>
                         </thead>
 
-                        <tbody>
-                            @foreach (var item in allSaleItems.OrderBy(x => x.Item?.ItemName))
-                            {
-                                var itemTotal = item.Quantity * item.UnitPrice;
+                        <tbody id="saleItemsBody">
+                            @{
+                                // Step 1: Flatten sale items + apply minus if Return
+                                var allSaleItemsQty = Model.Sales
+                                .SelectMany(s => s.SaleItems.Select(i => new
+                                {
+                                    s.SaleType,
+                                    Category = i.Item.Category.Name,
+                                    ItemCode = i.Item?.ItemCode,
+                                    ItemName = i.Item?.ItemName,
+                                    Quantity = s.SaleType == "Return" ? -i.Quantity : i.Quantity,
+                                    UnitPrice = i.UnitPrice
+                                }))
+                                .ToList();
 
-                                <tr>
-                                    <td>@item.Item?.ItemName</td>
-                                    <td class="text-center">@item.Quantity</td>
-                                    <td class="text-end">@item.UnitPrice.ToString("N2")</td>
-                                    <td class="text-end fw-semibold">@itemTotal.ToString("N2")</td>
-                                </tr>
+                                // Step 2: Group items and sum quantity & total
+                                var groupedItems = allSaleItemsQty
+                                .GroupBy(x => x.ItemCode)
+                                .Select(g => new
+                                {
+                                    ItemCode = g.Key,
+                                    Category = g.First().Category,
+                                    ItemName = g.First().ItemName,
+                                    Quantity = g.Sum(x => x.Quantity),
+                                    UnitPrice = g.First().UnitPrice,
+                                    Total = g.Sum(x => x.Quantity * x.UnitPrice)
+                                })
+                                .OrderBy(x => x.ItemName)
+                                .ToList();
+
+                                var itemIdx = 1;
+
+                                decimal grandItemTotalQty = allSaleItemsQty.Sum(i => i.Quantity * i.UnitPrice);
                             }
 
+                            @foreach (var item in groupedItems)
+                            {
+                                <tr>
+                                    <td class="text-center">@itemIdx</td>
+
+                                    <td>@item.ItemCode</td>
+                                    <td>@item.Category</td>
+                                    <td>@item.ItemName</td>
+
+                                    <td class="text-center">
+                                        @item.Quantity
+                                    </td>
+
+                                    <td class="text-end">
+                                        @item.UnitPrice.ToString("N2")
+                                    </td>
+
+                                    <td class="text-end fw-semibold">
+                                        @item.Total.ToString("N2")
+                                    </td>
+                                </tr>
+
+                                itemIdx++;
+                            }
+
+
                             <tr class="table-light fw-bold">
-                                <td colspan="3" class="text-end">Grand Total:</td>
-                                <td class="text-end text-success">@grandItemTotal.ToString("N2")</td>
+                                <td colspan="6" class="text-end">Grand Total:</td>
+                                <td id="grandTotalCell" class="text-end text-success">@grandItemTotalQty.ToString("N2")</td>
                             </tr>
                         </tbody>
                     </table>
+
 
                 </div>
             </div>
         </div>
 
-        <!-- ===== Hidden A4 PRINT TEMPLATE ===== -->
+        <!-- ===== A4 PRINT TEMPLATE (INVOICE + ITEMS) ===== -->
         <div id="a4Area" class="d-none">
+
+            <!-- INVOICE BLOCK (default) -->
+            <div id="a4InvoiceBlock" style="display:block;">
+                <div style="text-align:center;margin-bottom:10px;">
+                    <div style="font-size:20px;font-weight:800;text-transform:uppercase;">
+                    </div>
+                    <div style="font-size:14px;font-weight:600;margin-top:2px;">
+                        Sales Report
+                    </div>
+                    <div style="font-size:11px;color:#4b5563;margin-top:2px;">
+                        Range: @((Model.FromDate?.ToString("yyyy-MM-dd") ?? "--")) → @((Model.ToDate?.ToString("yyyy-MM-dd") ?? "--"))
+                        &nbsp; | &nbsp;
+                        Printed: @DateTime.Now.ToString("yyyy-MM-dd HH:mm")
+                    </div>
+                    <hr style="margin-top:8px;margin-bottom:8px;border:0;border-top:1px solid #9ca3af;" />
+                </div>
+
+                <table style="width:100%;border-collapse:collapse;font-size:11px;">
+                    <thead>
+                        <tr>
+                            <th style="padding:6px;border:1px solid #333;text-align:left;background:#111827;color:#f9fafb;">Invoice</th>
+                            <th style="padding:6px;border:1px solid #333;text-align:left;background:#111827;color:#f9fafb;">Date</th>
+                            <th style="padding:6px;border:1px solid #333;text-align:left;background:#111827;color:#f9fafb;">Cashier</th>
+                            <th style="padding:6px;border:1px solid #333;text-align:right;background:#111827;color:#f9fafb;">Subtotal</th>
+                            <th style="padding:6px;border:1px solid #333;text-align:right;background:#111827;color:#f9fafb;">Tax</th>
+                            <th style="padding:6px;border:1px solid #333;text-align:right;background:#111827;color:#f9fafb;">Discount</th>
+                            <th style="padding:6px;border:1px solid #333;text-align:right;background:#111827;color:#f9fafb;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Sales != null && Model.Sales.Any())
+                        {
+                            decimal tSub = 0, tTax = 0, tDis = 0, tTot = 0;
+                            foreach (var s in Model.Sales)
+                            {
+                                tSub += s.SubTotal; tTax += s.Tax; tDis += s.Discount; tTot += s.Total;
+                                <tr>
+                                    <td style="padding:6px;border:1px solid #ddd;">@s.InvoiceNumber</td>
+                                    <td style="padding:6px;border:1px solid #ddd;">@s.SaleDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td style="padding:6px;border:1px solid #ddd;">@s.CashierId</td>
+                                    <td style="padding:6px;border:1px solid #ddd;text-align:right;">@s.SubTotal.ToString("N2")</td>
+                                    <td style="padding:6px;border:1px solid #ddd;text-align:right;">@s.Tax.ToString("N2")</td>
+                                    <td style="padding:6px;border:1px solid #ddd;text-align:right;">-@s.Discount.ToString("N2")</td>
+                                    <td style="padding:6px;border:1px solid #ddd;text-align:right;">
+                                        <strong>@s.Total.ToString("N2")</strong>
+                                    </td>
+                                </tr>
+                            }
+                            <tr>
+                                <td colspan="4" style="padding:7px;border-top:2px solid #111827;text-align:right;font-weight:700;">Totals</td>
+                                <td style="padding:7px;border-top:2px solid #111827;text-align:right;font-weight:700;">@tSub.ToString("N2")</td>
+                                <td style="padding:7px;border-top:2px solid #111827;text-align:right;font-weight:700;">@tTax.ToString("N2")</td>
+                                <td style="padding:7px;border-top:2px solid #111827;text-align:right;font-weight:700;">-@tDis.ToString("N2")</td>
+                                <td style="padding:7px;border-top:2px solid #111827;text-align:right;font-weight:700;">@tTot.ToString("N2")</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            <tr><td colspan="7" style="text-align:center;padding:10px;">No sales records</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ITEMS BLOCK (item qty mode ke liye) -->
+            <div id="a4ItemsBlock" style="display:none;">
+                <div style="text-align:center;margin-bottom:10px;">
+                    <div style="font-size:20px;font-weight:800;text-transform:uppercase;">
+                    </div>
+                    <div style="font-size:14px;font-weight:600;margin-top:2px;">
+                        Sales Items Report
+                    </div>
+                    <div style="font-size:11px;color:#4b5563;margin-top:2px;">
+                        Range: @((Model.FromDate?.ToString("yyyy-MM-dd") ?? "--")) → @((Model.ToDate?.ToString("yyyy-MM-dd") ?? "--"))
+                        &nbsp; | &nbsp;
+                        Printed: @DateTime.Now.ToString("yyyy-MM-dd HH:mm")
+                    </div>
+                    <hr style="margin-top:8px;margin-bottom:8px;border:0;border-top:1px solid #9ca3af;" />
+                </div>
+
+                <table style="width:100%;border-collapse:collapse;font-size:11px;">
+                    <thead>
+                        <tr>
+                            <th style="padding:6px;border:1px solid #333;text-align:center;background:#111827;color:#f9fafb;width:5%;">#</th>
+                            <th style="padding:6px;border:1px solid #333;text-align:left;background:#111827;color:#f9fafb;">Item Name</th>
+                            <th style="padding:6px;border:1px solid #333;text-align:right;background:#111827;color:#f9fafb;">Qty</th>
+                            <th style="padding:6px;border:1px solid #333;text-align:right;background:#111827;color:#f9fafb;">Unit Price</th>
+                            <th style="padding:6px;border:1px solid #333;text-align:right;background:#111827;color:#f9fafb;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (allSaleItems != null && allSaleItems.Any())
+                        {
+                            var pIdx = 1;
+                            foreach (var item in allSaleItems.OrderBy(x => x.Item?.ItemName))
+                            {
+                                var itemTotal = item.Quantity * item.UnitPrice;
+                                <tr>
+                                    <td style="padding:6px;border:1px solid #ddd;text-align:center;">@pIdx</td>
+                                    <td style="padding:6px;border:1px solid #ddd;">@item.Item?.ItemName</td>
+                                    <td style="padding:6px;border:1px solid #ddd;text-align:right;">@item.Quantity</td>
+                                    <td style="padding:6px;border:1px solid #ddd;text-align:right;">@item.UnitPrice.ToString("N2")</td>
+                                    <td style="padding:6px;border:1px solid #ddd;text-align:right;">
+                                        <strong>@itemTotal.ToString("N2")</strong>
+                                    </td>
+                                </tr>
+                                pIdx++;
+                            }
+                            <tr>
+                                <td colspan="4" style="padding:7px;border-top:2px solid #111827;text-align:right;font-weight:700;">
+                                    Grand Total
+                                </td>
+                                <td style="padding:7px;border-top:2px solid #111827;text-align:right;font-weight:700;">
+                                    @grandItemTotal.ToString("N2")
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            <tr><td colspan="5" style="text-align:center;padding:10px;">No items found</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+        <!-- ITEMS BLOCK -->
+        <div id="a4ItemsBlock" style="display:none;">
             <div style="text-align:center;margin-bottom:8px;">
-                <div style="font-size:18px;font-weight:700;">Sales Report</div>
+                <div style="font-size:18px;font-weight:700;">Sales Items Report</div>
                 <div style="font-size:12px;">
                     Range: @((Model.FromDate?.ToString("yyyy-MM-dd") ?? "--")) → @((Model.ToDate?.ToString("yyyy-MM-dd") ?? "--"))
                     <br />Printed: @DateTime.Now.ToString("yyyy-MM-dd HH:mm")
@@ -562,181 +812,176 @@
             <table style="width:100%;border-collapse:collapse;font-size:12px;">
                 <thead>
                     <tr>
-                        <th style="padding:6px;border:1px solid #333;text-align:left;">Invoice</th>
-                        <th style="padding:6px;border:1px solid #333;text-align:left;">Date</th>
-                        <th style="padding:6px;border:1px solid #333;text-align:left;">Cashier</th>
-                        <th style="padding:6px;border:1px solid #333;text-align:right;">Subtotal</th>
-                        <th style="padding:6px;border:1px solid #333;text-align:right;">Tax</th>
-                        <th style="padding:6px;border:1px solid #333;text-align:right;">Discount</th>
+                        <th style="padding:6px;border:1px solid #333;text-align:left;">Item Name</th>
+                        <th style="padding:6px;border:1px solid #333;text-align:right;">Qty</th>
+                        <th style="padding:6px;border:1px solid #333;text-align:right;">Unit Price</th>
                         <th style="padding:6px;border:1px solid #333;text-align:right;">Total</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @if (Model.Sales != null && Model.Sales.Any())
+                    @if (allSaleItems != null && allSaleItems.Any())
                     {
-                        decimal tSub = 0, tTax = 0, tDis = 0, tTot = 0;
-                        foreach (var s in Model.Sales)
+                        foreach (var item in allSaleItems.OrderBy(x => x.Item?.ItemName))
                         {
-                            tSub += s.SubTotal; tTax += s.Tax; tDis += s.Discount; tTot += s.Total;
+                            var itemTotal = item.Quantity * item.UnitPrice;
                             <tr>
-                                <td style="padding:6px;border:1px solid #ddd;">@s.InvoiceNumber</td>
-                                <td style="padding:6px;border:1px solid #ddd;">@s.SaleDate.ToString("yyyy-MM-dd HH:mm")</td>
-                                <td style="padding:6px;border:1px solid #ddd;">@s.CashierId</td>
-                                <td style="padding:6px;border:1px solid #ddd;text-align:right;">@s.SubTotal.ToString("N2")</td>
-                                <td style="padding:6px;border:1px solid #ddd;text-align:right;">@s.Tax.ToString("N2")</td>
-                                <td style="padding:6px;border:1px solid #ddd;text-align:right;">-@s.Discount.ToString("N2")</td>
+                                <td style="padding:6px;border:1px solid #ddd;">@item.Item?.ItemName</td>
+                                <td style="padding:6px;border:1px solid #ddd;text-align:right;">@item.Quantity</td>
+                                <td style="padding:6px;border:1px solid #ddd;text-align:right;">@item.UnitPrice.ToString("N2")</td>
                                 <td style="padding:6px;border:1px solid #ddd;text-align:right;">
-                                    <strong>@s.Total.ToString("N2")</strong>
+                                    <strong>@itemTotal.ToString("N2")</strong>
                                 </td>
                             </tr>
                         }
                         <tr>
-                            <td colspan="4" style="padding:8px;border-top:2px solid #333;text-align:right;"><strong>Totals</strong></td>
-                            <td style="padding:8px;border-top:2px solid #333;text-align:right;"><strong>@tSub.ToString("N2")</strong></td>
-                            <td style="padding:8px;border-top:2px solid #333;text-align:right;"><strong>@tTax.ToString("N2")</strong></td>
-                            <td style="padding:8px;border-top:2px solid #333;text-align:right;"><strong>-@tDis.ToString("N2")</strong></td>
-                            <td style="padding:8px;border-top:2px solid #333;text-align:right;"><strong>@tTot.ToString("N2")</strong></td>
+                            <td colspan="3" style="padding:8px;border-top:2px solid #333;text-align:right;">
+                                <strong>Grand Total</strong>
+                            </td>
+                            <td style="padding:8px;border-top:2px solid #333;text-align:right;">
+                                <strong>@grandItemTotal.ToString("N2")</strong>
+                            </td>
                         </tr>
                     }
                     else
                     {
-                        <tr><td colspan="8" style="text-align:center;padding:10px;">No sales records</td></tr>
+                        <tr><td colspan="4" style="text-align:center;padding:10px;">No items found</td></tr>
                     }
                 </tbody>
             </table>
         </div>
-
-        <!-- ===== SIMPLE ITEMS SUMMARY MODAL (ITEM NAME + TOTAL QTY) ===== -->
-        <div class="modal fade" id="itemsSummaryModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                <div class="modal-content">
-                    <div class="modal-header items-modal-header">
-                        <div>
-                            <div class="items-modal-title">Sales Items Summary</div>
-                            <div class="small text-muted">
-                                Items with total quantity sold in current filter.
-                            </div>
-                        </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                aria-label="Close"></button>
-                    </div>
-
-                    <div class="modal-body">
-                        @if (Model.ItemsSummary != null && Model.ItemsSummary.Any())
-                        {
-                            var totalQtyAll = Model.ItemsSummary.Sum(x => x.TotalQty);
-                            <div class="table-responsive">
-                                <table class="table table-sm items-table align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col">#</th>
-                                            <th scope="col">Item Name</th>
-                                            <th scope="col" class="text-center">Total Qty</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @{
-                                            var idx = 1;
-                                        }
-                                        @foreach (var row in Model.ItemsSummary)
-                                        {
-                                            <tr>
-                                                <td>@idx</td>
-                                                <td>@row.ItemName</td>
-                                                <td class="text-center fw-semibold">@row.TotalQty</td>
-                                            </tr>
-                                            idx++;
-                                        }
-                                    </tbody>
-                                    <tfoot>
-                                        <tr>
-                                            <td colspan="2" class="text-end">Total Qty:</td>
-                                            <td class="text-center">@totalQtyAll</td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="text-muted text-center py-3">
-                                No item details found for current filter.
-                            </div>
-                        }
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="button"
-                                class="btn btn-outline-secondary btn-soft-outline"
-                                data-bs-dismiss="modal">
-                            Close
-                        </button>
-                        <button type="button"
-                                class="btn btn-dark btn-soft"
-                                onclick="printItemsSummary()">
-                            <i class="fa fa-print me-1"></i> Print Items Qty
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- PRINT AREA FOR ITEMS SUMMARY (NEW WINDOW) -->
-        <div id="itemsPrintArea" class="d-none">
-            <div style="text-align:center;margin-bottom:8px;">
-                <div style="font-size:18px;font-weight:700;">Sales Items Summary</div>
-                <div style="font-size:12px;">
-                    Range: @((Model.FromDate?.ToString("yyyy-MM-dd") ?? "--")) → @((Model.ToDate?.ToString("yyyy-MM-dd") ?? "--"))
-                    <br />Printed: @DateTime.Now.ToString("yyyy-MM-dd HH:mm")
-                </div>
-            </div>
-
-            @if (Model.ItemsSummary != null && Model.ItemsSummary.Any())
-            {
-                var totalQtyAllPrint = Model.ItemsSummary.Sum(x => x.TotalQty);
-
-                <table style="width:100%;border-collapse:collapse;font-size:12px;">
-                    <thead>
-                        <tr>
-                            <th style="padding:6px;border:1px solid #333;text-align:left;">#</th>
-                            <th style="padding:6px;border:1px solid #333;text-align:left;">Item Name</th>
-                            <th style="padding:6px;border:1px solid #333;text-align:right;">Total Qty</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @{
-                            var pIdx = 1;
-                        }
-                        @foreach (var row in Model.ItemsSummary)
-                        {
-                            <tr>
-                                <td style="padding:6px;border:1px solid #ddd;">@pIdx</td>
-                                <td style="padding:6px;border:1px solid #ddd;">@row.ItemName</td>
-                                <td style="padding:6px;border:1px solid #ddd;text-align:right;">@row.TotalQty</td>
-                            </tr>
-                            pIdx++;
-                        }
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <td colspan="2"
-                                style="padding:8px;border-top:2px solid #333;text-align:right;">
-                                <strong>Total Qty</strong>
-                            </td>
-                            <td style="padding:8px;border-top:2px solid #333;text-align:right;">
-                                <strong>@totalQtyAllPrint</strong>
-                            </td>
-                        </tr>
-                    </tfoot>
-                </table>
-            }
-            else
-            {
-                <div style="text-align:center;padding:10px;">No sales records</div>
-            }
-        </div>
-
     </div>
+
+    <!-- ===== SIMPLE ITEMS SUMMARY MODAL (ITEM NAME + TOTAL QTY) ===== -->
+    <div class="modal fade" id="itemsSummaryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header items-modal-header">
+                    <div>
+                        <div class="items-modal-title">Sales Items Summary</div>
+                        <div class="small text-muted">
+                            Items with total quantity sold in current filter.
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    @if (Model.ItemsSummary != null && Model.ItemsSummary.Any())
+                    {
+                        var totalQtyAll = Model.ItemsSummary.Sum(x => x.TotalQty);
+                        <div class="table-responsive">
+                            <table class="table table-sm items-table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">#</th>
+                                        <th scope="col">Item Name</th>
+                                        <th scope="col" class="text-center">Total Qty</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        var idx = 1;
+                                    }
+                                    @foreach (var row in Model.ItemsSummary)
+                                    {
+                                        <tr>
+                                            <td>@idx</td>
+                                            <td>@row.ItemName</td>
+                                            <td class="text-center fw-semibold">@row.TotalQty</td>
+                                        </tr>
+                                        idx++;
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="2" class="text-end">Total Qty:</td>
+                                        <td class="text-center">@totalQtyAll</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-muted text-center py-3">
+                            No item details found for current filter.
+                        </div>
+                    }
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-outline-secondary btn-soft-outline"
+                            data-bs-dismiss="modal">
+                        Close
+                    </button>
+                    <button type="button"
+                            class="btn btn-dark btn-soft"
+                            onclick="printItemsSummary()">
+                        <i class="fa fa-print me-1"></i> Print Items Qty
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRINT AREA FOR ITEMS SUMMARY (NEW WINDOW) -->
+    <div id="itemsPrintArea" class="d-none">
+        <div style="text-align:center;margin-bottom:8px;">
+            <div style="font-size:18px;font-weight:700;">Sales Items Summary</div>
+            <div style="font-size:12px;">
+                Range: @((Model.FromDate?.ToString("yyyy-MM-dd") ?? "--")) → @((Model.ToDate?.ToString("yyyy-MM-dd") ?? "--"))
+                <br />Printed: @DateTime.Now.ToString("yyyy-MM-dd HH:mm")
+            </div>
+        </div>
+
+        @if (Model.ItemsSummary != null && Model.ItemsSummary.Any())
+        {
+            var totalQtyAllPrint = Model.ItemsSummary.Sum(x => x.TotalQty);
+
+            <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                <thead>
+                    <tr>
+                        <th style="padding:6px;border:1px solid #333;text-align:left;">#</th>
+                        <th style="padding:6px;border:1px solid #333;text-align:left;">Item Name</th>
+                        <th style="padding:6px;border:1px solid #333;text-align:right;">Total Qty</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        var pIdx = 1;
+                    }
+                    @foreach (var row in Model.ItemsSummary)
+                    {
+                        <tr>
+                            <td style="padding:6px;border:1px solid #ddd;">@pIdx</td>
+                            <td style="padding:6px;border:1px solid #ddd;">@row.ItemName</td>
+                            <td style="padding:6px;border:1px solid #ddd;text-align:right;">@row.TotalQty</td>
+                        </tr>
+                        pIdx++;
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="2"
+                            style="padding:8px;border-top:2px solid #333;text-align:right;">
+                            <strong>Total Qty</strong>
+                        </td>
+                        <td style="padding:8px;border-top:2px solid #333;text-align:right;">
+                            <strong>@totalQtyAllPrint</strong>
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        }
+        else
+        {
+            <div style="text-align:center;padding:10px;">No sales records</div>
+        }
+    </div>
+
+</div>
 </div>
 
 <style>
@@ -769,25 +1014,72 @@
 
 <link href="~/lib/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
 <script src="~/lib/sweetalert2/sweetalert2.min.js"></script>
+
 <script>
-    function toggleItems() {
-        var items = document.querySelector(".saleItemsTbl");
-        var sale = document.querySelector(".main-table");
+    document.getElementById("categoryInput").addEventListener("change", function () {
+        const selectedCategory = this.value.trim().toLowerCase();
+        const rows = document.querySelectorAll("#saleItemsBody tr");
+        let grandTotal = 0;
 
-        if (items.style.display === "none" || items.style.display === "") {
-            items.style.display = "table";
-            if (sale) sale.style.display = "none";
-        } else {
-            items.style.display = "none";
-            if (sale) sale.style.display = "table";
-        }
-    }
+        rows.forEach(row => {
+            // Skip grand total row
+            if (row.classList.contains("table-light")) {
+                return;
+            }
 
+            const categoryCell = row.querySelector("td:nth-child(3)"); // Category col
+            const totalCell = row.querySelector("td:nth-child(7)"); // Total col
+
+            if (!selectedCategory) {
+                // Show all rows
+                row.style.display = "";
+                grandTotal += parseFloat(totalCell.innerText.replace(/,/g, ""));
+            } else {
+                const rowCategory = categoryCell.innerText.trim().toLowerCase();
+                if (rowCategory === selectedCategory) {
+                    row.style.display = "";
+                    grandTotal += parseFloat(totalCell.innerText.replace(/,/g, ""));
+                } else {
+                    row.style.display = "none";
+                }
+            }
+        });
+
+        // Update Grand Total Cell
+        document.getElementById("grandTotalCell").innerText = grandTotal.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    });
 </script>
 
 
-
 <script>
+    // global mode: false = invoice mode, true = items mode
+    let isItemsMode = false;
+
+    function toggleItems() {
+        var items = document.querySelector(".saleItemsTbl");
+        var sale = document.querySelector(".main-table");
+        var category = document.getElementById("category");
+
+        if (!items || !sale) return;
+
+        if (items.style.display === "none" || items.style.display === "") {
+            // items mode ON
+            items.style.display = "table";
+            category.style.display = "block";
+            sale.style.display = "none";
+            isItemsMode = true;
+        } else {
+            // wapas invoice mode
+            items.style.display = "none";
+            category.style.display = "none";
+            sale.style.display = "table";
+            isItemsMode = false;
+        }
+    }
+
     function deleteSale(saleId) {
         Swal.fire({
             title: "Are you sure?",
@@ -839,21 +1131,22 @@
         });
     }
 
-    // Items Qty print: new window with only items summary
-    @* function printItemsSummary() {
-        var area = document.getElementById('itemsPrintArea');
-        if (!area) return;
-
-        var w = window.open('', '_blank', 'width=900,height=700');
-        w.document.write('<html><head><title>Items Qty Summary</title>');
-        w.document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />');
-        w.document.write('</head><body class="p-3">' + area.innerHTML + '</body></html>');
-        w.document.close();
-        w.focus();
-        w.print();
-    } *@
-
     function printA4() {
+        var invBlock = document.getElementById('a4InvoiceBlock');
+        var itemsBlock = document.getElementById('a4ItemsBlock');
+
+        if (invBlock && itemsBlock) {
+            if (isItemsMode) {
+                // item mode → items A4 show
+                invBlock.style.display = 'none';
+                itemsBlock.style.display = 'block';
+            } else {
+                // invoice mode → invoice A4 show
+                invBlock.style.display = 'block';
+                itemsBlock.style.display = 'none';
+            }
+        }
+
         window.print();
     }
 </script>
