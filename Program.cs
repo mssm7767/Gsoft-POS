@@ -21,6 +21,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<DatabaseResetService>();
+builder.Services.AddScoped<LicenseService>();
+
 
 // Identity Password Hasher Registration
 builder.Services.AddScoped<IPasswordHasher<GSoftPosNew.Models.User>, PasswordHasher<GSoftPosNew.Models.User>>();
@@ -83,6 +85,9 @@ using (var scope = app.Services.CreateScope())
 // *** Middleware order, NO mistake: ***
 app.UseStaticFiles();
 app.UseRouting();
+
+app.UseMiddleware<LicenseMiddleware>();
+
 app.UseSession();               // Session (if you are using it)
 app.UseAuthentication();        // <-- Always BEFORE UseAuthorization
 app.UseMiddleware<UserRolePermissionMiddleware>();

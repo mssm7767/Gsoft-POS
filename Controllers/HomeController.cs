@@ -1,9 +1,9 @@
 ﻿using GSoftPosNew.Data;
 using GSoftPosNew.Models;
+using GSoftPosNew.Services;
 using GSoftPosNew.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using System.Globalization;
 
@@ -14,16 +14,28 @@ namespace GSoftPosNew.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly AppDbContext _context;
+        private readonly LicenseService _license;
 
-        public HomeController(ILogger<HomeController> logger, AppDbContext context)
+        public HomeController(ILogger<HomeController> logger, AppDbContext context, LicenseService license)
         {
             _logger = logger;
             _context = context;
+            _license = license;
+
         }
 
+        public IActionResult LicenseExpired()
+        {
+            return View();
+        }
 
         public IActionResult Index(DateTime? fromDate, DateTime? toDate)
         {
+            var expiry = _license.GetExpiryDate();
+            var daysLeft = (expiry - DateTime.Today).Days;
+            ViewBag.DaysLeft = daysLeft;
+
+
             // Default to today's date range if not provided
             if (!fromDate.HasValue && !toDate.HasValue)
             {

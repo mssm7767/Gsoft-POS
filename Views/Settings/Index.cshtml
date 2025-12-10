@@ -9,6 +9,8 @@
     <!-- Bootstrap 5 -->
     <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="~/lib/fontawesome/css/all.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
 
     <style>
         :root {
@@ -271,6 +273,11 @@
             <div class="title"><i class="fa-solid fa-sliders"></i> Shop Settings</div>
             <div class="actions">
                 <div class="text-end d-flex justify-content-end gap-2">
+                    <button type="button" id="btnServiceCharges" class="btn btn-primary d-flex align-items-center gap-2 shadow-sm px-3 py-2 rounded-pill"
+                       style="background: linear-gradient(135deg, #0066ff, #0099ff); border:none;">
+                        <i class="fa-solid fa-screwdriver-wrench"></i>
+                        <span class="fw-semibold">Service Charges</span>
+                    </button>
 
                 </div>
             </div>
@@ -383,6 +390,18 @@
                         </div>
                     </div>
 
+                    <!-- SERVICE CHARGES SECTION (Hidden by default) -->
+                    <div id="serviceChargesSection" class="fg mt-3" style="display:none;">
+                        <div class="label">
+                            <i class="fa-solid fa-coins" style="color:#ff9800;"></i> Service Charges (%)
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-hand-holding-dollar"></i></span>
+                            <input asp-for="ServiceCharges" class="form-control" placeholder="Enter service charges percentage %" />
+                        </div>
+                    </div>
+
+
                     <!-- Save bar -->
                     <div class="savebar">
                         <button type="submit" class="btn btn-grad d-inline-flex align-items-center gap-2">
@@ -433,6 +452,19 @@
 
     <!-- Bootstrap JS (optional for components) -->
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.getElementById("btnServiceCharges").addEventListener("click", function () {
+            const sec = document.getElementById("serviceChargesSection");
+
+            if (sec.style.display === "none") {
+                sec.style.display = "block";
+                sec.classList.add("animate__animated", "animate__fadeIn");
+            } else {
+                sec.style.display = "none";
+            }
+        });
+    </script>
 
     <script>
         // Fade out success alert

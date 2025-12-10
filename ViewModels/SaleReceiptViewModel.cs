@@ -15,6 +15,7 @@
         public decimal Tax { get; set; }
         public decimal Discount { get; set; }
         public decimal Total { get; set; }
+        public decimal? ServiceCharges { get; set; }
 
         // Customer Info
         public int CustomerId { get; set; }

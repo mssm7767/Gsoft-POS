@@ -4,9 +4,6 @@ using GSoftPosNew.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
-using System.Text;
-
 
 namespace GSoftPosNew.Controllers
 {
@@ -96,6 +93,7 @@ namespace GSoftPosNew.Controllers
                 existing.NTN = model.NTN;
                 existing.STRN = model.STRN;
                 existing.POSId = model.POSId;
+                existing.ServiceCharges = model.ServiceCharges;
 
                 _context.ShopSettings.Update(existing);
                 await _context.SaveChangesAsync();

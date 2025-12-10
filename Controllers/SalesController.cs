@@ -156,6 +156,11 @@ namespace GSoftPosNew.Controllers
                 .Select(s => s.ShopName)
                 .FirstOrDefault();
 
+            ViewBag.ServiceCharges = _context.ShopSettings
+                .OrderByDescending(s => s.Id)
+                .Select(s => s.ServiceCharges)
+                .FirstOrDefault();
+
             return View(items);
         }
 
@@ -196,6 +201,11 @@ namespace GSoftPosNew.Controllers
                 return BadRequest("Invalid sale data. Raw request: " + rawBody);
             }
 
+           var serviceCharges = _context.ShopSettings
+                .OrderByDescending(s => s.Id)
+                .Select(s => s.ServiceCharges)
+                .FirstOrDefault();
+
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
@@ -207,6 +217,11 @@ namespace GSoftPosNew.Controllers
                 sale.CashierId = User.Identity?.Name ?? "Unknown";
                 sale.Id = 0;
                 sale.CustomerId = sale.custId;
+                if(serviceCharges != null || serviceCharges > 0)
+                {
+                    sale.ServiceCharges = sale.Total * serviceCharges / 100;
+                    sale.Total = sale.Total + sale.ServiceCharges ?? 0;
+                }
 
                 if (sale.SaleType == "Return")
                 {
@@ -1240,6 +1255,7 @@ namespace GSoftPosNew.Controllers
                 Tax = sale.Tax,
                 Discount = sale.Discount,
                 Total = sale.Total,
+                ServiceCharges = sale.ServiceCharges,
                 PaymentMethod = sale.Payment?.PaymentMethod ?? "Cash",
                 Waiter = sale.Waiter,
                 TableNo = sale.TableNo,
@@ -1298,6 +1314,7 @@ namespace GSoftPosNew.Controllers
                 Tax = sale.Tax,
                 Discount = sale.Discount,
                 Total = sale.Total,
+                ServiceCharges = sale.ServiceCharges,
                 CustomerId = sale.CustomerId,
                 CustomerName = _context.Customers
                     .AsEnumerable()

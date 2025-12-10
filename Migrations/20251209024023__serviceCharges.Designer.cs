@@ -4,6 +4,7 @@ using GSoftPosNew.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GSoftPosNew.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251209024023__serviceCharges")]
+    partial class _serviceCharges
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -891,9 +894,6 @@ namespace GSoftPosNew.Migrations
                     b.Property<string>("SaleType")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal?>("ServiceCharges")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<decimal>("SubTotal")
                         .HasColumnType("decimal(18,2)");
 
@@ -987,8 +987,8 @@ namespace GSoftPosNew.Migrations
                     b.Property<string>("STRN")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("ServiceCharges")
-                        .HasColumnType("int");
+                    b.Property<string>("ServiceCharges")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ShopName")
                         .HasColumnType("nvarchar(max)");
@@ -996,28 +996,6 @@ namespace GSoftPosNew.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ShopSettings");
-                });
-
-            modelBuilder.Entity("GSoftPosNew.Models.SoftwareLicense", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("ExpiryDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("SoftwareLicense");
                 });
 
             modelBuilder.Entity("GSoftPosNew.Models.StockAdjustment", b =>

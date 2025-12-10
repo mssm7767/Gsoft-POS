@@ -44,6 +44,7 @@ namespace GSoftPosNew.Data
         public DbSet<CustomerVanStock> CustomerVanStocks { get; set; }
         public DbSet<VanStockSale> VanStockSales { get; set; }
         public DbSet<PosTable> PosTables { get; set; }
+        public DbSet<SoftwareLicense> SoftwareLicense { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

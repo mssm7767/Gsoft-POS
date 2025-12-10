@@ -757,6 +757,8 @@
                     <thead>
                         <tr>
                             <th style="padding:6px;border:1px solid #333;text-align:center;background:#111827;color:#f9fafb;width:5%;">#</th>
+                            <th style="padding:6px;border:1px solid #333;text-align:left;background:#111827;color:#f9fafb;">Item Code</th>
+                            <th style="padding:6px;border:1px solid #333;text-align:left;background:#111827;color:#f9fafb;">Category</th>
                             <th style="padding:6px;border:1px solid #333;text-align:left;background:#111827;color:#f9fafb;">Item Name</th>
                             <th style="padding:6px;border:1px solid #333;text-align:right;background:#111827;color:#f9fafb;">Qty</th>
                             <th style="padding:6px;border:1px solid #333;text-align:right;background:#111827;color:#f9fafb;">Unit Price</th>
@@ -764,15 +766,17 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (allSaleItems != null && allSaleItems.Any())
+                        @if (groupedItems != null && groupedItems.Any())
                         {
                             var pIdx = 1;
-                            foreach (var item in allSaleItems.OrderBy(x => x.Item?.ItemName))
+                            foreach (var item in groupedItems)
                             {
                                 var itemTotal = item.Quantity * item.UnitPrice;
                                 <tr>
                                     <td style="padding:6px;border:1px solid #ddd;text-align:center;">@pIdx</td>
-                                    <td style="padding:6px;border:1px solid #ddd;">@item.Item?.ItemName</td>
+                                    <td style="padding:6px;border:1px solid #ddd;">@item.ItemCode</td>
+                                    <td style="padding:6px;border:1px solid #ddd;">@item.Category</td>
+                                    <td style="padding:6px;border:1px solid #ddd;">@item.ItemName</td>
                                     <td style="padding:6px;border:1px solid #ddd;text-align:right;">@item.Quantity</td>
                                     <td style="padding:6px;border:1px solid #ddd;text-align:right;">@item.UnitPrice.ToString("N2")</td>
                                     <td style="padding:6px;border:1px solid #ddd;text-align:right;">
@@ -782,7 +786,7 @@
                                 pIdx++;
                             }
                             <tr>
-                                <td colspan="4" style="padding:7px;border-top:2px solid #111827;text-align:right;font-weight:700;">
+                                <td colspan="6" style="padding:7px;border-top:2px solid #111827;text-align:right;font-weight:700;">
                                     Grand Total
                                 </td>
                                 <td style="padding:7px;border-top:2px solid #111827;text-align:right;font-weight:700;">

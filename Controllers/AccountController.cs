@@ -45,13 +45,13 @@ namespace GSoftPosNew.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            DateTime expiryDate = Convert.ToDateTime(_config["AppSettings:LicenseDate"]);
+            //DateTime expiryDate = Convert.ToDateTime(_config["AppSettings:LicenseDate"]);
 
-            if (LicenseHelper.IsExpired(expiryDate))
-            {
-                ViewBag.Error = "Your POS license has expired. Please contact support.";
-                return View(); // stop login
-            }
+            //if (LicenseHelper.IsExpired(expiryDate))
+            //{
+            //    ViewBag.Error = "Your POS license has expired. Please contact support.";
+            //    return View(); // stop login
+            //}
 
             // Find user by username
             var user = await _context.Users

@@ -128,6 +128,14 @@
                 <td class="text-right pr-2">SubTotal:</td>
                 <td class="text-right font-semibold">@Model.SubTotal.ToString("N0")</td>
             </tr>
+            @if(Model.ServiceCharges != null || Model.ServiceCharges > 0)
+            {
+                <tr>
+                    <td class="text-right pr-2">Service Charges:</td>
+                    <td class="text-right font-semibold">@Model.ServiceCharges?.ToString("N0")</td>
+                </tr>
+            }
+            
             <tr>
                 <td class="text-right pr-2">Tax:</td>
                 <td class="text-right font-semibold">@Model.Tax.ToString("N0")</td>
@@ -138,7 +146,9 @@
             </tr>
             <tr class="border-t border-black text-sm font-bold">
                 <td class="text-right pr-2">TOTAL:</td>
-                <td class="text-right">@Model.Total.ToString("N0")</td>
+                <td class="text-right">
+                    (@Model.Total.ToString("N0"))
+                </td>
             </tr>
         </table>
 

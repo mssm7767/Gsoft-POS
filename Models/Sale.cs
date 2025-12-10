@@ -33,5 +33,6 @@ namespace GSoftPosNew.Models
 
         public string? Waiter { get; set; }
         public string? TableNo { get; set; }
+        public decimal? ServiceCharges { get; set; }
     }
 }
