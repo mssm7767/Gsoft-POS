@@ -26,33 +26,47 @@ namespace GSoftPosNew.Controllers
             _viewEngine = viewEngine;
         }
 
-        public async Task<IActionResult> Index(DateTime? fromDate, DateTime? toDate, string search)
+        public async Task<IActionResult> Index(DateTime? fromDate, DateTime? toDate, string search, int customerId)
         {
             var query = _context.Sales.AsQueryable();
+            var queryPurchase = _context.Purchases.AsQueryable();
 
             if (fromDate.HasValue)
+            {
                 query = query.Where(s => s.SaleDate.Date >= fromDate.Value);
+                queryPurchase = queryPurchase.Where(s => s.Date.Date >= fromDate.Value);
+            }
+               
             else
             {
                 query = query.Where(s => s.SaleDate.Date == DateTime.Now.Date);
+                queryPurchase = queryPurchase.Where(s => s.Date.Date == DateTime.Now.Date);
             }
 
             if (toDate.HasValue)
+            {
                 query = query.Where(s => s.SaleDate.Date <= toDate.Value);
-
+                queryPurchase = queryPurchase.Where(s => s.Date.Date <= toDate.Value);
+            }
+               
             else
             {
                 query = query.Where(s => s.SaleDate.Date == DateTime.Now.Date);
+                queryPurchase = queryPurchase.Where(s => s.Date.Date == DateTime.Now.Date);
             }
 
             if (!string.IsNullOrEmpty(search))
                 query = query.Where(s => s.InvoiceNumber.Contains(search) || s.CashierId.Contains(search));
+
+            if (customerId != null && customerId > 0)
+                query = query.Where(s => s.CustomerId == customerId);
 
             var model = new SalesFilterViewModel
             {
                 FromDate = fromDate,
                 ToDate = toDate,
                 Search = search,
+                CustomerId = customerId,
                 Sales = query
                     .OrderByDescending(s => s.SaleDate)
                     .Include(s => s.SaleItems)
@@ -62,6 +76,11 @@ namespace GSoftPosNew.Controllers
             };
 
             ViewBag.Categories = await _context.Categories.ToListAsync();
+            ViewBag.Customers = await _context.Customers.ToListAsync();
+
+            ViewBag.Purchase = queryPurchase.Include(p => p.Items).ToList();
+
+
 
             return View(model);
         }
@@ -192,7 +211,7 @@ namespace GSoftPosNew.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> SaveSale([FromBody] Sale sale)
+        public async Task<IActionResult> SaveSale([FromBody] Sale sale, int serviceCharges )
         {
             if (sale == null || sale.SaleItems == null || !sale.SaleItems.Any())
             {
@@ -201,10 +220,17 @@ namespace GSoftPosNew.Controllers
                 return BadRequest("Invalid sale data. Raw request: " + rawBody);
             }
 
-           var serviceCharges = _context.ShopSettings
+           var serviceChargesValue = _context.ShopSettings
                 .OrderByDescending(s => s.Id)
                 .Select(s => s.ServiceCharges)
                 .FirstOrDefault();
+
+            bool isApplied = false;
+
+            if(serviceCharges == 1)
+            {
+                isApplied = true;
+            }
 
             using var transaction = await _context.Database.BeginTransactionAsync();
 
@@ -217,10 +243,10 @@ namespace GSoftPosNew.Controllers
                 sale.CashierId = User.Identity?.Name ?? "Unknown";
                 sale.Id = 0;
                 sale.CustomerId = sale.custId;
-                if(serviceCharges != null || serviceCharges > 0)
+                if (isApplied && serviceChargesValue.HasValue && serviceChargesValue > 0)
                 {
-                    sale.ServiceCharges = sale.Total * serviceCharges / 100;
-                    sale.Total = sale.Total + sale.ServiceCharges ?? 0;
+                    sale.ServiceCharges = sale.Total * serviceChargesValue.Value / 100;
+                    sale.Total += sale.ServiceCharges ?? 0;
                 }
 
                 if (sale.SaleType == "Return")
@@ -765,7 +791,7 @@ namespace GSoftPosNew.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> SaveOnly([FromBody] Sale sale)
+        public async Task<IActionResult> SaveOnly([FromBody] Sale sale, int serviceCharges)
         {
             if (sale == null || sale.SaleItems == null || !sale.SaleItems.Any())
             {
@@ -774,7 +800,19 @@ namespace GSoftPosNew.Controllers
                 return BadRequest("Invalid sale data. Raw request: " + rawBody);
             }
 
+            var serviceChargesValue = _context.ShopSettings
+                .OrderByDescending(s => s.Id)
+                .Select(s => s.ServiceCharges)
+                .FirstOrDefault();
+
             using var transaction = await _context.Database.BeginTransactionAsync();
+
+            bool isApplied = false;
+
+            if (serviceCharges == 1)
+            {
+                isApplied = true;
+            }
 
             try
             {
@@ -785,6 +823,11 @@ namespace GSoftPosNew.Controllers
                 sale.CashierId = User.Identity?.Name ?? "Unknown";
                 sale.Id = 0;
                 sale.CustomerId = sale.custId;
+                if (isApplied && serviceChargesValue.HasValue && serviceChargesValue > 0)
+                {
+                    sale.ServiceCharges = sale.Total * serviceChargesValue.Value / 100;
+                    sale.Total += sale.ServiceCharges ?? 0;
+                }
 
                 if (sale.SaleType == "Return")
                 {

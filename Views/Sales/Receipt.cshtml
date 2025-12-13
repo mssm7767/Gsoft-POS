@@ -95,7 +95,7 @@
                 <tr class="border-b border-gray-300">
                     <th class="text-left w-5">#</th>
                     <th class="text-left">Item</th>
-                    <th class="text-right w-12">Price</th>
+                    <th class="text-center w-12">Price</th>
                     <th class="text-right w-8">Qty</th>
                     <th class="text-right w-14">Total</th>
                 </tr>
@@ -108,8 +108,8 @@
                         <tr>
                             <td>@item.SrNo</td>
                             <td class="max-w-[100px] break-words">@item.ItemName</td>
-                            <td class="text-right">@item.UnitPrice.ToString("N0")</td>
-                            <td class="text-right">@item.Quantity</td>
+                            <td class="text-center">@item.UnitPrice.ToString("N0")</td>
+                           <td class="text-right">@item.Quantity.ToString("N2")</td>
                             <td class="text-right">@item.LineTotal.ToString("N0")</td>
                         </tr>
                     }

@@ -16,6 +16,7 @@ namespace GSoftPosNew.ViewModels
         public DateTime? FromDate { get; set; }
         public DateTime? ToDate { get; set; }
         public string? Search { get; set; }
+        public int? CustomerId { get; set; }
 
         // Sales grid ke liye
         public List<Sale> Sales { get; set; } = new List<Sale>();

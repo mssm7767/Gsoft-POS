@@ -3,10 +3,15 @@
 @model GSoftPosNew.ViewModels.SalesFilterViewModel
 
 @{
+
     ViewData["Title"] = "Sales Report";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var fromStr = Model.FromDate?.ToString("yyyy-MM-dd");
     var toStr = Model.ToDate?.ToString("yyyy-MM-dd");
+
+
+
+    var purchase = ViewBag.Purchase as List<Purchase>;
 }
 
 @{
@@ -16,7 +21,6 @@
 
     decimal grandItemTotal = allSaleItems.Sum(i => i.Quantity * i.UnitPrice);
 }
-
 
 <style>
     /* ========= PAGE BACKGROUND & LAYOUT ========= */
@@ -336,6 +340,23 @@
                         <input id="search" type="text" name="search" class="form-control"
                                placeholder="Invoice # or Cashier" value="@Model.Search" />
                     </div>
+                    <div id="customer" class="col-md-2">
+                        <label class="form-label filter-label">
+                            <i class="fa fa-users me-1 text-primary"></i>
+                            Customer
+                        </label>
+
+                        <select id="customerInput" name="customerId" class="form-control" asp-for="CustomerId">
+                            <option value="">-- Select Customer --</option>
+
+                            @foreach (var cus in ViewBag.Customers)
+                            {
+                                <option value="@cus.Id">
+                                    @cus.CustomerName
+                                </option>
+                            }
+                        </select>
+                    </div>
                     <div id="category" class="col-md-2" style="display: none;">
                         <label class="form-label filter-label">
                             <i class="fa fa-list-alt me-1 text-primary"></i>
@@ -354,7 +375,7 @@
                         </select>
                     </div>
 
-                    <div class="col-md-4 text-end">
+                    <div class="col-md-2 text-end">
                         <button type="submit" class="btn btn-success px-4 btn-soft">
                             <i class="fa fa-search me-1"></i> Filter
                         </button>
@@ -566,7 +587,7 @@
 
                                 <!-- Totals Row -->
                                 <tr class="table-light fw-bold">
-                                    <td colspan="4" class="text-end">Totals:</td>
+                                    <td colspan="5" class="text-end">Totals:</td>
                                     <td class="text-end">@grandSubtotal.ToString("N2")</td>
                                     <td class="text-end">@grandTax.ToString("N2")</td>
                                     <td class="text-end text-danger">-@grandDiscount.ToString("N2")</td>
@@ -593,23 +614,27 @@
                                 <th style="width:10%;">Category</th>
                                 <th style="width:30%;">Item Name</th>
                                 <th class="text-center" style="width:10%;">Qty</th>
-                                <th class="text-end" style="width:15%;">Unit Price</th>
-                                <th class="text-end" style="width:15%;">Total</th>
+                                <th class="text-center" style="width:8%;">Unit Price</th>
+                                <th class="text-center" style="width:10%;">Discount</th>
+                                <th class="text-center" style="width:15%;">Total</th>
                             </tr>
                         </thead>
 
                         <tbody id="saleItemsBody">
                             @{
+
                                 // Step 1: Flatten sale items + apply minus if Return
                                 var allSaleItemsQty = Model.Sales
                                 .SelectMany(s => s.SaleItems.Select(i => new
                                 {
                                     s.SaleType,
+                                    ItemId = i.ItemId,
                                     Category = i.Item.Category.Name,
                                     ItemCode = i.Item?.ItemCode,
                                     ItemName = i.Item?.ItemName,
                                     Quantity = s.SaleType == "Return" ? -i.Quantity : i.Quantity,
-                                    UnitPrice = i.UnitPrice
+                                    UnitPrice = i.UnitPrice,
+                                    Discount = s.Discount         
                                 }))
                                 .ToList();
 
@@ -622,15 +647,28 @@
                                     Category = g.First().Category,
                                     ItemName = g.First().ItemName,
                                     Quantity = g.Sum(x => x.Quantity),
+                                    Discount = g.Sum(x => x.Discount),
                                     UnitPrice = g.First().UnitPrice,
-                                    Total = g.Sum(x => x.Quantity * x.UnitPrice)
+                                    Total = g.Sum(x => (x.Quantity * x.UnitPrice) - x.Discount),
+
+                                    PurchaseTotal = purchase
+                                    .Where(p => p.Items.Any(pi => pi.ItemId == g.First().ItemId))
+                                    .SelectMany(p => p.Items.Where(pi => pi.ItemId == g.First().ItemId))
+                                    .Sum(pi => pi.LineTotal)
+
                                 })
                                 .OrderBy(x => x.ItemName)
                                 .ToList();
 
                                 var itemIdx = 1;
 
-                                decimal grandItemTotalQty = allSaleItemsQty.Sum(i => i.Quantity * i.UnitPrice);
+
+
+                                decimal purchaseTotal = groupedItems.Sum(p => p.PurchaseTotal);
+
+                                decimal grandItemTotalQty = allSaleItemsQty.Sum(i => (i.Quantity * i.UnitPrice) - i.Discount);
+
+                                var grandProfit = grandItemTotalQty - purchaseTotal;
                             }
 
                             @foreach (var item in groupedItems)
@@ -646,12 +684,20 @@
                                         @item.Quantity
                                     </td>
 
-                                    <td class="text-end">
+                                    <td class="text-center">
                                         @item.UnitPrice.ToString("N2")
                                     </td>
 
-                                    <td class="text-end fw-semibold">
+                                    <td class="text-center text-danger">
+                                        -@item.Discount.ToString("N2")
+                                    </td>
+
+
+                                    <td class="text-center fw-semibold">
                                         @item.Total.ToString("N2")
+                                    </td>
+                                    <td class="text-end fw-semibold" hidden>
+                                        @item.PurchaseTotal.ToString("N2")
                                     </td>
                                 </tr>
 
@@ -660,9 +706,18 @@
 
 
                             <tr class="table-light fw-bold">
-                                <td colspan="6" class="text-end">Grand Total:</td>
+                                <td colspan="3" class="text-end">Grand Total:</td>
                                 <td id="grandTotalCell" class="text-end text-success">@grandItemTotalQty.ToString("N2")</td>
+
+                                <td class="text-end">Purchase:</td>
+                                <td id="purchaseCell" class="text-end text-success">@purchaseTotal.ToString("N2")</td>
+
+                                <td >Profit After Discount:</td>
+                                <td id="profitCell" class="text-center @(grandProfit < 0 ? "text-danger" : "text-success")">
+                                    @grandProfit.ToString("N2")
+                                </td>
                             </tr>
+
                         </tbody>
                     </table>
 
@@ -1024,7 +1079,8 @@
         const selectedCategory = this.value.trim().toLowerCase();
         const rows = document.querySelectorAll("#saleItemsBody tr");
         let grandTotal = 0;
-
+        let purchaseTotal = 0;
+        
         rows.forEach(row => {
             // Skip grand total row
             if (row.classList.contains("table-light")) {
@@ -1032,25 +1088,38 @@
             }
 
             const categoryCell = row.querySelector("td:nth-child(3)"); // Category col
-            const totalCell = row.querySelector("td:nth-child(7)"); // Total col
+            const totalCell = row.querySelector("td:nth-child(8)"); // Total col
+            const purchaseCell = row.querySelector("td:nth-child(9)"); // Total col
 
             if (!selectedCategory) {
                 // Show all rows
                 row.style.display = "";
                 grandTotal += parseFloat(totalCell.innerText.replace(/,/g, ""));
+                purchaseTotal += parseFloat(purchaseCell.innerText.replace(/,/g, ""));
             } else {
                 const rowCategory = categoryCell.innerText.trim().toLowerCase();
                 if (rowCategory === selectedCategory) {
                     row.style.display = "";
                     grandTotal += parseFloat(totalCell.innerText.replace(/,/g, ""));
+                    purchaseTotal += parseFloat(purchaseCell.innerText.replace(/,/g, ""));
                 } else {
                     row.style.display = "none";
                 }
             }
         });
 
+        let profit = grandTotal - purchaseTotal;
+
         // Update Grand Total Cell
         document.getElementById("grandTotalCell").innerText = grandTotal.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+        document.getElementById("purchaseCell").innerText = purchaseTotal.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+        document.getElementById("profitCell").innerText = profit.toLocaleString(undefined, {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });

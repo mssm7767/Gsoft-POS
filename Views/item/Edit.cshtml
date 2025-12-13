@@ -1,370 +1,592 @@
-﻿@model GSoftPosNew.Models.AddItemViewModel
+﻿@using System.Linq
+@using System.Collections.Generic
+@using GSoftPosNew.Models
+@model GSoftPosNew.Models.AddItemViewModel
+
 @{
     ViewData["Title"] = "Edit Item";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var existingItems = Model?.ExistingItems ?? new List<ItemModel>();
+
+    var supplierNames = existingItems
+        .Where(x => x.Supplier != null && !string.IsNullOrWhiteSpace(x.Supplier.SupplierName))
+        .Select(x => x.Supplier.SupplierName)
+        .Distinct()
+        .OrderBy(x => x)
+        .ToList();
+
+    var categoryNames = existingItems
+        .Where(x => x.Category != null && !string.IsNullOrWhiteSpace(x.Category.Name))
+        .Select(x => x.Category.Name)
+        .Distinct()
+        .OrderBy(x => x)
+        .ToList();
+
+    var recipeIngredients = ViewBag.RecipeIngredients as List<Ingredient> ?? new List<Ingredient>();
 }
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
 <link href="~/css/item-custom.css" rel="stylesheet" />
 
-<!-- TOP BAR -->
-<div class="top-info-bar mb-4">
-    <span><i class="fa fa-user-circle"></i> @ViewBag.CurrentUser ?? "Admin"</span>
-    <span><i class="fa fa-clock"></i> <span id="currentTime"></span></span>
-    <span><i class="fa fa-calendar"></i> <span id="currentDate"></span></span>
-</div>
-
-<!-- EDIT ITEM FORM -->
-<div class="add-item-container">
-    <div class="d-flex align-items-center mb-3">
-        <h4 class="mb-0"><i class="fa fa-plus-circle me-2"></i>Edit Item</h4>
+@* ===== Center SMS toast for Update / Delete ===== *@
+@if (TempData["Success"] != null)
+{
+    <div id="centerSmsSuccess" class="sms-message success">
+        @TempData["Success"]
     </div>
+}
+@if (TempData["Danger"] != null)
+{
+    <div id="centerSmsDanger" class="sms-message danger">
+        @TempData["Danger"]
+    </div>
+}
 
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success shadow-sm" id="alert-success">@TempData["Success"]</div>
-    }
-    @if (TempData["Danger"] != null)
-    {
-        <div class="alert alert-danger shadow-sm" id="alert-danger">@TempData["Danger"]</div>
-    }
-
-    <form asp-action="Edit" method="post" enctype="multipart/form-data" class="row g-2">
-        <!-- Main Fields -->
-        <div class="col-12 col-md-6">
-            <input asp-for="ItemData.Id" hidden />
-
-            <label asp-for="ItemData.ItemCode" class="form-label form-label-sm">
-                Item Code / Barcode <span class="text-danger">*</span>
-            </label>
-            <div class="input-group input-group-sm">
-                <input asp-for="ItemData.ItemCode"
-                       id="Item_ItemCode"
-                       class="form-control form-control-sm barcode-blink"
-                       placeholder="Scan or type barcode..."
-                       autocomplete="off" />
-                <button type="button"
-                        id="btnAutoCode"
-                        class="btn btn-outline-secondary btn-sm"
-                        title="Auto-generate code">
-                    <i class="fa fa-sync-alt"></i>
-                </button>
+<div class="row">
+    <!-- LEFT: ~40% Edit form -->
+    <div class="col-lg-5 col-md-6">
+        <!-- TOP BAR -->
+        <div class="top-info-bar mb-2">
+            <div>
+                <i class="fa fa-user-circle"></i> @(@ViewBag.CurrentUser ?? "Admin")
             </div>
-            @Html.ValidationMessageFor(m => m.ItemData.ItemCode, "", new { @class = "text-danger" })
-        </div>
-
-        <div class="col-12 col-md-6">
-            <label asp-for="ItemData.ReferenceCode" class="form-label form-label-sm">Reference Code</label>
-            <input asp-for="ItemData.ReferenceCode" class="form-control form-control-sm" />
-        </div>
-
-        <div class="col-12 col-md-6">
-            <label asp-for="ItemData.ItemName" class="form-label form-label-sm">
-                Item Name <span class="text-danger">*</span>
-            </label>
-            <input asp-for="ItemData.ItemName" class="form-control form-control-sm" />
-            @Html.ValidationMessageFor(m => m.ItemData.ItemName, "", new { @class = "text-danger" })
-        </div>
-
-        <!-- Flavour -->
-        <div class="col-12 col-md-6">
-            <label asp-for="ItemData.Flavour" class="form-label form-label-sm">
-                Flavour
-            </label>
-            <div class="input-group input-group-sm">
-                <input asp-for="ItemData.Flavour"
-                       class="form-control form-control-sm"
-                       list="flavourList"
-                       placeholder="e.g., Spicy, Cheesy, BBQ..." />
-                <button type="button"
-                        class="btn btn-outline-secondary btn-sm"
-                        id="btnClearFlavour"
-                        title="Clear">
-                    <i class="fa fa-times"></i>
-                </button>
+            <div>
+                <i class="fa fa-clock"></i> <span id="currentTime"></span>
+                <span class="ms-3"><i class="fa fa-calendar"></i> <span id="currentDate"></span></span>
             </div>
-            @Html.ValidationMessageFor(m => m.ItemData.Flavour, "", new { @class = "text-danger" })
-            <datalist id="flavourList">
-                <option value="Spicy"></option>
-                <option value="Cheesy"></option>
-                <option value="BBQ"></option>
-                <option value="Garlic"></option>
-                <option value="Mayo"></option>
-                <option value="Chocolate"></option>
-                <option value="Vanilla"></option>
-                <option value="Strawberry"></option>
-            </datalist>
         </div>
 
-        <div class="col-12 col-md-6">
-            <label class="form-label form-label-sm">
-                Category <span class="text-danger">*</span>
-            </label>
-            <div class="input-group input-group-sm">
-                <select name="ItemData.CategoryId"
-                        asp-for="ItemData.CategoryId"
-                        class="form-select form-select-sm">
-                    @foreach (var category in ViewBag.CategoryList)
-                    {
-                        <option value="@category.Value">@category.Text</option>
-                    }
-                </select>
-                <a asp-controller="Category"
-                   asp-action="Create"
-                   class="btn btn-success btn-sm"
-                   title="Add Category">
-                    <i class="fa fa-plus"></i>
-                </a>
+        <div class="add-item-container">
+            <div class="d-flex align-items-center mb-3">
+                <h4 class="mb-0">
+                    <i class="fa fa-pen-to-square me-2"></i>
+                    Edit Item
+                </h4>
             </div>
-            <span asp-validation-for="ItemData.CategoryId" class="text-danger"></span>
-        </div>
 
-        <div class="col-12 col-md-6">
-            <label class="form-label form-label-sm">
-                Supplier <span class="text-danger">*</span>
-            </label>
-            <div class="input-group input-group-sm">
-                <select name="ItemData.SupplierId"
-                        asp-for="ItemData.SupplierId"
-                        class="form-select form-select-sm">
-                    @foreach (var supplier in ViewBag.SupplierList)
-                    {
-                        <option value="@supplier.Value">@supplier.Text</option>
-                    }
-                </select>
-                <a asp-controller="Supplier"
-                   asp-action="Create"
-                   class="btn btn-success btn-sm"
-                   title="Add Supplier">
-                    <i class="fa fa-plus"></i>
-                </a>
-            </div>
-            <span asp-validation-for="ItemData.SupplierId" class="text-danger"></span>
-        </div>
+            <form asp-action="Edit" method="post" enctype="multipart/form-data" class="row g-2" id="editItemForm">
+                @Html.AntiForgeryToken()
 
-        <div class="col-12 col-md-4">
-            <label asp-for="ItemData.SalePrice" class="form-label form-label-sm">
-                MRP Price <span class="text-danger">*</span>
-            </label>
-            <input asp-for="ItemData.SalePrice"
-                   id="mrpPrice"
-                   class="form-control form-control-sm"
-                   type="number"
-                   step="0.01" />
-            @Html.ValidationMessageFor(m => m.ItemData.SalePrice, "", new { @class = "text-danger" })
-        </div>
+                <input asp-for="ItemData.Id" type="hidden" />
 
-        <div class="col-12 col-md-4">
-            <label asp-for="ItemData.MarkupPercentage" class="form-label form-label-sm">Markup %</label>
-            <input asp-for="ItemData.MarkupPercentage"
-                   id="markupPct"
-                   class="form-control form-control-sm"
-                   type="number"
-                   step="0.01" />
-        </div>
-
-        <div class="col-12 col-md-4">
-            <label asp-for="ItemData.PurchasePrice" class="form-label form-label-sm">
-                Purchase Price <span class="text-danger">*</span>
-            </label>
-            <input asp-for="ItemData.PurchasePrice"
-                   id="purchasePrice"
-                   class="form-control form-control-sm"
-                   type="number"
-                   step="0.01" />
-            @Html.ValidationMessageFor(m => m.ItemData.PurchasePrice, "", new { @class = "text-danger" })
-        </div>
-
-        <div class="col-12 col-md-6">
-            <label asp-for="ItemData.Quantity" class="form-label form-label-sm">Opening Qty</label>
-            <input asp-for="ItemData.Quantity"
-                   class="form-control form-control-sm"
-                   type="number"
-                   min="0" />
-        </div>
-
-        <div class="col-12 col-md-4">
-            <label class="form-label form-label-sm">
-                <i class="fa-solid fa-image text-primary me-1"></i> Item Image
-            </label>
-            <input type="file" name="ImageFile" class="form-control form-control-sm" />
-
-            @if (!string.IsNullOrEmpty(Model.ItemData.ImagePath))
-            {
-                <div class="mt-2">
-                    <img src="@Url.Content(Model.ItemData.ImagePath)"
-                         alt="@Model.ItemData.ItemName"
-                         class="img-thumbnail"
-                         style="max-height:150px;">
+                <!-- Item Code -->
+                <div class="col-12 col-md-6">
+                    <label asp-for="ItemData.ItemCode" class="form-label form-label-sm">
+                        Item Code / Barcode <span class="text-danger">*</span>
+                        <span class="text-muted small">(Ctrl + A for Auto Code)</span>
+                    </label>
+                    <div class="input-group input-group-sm">
+                        <input asp-for="ItemData.ItemCode" id="Item_ItemCode" class="form-control form-control-sm barcode-blink"
+                               placeholder="Scan or type barcode..." autocomplete="off" />
+                        <button type="button" id="btnAutoCode" class="btn btn-outline-secondary btn-sm" title="Auto-generate code (Ctrl + A)">
+                            <i class="fa fa-magic"></i>
+                            <span class="d-none d-md-inline">Auto</span>
+                        </button>
+                    </div>
+                    @Html.ValidationMessageFor(m => m.ItemData.ItemCode, "", new { @class = "text-danger" })
                 </div>
-            }
-        </div>
 
-        <!-- More Details Button -->
-        <div class="col-12">
-            <button class="btn btn-link text-primary fw-bold"
-                    type="button"
-                    id="btnMoreDetails"
-                    style="font-size:1.14rem;"
-                    onclick="toggleMoreDetails()">
-                <i class="fa fa-plus-circle" id="iconMoreDetails"></i>
-                More Details (Optional)
-            </button>
-        </div>
+                <!-- Reference Code -->
+                <div class="col-12 col-md-6">
+                    <label asp-for="ItemData.ReferenceCode" class="form-label form-label-sm">Reference Code</label>
+                    <input asp-for="ItemData.ReferenceCode" id="Item_ReferenceCode" class="form-control form-control-sm" />
+                </div>
 
-        <!-- More Details (Hidden by Default) -->
-        <div class="col-12" id="moreDetailsSection" style="display:none;">
-            <div class="card mb-3"
-                 style="background: linear-gradient(90deg,#e9f8fe 70%,#d0f9e6 100%); border:1px solid #bde4fb;">
-                <div class="card-body p-3">
-                    <div class="row g-2">
-                        <div class="col-md-4">
-                            <label class="form-label form-label-sm">Sale Price 2</label>
-                            <input name="SalePrice2"
-                                   class="form-control form-control-sm"
-                                   type="number"
-                                   step="0.01"
-                                   placeholder="Second Sale Price" />
+                <!-- Item Name -->
+                <div class="col-12 col-md-6">
+                    <label asp-for="ItemData.ItemName" class="form-label form-label-sm">
+                        Item Name <span class="text-danger">*</span>
+                    </label>
+                    <input asp-for="ItemData.ItemName" id="Item_ItemName" class="form-control form-control-sm" />
+                    @Html.ValidationMessageFor(m => m.ItemData.ItemName, "", new { @class = "text-danger" })
+                </div>
+
+                <!-- Flavour -->
+                <div class="col-12 col-md-6">
+                    <label asp-for="ItemData.Flavour" class="form-label form-label-sm">
+                        Flavour
+                    </label>
+                    <div class="input-group input-group-sm">
+                        <input asp-for="ItemData.Flavour"
+                               id="Item_Flavour"
+                               class="form-control form-control-sm"
+                               list="flavourList"
+                               placeholder="e.g., Spicy, Cheesy, BBQ..." />
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnClearFlavour" title="Clear">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                    @Html.ValidationMessageFor(m => m.ItemData.Flavour, "", new { @class = "text-danger" })
+                    <datalist id="flavourList">
+                        <option value="Spicy"></option>
+                        <option value="Cheesy"></option>
+                        <option value="BBQ"></option>
+                        <option value="Garlic"></option>
+                        <option value="Mayo"></option>
+                        <option value="Chocolate"></option>
+                        <option value="Vanilla"></option>
+                        <option value="Strawberry"></option>
+                    </datalist>
+                </div>
+
+                <!-- Category -->
+                <div class="col-12 col-md-6">
+                    <label class="form-label form-label-sm">
+                        Category <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group input-group-sm">
+                        <select id="CategoryId" name="ItemData.CategoryId" asp-for="ItemData.CategoryId" class="form-select form-select-sm">
+                            <option value="">Select category</option>
+                            @foreach (var category in ViewBag.CategoryList)
+                            {
+                                <option value="@category.Value">@category.Text</option>
+                            }
+                        </select>
+                        <a asp-controller="Category" asp-action="Create" class="btn btn-success btn-sm" title="Add Category">
+                            <i class="fa fa-plus"></i>
+                        </a>
+                    </div>
+                    <span asp-validation-for="ItemData.CategoryId" class="text-danger"></span>
+                </div>
+
+                <!-- Supplier -->
+                <div class="col-12 col-md-6">
+                    <label class="form-label form-label-sm">
+                        Supplier <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group input-group-sm">
+                        <select id="SupplierId" name="ItemData.SupplierId" asp-for="ItemData.SupplierId" class="form-select form-select-sm">
+                            <option value="">Select supplier</option>
+                            @foreach (var supplier in ViewBag.SupplierList)
+                            {
+                                <option value="@supplier.Value">@supplier.Text</option>
+                            }
+                        </select>
+                        <a asp-controller="Supplier" asp-action="Create" class="btn btn-success btn-sm" title="Add Supplier">
+                            <i class="fa fa-plus"></i>
+                        </a>
+                    </div>
+                    <span asp-validation-for="ItemData.SupplierId" class="text-danger"></span>
+                </div>
+
+                <!-- Prices -->
+                <div class="col-12 col-md-4">
+                    <label asp-for="ItemData.SalePrice" class="form-label form-label-sm">
+                        MRP Price (sale price) <span class="text-danger">*</span>
+                    </label>
+                    <input asp-for="ItemData.SalePrice" id="mrpPrice" class="form-control form-control-sm" type="number" step="0.01" />
+                    @Html.ValidationMessageFor(m => m.ItemData.SalePrice, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label asp-for="ItemData.MarkupPercentage" class="form-label form-label-sm">Markup %</label>
+                    <input asp-for="ItemData.MarkupPercentage" id="markupPct" class="form-control form-control-sm" type="number" step="0.01" />
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label asp-for="ItemData.PurchasePrice" class="form-label form-label-sm">
+                        Purchase Price (cost price) <span class="text-danger">*</span>
+                    </label>
+                    <input asp-for="ItemData.PurchasePrice" id="purchasePrice" class="form-control form-control-sm" type="number" step="0.01" />
+                    @Html.ValidationMessageFor(m => m.ItemData.PurchasePrice, "", new { @class = "text-danger" })
+                </div>
+
+                <!-- Opening Qty -->
+                <div class="col-12 col-md-6">
+                    <label asp-for="ItemData.Quantity" class="form-label form-label-sm">Opening Qty</label>
+                    <input asp-for="ItemData.Quantity" id="Item_Quantity" class="form-control form-control-sm" type="number" min="0" />
+                </div>
+
+                <!-- Image -->
+                <div class="col-md-4">
+                    <label class="form-label">
+                        <i class="fa-solid fa-image text-primary me-1"></i> Item Image
+                    </label>
+                    <input type="file" name="ImageFile" id="ImageFile" class="form-control" />
+
+                    @if (!string.IsNullOrEmpty(Model.ItemData.ImagePath))
+                    {
+                        <div class="mt-2">
+                            <img src="@Url.Content(Model.ItemData.ImagePath)"
+                                 alt="@Model.ItemData.ItemName"
+                                 class="img-thumbnail"
+                                 style="max-height:150px;">
                         </div>
+                    }
+                </div>
 
-                        <div class="col-md-4">
-                            <label asp-for="ItemData.PackSize" class="form-label form-label-sm">Pack Size</label>
-                            <input asp-for="ItemData.PackSize"
-                                   class="form-control form-control-sm"
-                                   id="packsize" />
-                        </div>
+                <!-- More details + Recipe buttons -->
+                <div class="col-12 d-flex align-items-center gap-3 mt-1">
+                    <button class="btn btn-link text-primary fw-bold p-0" type="button"
+                            id="btnMoreDetails"
+                            style="font-size:1.02rem;"
+                            onclick="toggleMoreDetails()">
+                        <i class="fa fa-plus-circle" id="iconMoreDetails"></i> More Details (Optional)
+                    </button>
 
-                        <div class="col-md-4">
-                            <label asp-for="ItemData.UnitPrice" class="form-label form-label-sm">Unit Price</label>
-                            <input asp-for="ItemData.UnitPrice"
-                                   class="form-control form-control-sm"
-                                   id="unitprice"
-                                   readonly />
-                        </div>
+                    <button class="btn btn-link text-success fw-bold p-0" type="button"
+                            id="btnRecipeToggle"
+                            style="font-size:1.02rem;"
+                            onclick="toggleRecipeSection()">
+                        <i class="fa fa-utensils" id="iconRecipe"></i> Add Recipe
+                    </button>
+                </div>
 
-                        <div class="col-md-4">
-                            <label asp-for="ItemData.PackPrice" class="form-label form-label-sm">Pack Price</label>
-                            <input asp-for="ItemData.PackPrice"
-                                   class="form-control form-control-sm"
-                                   type="number"
-                                   id="packprice"
-                                   readonly />
-                        </div>
+                <!-- More Details -->
+                <div class="col-12" id="moreDetailsSection" style="display:none;">
+                    <div class="card mb-2"
+                         style="background: linear-gradient(90deg,#e9f8fe 70%,#d0f9e6 100%); border:1px solid #bde4fb;">
+                        <div class="card-body p-3">
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <label class="form-label form-label-sm">Sale Price 2</label>
+                                    <input name="SalePrice2" id="SalePrice2" class="form-control form-control-sm"
+                                           type="number" step="0.01" placeholder="Second Sale Price" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label asp-for="ItemData.PackSize" class="form-label form-label-sm">Pack Size</label>
+                                    <input asp-for="ItemData.PackSize" class="form-control form-control-sm" id="packsize" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label asp-for="ItemData.UnitPrice" class="form-label form-label-sm">Unit Price</label>
+                                    <input asp-for="ItemData.UnitPrice" class="form-control form-control-sm"
+                                           id="unitprice" readonly />
+                                </div>
+                                <div class="col-md-4">
+                                    <label asp-for="ItemData.PackPrice" class="form-label form-label-sm">Pack Price</label>
+                                    <input asp-for="ItemData.PackPrice" class="form-control form-control-sm"
+                                           type="number" id="packprice" readonly />
+                                </div>
 
-                        <div class="col-12 col-sm-6 col-md-4">
-                            <label class="form-label form-label-sm">
-                                Unit <span class="text-danger">*</span>
-                            </label>
-                            <div class="input-group input-group-sm">
-                                <select name="ItemData.UnitId" class="form-select form-select-sm">
-                                    <option value="">Select Unit</option>
-                                    @foreach (var unit in ViewBag.UnitList)
-                                    {
-                                        <option value="@unit.Value">@unit.Text</option>
-                                    }
-                                </select>
-                                <a asp-controller="Unit" asp-action="Create" class="btn btn-success btn-sm" title="Add Unit">
-                                    <i class="fa fa-plus"></i>
-                                </a>
+                                <div class="col-12 col-sm-6 col-md-4">
+                                    <label class="form-label form-label-sm">
+                                        Unit <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group input-group-sm">
+                                        <select name="ItemData.UnitId" id="UnitId" class="form-select form-select-sm">
+                                            <option value="">Select Unit</option>
+                                            @foreach (var unit in ViewBag.UnitList)
+                                            {
+                                                <option value="@unit.Value">@unit.Text</option>
+                                            }
+                                        </select>
+                                        <a asp-controller="Unit" asp-action="Create"
+                                           class="btn btn-success btn-sm" title="Add Unit">
+                                            <i class="fa fa-plus"></i>
+                                        </a>
+                                    </div>
+                                    <span asp-validation-for="ItemData.SupplierId" class="text-danger"></span>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label asp-for="ItemData.LocationId" class="form-label form-label-sm">
+                                        Location <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group input-group-sm">
+                                        <select asp-for="ItemData.LocationId" id="LocationId"
+                                                asp-items="Model.LocationList"
+                                                class="form-select form-select-sm">
+                                            <option value="">Select Location</option>
+                                        </select>
+                                        <a asp-controller="Location" asp-action="Create"
+                                           class="btn btn-success btn-sm" title="Add Location">
+                                            <i class="fa fa-plus"></i>
+                                        </a>
+                                    </div>
+                                    <span asp-validation-for="ItemData.LocationId" class="text-danger"></span>
+                                </div>
                             </div>
-                            @* validation span hata diya, kyun ke ItemModel me UnitId property nahi hai *@
                         </div>
-
-
                     </div>
                 </div>
-            </div>
+
+                <!-- RECIPE CARD -->
+                <div class="col-12" id="recipeSectionWrapper" style="display:none;">
+                    <div class="card mb-2"
+                         style="background: linear-gradient(90deg,#e9f8fe 70%,#d0f9e6 100%); border:1px solid #bde4fb;">
+                        <div class="card-body p-3">
+
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0">
+                                    <i class="fa fa-utensils text-success me-1"></i>
+                                    Recipe (Raw Material / Ingredients)
+                                </h6>
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-success"
+                                        onclick="addRecipeRow()">
+                                    <i class="fa fa-plus"></i> Add Ingredient Row
+                                </button>
+                            </div>
+
+                            <div class="alert alert-info py-2 mb-2" style="font-size:0.8rem;">
+                                <i class="fa fa-lightbulb me-1"></i>
+                                Yahan is item ke liye jo jo <strong>ingredients</strong> use honge,
+                                unki quantity aur cost add karein.
+                            </div>
+
+                            <div class="table-responsive border rounded-3"
+                                 style="background:#ffffff; max-height:260px; overflow:auto;">
+                                <table class="table table-sm mb-0 align-middle" id="recipeTable">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width:26px;"></th>
+                                            <th>Ingredient</th>
+                                            <th>Category</th>
+                                            <th style="width:90px;">Unit</th>
+                                            <th style="width:90px;" class="text-end">Avail</th>
+                                            <th style="width:90px;" class="text-end">Use</th>
+                                            <th style="width:110px;" class="text-end">Cost/Unit</th>
+                                            <th style="width:110px;" class="text-end">Line Total</th>
+                                            <th style="width:40px;" class="text-center">Del</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- JS se rows add honge -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <div class="fw-bold">
+                                    Total Recipe Cost:
+                                    <span id="recipeGrandTotal" class="text-primary">0.00</span>
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <label class="form-label form-label-sm">
+                                    Recipe / Item Picture (optional)
+                                </label>
+                                <input type="file"
+                                       name="RecipeImage"
+                                       class="form-control form-control-sm"
+                                       accept="image/*" />
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Buttons -->
+                <div class="col-12 d-flex justify-content-end mt-3 gap-2">
+                    <button type="reset" id="btnClearAll" class="btn btn-secondary btn-sm">Clear</button>
+                    <button type="submit" id="btnSaveNext" class="btn btn-primary btn-sm">Update</button>
+                    <a href="@Url.Action("Index", "Home")" class="btn btn-danger btn-sm ms-2">Exit to Dashboard</a>
+                </div>
+            </form>
         </div>
-
-        <!-- Bottom Buttons (inside form) -->
-        <div class="col-12 d-flex justify-content-end mt-3 gap-2">
-            <button type="reset" class="btn btn-secondary btn-sm">Clear</button>
-            <button type="submit" class="btn btn-primary btn-sm">Save &amp; Next</button>
-            <a href="@Url.Action("Index", "Home")" class="btn btn-danger btn-sm ms-2">Exit to Dashboard</a>
-        </div>
-    </form>
-</div>
-
-<!-- ITEMS TABLE (CURRENT STOCK) -->
-<div class="card mb-4 mt-4" style="max-width:900px;margin:0 auto;">
-    <div class="search-bar-row">
-        <input type="text" id="searchItemInput" placeholder="Search item..." />
-        <button class="btn btn-primary" type="button" onclick="searchTable()">Search</button>
-
-        <button class="btn btn-secondary" type="button"
-                onclick="window.location.href='@Url.Action("Index", "Item")'">
-            <i class="fa fa-list me-1"></i> Stock List
-        </button>
     </div>
 
-    <div class="card-header bg-secondary text-white form-label-sm">Current Stock</div>
-    <div class="card-body p-0">
-        <div class="table-responsive" style="max-height:300px; overflow-y:auto;">
-            <table id="stockTable" class="table table-hover table-sm mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th class="form-label-sm">Code</th>
-                        <th class="form-label-sm">Name</th>
-                        <th class="form-label-sm">Category</th>
-                        <th class="form-label-sm">Supplier</th>
-                        <th class="form-label-sm">Qty</th>
-                        <th class="form-label-sm">Purchase PKR</th>
-                        <th class="form-label-sm">Sale PKR</th>
-                        <th class="form-label-sm">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var it in Model.ExistingItems)
+    <!-- RIGHT: ~60% Current Stock with search -->
+    <div class="col-lg-7 col-md-6">
+        <div class="card mb-4 mt-4 stock-card">
+            <div class="search-bar-row">
+                <input type="text"
+                       id="searchItemInput"
+                       class="form-control form-control-sm"
+                       placeholder="Search by code / name / supplier..." />
+
+                <select id="filterSupplier" class="form-select form-select-sm" style="max-width:180px;">
+                    <option value="">All Suppliers</option>
+                    @foreach (var s in supplierNames)
                     {
-                        <tr>
-                            <td class="form-label-sm">@it.ItemCode</td>
-                            <td class="form-label-sm">@it.ItemName</td>
-                            <td class="form-label-sm">@it.CategoryId</td>
-                            <td class="form-label-sm">@it.SupplierId</td>
-                            <td class="form-label-sm">@it.Quantity</td>
-                            <td class="form-label-sm">@it.PurchasePrice.ToString("0.00")</td>
-                            <td class="form-label-sm">@it.SalePrice.ToString("0.00")</td>
-                            <td class="form-label-sm">
-                                <a asp-action="Edit"
-                                   asp-route-id="@it.Id"
-                                   class="btn btn-sm btn-outline-primary me-1"
-                                   title="Edit">
-                                    <i class="fa fa-edit"></i>
-                                </a>
-                                <a asp-action="Delete"
-                                   asp-route-id="@it.Id"
-                                   class="btn btn-sm btn-outline-danger"
-                                   onclick="return confirm('Confirm delete?');"
-                                   title="Delete">
-                                    <i class="fa fa-trash"></i>
-                                </a>
-                            </td>
-                        </tr>
+                        <option value="@s">@s</option>
                     }
-                </tbody>
-            </table>
+                </select>
+
+                <select id="filterCategory" class="form-select form-select-sm" style="max-width:180px;">
+                    <option value="">All Categories</option>
+                    @foreach (var c in categoryNames)
+                    {
+                        <option value="@c">@c</option>
+                    }
+                </select>
+
+                <button class="btn btn-primary btn-sm" type="button" onclick="searchTable()">
+                    <i class="fa fa-search me-1"></i> Search
+                </button>
+
+                <button class="btn btn-secondary btn-sm ms-auto" type="button"
+                        onclick="window.location.href='@Url.Action("Index", "Item")'">
+                    <i class="fa fa-list me-1"></i> Stock List
+                </button>
+            </div>
+
+            <div class="card-header">
+                Current Stock
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive" style="max-height:300px; overflow-y:auto;">
+                    <table id="stockTable" class="table table-hover table-sm mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="form-label-sm">Code</th>
+                                <th class="form-label-sm">Name</th>
+                                <th class="form-label-sm">Category</th>
+                                <th class="form-label-sm">Supplier</th>
+                                <th class="form-label-sm">Qty</th>
+                                <th class="form-label-sm">Purchase PKR</th>
+                                <th class="form-label-sm">Sale PKR</th>
+                                <th class="form-label-sm">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stockBody">
+                            @foreach (var it in existingItems)
+                            {
+                                var supplierName = it.Supplier?.SupplierName ?? "";
+                                var categoryName = it.Category?.Name ?? "";
+
+                                <tr data-supplier="@supplierName"
+                                    data-category="@categoryName">
+                                    <td class="form-label-sm">@it.ItemCode</td>
+                                    <td class="form-label-sm">@it.ItemName</td>
+                                    <td class="form-label-sm">@categoryName</td>
+                                    <td class="form-label-sm">@supplierName</td>
+                                    <td class="form-label-sm">@it.Quantity</td>
+                                    <td class="form-label-sm">@it.PurchasePrice.ToString("0.00")</td>
+                                    <td class="form-label-sm">@it.SalePrice.ToString("0.00")</td>
+                                    <td class="form-label-sm">
+                                        <a asp-action="Edit" asp-route-id="@it.Id"
+                                           class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                                            <i class="fa fa-edit"></i>
+                                        </a>
+                                        <form asp-action="Delete" asp-route-id="@it.Id" method="post" style="display:inline">
+                                            @* returnToEditId so that after delete we stay on current item screen *@
+                                            <input type="hidden" name="returnToEditId" value="@Model.ItemData.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                    onclick="return confirm('Confirm delete?');" title="Delete">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // ========== Center SMS toast ==========
+        document.addEventListener('DOMContentLoaded', function () {
+            ['centerSmsSuccess', 'centerSmsDanger'].forEach(function (id) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                setTimeout(() => el.classList.add('show'), 50);
+                setTimeout(() => el.classList.remove('show'), 1100);
+                setTimeout(() => el.remove(), 1500);
+            });
+        });
+    </script>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const packSizeInput = document.getElementById("packsize");
-            const unitPriceInput = document.getElementById("unitprice");
-            const packPriceInput = document.getElementById("packprice");
-            const mrpPriceInput = document.getElementById("mrpPrice");
+        // =================== Time & Date ===================
+        function updateDateTime() {
+            const now = new Date();
+            document.getElementById("currentTime")?.replaceChildren(document.createTextNode(now.toLocaleTimeString()));
+            document.getElementById("currentDate")?.replaceChildren(document.createTextNode(now.toLocaleDateString()));
+        }
+        setInterval(updateDateTime, 1000); updateDateTime();
 
+        // =================== Helpers ===================
+        function qs(sel, root=document){ return root.querySelector(sel); }
+        function qsa(sel, root=document){ return Array.from(root.querySelectorAll(sel)); }
+        function byText(root, tag, text){
+            return qsa(tag, root).find(b => (b.textContent||'').trim().toLowerCase() === text.trim().toLowerCase());
+        }
+
+        const editForm = qs('#editItemForm') || document.forms[0];
+        const btnSaveNext = document.getElementById('btnSaveNext') || byText(editForm||document, 'button', 'Update') || qs('button[type="submit"]', editForm||document);
+        const btnClearAll = document.getElementById('btnClearAll') || byText(editForm||document, 'button', 'Clear') || qs('button[type="reset"]', editForm||document);
+
+        const codeInput = document.getElementById('Item_ItemCode');
+        const refInput  = document.getElementById('Item_ReferenceCode') || qs('input[name="ItemData.ReferenceCode"]');
+        const flavInput  = document.getElementById('Item_Flavour')       || qs('input[name="ItemData.Flavour"]');
+        const catSel     = document.getElementById('CategoryId')         || qs('select[name="ItemData.CategoryId"]');
+        const supSel     = document.getElementById('SupplierId')         || qs('select[name="ItemData.SupplierId"]');
+        const qtyInput   = document.getElementById('Item_Quantity')      || qs('input[name="ItemData.Quantity"]');
+        const imgInput   = document.getElementById('ImageFile')          || qs('input[name="ImageFile"]');
+
+        // =================== Auto-generate code (button + Ctrl+A) ===================
+        (function(){
+            const btn = document.getElementById('btnAutoCode');
+            if (!btn || !codeInput) return;
+
+            function generateCode() {
+                fetch('@Url.Action("GetNextCode", "Item")')
+                    .then(r => { if(!r.ok) throw 0; return r.json(); })
+                    .then(code => {
+                        codeInput.value = code;
+                        codeInput.dispatchEvent(new Event('input'));
+                        if (refInput) {
+                            refInput.focus();
+                            refInput.select?.();
+                        }
+                    })
+                    .catch(() => alert("Cannot generate code"));
+            }
+
+            btn.addEventListener('click', generateCode);
+
+            document.addEventListener('keydown', function (e) {
+                if (e.ctrlKey && (e.key === 'a' || e.key === 'A')) {
+                    e.preventDefault();
+                    generateCode();
+                }
+            });
+        })();
+
+        // =================== Prices auto-calc ===================
+        (function(){
+            const mrpEl = document.getElementById('mrpPrice');
+            const pctEl = document.getElementById('markupPct');
+            const purchEl = document.getElementById('purchasePrice');
+
+            function updatePurchasePrice() {
+                const mrp = parseFloat(mrpEl?.value);
+                const pct = parseFloat(pctEl?.value);
+                if (!purchEl) return;
+                if (!isNaN(mrp)) {
+                    if (!isNaN(pct) && pct !== 0) {
+                        purchEl.value = (mrp * (100 - pct) / 100).toFixed(2);
+                        purchEl.readOnly = true;
+                    } else {
+                        purchEl.value = (mrp * (100 - (pct || 0)) / 100).toFixed(2);
+                        purchEl.readOnly = false;
+                    }
+                } else {
+                    purchEl.value = '';
+                    purchEl.readOnly = false;
+                }
+            }
+            mrpEl?.addEventListener('input', updatePurchasePrice);
+            pctEl?.addEventListener('input', updatePurchasePrice);
+
+            purchEl?.addEventListener("input", function () {
+                const mrp = parseFloat(mrpEl?.value);
+                const purch = parseFloat(purchEl?.value);
+                if (!isNaN(mrp) && mrp > 0 && !isNaN(purch) && purch > 0) {
+                    const pct = ((mrp - purch) / mrp) * 100;
+                    if (pctEl) pctEl.value = pct.toFixed(0);
+                } else {
+                    if (pctEl) pctEl.value = "";
+                }
+            });
+
+            const packSizeInput = document.getElementById("packsize")   || qs('input[name="ItemData.PackSize"]');
+            const unitPriceInput = document.getElementById("unitprice") || qs('input[name="ItemData.UnitPrice"]');
+            const packPriceInput = document.getElementById("packprice") || qs('input[name="ItemData.PackPrice"]');
             function calculatePrices() {
                 const packSize = parseFloat(packSizeInput?.value) || 0;
-                const mrpPrice = parseFloat(mrpPriceInput?.value) || 0;
-
+                const mrpPrice = parseFloat(mrpEl?.value) || 0;
                 if (packSize > 0) {
                     const unitPrice = mrpPrice / packSize;
                     const packPrice = packSize * unitPrice;
-
                     if (unitPriceInput) unitPriceInput.value = unitPrice.toFixed(2);
                     if (packPriceInput) packPriceInput.value = packPrice.toFixed(2);
                 } else {
@@ -372,95 +594,100 @@
                     if (packPriceInput) packPriceInput.value = "";
                 }
             }
-
             packSizeInput?.addEventListener("keyup", calculatePrices);
-            mrpPriceInput?.addEventListener("keyup", calculatePrices);
+            mrpEl?.addEventListener("keyup", calculatePrices);
+        })();
+
+        // =================== Flavour clear ===================
+        document.getElementById('btnClearFlavour')?.addEventListener('click', () => {
+            if (flavInput) { flavInput.value = ''; flavInput.focus(); }
         });
-    </script>
 
-    <script>
-        // alerts auto-hide
-        setTimeout(() => { document.getElementById("alert-success")?.remove(); }, 2000);
-        setTimeout(() => { document.getElementById("alert-danger")?.remove(); }, 2000);
+        // =================== Stock search (AJAX) ===================
+        function renderStockRows(items) {
+            const tbody = document.querySelector('#stockTable tbody');
+            if (!tbody) return;
 
-        // Live time & date
-        function updateDateTime() {
-            const now = new Date();
-            document.getElementById("currentTime").innerText = now.toLocaleTimeString();
-            document.getElementById("currentDate").innerText = now.toLocaleDateString();
+            tbody.innerHTML = '';
+
+            if (!items || !items.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-2">No items found</td>
+                    </tr>`;
+                return;
+            }
+
+            items.forEach(it => {
+                const tr = document.createElement('tr');
+                tr.setAttribute('data-supplier', it.supplierName ?? '');
+                tr.setAttribute('data-category', it.categoryName ?? '');
+
+                tr.innerHTML = `
+                    <td class="form-label-sm">${it.itemCode ?? ''}</td>
+                    <td class="form-label-sm">${it.itemName ?? ''}</td>
+                    <td class="form-label-sm">${it.categoryName ?? ''}</td>
+                    <td class="form-label-sm">${it.supplierName ?? ''}</td>
+                    <td class="form-label-sm">${it.quantity ?? 0}</td>
+                    <td class="form-label-sm">${(it.purchasePrice ?? 0).toFixed(2)}</td>
+                    <td class="form-label-sm">${(it.salePrice ?? 0).toFixed(2)}</td>
+                    <td class="form-label-sm">
+                        <a href="/Item/Edit/${it.id}" class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                            <i class="fa fa-edit"></i>
+                        </a>
+                        <form action="/Item/Delete/${it.id}" method="post" style="display:inline">
+                            <input type="hidden" name="returnToEditId" value="@Model.ItemData.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                    onclick="return confirm('Confirm delete?');" title="Delete">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </form>
+                    </td>`;
+                tbody.appendChild(tr);
+            });
         }
-        setInterval(updateDateTime, 1000); updateDateTime();
 
-        // Auto-generate code
-        document.addEventListener("DOMContentLoaded", function () {
-            const btn = document.getElementById('btnAutoCode');
-            if (btn) {
-                btn.addEventListener('click', function () {
-                    fetch('@Url.Action("GetNextCode", "Item")')
-                        .then(response => {
-                            if (!response.ok) throw new Error("Network error");
-                            return response.json();
-                        })
-                        .then(code => {
-                            document.getElementById('Item_ItemCode').value = code;
-                        })
-                        .catch(() => alert("Cannot generate code"));
+        function searchTable() {
+            const text = (document.getElementById("searchItemInput")?.value || "").trim();
+            const sup  = (document.getElementById("filterSupplier")?.value || "").trim();
+            const cat  = (document.getElementById("filterCategory")?.value || "").trim();
+
+            const url = '@Url.Action("SearchStockAjax", "Item")'
+                + `?search=${encodeURIComponent(text)}`
+                + `&supplier=${encodeURIComponent(sup)}`
+                + `&category=${encodeURIComponent(cat)}`;
+
+            fetch(url)
+                .then(r => {
+                    if (!r.ok) throw new Error("Network error");
+                    return r.json();
+                })
+                .then(data => {
+                    renderStockRows(data);
+                })
+                .catch(() => {
+                    alert("Error loading stock items.");
                 });
-            }
-        });
-
-        // Purchase price auto-calc
-        function updatePurchasePrice() {
-            const mrpEl = document.getElementById('mrpPrice');
-            const pctEl = document.getElementById('markupPct');
-            const purchEl = document.getElementById('purchasePrice');
-
-            if (!mrpEl || !purchEl) return;
-
-            const mrp = parseFloat(mrpEl.value);
-            const pct = parseFloat(pctEl?.value);
-
-            if (!isNaN(mrp)) {
-                if (!isNaN(pct) && pct !== 0) {
-                    purchEl.value = (mrp * (100 - pct) / 100).toFixed(2);
-                    purchEl.readOnly = true;
-                } else {
-                    purchEl.value = (mrp * (100 - (pct || 0)) / 100).toFixed(2);
-                    purchEl.readOnly = false;
-                }
-            } else {
-                purchEl.value = '';
-                purchEl.readOnly = false;
-            }
         }
+        window.searchTable = searchTable;
 
-        document.getElementById('mrpPrice')?.addEventListener('input', updatePurchasePrice);
-        document.getElementById('markupPct')?.addEventListener('input', updatePurchasePrice);
-
-        const mrpEl2 = document.getElementById("mrpPrice");
-        const pctEl2 = document.getElementById("markupPct");
-        const purchEl2 = document.getElementById("purchasePrice");
-
-        purchEl2?.addEventListener("input", function () {
-            const mrp = parseFloat(mrpEl2?.value);
-            const purch = parseFloat(purchEl2?.value);
-
-            if (!isNaN(mrp) && mrp > 0 && !isNaN(purch) && purch > 0) {
-                const pct = ((mrp - purch) / mrp) * 100;
-                if (pctEl2) pctEl2.value = pct.toFixed(0);
-            } else {
-                if (pctEl2) pctEl2.value = "";
-            }
+        document.addEventListener("DOMContentLoaded", function () {
+            document.getElementById("searchItemInput")?.addEventListener("keyup", function (e) {
+                if (e.key === "Enter") {
+                    searchTable();
+                }
+            });
+            document.getElementById("filterSupplier")?.addEventListener("change", searchTable);
+            document.getElementById("filterCategory")?.addEventListener("change", searchTable);
         });
 
-        // More Details Toggle
+        // =================== More details toggle ===================
         function toggleMoreDetails() {
             const section = document.getElementById('moreDetailsSection');
             const icon = document.getElementById('iconMoreDetails');
             if (!section || !icon) return;
-
             if (section.style.display === "none" || section.style.display === "") {
-                section.style.display = "";
+                section.style.display = "block";
                 icon.classList.remove("fa-plus-circle");
                 icon.classList.add("fa-minus-circle");
             } else {
@@ -471,49 +698,238 @@
         }
         window.toggleMoreDetails = toggleMoreDetails;
 
-        // Search functionality (stock table)
-        function searchTable() {
-            const input = document.getElementById("searchItemInput");
-            const filter = (input?.value || '').toLowerCase();
-            const trs = document.querySelectorAll("#stockTable tbody tr");
+        // =================== ENTER FLOW ===================
+        (function(){
+            const flow = [
+                'Item_ItemCode','Item_ReferenceCode','Item_ItemName','Item_Flavour',
+                (catSel && catSel.id) || 'CategoryId',
+                (supSel && supSel.id) || 'SupplierId',
+                'mrpPrice','markupPct','purchasePrice','Item_Quantity','ImageFile','btnSaveNext'
+           ].filter(Boolean);
 
-            trs.forEach(tr => {
-                const rowText = tr.innerText.toLowerCase();
-                tr.style.display = rowText.includes(filter) ? "" : "none";
-            });
-        }
-        window.searchTable = searchTable;
-
-        // Barcode blinking
-        document.addEventListener("DOMContentLoaded", function () {
-            const barcodeInput = document.getElementById("Item_ItemCode");
-            if (barcodeInput) {
-                barcodeInput.focus();
-                function removeBlink() {
-                    barcodeInput.classList.remove("barcode-blink");
-                    barcodeInput.removeEventListener('input', removeBlink);
+            function focusNext(currId){
+                const i = flow.indexOf(currId);
+                if (i >= 0 && i < flow.length - 1) {
+                    const nx = document.getElementById(flow[i+1]) ||
+                               (flow[i+1]==='btnSaveNext' ? btnSaveNext : null);
+                    if (nx) { nx.focus(); if (nx.select && nx.tagName === 'INPUT') nx.select(); }
                 }
-                barcodeInput.addEventListener('input', removeBlink);
             }
-        });
 
-        // Flavour clear button
-        document.addEventListener('DOMContentLoaded', function () {
-            document.getElementById('btnClearFlavour')?.addEventListener('click', () => {
-                const input = document.querySelector('[name="ItemData.Flavour"]');
-                if (input) { input.value = ''; input.focus(); }
+            flow.forEach(id=>{
+                const el = (id==='btnSaveNext') ? btnSaveNext : document.getElementById(id);
+                if(!el) return;
+                el.addEventListener('keydown', (e)=>{
+                    if(e.key === 'Enter'){
+                        e.preventDefault();
+                        if(id === 'btnSaveNext'){ btnSaveNext?.click(); return; }
+                        focusNext(id);
+                    }
+                });
             });
-        });
+        })();
 
-        // Custom notification auto-hide (if exists)
-        document.addEventListener("DOMContentLoaded", function () {
-            const notification = document.getElementById("customNotification");
-            if (notification) {
-                setTimeout(() => {
-                    notification.classList.remove("show");
-                    setTimeout(() => notification.style.display = 'none', 500);
-                }, 1500);
+        // =================== Save & Next → focus barcode next load ===================
+        (function(){
+            btnSaveNext?.addEventListener('click', ()=>{
+                sessionStorage.setItem('focusBarcodeNext','1');
+            });
+            document.addEventListener('DOMContentLoaded', ()=>{
+                const wantFocus = sessionStorage.getItem('focusBarcodeNext') === '1';
+                if (wantFocus || true){
+                    codeInput?.focus(); codeInput?.select?.();
+                }
+                sessionStorage.removeItem('focusBarcodeNext');
+            });
+        })();
+
+        // =================== Clear button ===================
+        (function(){
+            btnClearAll?.addEventListener('click', function(e){
+                e.preventDefault();
+                editForm?.reset();
+                codeInput?.focus();
+                codeInput?.select?.();
+            });
+        })();
+
+        // =================== Barcode blink remove on input ===================
+        (function(){
+            if (codeInput) {
+                function removeBlink() {
+                    codeInput.classList.remove("barcode-blink");
+                    codeInput.removeEventListener('input', removeBlink);
+                }
+                codeInput.addEventListener('input', removeBlink);
             }
+        })();
+    </script>
+
+    <script>
+        // ================= RECIPE SECTION (same as Add) =================
+        function toggleRecipeSection() {
+            const wrapper = document.getElementById('recipeSectionWrapper');
+            const icon = document.getElementById('iconRecipe');
+            if (!wrapper) return;
+
+            const shouldShow = (wrapper.style.display === 'none' || wrapper.style.display === '');
+            wrapper.style.display = shouldShow ? 'block' : 'none';
+
+            if (icon) {
+                if (shouldShow) {
+                    icon.classList.add('fa-minus-circle');
+                    icon.classList.remove('fa-utensils');
+                } else {
+                    icon.classList.remove('fa-minus-circle');
+                    icon.classList.add('fa-utensils');
+                }
+            }
+        }
+
+        function addRecipeRow() {
+            const tbody = document.querySelector('#recipeTable tbody');
+            const index = tbody.rows.length;
+
+            const row = document.createElement('tr');
+
+            row.innerHTML = `
+                <td class="text-center">
+                    <i class="fa fa-grip-vertical"></i>
+                </td>
+
+                <td>
+                    <select name="RecipeIngredients[${index}].IngredientId"
+                            class="form-select form-select-sm recipe-ing-select">
+                        <option value="">Select...</option>
+                        @foreach (var ing in recipeIngredients)
+                        {
+                                    var unitText = !string.IsNullOrWhiteSpace(ing.ConsumptionUnit)
+                                                                                                                    ? ing.ConsumptionUnit
+                                                                                                                    : ing.PurchaseUnit;
+                                    var avail = ing.PurchaseQty ?? 0;
+                                    var cpu = ing.CostPerUnit ?? 0;
+
+                                    <text>
+                                    <option value="@ing.Id"
+                                            data-cat="@Html.Raw(ing.Category?.Name ?? "")"
+                                            data-unit="@Html.Raw(unitText ?? "")"
+                                            data-avail="@avail"
+                                            data-cpu="@cpu">
+                                        @ing.Name (@unitText)
+                                    </option>
+                                    </text>
+                        }
+                    </select>
+                </td>
+
+                <td>
+                    <span class="recipe-cat small text-muted"></span>
+                </td>
+
+                <td>
+                    <input name="RecipeIngredients[${index}].Unit"
+                           class="form-control form-control-sm recipe-unit" readonly />
+                </td>
+
+                <td class="text-end">
+                    <input name="RecipeIngredients[${index}].AvailQty"
+                           class="form-control form-control-sm text-end recipe-avail" readonly />
+                </td>
+
+                <td class="text-end">
+                    <input name="RecipeIngredients[${index}].UseQty"
+                           class="form-control form-control-sm text-end recipe-use" value="0" />
+                </td>
+
+                <td class="text-end">
+                    <input name="RecipeIngredients[${index}].CostPerUnit"
+                           class="form-control form-control-sm text-end recipe-cpu" readonly />
+                </td>
+
+                <td class="text-end">
+                    <input name="RecipeIngredients[${index}].LineTotal"
+                           class="form-control form-control-sm text-end recipe-line-total" readonly />
+                </td>
+
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-danger"
+                            onclick="deleteRecipeRow(this)">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            `;
+
+            tbody.appendChild(row);
+
+            const sel = row.querySelector('.recipe-ing-select');
+            const use = row.querySelector('.recipe-use');
+
+            if (sel) sel.addEventListener('change', onIngredientChange);
+            if (use) use.addEventListener('input', recalcRecipeRowTotal);
+        }
+
+        function deleteRecipeRow(btn) {
+            const tr = btn.closest('tr');
+            if (!tr) return;
+            tr.remove();
+            recalcRecipeGrandTotal();
+        }
+
+        function onIngredientChange(e) {
+            const sel = e.target;
+            const tr = sel.closest('tr');
+            if (!tr) return;
+
+            const opt = sel.selectedOptions[0];
+            if (!opt) return;
+
+            const catName = opt.getAttribute('data-cat') || '';
+            const unit = opt.getAttribute('data-unit') || '';
+            const avail = opt.getAttribute('data-avail') || '0';
+            const cpu = opt.getAttribute('data-cpu') || '0';
+
+            const catSpan = tr.querySelector('.recipe-cat');
+            const unitInput = tr.querySelector('.recipe-unit');
+            const availInput = tr.querySelector('.recipe-avail');
+            const cpuInput = tr.querySelector('.recipe-cpu');
+
+            if (catSpan) catSpan.textContent = catName;
+            if (unitInput) unitInput.value = unit;
+            if (availInput) availInput.value = parseFloat(avail).toFixed(2);
+            if (cpuInput) cpuInput.value = parseFloat(cpu).toFixed(4);
+
+            recalcRecipeRowTotal.call(tr);
+        }
+
+        function recalcRecipeRowTotal() {
+            const tr = this.closest ? this.closest('tr') : this;
+            if (!tr) return;
+
+            const useInput = tr.querySelector('.recipe-use');
+            const cpuInput = tr.querySelector('.recipe-cpu');
+            const totalInput = tr.querySelector('.recipe-line-total');
+
+            const useQty = parseFloat(useInput?.value || '0');
+            const cpu = parseFloat(cpuInput?.value || '0');
+
+            const total = (useQty > 0 && cpu > 0) ? (useQty * cpu) : 0;
+            if (totalInput) totalInput.value = total.toFixed(4);
+
+            recalcRecipeGrandTotal();
+        }
+
+        function recalcRecipeGrandTotal() {
+            let sum = 0;
+            document.querySelectorAll('.recipe-line-total').forEach(inp => {
+                const v = parseFloat(inp.value || '0');
+                if (!isNaN(v)) sum += v;
+            });
+            const tgt = document.getElementById('recipeGrandTotal');
+            if (tgt) tgt.textContent = sum.toFixed(2);
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // yahan agar existing recipe rows pre-load karne hon, JS se Model se fill kar sakte ho
         });
     </script>
 

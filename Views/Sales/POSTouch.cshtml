@@ -1414,6 +1414,7 @@
                     <div class="keypad-title">Keypad • <span id="padHeading">Qty</span></div>
                     <div class="pad-targets">
                         <span>Target:</span>
+                        <label><input type="radio" name="serviceCharges" value="1" > Service Charges</label>
                         <label><input type="radio" name="padTarget" value="qty" checked> Qty</label>
                         <label><input type="radio" name="padTarget" value="price"> Price</label>
                         <label><input type="radio" name="padTarget" value="disc"> Discount</label>
@@ -2562,9 +2563,11 @@
                 },
                 SaleItems: saleItems
             };
+            const isChecked = document.querySelector('input[name="serviceCharges"]').checked ? 1 : 0;
+
 
             try {
-                const res = await fetch('/Sales/SaveSale', {
+                const res = await fetch(`/Sales/SaveSale?serviceCharges=${isChecked}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
