@@ -24,6 +24,7 @@ namespace GSoftPosNew.Controllers
 
         }
 
+        [AllowAnonymous]
         public IActionResult LicenseExpired()
         {
             return View();
