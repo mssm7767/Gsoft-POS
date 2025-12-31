@@ -3,321 +3,917 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barcode Printing System</title>
+    <title>Barcode Printing System | G-Soft POS</title>
     <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="~/lib/fontawesome/css/all.min.css" rel="stylesheet" />
     <script src="~/lib/jsbarcode/jsbarcode.all.min.js"></script>
     <style>
+        /* Previous CSS styles remain exactly the same */
         :root {
             --primary: #4361ee;
-            --secondary: #3f37c9;
+            --primary-light: #eef2ff;
+            --secondary: #3a0ca3;
             --success: #4cc9f0;
+            --success-light: #f0fdff;
+            --warning: #f8961e;
+            --warning-light: #fff3e0;
+            --danger: #e63946;
+            --danger-light: #ffe6e9;
             --light: #f8f9fa;
-            --dark: #212529;
-            --gray: #6c757d;
-            --border: #dee2e6;
+            --dark: #1a1a2e;
+            --gray: #8d99ae;
+            --border: #e2e8f0;
+            --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            background-color: #f5f7fb;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7ff 0%, #f0f4ff 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            min-height: 100vh;
+            color: var(--dark);
+            line-height: 1.6;
         }
 
-        .card {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        .container {
+            max-width: 1400px;
         }
 
+        /* Glass Morphism Effect */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: var(--card-shadow);
+        }
+
+        /* Header Styling */
         .header-gradient {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            border-radius: 12px 12px 0 0;
-            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            position: relative;
+            overflow: hidden;
+            padding: 1.5rem !important;
         }
 
+            .header-gradient::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%234361ee' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+            }
+
+        .datetime {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Search Section */
         .search-container {
             position: relative;
         }
 
-        .search-results {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            max-height: 300px;
-            overflow-y: auto;
+        .search-input-group {
             background: white;
-            border-radius: 0 0 8px 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            display: none;
-        }
-
-        .search-item {
-            padding: 12px 15px;
-            border-bottom: 1px solid var(--border);
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-            .search-item:hover {
-                background-color: #f8f9fa;
-            }
-
-            .search-item:last-child {
-                border-bottom: none;
-            }
-
-        .item-code {
-            font-weight: 600;
-            color: var(--primary);
-        }
-
-        .item-price {
-            color: var(--success);
-            font-weight: 600;
-        }
-
-        .table-responsive {
-            border-radius: 8px;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            transition: var(--transition);
             overflow: hidden;
         }
 
-        .table th {
-            background-color: #f1f3f9;
-            font-weight: 600;
-            color: var(--dark);
-            border-bottom: 2px solid var(--border);
+            .search-input-group:focus-within {
+                border-color: var(--primary);
+                box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.15);
+                transform: translateY(-2px);
+            }
+
+        .search-input {
+            border: none;
+            padding: 16px;
+            font-size: 16px;
+            background: transparent;
+            flex: 1;
+            min-width: 0;
         }
+
+            .search-input:focus {
+                outline: none;
+                box-shadow: none;
+            }
+
+        .search-icon {
+            color: var(--gray);
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-results {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            z-index: 1050;
+            max-height: 400px;
+            overflow-y: auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            border: 1px solid var(--border);
+            display: none;
+            animation: slideDown 0.2s ease;
+        }
+
+        @@keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .search-item {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+            .search-item:hover {
+                background: var(--primary-light);
+                transform: translateX(5px);
+            }
+
+        .search-item-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-light), #e0e7ff);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        /* Table Styling */
+        .table-container {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+        }
+
+        .table {
+            margin: 0;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+            .table th {
+                background: linear-gradient(135deg, var(--primary-light), #e0e7ff);
+                color: var(--primary);
+                font-weight: 600;
+                text-transform: uppercase;
+                font-size: 12px;
+                letter-spacing: 0.5px;
+                padding: 18px 16px;
+                border: none;
+                white-space: nowrap;
+            }
+
+            .table td {
+                padding: 16px;
+                vertical-align: middle;
+                border-color: var(--border);
+                border-top: 1px solid var(--border);
+            }
+
+            .table tbody tr {
+                transition: var(--transition);
+            }
+
+                .table tbody tr:hover {
+                    background: rgba(67, 97, 238, 0.04);
+                }
 
         .qty-input {
-            width: 80px;
+            width: 70px;
             text-align: center;
-        }
-
-        .size-option {
             border: 2px solid var(--border);
             border-radius: 8px;
-            padding: 12px;
+            padding: 8px 12px;
+            font-weight: 600;
+            transition: var(--transition);
+            background: white;
+        }
+
+            .qty-input:focus {
+                border-color: var(--primary);
+                box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+                outline: none;
+            }
+
+        /* Size Options */
+        .size-option {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            height: 100%;
         }
 
             .size-option:hover {
+                transform: translateY(-5px);
                 border-color: var(--primary);
+                box-shadow: 0 10px 25px rgba(67, 97, 238, 0.15);
             }
 
             .size-option.active {
                 border-color: var(--primary);
-                background-color: rgba(67, 97, 238, 0.05);
+                background: linear-gradient(135deg, var(--primary-light) 0%, white 100%);
+                box-shadow: 0 10px 25px rgba(67, 97, 238, 0.2);
             }
+
+                .size-option.active::before {
+                    content: '✓';
+                    position: absolute;
+                    top: 12px;
+                    right: 12px;
+                    width: 24px;
+                    height: 24px;
+                    background: var(--primary);
+                    color: white;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 12px;
+                    font-weight: bold;
+                }
+
+        /* Buttons */
+        .btn {
+            border-radius: 12px;
+            padding: 12px 28px;
+            font-weight: 600;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
 
         .btn-primary {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border: none;
-            border-radius: 8px;
-            padding: 10px 24px;
-            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+            color: white;
         }
 
             .btn-primary:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 25px rgba(67, 97, 238, 0.4);
                 background: linear-gradient(135deg, var(--secondary), var(--primary));
+                color: white;
+            }
+
+        .btn-outline-primary {
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            background: transparent;
+        }
+
+            .btn-outline-primary:hover {
+                background: var(--primary);
+                color: white;
                 transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+                box-shadow: 0 4px 15px rgba(67, 97, 238, 0.2);
             }
 
         .btn-danger {
+            background: linear-gradient(135deg, #e63946, #d62839);
+            box-shadow: 0 4px 15px rgba(230, 57, 70, 0.3);
+            color: white;
+        }
+
+            .btn-danger:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 25px rgba(230, 57, 70, 0.4);
+                background: linear-gradient(135deg, #d62839, #e63946);
+                color: white;
+            }
+
+        /* Barcode Preview */
+        .barcode-preview-container {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--border);
+            height: 100%;
+        }
+
+        .preview-label {
+            width: 142px;
+            height: 105px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 5px 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+
+            .preview-label::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                background: linear-gradient(90deg, var(--primary), var(--success));
+            }
+
+        /* Stats Cards */
+        .stats-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+            transition: var(--transition);
+            height: 100%;
+        }
+
+            .stats-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            display: none;
+        }
+
+        .empty-state-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary-light), #e0e7ff);
             border-radius: 50%;
-            width: 36px;
-            height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin: 0 auto 20px;
+            color: var(--primary);
+            font-size: 32px;
         }
 
-        .datetime {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            padding: 8px 15px;
-            font-size: 0.9rem;
-        }
-
-        .barcode-preview {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            margin-bottom: 15px;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--gray);
-        }
-
-            .empty-state i {
-                font-size: 3rem;
-                margin-bottom: 15px;
-                color: #dee2e6;
+        /* Animations */
+        @@keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
             }
 
-        .preview-label {
-            width: 142px; /* 38mm */
-            height: 105px; /* 28mm */
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 2px;
-            background: white;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start; /* Left aligned */
-            justify-content: space-between;
-            margin: 0 auto;
-            padding: 3px 5px;
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        /* Improved barcode styling */
-        .barcode-svg {
-            max-width: 100%;
-            height: auto;
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
         }
 
-        .barcode-container {
+        /* Print Button */
+        .print-btn {
+            position: relative;
+            overflow: hidden;
+            padding: 15px 40px !important;
+            font-size: 16px !important;
+        }
+
+            .print-btn::after {
+                content: '';
+                position: absolute;
+                top: -50%;
+                left: -50%;
+                width: 200%;
+                height: 200%;
+                background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+                transform: rotate(45deg);
+                transition: 0.5s;
+            }
+
+            .print-btn:hover::after {
+                left: 100%;
+            }
+
+        /* Action Buttons */
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
             display: flex;
-            justify-content: flex-start; /* Left aligned */
             align-items: center;
-            width: 100%;
-            margin: 2px 0;
+            justify-content: center;
+            transition: var(--transition);
+            border: none;
+            background: var(--light);
+            color: var(--gray);
+            cursor: pointer;
         }
+
+            .action-btn:hover {
+                background: var(--primary);
+                color: white;
+                transform: scale(1.1);
+            }
+
+        /* Badges */
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background: var(--secondary);
+            }
+
+        /* Responsive Design */
+        @@media (max-width: 768px) {
+            .container {
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+
+            .table-responsive {
+                border-radius: 12px;
+                overflow-x: auto;
+            }
+
+            .search-input {
+                font-size: 14px;
+                padding: 12px;
+            }
+
+            .size-option {
+                padding: 15px;
+                margin-bottom: 10px;
+            }
+
+            .stats-card {
+                margin-bottom: 15px;
+            }
+
+            .btn {
+                padding: 10px 20px;
+                font-size: 13px;
+            }
+
+            .header-gradient {
+                padding: 1rem !important;
+            }
+
+            .datetime {
+                font-size: 12px;
+                padding: 8px 12px;
+            }
+
+            .print-btn {
+                width: 100%;
+                margin-top: 10px;
+            }
+        }
+
+        @@media (max-width: 576px) {
+            .search-input-group {
+                flex-direction: column;
+            }
+
+            .search-icon {
+                padding: 10px;
+            }
+
+            .table th, .table td {
+                padding: 12px 8px;
+                font-size: 13px;
+            }
+
+            .qty-input {
+                width: 60px;
+                padding: 6px;
+            }
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid var(--primary);
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @@keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+            max-width: 400px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            border-left: 4px solid var(--primary);
+        }
+
+            .notification.show {
+                transform: translateX(0);
+            }
+
+            .notification.success {
+                border-left-color: var(--success);
+            }
+
+            .notification.warning {
+                border-left-color: var(--warning);
+            }
+
+            .notification.danger {
+                border-left-color: var(--danger);
+            }
+
+        /* Debug Button */
+        .debug-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 9998;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--warning);
+            color: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(248, 150, 30, 0.3);
+            transition: var(--transition);
+        }
+
+            .debug-btn:hover {
+                transform: scale(1.1);
+                box-shadow: 0 6px 20px rgba(248, 150, 30, 0.4);
+            }
     </style>
 </head>
 <body>
     <div class="container py-4">
-        <div class="card mb-4">
-            <div class="header-gradient">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h2 class="mb-0"><i class="fas fa-barcode me-2"></i> Barcode Printing System</h2>
+        <!-- Main Card -->
+        <div class="card glass-card border-0">
+            <!-- Header -->
+            <div class="header-gradient p-4">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-white rounded-3 p-2 shadow-sm">
+                            <i class="fas fa-qrcode fa-2x text-primary"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-white mb-1 fw-bold"><i class="fas fa-barcode me-2"></i> Barcode Studio Pro</h2>
+                            <p class="text-white-50 mb-0">Professional label printing & inventory management</p>
+                        </div>
+                    </div>
                     <div class="datetime">
-                        <i class="fas fa-clock me-2"></i>
+                        <i class="fas fa-calendar-alt"></i>
                         <span id="currentDateTime">Loading...</span>
                     </div>
                 </div>
             </div>
 
+            <!-- Card Body -->
             <div class="card-body p-4">
+                <!-- Stats Row -->
+                <div class="row mb-4">
+                    <div class="col-md-3 mb-3">
+                        <div class="stats-card">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-primary-light rounded-2 p-2">
+                                    <i class="fas fa-boxes text-primary fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h4 class="mb-0 fw-bold" id="totalItems">0</h4>
+                                    <small class="text-muted">Total Items</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="stats-card">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-success-light rounded-2 p-2">
+                                    <i class="fas fa-tags text-success fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h4 class="mb-0 fw-bold" id="totalLabels">0</h4>
+                                    <small class="text-muted">Total Labels</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="stats-card">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-warning-light rounded-2 p-2">
+                                    <i class="fas fa-ruler-combined text-warning fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h4 class="mb-0 fw-bold" id="labelSize">38×28</h4>
+                                    <small class="text-muted">Label Size (mm)</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="stats-card">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-danger-light rounded-2 p-2">
+                                    <i class="fas fa-print text-danger fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h4 class="mb-0 fw-bold" id="readyStatus">Ready</h4>
+                                    <small class="text-muted">Print Status</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Search Section -->
                 <div class="row mb-4">
-                    <div class="col-md-8">
+                    <div class="col-lg-8 mb-3">
                         <div class="search-container">
-                            <label class="form-label fw-semibold">Search Items by Name or Code</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light"><i class="fas fa-search text-muted"></i></span>
-                                <input type="text" class="form-control" id="itemSearch" placeholder="Enter item name, code or barcode...">
-                                <button class="btn btn-outline-secondary" type="button" id="clearSearch">Clear</button>
+                            <label class="form-label fw-semibold mb-2 d-flex align-items-center gap-2">
+                                <i class="fas fa-search text-primary"></i>
+                                Search Inventory Items
+                            </label>
+                            <div class="search-input-group d-flex align-items-center">
+                                <span class="search-icon">
+                                    <i class="fas fa-search" id="searchIcon"></i>
+                                </span>
+                                <input type="text"
+                                       class="form-control search-input border-0"
+                                       id="itemSearch"
+                                       placeholder="Type item name, code, barcode or category..."
+                                       autocomplete="off">
+                                <button class="btn action-btn me-2" type="button" id="clearSearch" title="Clear Search">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                <button class="btn btn-primary rounded-end" type="button" id="scanBarcode">
+                                    <i class="fas fa-camera me-2"></i>Scan
+                                </button>
                             </div>
                             <div class="search-results" id="searchResults"></div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold">Quick Actions</label>
-                        <div class="d-grid gap-2 d-md-flex">
+                    <div class="col-lg-4 mb-3">
+                        <label class="form-label fw-semibold mb-2 d-flex align-items-center gap-2">
+                            <i class="fas fa-bolt text-warning"></i>
+                            Quick Actions
+                        </label>
+                        <div class="d-flex gap-2">
                             <button class="btn btn-outline-primary flex-fill" id="addSampleItems">
-                                <i class="fas fa-plus-circle me-2"></i>Add Sample Items
+                                <i class="fas fa-magic me-2"></i>Load Demo
                             </button>
                             <button class="btn btn-outline-danger flex-fill" id="clearAll">
-                                <i class="fas fa-trash me-2"></i>Clear All
+                                <i class="fas fa-trash-alt me-2"></i>Clear All
                             </button>
                         </div>
                     </div>
                 </div>
 
                 <!-- Items Table -->
-                <div class="table-responsive mb-4">
-                    <table class="table table-hover" id="itemsTable">
-                        <thead>
-                            <tr>
-                                <th width="15%">Item Code</th>
-                                <th width="35%">Item Name</th>
-                                <th width="15%">Price</th>
-                                <th width="15%">Quantity</th>
-                                <th width="10%">Total</th>
-                                <th width="10%">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="itemsTableBody">
-                            <!-- Items will be added here dynamically -->
-                        </tbody>
-                    </table>
+                <div class="table-container fade-in">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="itemsTable">
+                            <thead>
+                                <tr>
+                                    <th width="15%">
+                                        <i class="fas fa-hashtag me-2"></i>Code
+                                    </th>
+                                    <th width="35%">
+                                        <i class="fas fa-cube me-2"></i>Item Name
+                                    </th>
+                                    <th width="15%">
+                                        <i class="fas fa-tag me-2"></i>Price
+                                    </th>
+                                    <th width="15%">
+                                        <i class="fas fa-layer-group me-2"></i>Quantity
+                                    </th>
+                                    <th width="10%">
+                                        <i class="fas fa-calculator me-2"></i>Total
+                                    </th>
+                                    <th width="10%">
+                                        <i class="fas fa-cog me-2"></i>Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemsTableBody">
+                                <!-- Items will be added here dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
 
+                    <!-- Empty State -->
                     <div class="empty-state" id="emptyTableState">
-                        <i class="fas fa-shopping-cart"></i>
-                        <h4>No items added</h4>
-                        <p>Search for items above to add them to your barcode print list</p>
+                        <div class="empty-state-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <h4 class="fw-semibold mb-2">No items in print queue</h4>
+                        <p class="text-muted mb-4">Search for items above to add them for printing</p>
                     </div>
                 </div>
 
-                <!-- Label Size Selection -->
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <label class="form-label fw-semibold">Select Label Size</label>
-                        <div class="row g-3">
-                            <div class="col-md-3">
-                                <div class="size-option active" data-size="38x28">
-                                    <h5>38 × 28 mm</h5>
-                                    <p class="text-muted mb-0">1.50" × 1.10"</p>
-                                    <small class="text-success">Standard Retail</small>
+                <!-- Label Size & Preview Section -->
+                <div class="row mb-4 mt-4">
+                    <div class="col-lg-8 mb-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-light border-0">
+                                <h6 class="mb-0 d-flex align-items-center gap-2">
+                                    <i class="fas fa-ruler-combined text-primary"></i>
+                                    Select Label Size
+                                    <span class="badge bg-primary ms-2">Recommended</span>
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <div class="size-option active" data-size="38x28">
+                                            <i class="fas fa-tag fa-2x mb-2 text-primary"></i>
+                                            <h5 class="mb-1">38 × 28 mm</h5>
+                                            <p class="text-muted small mb-2">Standard Retail</p>
+                                            <span class="badge bg-primary">Popular</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="size-option" data-size="50x25">
+                                            <i class="fas fa-receipt fa-2x mb-2 text-success"></i>
+                                            <h5 class="mb-1">50 × 25 mm</h5>
+                                            <p class="text-muted small mb-0">Price Tags</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="size-option" data-size="40x30">
+                                            <i class="fas fa-square fa-2x mb-2 text-warning"></i>
+                                            <h5 class="mb-1">40 × 30 mm</h5>
+                                            <p class="text-muted small mb-0">Product Labels</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="size-option" data-size="60x40">
+                                            <i class="fas fa-expand-alt fa-2x mb-2 text-danger"></i>
+                                            <h5 class="mb-1">60 × 40 mm</h5>
+                                            <p class="text-muted small mb-0">Premium Labels</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-md-3">
-                                <div class="size-option" data-size="50x25">
-                                    <h5>50 × 25 mm</h5>
-                                    <p class="text-muted mb-0">1.97" × 0.98"</p>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 mb-4">
+                        <div class="barcode-preview-container h-100">
+                            <h6 class="fw-semibold mb-3 d-flex align-items-center gap-2">
+                                <i class="fas fa-eye text-primary"></i>
+                                Live Preview
+                            </h6>
+                            <div class="text-center mb-4">
+                                <div class="preview-label">
+                                    <div style="font-size: 10px; font-weight: 800; color: var(--primary); text-align: left;">
+                                        @(ViewBag.ShopName ?? "G-SOFT POS")
+                                    </div>
+                                    <div style="font-size: 9px; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left;"
+                                         id="previewItemName">
+                                        Search and add items
+                                    </div>
+                                    <div class="barcode-container" style="margin: 2px 0; display: flex; justify-content: flex-start;">
+                                        <svg id="barcodePreview" class="barcode-svg"></svg>
+                                    </div>
+                                    <div style="width: 100%; text-align: left;">
+                                        <div style="font-size: 9px; font-weight: 700;" id="previewItemCode">ITEM-CODE</div>
+                                        <div style="font-size: 10px; font-weight: 800; color: #e63946;" id="previewPrice">Rs. 0</div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-md-3">
-                                <div class="size-option" data-size="40x30">
-                                    <h5>40 × 30 mm</h5>
-                                    <p class="text-muted mb-0">1.57" × 1.18"</p>
+                            <div class="text-center">
+                                <div class="badge bg-primary mb-2">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Professional Quality
                                 </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="size-option" data-size="60x40">
-                                    <h5>60 × 40 mm</h5>
-                                    <p class="text-muted mb-0">2.36" × 1.57"</p>
-                                </div>
+                                <p class="small text-muted mb-0">
+                                    Perfect for retail scanning and inventory management
+                                </p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Print Section -->
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <div class="barcode-preview">
-                            <h6 class="mb-2">Barcode Preview (38×28mm)</h6>
-                            <div class="preview-label">
-                                <div style="font-size: 10px; font-weight: bold; letter-spacing: 0.3px; text-align: left; width: 100%;">
-                                    @((string.IsNullOrWhiteSpace(ViewBag.ShopName) ? "G-Soft" : ViewBag.ShopName))
-                                </div>
-                                <div style="font-size: 9px; font-weight: 500; max-width: 95%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; width: 100%; margin: 1px 0;" id="previewItemName">Cotton T-Shirt</div>
-                                <div class="barcode-container">
-                                    <svg id="barcodePreview" class="barcode-svg"></svg>
-                                </div>
-                                <div style="width: 100%;">
-                                    <div style="font-size: 9px; font-weight: bold; text-align: left;" id="previewItemCode">00001</div>
-                                    <div style="font-size: 10px; font-weight: bold; color: #d63384; text-align: left;" id="previewPrice">Rs. 1,250</div>
-                                </div>
+                <!-- Print Action Section -->
+                <div class="row align-items-center mt-4 pt-3 border-top">
+                    <div class="col-lg-6">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-light rounded-2 p-2">
+                                <i class="fas fa-info-circle fa-2x text-primary"></i>
                             </div>
-                            <p class="small text-muted mt-2 mb-0">Perfect for scanning - 38×28mm (1.50" × 1.10")</p>
+                            <div>
+                                <h6 class="mb-1">Print Summary</h6>
+                                <p class="text-muted small mb-0">
+                                    <span id="summaryItems">0 items</span> selected ·
+                                    <span id="summaryLabels">0 labels</span> to print
+                                </p>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-6 text-end">
-                        <button class="btn btn-primary btn-lg" id="printBarcodes">
-                            <i class="fas fa-print me-2"></i>Print Barcodes
+                    <div class="col-lg-6 text-lg-end mt-3 mt-lg-0">
+                        <button class="btn btn-primary btn-lg print-btn px-5" id="printBarcodes">
+                            <i class="fas fa-print me-2"></i>
+                            <span>Print Barcodes</span>
+                            <span class="badge bg-white text-primary ms-2" id="badgeCount">0</span>
                         </button>
                     </div>
                 </div>
@@ -328,9 +924,38 @@
     <!-- Print Template (Hidden) -->
     <div id="printTemplate" style="display: none;"></div>
 
+    <!-- Debug Button -->
+    <button class="debug-btn" id="debugBtn" title="Debug API Connection">
+        <i class="fas fa-bug"></i>
+    </button>
+
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+        // State management
+        let selectedItems = [];
+        let selectedSize = '38x28';
+        let isDemoMode = false;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initApp();
+        });
+
+        function initApp() {
+            // Initialize datetime
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+
+            // Initialize barcode preview
+            updateBarcodePreview();
+            updateStats();
+            updateEmptyState();
+
+            // Set up event listeners
+            setupEventListeners();
+        }
+
         // Update current date and time
         function updateDateTime() {
             const now = new Date();
@@ -340,32 +965,13 @@
                 month: 'long',
                 day: 'numeric',
                 hour: '2-digit',
-                minute: '2-digit'
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
             };
-            document.getElementById('currentDateTime').textContent = now.toLocaleDateString('en-US', options);
+            const dateTimeStr = now.toLocaleDateString('en-US', options);
+            document.getElementById('currentDateTime').textContent = dateTimeStr;
         }
-
-        // Initialize datetime and update every minute
-        updateDateTime();
-        setInterval(updateDateTime, 60000);
-
-        // Sample data for demonstration
-        const sampleItems = [
-            { id: 1, code: '0001', name: 'Cotton T-Shirt', price: 1250, barcode: '2912345678906' },
-            { id: 2, code: '00002', name: 'Denim Jeans', price: 2999, barcode: '2912345678913' },
-            { id: 3, code: '00003', name: 'Sports Shoes', price: 4550, barcode: '2912345678920' },
-            { id: 4, code: '00004', name: 'Winter Jacket', price: 7999, barcode: '2912345678937' },
-            { id: 5, code: '00005', name: 'Baseball Cap', price: 1575, barcode: '2912345678944' },
-            { id: 6, code: '00006', name: 'Leather Belt', price: 2250, barcode: '2912345678951' },
-            { id: 7, code: '00007', name: 'Wool Socks', price: 899, barcode: '2912345678968' },
-            { id: 8, code: '00008', name: 'Sunglasses', price: 3525, barcode: '2912345678975' },
-            { id: 9, code: '00009', name: 'Backpack', price: 4200, barcode: '2912345678982' },
-            { id: 10, code: '00010', name: 'Water Bottle', price: 1250, barcode: '2912345678999' }
-        ];
-
-        // Currently selected items
-        let selectedItems = [];
-        let selectedSize = '38x28';
 
         // Initialize barcode preview
         function updateBarcodePreview() {
@@ -384,13 +990,13 @@
                     margin: 0
                 });
             } else {
-                document.getElementById('barcodePreview').innerHTML = '';
-                document.getElementById('previewItemName').textContent = 'Cotton T-Shirt';
-                document.getElementById('previewItemCode').textContent = '00001';
-                document.getElementById('previewPrice').textContent = 'Rs. 1,250';
+                // Show default preview
+                document.getElementById('previewItemName').textContent = 'Search and add items';
+                document.getElementById('previewItemCode').textContent = 'ITEM-CODE';
+                document.getElementById('previewPrice').textContent = 'Rs. 0';
 
-                // Reset to sample barcode
-                JsBarcode("#barcodePreview", '2912345678906', {
+                // Generate default barcode
+                JsBarcode("#barcodePreview", "GS-PRO-001", {
                     format: "CODE128",
                     lineColor: "#000",
                     width: 1.0,
@@ -401,91 +1007,288 @@
             }
         }
 
-        // Update selected size
-        document.querySelectorAll('.size-option').forEach(option => {
-            option.addEventListener('click', function() {
-                document.querySelectorAll('.size-option').forEach(opt => opt.classList.remove('active'));
-                this.classList.add('active');
-                selectedSize = this.getAttribute('data-size');
-                updateBarcodePreview();
-            });
-        });
+        // Update statistics
+        function updateStats() {
+            const totalItems = selectedItems.length;
+            const totalLabels = selectedItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
-        // Search functionality
-        document.getElementById('itemSearch').addEventListener('input', async function () {
+            document.getElementById('totalItems').textContent = totalItems;
+            document.getElementById('totalLabels').textContent = totalLabels;
+            document.getElementById('labelSize').textContent = selectedSize.replace('x', '×');
+            document.getElementById('badgeCount').textContent = totalLabels;
+
+            // Update summary
+            document.getElementById('summaryItems').textContent = `${totalItems} item${totalItems !== 1 ? 's' : ''}`;
+            document.getElementById('summaryLabels').textContent = `${totalLabels} label${totalLabels !== 1 ? 's' : ''}`;
+
+            // Update status
+            const statusEl = document.getElementById('readyStatus');
+            if (totalLabels > 0) {
+                statusEl.textContent = 'Ready to Print';
+                statusEl.style.color = 'var(--success)';
+            } else {
+                statusEl.textContent = 'Waiting for Items';
+                statusEl.style.color = 'var(--warning)';
+            }
+        }
+
+        // Set up all event listeners
+        function setupEventListeners() {
+            // Size selection
+            document.querySelectorAll('.size-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.size-option').forEach(opt => opt.classList.remove('active'));
+                    this.classList.add('active');
+                    selectedSize = this.getAttribute('data-size');
+                    document.getElementById('labelSize').textContent = selectedSize.replace('x', '×');
+                    updateBarcodePreview();
+                });
+            });
+
+            // Search functionality
+            document.getElementById('itemSearch').addEventListener('input', handleSearch);
+
+            // Clear search
+            document.getElementById('clearSearch').addEventListener('click', function() {
+                document.getElementById('itemSearch').value = '';
+                document.getElementById('searchResults').style.display = 'none';
+                document.getElementById('itemSearch').focus();
+            });
+
+            // Scan barcode
+            document.getElementById('scanBarcode').addEventListener('click', function() {
+                const barcode = prompt('Enter barcode to scan:');
+                if (barcode && barcode.trim()) {
+                    document.getElementById('itemSearch').value = barcode.trim();
+                    document.getElementById('itemSearch').dispatchEvent(new Event('input'));
+                }
+            });
+
+            // Add sample items button (disabled for now since you don't want demo)
+            document.getElementById('addSampleItems').addEventListener('click', function() {
+                showNotification('Demo items disabled. Please search for actual inventory items.', 'info');
+            });
+
+            // Clear all items
+            document.getElementById('clearAll').addEventListener('click', clearAllItems);
+
+            // Print barcodes
+            document.getElementById('printBarcodes').addEventListener('click', printBarcodes);
+
+            // Debug button
+            document.getElementById('debugBtn').addEventListener('click', function() {
+                testApiConnection();
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                // Escape to clear search
+                if (e.key === 'Escape') {
+                    document.getElementById('itemSearch').value = '';
+                    document.getElementById('searchResults').style.display = 'none';
+                }
+
+                // Enter to select first search result
+                if (e.key === 'Enter' && document.activeElement.id === 'itemSearch') {
+                    const firstResult = document.querySelector('.search-item');
+                    if (firstResult) {
+                        e.preventDefault();
+                        const itemData = getItemDataFromElement(firstResult);
+                        if (itemData) {
+                            addItemToTable(itemData);
+                            document.getElementById('itemSearch').value = '';
+                            document.getElementById('searchResults').style.display = 'none';
+                        }
+                    }
+                }
+            });
+
+            // Click outside to close search results
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.search-container')) {
+                    document.getElementById('searchResults').style.display = 'none';
+                }
+            });
+        }
+
+        // Search handler - ONLY REAL DATABASE
+        async function handleSearch() {
             const searchTerm = this.value.trim();
             const resultsContainer = document.getElementById('searchResults');
+            const searchIcon = document.getElementById('searchIcon');
 
             if (searchTerm.length < 2) {
                 resultsContainer.style.display = 'none';
+                searchIcon.className = 'fas fa-search';
                 return;
             }
 
+            // Show loading
+            searchIcon.className = 'fas fa-spinner fa-spin';
+            resultsContainer.innerHTML = '<div class="search-item"><div class="text-center w-100"><div class="spinner mx-auto"></div><p class="mt-2 mb-0">Searching inventory...</p></div></div>';
+            resultsContainer.style.display = 'block';
+
             try {
+                // Fetch from REAL DATABASE API
                 const response = await fetch(`/Sales/SearchItems?term=${encodeURIComponent(searchTerm)}`);
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+
                 const items = await response.json();
 
-                if (items.length > 0) {
-                    let resultsHTML = '';
-                    items.forEach(item => {
-                        resultsHTML += `
-                            <div class="search-item" data-id="${item.id}">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <div class="fw-semibold">${item.itemName}</div>
-                                        <div class="small text-muted">Code: <span class="item-code">${item.itemCode}</span></div>
-                                    </div>
-                                    <div class="text-end">
-                                        <div class="item-price">Rs. ${item.salePrice.toLocaleString()}</div>
-                                        <div class="small text-muted">Barcode: ${item.itemCode ?? '-'}</div>
-                                    </div>
+                if (!Array.isArray(items)) {
+                    throw new Error('Invalid response format from server');
+                }
+
+                displaySearchResults(items, searchTerm);
+
+            } catch (error) {
+                console.error('Search API error:', error);
+                showNotification('Cannot connect to inventory database. Please check your connection.', 'danger');
+                resultsContainer.innerHTML = `
+                    <div class="search-item">
+                        <div class="search-item-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div>
+                            <div class="fw-semibold text-danger">Database Error</div>
+                            <div class="small text-muted">Cannot load inventory items</div>
+                            <div class="small text-muted mt-1">Error: ${error.message}</div>
+                        </div>
+                    </div>
+                `;
+                resultsContainer.style.display = 'block';
+            } finally {
+                searchIcon.className = 'fas fa-search';
+            }
+        }
+
+        // Display search results
+        function displaySearchResults(items, searchTerm) {
+            const resultsContainer = document.getElementById('searchResults');
+
+            if (items.length === 0) {
+                resultsContainer.innerHTML = `
+                    <div class="search-item">
+                        <div class="search-item-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div>
+                            <div class="fw-semibold">No items found</div>
+                            <div class="small text-muted">Try a different search term</div>
+                        </div>
+                    </div>
+                `;
+                resultsContainer.style.display = 'block';
+                return;
+            }
+
+            let resultsHTML = '';
+
+            items.forEach(item => {
+                // Use actual item data from database
+                const icon = getIconForCategory(item.category || '');
+                const price = item.salePrice || item.price || 0;
+                const barcode = item.barcode || item.itemCode || '';
+                const stock = item.stock || item.stockQuantity || 0;
+
+                resultsHTML += `
+                    <div class="search-item"
+                         data-id="${item.id}"
+                         data-code="${item.itemCode}"
+                         data-name="${item.itemName}"
+                         data-price="${price}"
+                         data-barcode="${barcode}"
+                         data-category="${item.category || ''}"
+                         data-stock="${stock}">
+                        <div class="search-item-icon">
+                            <i class="fas ${icon}"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <div class="fw-semibold text-truncate" style="max-width: 200px">
+                                    ${item.itemName}
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-primary-light text-primary">Rs. ${price.toLocaleString()}</span>
                                 </div>
                             </div>
-                        `;
-                    });
+                            <div class="small text-muted d-flex gap-3 mb-1">
+                                <span><i class="fas fa-hashtag"></i> ${item.itemCode}</span>
+                                ${item.category ? `<span><i class="fas fa-tag"></i> ${item.category}</span>` : ''}
+                                ${barcode ? `<span><i class="fas fa-barcode"></i> ${barcode}</span>` : ''}
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge ${stock > 10 ? 'bg-success' : stock > 0 ? 'bg-warning' : 'bg-danger'}">
+                                    Stock: ${stock}
+                                </span>
+                                <button class="btn btn-sm btn-outline-primary add-item-btn">
+                                    <i class="fas fa-plus me-1"></i> Add
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
 
-                    resultsContainer.innerHTML = resultsHTML;
-                    resultsContainer.style.display = 'block';
+            resultsContainer.innerHTML = resultsHTML;
+            resultsContainer.style.display = 'block';
 
-                    // Add click event to each item
-                    document.querySelectorAll('.search-item').forEach(item => {
-                        item.addEventListener('click', function () {
-                            const itemId = parseInt(this.getAttribute('data-id'));
-                            const selectedItem = items.find(i => i.id === itemId);
-
-                            addItemToTable(selectedItem);
-
+            // Add event listeners to search results
+            document.querySelectorAll('.search-item').forEach(item => {
+                // Click on item (except the add button)
+                item.addEventListener('click', function(e) {
+                    if (!e.target.closest('.add-item-btn')) {
+                        const itemData = getItemDataFromElement(this);
+                        if (itemData) {
+                            addItemToTable(itemData);
                             document.getElementById('itemSearch').value = '';
                             resultsContainer.style.display = 'none';
-                        });
+                        }
+                    }
+                });
+
+                // Click on add button
+                const addBtn = item.querySelector('.add-item-btn');
+                if (addBtn) {
+                    addBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const parentItem = this.closest('.search-item');
+                        const itemData = getItemDataFromElement(parentItem);
+                        if (itemData) {
+                            addItemToTable(itemData);
+                            showNotification(`${itemData.itemName} added to print queue`, 'success');
+                        }
                     });
-                } else {
-                    resultsContainer.innerHTML = '<div class="search-item text-muted">No items found</div>';
-                    resultsContainer.style.display = 'block';
                 }
-            } catch (error) {
-                console.error('Error fetching items:', error);
-                resultsContainer.innerHTML = '<div class="search-item text-danger">Error loading items</div>';
-                resultsContainer.style.display = 'block';
-            }
-        });
+            });
+        }
 
-
-        // Clear search
-        document.getElementById('clearSearch').addEventListener('click', function() {
-            document.getElementById('itemSearch').value = '';
-            document.getElementById('searchResults').style.display = 'none';
-        });
+        // Helper: Get item data from search result element
+        function getItemDataFromElement(element) {
+            return {
+                id: element.getAttribute('data-id'),
+                itemCode: element.getAttribute('data-code'),
+                itemName: element.getAttribute('data-name'),
+                salePrice: parseFloat(element.getAttribute('data-price')) || 0,
+                barcode: element.getAttribute('data-barcode'),
+                category: element.getAttribute('data-category'),
+                stock: parseInt(element.getAttribute('data-stock')) || 0
+            };
+        }
 
         // Add item to table
         function addItemToTable(item) {
-            // Check if item already exists in table
-            const existingItemIndex = selectedItems.findIndex(i => i.id === item.id);
+            // Check if item already exists
+            const existingIndex = selectedItems.findIndex(i => i.id == item.id);
 
-            if (existingItemIndex !== -1) {
-                // Increase quantity if item already exists
-                selectedItems[existingItemIndex].quantity += 1;
-                updateTableRow(selectedItems[existingItemIndex]);
+            if (existingIndex > -1) {
+                // Increase quantity
+                selectedItems[existingIndex].quantity += 1;
+                updateTableRow(selectedItems[existingIndex]);
+                showNotification(`Increased quantity of ${item.itemName}`, 'info');
             } else {
                 // Add new item
                 const newItem = {
@@ -493,19 +1296,21 @@
                     code: item.itemCode,
                     name: item.itemName,
                     price: item.salePrice,
-                    barcode: item.itemCode,
-                    quantity: 1
+                    barcode: item.barcode || item.itemCode,
+                    quantity: 1,
+                    icon: getIconForCategory(item.category)
                 };
-
-                
-
                 selectedItems.push(newItem);
-                console.log(selectedItems);
                 addTableRow(newItem);
+                showNotification(`${item.itemName} added successfully`, 'success');
             }
 
             updateBarcodePreview();
+            updateStats();
             updateEmptyState();
+
+            // Clear search
+            document.getElementById('searchResults').style.display = 'none';
         }
 
         // Add table row
@@ -513,30 +1318,75 @@
             const tableBody = document.getElementById('itemsTableBody');
             const row = document.createElement('tr');
             row.setAttribute('data-id', item.id);
+            row.className = 'fade-in';
             row.innerHTML = `
-                <td>${item.code}</td>
-                <td>${item.name}</td>
-                <td>Rs. ${item.price.toLocaleString()}</td>
                 <td>
-                    <input type="number" class="form-control qty-input" value="${item.quantity}" min="1">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="bg-primary-light rounded-1 p-1">
+                            <i class="fas ${item.icon || 'fa-box'} fa-sm text-primary"></i>
+                        </div>
+                        <span class="fw-semibold">${item.code}</span>
+                    </div>
                 </td>
-                <td>Rs. ${(item.price * item.quantity).toLocaleString()}</td>
                 <td>
-                    <button class="btn btn-danger btn-sm remove-item">
-                        <i class="fas fa-times"></i>
-                    </button>
+                    <div class="text-truncate" style="max-width: 200px" title="${item.name}">
+                        ${item.name}
+                    </div>
+                </td>
+                <td>
+                    <span class="badge bg-primary-light text-primary fw-semibold">
+                        Rs. ${item.price.toLocaleString()}
+                    </span>
+                </td>
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-sm btn-outline-primary qty-minus" style="width: 32px; height: 32px">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <input type="number" class="form-control qty-input" value="${item.quantity}" min="1" style="width: 60px">
+                        <button class="btn btn-sm btn-outline-primary qty-plus" style="width: 32px; height: 32px">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </td>
+                <td class="fw-bold text-primary">
+                    Rs. ${(item.price * item.quantity).toLocaleString()}
+                </td>
+                <td>
+                    <div class="d-flex gap-1">
+                        <button class="btn action-btn remove-item" title="Remove">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 </td>
             `;
             tableBody.appendChild(row);
 
             // Add event listeners
             const qtyInput = row.querySelector('.qty-input');
+            const minusBtn = row.querySelector('.qty-minus');
+            const plusBtn = row.querySelector('.qty-plus');
+            const removeBtn = row.querySelector('.remove-item');
+
             qtyInput.addEventListener('change', function() {
                 const newQty = parseInt(this.value) || 1;
                 updateItemQuantity(item.id, newQty);
             });
 
-            const removeBtn = row.querySelector('.remove-item');
+            minusBtn.addEventListener('click', function() {
+                const currentQty = parseInt(qtyInput.value) || 1;
+                if (currentQty > 1) {
+                    qtyInput.value = currentQty - 1;
+                    updateItemQuantity(item.id, currentQty - 1);
+                }
+            });
+
+            plusBtn.addEventListener('click', function() {
+                const currentQty = parseInt(qtyInput.value) || 1;
+                qtyInput.value = currentQty + 1;
+                updateItemQuantity(item.id, currentQty + 1);
+            });
+
             removeBtn.addEventListener('click', function() {
                 removeItem(item.id);
             });
@@ -556,179 +1406,130 @@
 
         // Update item quantity
         function updateItemQuantity(itemId, newQty) {
-            const itemIndex = selectedItems.findIndex(item => item.id === itemId);
-            if (itemIndex !== -1) {
+            const itemIndex = selectedItems.findIndex(item => item.id == itemId);
+            if (itemIndex > -1) {
                 selectedItems[itemIndex].quantity = newQty;
                 updateTableRow(selectedItems[itemIndex]);
                 updateBarcodePreview();
+                updateStats();
             }
         }
 
         // Remove item
         function removeItem(itemId) {
-            selectedItems = selectedItems.filter(item => item.id !== itemId);
-            const row = document.querySelector(`tr[data-id="${itemId}"]`);
-            if (row) {
-                row.remove();
-            }
-            updateBarcodePreview();
-            updateEmptyState();
-        }
-
-        // Update empty state visibility
-        function updateEmptyState() {
-            const emptyState = document.getElementById('emptyTableState');
-            if (selectedItems.length === 0) {
-                emptyState.style.display = 'block';
-                document.querySelector('#itemsTable thead').style.display = 'none';
-            } else {
-                emptyState.style.display = 'none';
-                document.querySelector('#itemsTable thead').style.display = 'table-header-group';
+            const item = selectedItems.find(item => item.id == itemId);
+            if (item) {
+                selectedItems = selectedItems.filter(item => item.id != itemId);
+                const row = document.querySelector(`tr[data-id="${itemId}"]`);
+                if (row) {
+                    row.style.opacity = '0';
+                    row.style.transform = 'translateX(100px)';
+                    setTimeout(() => {
+                        row.remove();
+                        updateBarcodePreview();
+                        updateStats();
+                        updateEmptyState();
+                        showNotification(`${item.name} removed`, 'warning');
+                    }, 300);
+                }
             }
         }
-
-        // Add sample items
-        document.getElementById('addSampleItems').addEventListener('click', function() {
-            // Add first 5 sample items
-            for (let i = 0; i < 5; i++) {
-                addItemToTable(sampleItems[i]);
-            }
-        });
 
         // Clear all items
-        document.getElementById('clearAll').addEventListener('click', function() {
-            selectedItems = [];
-            document.getElementById('itemsTableBody').innerHTML = '';
-            updateBarcodePreview();
-            updateEmptyState();
-        });
-
-        // Print barcodes with left-aligned layout
-        document.getElementById('printBarcodes').addEventListener('click', function() {
+        function clearAllItems() {
             if (selectedItems.length === 0) {
-                alert('Please add items to print barcodes.');
+                showNotification('No items to clear', 'info');
                 return;
             }
+
+            if (confirm('Are you sure you want to clear all items from the print queue?')) {
+                selectedItems = [];
+                document.getElementById('itemsTableBody').innerHTML = '';
+                updateBarcodePreview();
+                updateStats();
+                updateEmptyState();
+                showNotification('All items cleared', 'danger');
+            }
+        }
+
+        // Update empty state
+        function updateEmptyState() {
+            const emptyState = document.getElementById('emptyTableState');
+            const tableHead = document.querySelector('#itemsTable thead');
+
+            if (selectedItems.length === 0) {
+                emptyState.style.display = 'block';
+                if (tableHead) tableHead.style.display = 'none';
+            } else {
+                emptyState.style.display = 'none';
+                if (tableHead) tableHead.style.display = 'table-header-group';
+            }
+        }
+
+        // Print barcodes
+        function printBarcodes() {
+            if (selectedItems.length === 0) {
+                showNotification('Please add items to print barcodes', 'warning');
+                return;
+            }
+
+            const printBtn = document.getElementById('printBarcodes');
+            const originalText = printBtn.innerHTML;
+            printBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Preparing...';
+            printBtn.disabled = true;
 
             // Get dimensions
             const dimensions = selectedSize.split('x');
             const width = parseInt(dimensions[0]);
             const height = parseInt(dimensions[1]);
 
-            // Size-specific configurations with left alignment
+            // Size configurations
             const sizeConfigs = {
-                '38x28': {
-                    shopFont: '11px', itemFont: '10px', codeFont: '10px', priceFont: '11px',
-                    barcodeWidth: 1.0, barcodeHeight: 32, padding: '1mm 1mm 1mm 2mm' // More left padding
-                },
-                '50x25': {
-                    shopFont: '12px', itemFont: '11px', codeFont: '11px', priceFont: '12px',
-                    barcodeWidth: 1.2, barcodeHeight: 28, padding: '1mm 1mm 1mm 2mm'
-                },
-                '40x30': {
-                    shopFont: '12px', itemFont: '11px', codeFont: '11px', priceFont: '12px',
-                    barcodeWidth: 1.1, barcodeHeight: 34, padding: '1.5mm 1.5mm 1.5mm 3mm'
-                },
-                '60x40': {
-                    shopFont: '14px', itemFont: '13px', codeFont: '13px', priceFont: '14px',
-                    barcodeWidth: 1.4, barcodeHeight: 42, padding: '2mm 2mm 2mm 4mm'
-                }
+                '38x28': { shopFont: '11px', itemFont: '10px', codeFont: '10px', priceFont: '11px', barcodeWidth: 1.0, barcodeHeight: 32 },
+                '50x25': { shopFont: '12px', itemFont: '11px', codeFont: '11px', priceFont: '12px', barcodeWidth: 1.2, barcodeHeight: 28 },
+                '40x30': { shopFont: '12px', itemFont: '11px', codeFont: '11px', priceFont: '12px', barcodeWidth: 1.1, barcodeHeight: 34 },
+                '60x40': { shopFont: '14px', itemFont: '13px', codeFont: '13px', priceFont: '14px', barcodeWidth: 1.4, barcodeHeight: 42 }
             };
 
             const config = sizeConfigs[selectedSize] || sizeConfigs['38x28'];
+            const shopName = "@(ViewBag.ShopName ?? "G-SOFT POS")";
+            const printDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 
-            // Create print content with @@page at the top
+            // Create print template
             let printHTML = `
                 <!DOCTYPE html>
                 <html>
                 <head>
-                    <title>Barcode Labels</title>
+                    <title>Barcode Labels - ${shopName}</title>
                     <style>
-                        @@page {
-                            size: ${width}mm ${height}mm;
-                            margin: 0;
-                        }
-
-                        body {
-                            margin: 0;
-                            padding: 0;
-                            font-family: Arial, sans-serif;
-                            background: white;
-                            width: ${width}mm;
-                            height: ${height}mm;
-                        }
-
+                        @@page { size: ${width}mm ${height}mm; margin: 0; }
+                        body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
                         .label {
                             width: ${width}mm;
                             height: ${height}mm;
+                            padding: 2mm 3mm;
                             display: flex;
                             flex-direction: column;
                             justify-content: space-between;
                             align-items: flex-start;
                             page-break-after: always;
                             box-sizing: border-box;
-                            padding: ${config.padding};
-                            text-align: left;
+                            position: relative;
                         }
-
-                        .shop-name {
-                            font-size: ${config.shopFont};
-                            font-weight: bold;
-                            margin-bottom: 0.5mm;
-                            letter-spacing: 0.3px;
-                            width: 100%;
-                            text-align: left;
-                        }
-
-                        .item-name {
-                            font-size: ${config.itemFont};
-                            margin-bottom: 1mm;
-                            font-weight: 500;
-                            max-width: ${width - 6}mm;
-                            overflow: hidden;
-                            text-overflow: ellipsis;
-                            white-space: nowrap;
-                            width: 100%;
-                            text-align: left;
-                        }
-
-                        .barcode-container {
-                            margin: 1mm 0;
-                            width: 95%;
-                            display: flex;
-                            justify-content: flex-start;
-                            flex-grow: 1;
-                        }
-
-                        .bottom-section {
-                            display: flex;
-                            flex-direction: column;
-                            align-items: flex-start;
-                            width: 100%;
-                            margin-top: 1mm;
-                        }
-
-                        .item-code {
-                            font-size: ${config.codeFont};
-                            font-weight: bold;
-                            margin-bottom: 1mm;
-                        }
-
-                        .item-price {
-                            font-size: ${config.priceFont};
-                            font-weight: bold;
-                            color: #d63384;
-                        }
+                        .shop-name { font-size: ${config.shopFont}; font-weight: bold; color: #4361ee; }
+                        .item-name { font-size: ${config.itemFont}; font-weight: 600; max-width: ${width - 6}mm; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+                        .barcode-container { margin: 1mm 0; width: 100%; }
+                        .bottom-info { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; }
+                        .item-code { font-size: ${config.codeFont}; font-weight: bold; }
+                        .item-price { font-size: ${config.priceFont}; font-weight: bold; color: #e63946; }
+                        .print-date { position: absolute; bottom: 1mm; right: 2mm; font-size: 8px; color: #999; }
                     </style>
                 </head>
                 <body>
             `;
 
-            // Generate labels for each item
+            // Generate labels
             selectedItems.forEach(item => {
-
-                 const shopName = "@(ViewBag.ShopName ?? "G-Soft")";
-
                 for (let i = 0; i < item.quantity; i++) {
                     printHTML += `
                         <div class="label">
@@ -737,29 +1538,32 @@
                             <div class="barcode-container">
                                 <svg class="barcode"></svg>
                             </div>
-                            <div class="bottom-section">
+                            <div class="bottom-info">
                                 <div class="item-code">${item.code}</div>
                                 <div class="item-price">Rs. ${item.price.toLocaleString()}</div>
                             </div>
+                            <div class="print-date">${printDate}</div>
                         </div>
                     `;
                 }
             });
+
+            printHTML += '</body></html>';
 
             // Open print window
             const printWindow = window.open('', '_blank');
             printWindow.document.write(printHTML);
             printWindow.document.close();
 
-            // Generate barcodes after the content is loaded
+            // Generate barcodes after content loads
             printWindow.onload = function() {
                 const barcodes = printWindow.document.querySelectorAll('.barcode');
-                let currentIndex = 0;
+                let index = 0;
 
                 selectedItems.forEach(item => {
                     for (let i = 0; i < item.quantity; i++) {
-                        if (barcodes[currentIndex]) {
-                            JsBarcode(barcodes[currentIndex], item.barcode, {
+                        if (barcodes[index]) {
+                            JsBarcode(barcodes[index], item.barcode, {
                                 format: "CODE128",
                                 lineColor: "#000",
                                 width: config.barcodeWidth,
@@ -768,20 +1572,114 @@
                                 margin: 0
                             });
                         }
-                        currentIndex++;
+                        index++;
                     }
                 });
 
-                // Trigger print after a short delay to ensure barcodes are rendered
+                // Restore button
+                printBtn.innerHTML = originalText;
+                printBtn.disabled = false;
+
+                // Print after delay
                 setTimeout(() => {
                     printWindow.print();
+                    printWindow.onafterprint = function() {
+                        printWindow.close();
+                        showNotification('Barcodes printed successfully', 'success');
+                    };
                 }, 500);
             };
-        });
+        }
 
-        // Initialize
-        updateEmptyState();
-        updateBarcodePreview();
+        // Helper: Get icon for category
+        function getIconForCategory(category) {
+            const iconMap = {
+                'Electronics': 'fa-laptop',
+                'Clothing': 'fa-tshirt',
+                'Footwear': 'fa-shoe-prints',
+                'Accessories': 'fa-gem',
+                'Home Appliances': 'fa-home',
+                'Gaming': 'fa-gamepad',
+                'Luxury': 'fa-gem',
+                'Fashion': 'fa-tshirt',
+                'Sports': 'fa-futbol',
+                'Books': 'fa-book',
+                'Food': 'fa-utensils',
+                'Beverages': 'fa-wine-glass',
+                'Furniture': 'fa-couch',
+                'Tools': 'fa-tools',
+                'Toys': 'fa-gamepad',
+                'Health': 'fa-heartbeat',
+                'Beauty': 'fa-spa'
+            };
+            return iconMap[category] || 'fa-box';
+        }
+
+        // Notification system
+        function showNotification(message, type = 'info') {
+            // Remove existing notifications
+            document.querySelectorAll('.notification').forEach(n => n.remove());
+
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+
+            const icons = {
+                success: 'fa-check-circle',
+                warning: 'fa-exclamation-triangle',
+                danger: 'fa-times-circle',
+                info: 'fa-info-circle'
+            };
+
+            notification.innerHTML = `
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle p-2" style="background: ${type === 'success' ? '#4cc9f0' : type === 'warning' ? '#f8961e' : type === 'danger' ? '#e63946' : '#4361ee'}; color: white;">
+                        <i class="fas ${icons[type] || 'fa-info-circle'}"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold">${message}</div>
+                        <small class="text-muted">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
+                    </div>
+                    <button class="btn btn-sm btn-light" onclick="this.parentElement.parentElement.remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+
+            document.body.appendChild(notification);
+
+            // Show animation
+            setTimeout(() => notification.classList.add('show'), 10);
+
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // Test API connection
+        async function testApiConnection() {
+            showNotification('Testing database connection...', 'info');
+
+            try {
+                const response = await fetch('/Sales/SearchItems?term=test');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                const itemCount = Array.isArray(data) ? data.length : 'N/A';
+
+                showNotification(`Database connected successfully. ${itemCount} items available.`, 'success');
+
+            } catch (error) {
+                showNotification(`Database connection failed: ${error.message}`, 'danger');
+            }
+        }
     </script>
 </body>
 </html>

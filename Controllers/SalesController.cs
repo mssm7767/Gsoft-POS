@@ -1,4 +1,9 @@
-﻿using GSoftPosNew.Data;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using GSoftPosNew.Data;
 using GSoftPosNew.Models;
 using GSoftPosNew.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -9,8 +14,7 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System.Drawing.Printing;
-using System.Text.Json;
-using System.Threading.Tasks;
+// using System.Text.Json; // Iski zaroorat nahi, niche fully-qualified use ho raha hai
 
 namespace GSoftPosNew.Controllers
 {
@@ -36,7 +40,6 @@ namespace GSoftPosNew.Controllers
                 query = query.Where(s => s.SaleDate.Date >= fromDate.Value);
                 queryPurchase = queryPurchase.Where(s => s.Date.Date >= fromDate.Value);
             }
-               
             else
             {
                 query = query.Where(s => s.SaleDate.Date == DateTime.Now.Date);
@@ -48,7 +51,6 @@ namespace GSoftPosNew.Controllers
                 query = query.Where(s => s.SaleDate.Date <= toDate.Value);
                 queryPurchase = queryPurchase.Where(s => s.Date.Date <= toDate.Value);
             }
-               
             else
             {
                 query = query.Where(s => s.SaleDate.Date == DateTime.Now.Date);
@@ -58,7 +60,7 @@ namespace GSoftPosNew.Controllers
             if (!string.IsNullOrEmpty(search))
                 query = query.Where(s => s.InvoiceNumber.Contains(search) || s.CashierId.Contains(search));
 
-            if (customerId != null && customerId > 0)
+            if (customerId > 0)
                 query = query.Where(s => s.CustomerId == customerId);
 
             var model = new SalesFilterViewModel
@@ -77,10 +79,7 @@ namespace GSoftPosNew.Controllers
 
             ViewBag.Categories = await _context.Categories.ToListAsync();
             ViewBag.Customers = await _context.Customers.ToListAsync();
-
             ViewBag.Purchase = queryPurchase.Include(p => p.Items).ToList();
-
-
 
             return View(model);
         }
@@ -105,14 +104,170 @@ namespace GSoftPosNew.Controllers
                 ? saleInvNo.Substring(saleInvNo.Length - 4)
                 : "0000";
 
-
-
             ViewBag.ShopName = _context.ShopSettings
                 .OrderByDescending(s => s.Id)
                 .Select(s => s.ShopName)
                 .FirstOrDefault();
 
             return View(items);
+        }
+
+        // ==================== SALES RETURN REPORT (GET) ====================
+        [HttpGet]
+        public IActionResult SalesReturn()
+        {
+            var model = new SalesReturnFilterViewModel
+            {
+                FromDate = DateTime.Today,
+                ToDate = DateTime.Today
+            };
+
+            // Dropdowns fill
+            PopulateSalesReturnDropdowns(model);
+
+            // Default: aaj ki returns dikhao
+            model.Rows = LoadSalesReturnRows(
+                model.FromDate.Value,
+                model.ToDate.Value,
+                null,
+                0,
+                0
+            );
+
+            return View(model); // Views/Sales/SalesReturn.cshtml
+        }
+
+        // ==================== SALES RETURN REPORT (POST - FILTER) ====================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult SalesReturn(SalesReturnFilterViewModel filter)
+        {
+            // Dates normalize
+            if (filter.FromDate == null && filter.ToDate == null)
+            {
+                filter.FromDate = DateTime.Today;
+                filter.ToDate = DateTime.Today;
+            }
+
+            if (filter.FromDate != null && filter.ToDate == null)
+                filter.ToDate = filter.FromDate;
+
+            if (filter.ToDate != null && filter.FromDate == null)
+                filter.FromDate = filter.ToDate;
+
+            // Rows load via helper (sirf Return wali sales se)
+            filter.Rows = LoadSalesReturnRows(
+                filter.FromDate!.Value,
+                filter.ToDate!.Value,
+                filter.ItemSearch,
+                filter.CategoryId,
+                filter.SupplierId
+            );
+
+            // Dropdowns dubara fill (POST pe bhi)
+            PopulateSalesReturnDropdowns(filter);
+
+            return View(filter);
+        }
+
+        // Sirf Return wali sales se grid ke rows banaane ka helper
+        private List<SalesReturnRow> LoadSalesReturnRows(
+            DateTime fromDate,
+            DateTime toDate,
+            string? itemSearch,
+            int categoryId,
+            int supplierId)
+        {
+            var from = fromDate.Date;
+            var to = toDate.Date.AddDays(1).AddTicks(-1);
+
+            // Base: sirf SaleType == "Return"
+            var salesQuery = _context.Sales
+                .Include(s => s.SaleItems)
+                    .ThenInclude(si => si.Item)
+                        .ThenInclude(i => i.Category)
+                .Include(s => s.SaleItems)
+                    .ThenInclude(si => si.Item)
+                        .ThenInclude(i => i.Supplier)
+                .Where(s => s.SaleType == "Return")
+                .Where(s => s.SaleDate >= from && s.SaleDate <= to)
+                .AsQueryable();
+
+            // SaleItems flatten
+            var q = from s in salesQuery
+                    from si in s.SaleItems
+                    let itm = si.Item
+                    select new
+                    {
+                        Sale = s,
+                        Line = si,
+                        Item = itm
+                    };
+
+            // Item search (name / code)
+            if (!string.IsNullOrWhiteSpace(itemSearch))
+            {
+                var search = itemSearch.Trim().ToLower();
+                q = q.Where(x =>
+                    x.Item.ItemName.ToLower().Contains(search) ||
+                    x.Item.ItemCode.ToLower().Contains(search));
+            }
+
+            // Category filter
+            if (categoryId > 0)
+            {
+                q = q.Where(x => x.Item.CategoryId == categoryId);
+            }
+
+            // Supplier filter
+            if (supplierId > 0)
+            {
+                q = q.Where(x => x.Item.SupplierId == supplierId);
+            }
+
+            var rows = q
+                .OrderBy(x => x.Sale.SaleDate)
+                .ThenBy(x => x.Item.ItemName)
+                .Select(x => new SalesReturnRow
+                {
+                    InvoiceNo = x.Sale.InvoiceNumber,
+                    ItemCode = x.Item.ItemCode,
+                    ItemName = x.Item.ItemName,
+                    Quantity = x.Line.Quantity,
+                    Amount = x.Line.LineTotal,
+                    ReturnDate = x.Sale.SaleDate,
+                    CategoryName = x.Item.Category != null ? x.Item.Category.Name : "",
+                    SupplierName = x.Item.Supplier != null ? x.Item.Supplier.SupplierName : ""
+                })
+                .ToList();
+
+            return rows;
+        }
+
+        private void PopulateSalesReturnDropdowns(SalesReturnFilterViewModel model)
+        {
+            // Categories dropdown
+            model.Categories = _context.Categories
+                .OrderBy(c => c.Name)
+                .Select(c => new SelectListItem
+                {
+                    Value = c.Id.ToString(),
+                    Text = c.Name
+                })
+                .ToList();
+
+            // Suppliers dropdown
+            model.Suppliers = _context.Suppliers
+                .OrderBy(s => s.SupplierName)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.Id.ToString(),
+                    Text = s.SupplierName
+                })
+                .ToList();
+
+            // Top bar ke liye
+            ViewBag.CurrentUser = User.Identity?.Name ?? "Admin";
         }
 
         public async Task<IActionResult> POSTouch()
@@ -211,7 +366,7 @@ namespace GSoftPosNew.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> SaveSale([FromBody] Sale sale, int serviceCharges )
+        public async Task<IActionResult> SaveSale([FromBody] Sale sale, int serviceCharges)
         {
             if (sale == null || sale.SaleItems == null || !sale.SaleItems.Any())
             {
@@ -220,14 +375,14 @@ namespace GSoftPosNew.Controllers
                 return BadRequest("Invalid sale data. Raw request: " + rawBody);
             }
 
-           var serviceChargesValue = _context.ShopSettings
-                .OrderByDescending(s => s.Id)
-                .Select(s => s.ServiceCharges)
-                .FirstOrDefault();
+            var serviceChargesValue = _context.ShopSettings
+                 .OrderByDescending(s => s.Id)
+                 .Select(s => s.ServiceCharges)
+                 .FirstOrDefault();
 
             bool isApplied = false;
 
-            if(serviceCharges == 1)
+            if (serviceCharges == 1)
             {
                 isApplied = true;
             }
@@ -243,6 +398,12 @@ namespace GSoftPosNew.Controllers
                 sale.CashierId = User.Identity?.Name ?? "Unknown";
                 sale.Id = 0;
                 sale.CustomerId = sale.custId;
+
+                sale.Discount = sale.SaleItems
+                                .Where(x => x.DiscountPercent > 0)
+                                .Sum(x => (x.UnitPrice * x.Quantity) * x.DiscountPercent / 100m);
+
+
                 if (isApplied && serviceChargesValue.HasValue && serviceChargesValue > 0)
                 {
                     sale.ServiceCharges = sale.Total * serviceChargesValue.Value / 100;
@@ -489,21 +650,19 @@ namespace GSoftPosNew.Controllers
                             dbItem.Quantity -= item.Quantity;
                             _context.Items.Update(dbItem);
 
-                            if(dbItem.ItemIngredients != null)
+                            if (dbItem.ItemIngredients != null)
                             {
-                                foreach(var ingItem  in dbItem.ItemIngredients)
+                                foreach (var ingItem in dbItem.ItemIngredients)
                                 {
                                     var ingredient = _context.Ingredients
                                                         .FirstOrDefault(x => x.Id == ingItem.IngredientId);
 
                                     if (ingredient != null)
                                     {
-
                                         decimal currentStock = ingredient.PurchaseQty ?? 0;
                                         decimal newStock = currentStock - ingItem.UseQty;
 
                                         ingredient.PurchaseQty = newStock;
-
                                     }
                                 }
                             }
@@ -823,6 +982,11 @@ namespace GSoftPosNew.Controllers
                 sale.CashierId = User.Identity?.Name ?? "Unknown";
                 sale.Id = 0;
                 sale.CustomerId = sale.custId;
+
+                sale.Discount = sale.SaleItems
+                                .Where(x => x.DiscountPercent > 0)
+                                .Sum(x => (x.UnitPrice * x.Quantity) * x.DiscountPercent / 100m);
+
                 if (isApplied && serviceChargesValue.HasValue && serviceChargesValue > 0)
                 {
                     sale.ServiceCharges = sale.Total * serviceChargesValue.Value / 100;
@@ -1194,7 +1358,7 @@ namespace GSoftPosNew.Controllers
                     SaleItems = saleItems.Select(item => new SaleItem
                     {
                         ItemId = item.ItemId,
-                        Quantity = item.Quantity,        // decimal -> decimal
+                        Quantity = item.Quantity,
                         UnitPrice = item.UnitPrice,
                         DiscountPercent = item.DiscountPercent,
                         TaxAmount = item.TaxAmount,
@@ -1283,7 +1447,7 @@ namespace GSoftPosNew.Controllers
                              SrNo = 0,
                              ItemName = i.ItemName,
                              UnitPrice = si.UnitPrice,
-                             Quantity = si.Quantity,   // SaleItemReceiptVM.Quantity should be decimal
+                             Quantity = si.Quantity,
                              LineTotal = si.LineTotal
                          })
                         .ToList();
@@ -1321,7 +1485,7 @@ namespace GSoftPosNew.Controllers
         public class SaleItemModel
         {
             public int ItemId { get; set; }
-            public decimal Quantity { get; set; }      // ✅ important: decimal
+            public decimal Quantity { get; set; }
             public decimal UnitPrice { get; set; }
             public decimal DiscountPercent { get; set; }
             public decimal TaxAmount { get; set; }
@@ -1380,7 +1544,9 @@ namespace GSoftPosNew.Controllers
                              SrNo = 0,
                              ItemName = i.ItemName,
                              UnitPrice = si.UnitPrice,
-                             Quantity = si.Quantity,   // SaleItemReceiptVM.Quantity = decimal
+                             Quantity = si.Quantity,
+                             DiscountPercent = si.DiscountPercent,   // ✅ ADD
+                             TaxAmount = si.TaxAmount,               // ✅ ADD
                              LineTotal = si.LineTotal
                          }).ToList()
             };
@@ -1439,7 +1605,7 @@ namespace GSoftPosNew.Controllers
                              SrNo = 0,
                              ItemName = i.ItemName,
                              UnitPrice = si.UnitPrice,
-                             Quantity = si.Quantity,   // SaleItemReceiptVM.Quantity = decimal
+                             Quantity = si.Quantity,
                              LineTotal = si.LineTotal
                          }).ToList()
             }).ToList();
@@ -1506,7 +1672,7 @@ namespace GSoftPosNew.Controllers
                              SrNo = 0,
                              ItemName = i.ItemName,
                              UnitPrice = si.UnitPrice,
-                             Quantity = si.Quantity,   // SaleItemReceiptVM.Quantity = decimal
+                             Quantity = si.Quantity,
                              LineTotal = si.LineTotal
                          }).ToList()
             };
@@ -1612,7 +1778,7 @@ namespace GSoftPosNew.Controllers
                              SrNo = 0,
                              ItemName = i.ItemName,
                              UnitPrice = si.UnitPrice,
-                             Quantity = si.Quantity,    // SaleItemReceiptVM.Quantity = decimal
+                             Quantity = si.Quantity,
                              LineTotal = si.LineTotal
                          }).ToList()
             };

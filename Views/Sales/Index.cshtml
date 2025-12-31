@@ -1,1225 +1,1492 @@
 ﻿@using System
 @using System.Linq
+@using System.Collections.Generic
+@using System.Collections
+@using GSoftPosNew.Models
 @model GSoftPosNew.ViewModels.SalesFilterViewModel
 
 @{
-
     ViewData["Title"] = "Sales Report";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
     var fromStr = Model.FromDate?.ToString("yyyy-MM-dd");
     var toStr = Model.ToDate?.ToString("yyyy-MM-dd");
-
-
-
     var purchase = ViewBag.Purchase as List<Purchase>;
+
+    int itemsCount = 0;
+    decimal purchaseTotal = 0m;
+    decimal grandItemTotalQty = 0m;
+    decimal grandProfit = 0m;
+
+    decimal grandSaleSubtotal = 0m;
+    decimal grandReturnSubtotal = 0m;
+    decimal grandSubtotal = 0m;
+    decimal grandTax = 0m;
+    decimal grandDiscount = 0m;
+    decimal grandSaleTotal = 0m;
+    decimal grandReturnTotal = 0m;
+    decimal grandTotal = 0m;
+    decimal runningSubtotal = 0m;
+    decimal runningTax = 0m;
+    decimal runningDiscount = 0m;
+    decimal runningTotal = 0m;
+
+    var itemsList = new ArrayList();
+
+    if (Model?.Sales != null && Model.Sales.Any())
+    {
+        var allSaleItemsQty = Model.Sales
+            .SelectMany(s => s.SaleItems.Select(i => new
+            {
+                s.SaleType,
+                ItemId = i.ItemId,
+                Category = i.Item?.Category?.Name ?? "N/A",
+                ItemCode = i.Item?.ItemCode ?? "N/A",
+                ItemName = i.Item?.ItemName ?? "Unknown",
+                Quantity = s.SaleType == "Return" ? -i.Quantity : i.Quantity,
+                UnitPrice = i.UnitPrice,
+                Discount = i.DiscountPercent,
+                CostPrice =
+                    int.TryParse(i.Item?.PackSize, out var ps) && ps > 0
+                        ? i.Item.PurchasePrice / ps
+                        : i.Item.PurchasePrice,
+
+            }))
+            .ToList();
+
+        var groupedItemsData = allSaleItemsQty
+            .GroupBy(x => x.ItemCode)
+            .Select(g => new
+            {
+                ItemId = g.First().ItemId,
+                ItemCode = g.Key,
+                Category = g.First().Category,
+                ItemName = g.First().ItemName,
+                Quantity = g.Sum(x => x.Quantity),
+                Discount = g.Sum(x => (x.Quantity * x.UnitPrice) * x.Discount / 100m),
+                UnitPrice = g.First().UnitPrice,
+                Total = g.Sum(x => (x.Quantity * x.UnitPrice) - ((x.Quantity * x.UnitPrice) * x.Discount / 100m)),
+                CostPrice = g.First().CostPrice * g.Sum(x => x.Quantity),
+                PurchaseTotal = purchase?
+                    .Where(p => p.Items?.Any(pi => pi.ItemId == g.First().ItemId) == true)
+                    .SelectMany(p => p.Items?.Where(pi => pi.ItemId == g.First().ItemId) ?? new List<PurchaseItem>())
+                    .Sum(pi => pi.LineTotal) ?? 0
+            })
+            .OrderBy(x => x.ItemName)
+            .ToList();
+
+        itemsCount = groupedItemsData.Count;
+        purchaseTotal = groupedItemsData.Sum(p => p.PurchaseTotal);
+        grandItemTotalQty = allSaleItemsQty.Sum(i => (i.Quantity * i.UnitPrice) - i.Discount);
+        grandProfit = grandItemTotalQty - purchaseTotal;
+
+        foreach (var item in groupedItemsData) { itemsList.Add(item); }
+
+        grandSaleSubtotal = Model.Sales.Where(s => s.SaleType == "Sale").Sum(s => s.SubTotal);
+        grandReturnSubtotal = Model.Sales.Where(s => s.SaleType == "Return").Sum(s => s.SubTotal);
+
+        grandSubtotal = grandSaleSubtotal - grandReturnSubtotal;
+        grandTax = Model.Sales.Sum(s => s.Tax);
+        grandDiscount = Model.Sales.Sum(s => s.Discount);
+
+        grandSaleTotal = Model.Sales.Where(s => s.SaleType == "Sale").Sum(s => s.Total);
+        grandReturnTotal = Model.Sales.Where(s => s.SaleType == "Return").Sum(s => s.Total);
+
+        grandTotal = grandSaleTotal - grandReturnTotal;
+
+        foreach (var sale in Model.Sales)
+        {
+            if (sale.SaleType == "Return")
+            {
+                runningSubtotal -= sale.SubTotal;
+                runningTax -= sale.Tax;
+                runningDiscount -= sale.Discount;
+                runningTotal -= sale.Total;
+            }
+            else
+            {
+                runningSubtotal += sale.SubTotal;
+                runningTax += sale.Tax;
+                runningDiscount += sale.Discount;
+                runningTotal += sale.Total;
+            }
+        }
+    }
 }
 
-@{
-    var allSaleItems = Model.Sales
-        .SelectMany(s => s.SaleItems)
-        .ToList();
-
-    decimal grandItemTotal = allSaleItems.Sum(i => i.Quantity * i.UnitPrice);
-}
+<!-- Icons (agar layout me nahi hain to yahan se load ho jayenge) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 <style>
-    /* ========= PAGE BACKGROUND & LAYOUT ========= */
-    .sales-page-wrapper {
-        background: radial-gradient(circle at top left, #e0f2fe 0, #eef2ff 40%, #f9fafb 100%);
+    :root {
+        --primary: #3b82f6;
+        --primary-dark: #1d4ed8;
+        --primary-light: #dbeafe;
+        --secondary: #8b5cf6;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --info: #0ea5e9;
+        --dark: #1f2937;
+        --light: #f8fafc;
+        --gray-100: #f1f5f9;
+        --gray-200: #e2e8f0;
+        --gray-300: #cbd5e1;
+        --gray-600: #64748b;
+        --gray-800: #334155;
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+        --radius-xl: 20px;
+        --shadow-sm: 0 2px 12px rgba(0,0,0,0.06);
+        --shadow-md: 0 6px 24px rgba(0,0,0,0.1);
+        --shadow-lg: 0 12px 48px rgba(0,0,0,0.15);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
         min-height: 100vh;
-        padding: 1.5rem 0 2.5rem;
+        color: var(--dark);
     }
 
-    .card {
-        border-radius: 1.1rem;
-        border: 1px solid rgba(148, 163, 184, 0.25);
-        box-shadow: 0 14px 35px rgba(15, 23, 42, 0.12);
+    .sales-dashboard {
+        max-width: 1800px;
+        margin: 0 auto;
+        padding: 20px;
+        animation: fadeIn 0.5s ease-out;
     }
 
-    /* ========= PAGE HEADER ========= */
-    .page-header {
-        background: linear-gradient(120deg, #0ea5e9 0%, #6366f1 50%, #22c55e 100%);
-        border-radius: 1.1rem;
-        padding: 0.9rem 1.3rem;
-        color: #eff6ff;
-        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.4);
-    }
-
-    .page-header-main {
-        display: flex;
-        align-items: center;
-        gap: .8rem;
-    }
-
-    .page-header-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 999px;
-        background: rgba(15, 23, 42, 0.18);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.25rem;
-    }
-
-    .page-header h2 {
-        letter-spacing: .3px;
-        margin-bottom: .1rem;
-    }
-
-    .page-header-sub {
-        font-size: .8rem;
-        opacity: .9;
-    }
-
-    .btn-soft {
-        border-radius: 999px;
-        box-shadow: 0 8px 18px rgba(15, 23, 42, .15);
-        border: none;
-    }
-
-    .btn-soft-outline {
-        border-radius: 999px;
-    }
-
-    /* ========= FILTER CARD ========= */
-    .filter-card {
-        border: none;
-        background: linear-gradient(135deg, #eff6ff 0, #e0f2fe 60%, #ecfdf5 100%);
-    }
-
-        .filter-card .card-body {
-            padding: 1.1rem 1.3rem 0.8rem;
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
         }
 
-    .filter-label {
-        font-size: .8rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: .08em;
-        color: #6b7280;
-    }
-
-        .filter-label i {
-            font-size: .95rem;
+        to {
+            opacity: 1;
+            transform: translateY(0);
         }
-
-    .filter-card .form-control {
-        border-radius: .8rem;
-        border-color: rgba(148, 163, 184, 0.7);
     }
 
-    .filter-card .btn-success {
-        box-shadow: 0 10px 28px rgba(22, 163, 74, 0.36);
-    }
-
-    .filter-card .btn-outline-secondary {
-        border-width: 1px;
-    }
-
-    /* ========= KPI BADGES ========= */
-    .kpi-row {
-        gap: .6rem;
-    }
-
-    .kpi-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: .55rem;
-        border-radius: .9rem;
-        padding: .5rem .9rem;
-        font-size: .9rem;
-        border: 1px solid rgba(148, 163, 184, 0.45);
-        background: #ffffff;
-        box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
-    }
-
-        .kpi-badge .icon {
-            width: 30px;
-            height: 30px;
-            border-radius: 999px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: .95rem;
-        }
-
-        .kpi-badge .label {
-            color: #6b7280;
-            text-transform: uppercase;
-            letter-spacing: .06em;
-            font-size: .7rem;
-        }
-
-        .kpi-badge .val {
-            font-weight: 700;
-            font-size: .9rem;
-        }
-
-    .kpi-primary .icon {
-        background: rgba(59, 130, 246, 0.12);
-        color: #1d4ed8;
-    }
-
-    .kpi-tax .icon {
-        background: rgba(248, 113, 113, 0.15);
-        color: #b91c1c;
-    }
-
-    .kpi-discount .icon {
-        background: rgba(251, 191, 36, 0.16);
-        color: #b45309;
-    }
-
-    .kpi-total .icon {
-        background: rgba(34, 197, 94, 0.15);
-        color: #15803d;
-    }
-
-    /* ========= TABLE ========= */
-    .table-card {
-        border-radius: 1.1rem;
+    .dashboard-header {
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        border-radius: var(--radius-xl);
+        padding: 20px 30px;
+        margin-bottom: 25px;
+        color: white;
+        box-shadow: var(--shadow-lg);
+        position: relative;
         overflow: hidden;
     }
 
-    .table.compact > :not(caption) > * > * {
-        padding: .45rem .6rem;
-    }
-
-    .table thead th {
-        letter-spacing: .4px;
-        font-size: .78rem;
-        text-transform: uppercase;
-    }
-
-        .table thead th i {
-            font-size: .85rem;
+        .dashboard-header::before {
+            content: '';
+            position: absolute;
+            top: -60px;
+            right: -60px;
+            width: 200px;
+            height: 200px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
         }
 
-    .table-hover tbody tr:hover {
-        background: #eff6ff;
+        .dashboard-header::after {
+            content: '';
+            position: absolute;
+            bottom: -40px;
+            left: -40px;
+            width: 150px;
+            height: 150px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+        }
+
+    .header-content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
 
-    .badge-invoice {
-        background: rgba(37, 99, 235, 0.1);
-        color: #1d4ed8;
-        border-radius: 999px;
-        padding: .15rem .6rem;
-        font-size: .78rem;
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .header-icon {
+        width: 60px;
+        height: 60px;
+        background: rgba(255,255,255,0.15);
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.25);
+    }
+
+        .header-icon i {
+            font-size: 28px;
+            color: white;
+        }
+
+    .header-text {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .header-title {
+        font-size: 24px;
+        font-weight: 800;
+        margin: 0;
+        letter-spacing: -0.5px;
+        background: linear-gradient(90deg, #fff 0%, #e0e7ff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .header-subtitle {
+        font-size: 14px;
+        opacity: 0.9;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .header-right {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-end;
+    }
+
+    .header-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 15px;
+        background: rgba(255,255,255,0.1);
+        border-radius: var(--radius-md);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.2);
+        font-size: 13px;
+        width: fit-content;
+    }
+
+    /* ✅ Header top CTA */
+    .header-cta {
+        border: 1px solid rgba(255,255,255,.25);
+        background: linear-gradient(135deg, rgba(16,185,129,.95) 0%, rgba(13,156,109,.95) 100%);
+        color: #fff;
+        box-shadow: 0 10px 25px rgba(0,0,0,.18);
+    }
+
+        .header-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 30px rgba(0,0,0,.22);
+        }
+
+    .filter-section {
+        background: white;
+        border-radius: var(--radius-xl);
+        padding: 20px 25px;
+        margin-bottom: 25px;
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--gray-200);
+        animation: slideUp 0.6s ease-out 0.2s both;
+    }
+
+    @@keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        color: var(--dark);
+        padding-bottom: 15px;
+        border-bottom: 2px solid var(--gray-100);
+    }
+
+        .section-title i {
+            color: var(--primary);
+            font-size: 20px;
+        }
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .filter-label {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--gray-600);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+        .filter-label i {
+            font-size: 14px;
+            color: var(--primary);
+        }
+
+    .filter-input {
+        padding: 10px 14px;
+        border: 2px solid var(--gray-200);
+        border-radius: var(--radius-md);
+        font-size: 14px;
+        transition: var(--transition);
+        background: white;
+    }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+    .filter-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        align-items: center;
+        padding-top: 15px;
+        border-top: 1px solid var(--gray-200);
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border-radius: var(--radius-md);
+        font-size: 14px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: var(--transition);
+        border: none;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+        }
+
+    .btn-secondary {
+        background: white;
+        color: var(--dark);
+        border: 2px solid var(--gray-300);
+    }
+
+        .btn-secondary:hover {
+            background: var(--gray-100);
+            border-color: var(--gray-400);
+            transform: translateY(-2px);
+        }
+
+    .btn-dark {
+        background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(31, 41, 55, 0.3);
+    }
+
+        .btn-dark:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(31, 41, 55, 0.4);
+        }
+
+    .btn-light {
+        background: white;
+        color: var(--dark);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+
+        .btn-light:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+
+    .kpi-section {
+        margin-bottom: 25px;
+        animation: slideUp 0.6s ease-out 0.4s both;
+    }
+
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 15px;
+    }
+
+    .kpi-card {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--gray-200);
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+        }
+
+        .kpi-card:nth-child(1)::before {
+            background: linear-gradient(180deg, #3b82f6 0%, #8b5cf6 100%);
+        }
+
+        .kpi-card:nth-child(2)::before {
+            background: linear-gradient(180deg, #10b981 0%, #34d399 100%);
+        }
+
+        .kpi-card:nth-child(3)::before {
+            background: linear-gradient(180deg, #ef4444 0%, #f87171 100%);
+        }
+
+        .kpi-card:nth-child(4)::before {
+            background: linear-gradient(180deg, #f59e0b 0%, #fbbf24 100%);
+        }
+
+        .kpi-card:nth-child(5)::before {
+            background: linear-gradient(180deg, #0ea5e9 0%, #38bdf8 100%);
+        }
+
+    .kpi-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .kpi-info {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .kpi-label {
+        font-size: 12px;
+        color: var(--gray-600);
         font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+    }
+
+    .kpi-value {
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--dark);
+        line-height: 1;
+    }
+
+    .kpi-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .kpi-card:nth-child(1) .kpi-icon {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        color: var(--primary);
+    }
+
+    .kpi-card:nth-child(2) .kpi-icon {
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        color: var(--success);
+    }
+
+    .kpi-card:nth-child(3) .kpi-icon {
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        color: var(--danger);
+    }
+
+    .kpi-card:nth-child(4) .kpi-icon {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        color: var(--warning);
+    }
+
+    .kpi-card:nth-child(5) .kpi-icon {
+        background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+        color: var(--info);
+    }
+
+    .table-section {
+        margin-bottom: 30px;
+        animation: slideUp 0.6s ease-out 0.8s both;
+    }
+
+    .table-container {
+        background: white;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--gray-200);
+        overflow: hidden;
+    }
+
+    .table-header {
+        padding: 18px 24px;
+        border-bottom: 1px solid var(--gray-200);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    }
+
+    .table-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--dark);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+        .table-title i {
+            color: var(--primary);
+        }
+
+    .table-stats {
+        display: flex;
+        gap: 15px;
+        font-size: 13px;
+        color: var(--gray-600);
+    }
+
+        .table-stats span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: white;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--gray-200);
+            font-weight: 600;
+        }
+
+    .table-wrapper {
+        overflow-x: auto;
+        padding: 15px;
+    }
+
+    .data-table, .items-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1200px;
+    }
+
+    .items-table {
+        min-width: 1400px;
+    }
+
+        .data-table thead, .items-table thead {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            border-bottom: 2px solid var(--gray-300);
+        }
+
+        .data-table th, .items-table th {
+            padding: 14px 18px;
+            text-align: left;
+            font-weight: 700;
+            color: var(--gray-800);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        .data-table tbody tr, .items-table tbody tr {
+            border-bottom: 1px solid var(--gray-200);
+            transition: var(--transition);
+        }
+
+            .data-table tbody tr:hover {
+                background: linear-gradient(90deg, rgba(59, 130, 246, 0.04) 0%, rgba(59, 130, 246, 0.02) 100%);
+                transform: translateX(5px);
+            }
+
+            .items-table tbody tr:hover {
+                background: linear-gradient(90deg, rgba(59, 130, 246, 0.04) 0%, rgba(59, 130, 246, 0.02) 100%);
+            }
+
+        .data-table td, .items-table td {
+            padding: 14px 18px;
+            font-size: 13px;
+            color: var(--dark);
+            vertical-align: middle;
+        }
+
+    .invoice-badge {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
+        color: var(--primary);
+        padding: 6px 12px;
+        border-radius: var(--radius-md);
+        font-weight: 700;
+        font-size: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid rgba(59, 130, 246, 0.2);
     }
 
     .cashier-chip {
-        border-radius: 999px;
-        background: rgba(15, 23, 42, .04);
-        font-size: .8rem;
-        padding: .15rem .5rem;
-    }
-
-    .action-btn-group .btn {
-        border-radius: 999px;
-        padding-inline: .6rem;
-    }
-
-    /* ========= ITEMS MODAL ========= */
-    .items-modal-title {
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
+        color: var(--secondary);
+        padding: 6px 12px;
+        border-radius: var(--radius-md);
+        font-size: 12px;
         font-weight: 600;
-        letter-spacing: .03em;
-        text-transform: uppercase;
-        font-size: .8rem;
-        color: #6b7280;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid rgba(139, 92, 246, 0.2);
     }
 
-    .items-modal-header {
-        border-bottom: 1px solid rgba(148, 163, 184, .3);
-    }
-
-    .items-table thead th {
-        background-color: #111827;
-        color: #f9fafb;
-        font-size: .78rem;
-        text-transform: uppercase;
-        letter-spacing: .05em;
-    }
-
-    .items-table tfoot td {
+    .sale-type-badge {
+        padding: 6px 12px;
+        border-radius: var(--radius-md);
+        font-size: 11px;
         font-weight: 700;
-        background: #f3f4f6;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
     }
 
-    /* ========= PRINT (base A4) ========= */
+    .sale-type-sale {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+        color: var(--success);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .sale-type-return {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
+        color: var(--danger);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+    }
+
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        background: white;
+        transition: var(--transition);
+        cursor: pointer;
+        text-decoration: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+
+    .action-btn-view {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
+        color: var(--primary);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .action-btn-edit {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
+        color: var(--warning);
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .action-btn-delete {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
+        color: var(--danger);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .category-filter {
+        display: none;
+        margin-bottom: 15px;
+        padding: 15px;
+        background: white;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+    }
+
+        .category-filter.active {
+            display: block;
+            animation: slideUp 0.3s ease-out;
+        }
+
+    .empty-state {
+        padding: 60px 20px;
+        text-align: center;
+        background: white;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-md);
+    }
+
+    .empty-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+        font-size: 36px;
+        color: var(--gray-600);
+        box-shadow: var(--shadow-md);
+    }
+
+    .empty-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--gray-800);
+        margin-bottom: 12px;
+    }
+
+    .empty-subtitle {
+        font-size: 16px;
+        color: var(--gray-600);
+        max-width: 500px;
+        margin: 0 auto 24px;
+        line-height: 1.5;
+    }
+
+    .profit-positive {
+        color: #10b981;
+    }
+
+    .profit-negative {
+        color: #ef4444;
+    }
+
+    @@media (max-width: 1200px) {
+        .kpi-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .header-content {
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .header-right {
+            width: 100%;
+            align-items: flex-start;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .sales-dashboard {
+            padding: 15px;
+        }
+
+        .dashboard-header {
+            padding: 15px;
+        }
+
+        .header-left {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .header-icon {
+            width: 50px;
+            height: 50px;
+        }
+
+            .header-icon i {
+                font-size: 24px;
+            }
+
+        .header-title {
+            font-size: 20px;
+        }
+
+        .filter-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .kpi-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-actions {
+            flex-direction: column;
+            gap: 10px;
+            align-items: stretch;
+        }
+
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .table-header {
+            flex-direction: column;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .table-stats {
+            flex-wrap: wrap;
+        }
+
+        .header-right {
+            align-items: flex-start;
+        }
+    }
+
     @@media print {
-        @@page {
-            size: A4;
-            margin: 12mm;
-        }
-
-        body {
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-            font-size: 12px;
-            font-family: Arial, Helvetica, sans-serif;
-        }
-
-        .no-print, header, nav, .navbar, .sidebar, .footer, .topbar {
+        .no-print {
             display: none !important;
         }
 
-        .container-fluid, .sales-page-wrapper {
-            padding: 0 !important;
-            margin: 0 !important;
-            background: #ffffff !important;
-        }
-
-        .card, .page-header {
-            border: none !important;
-            box-shadow: none !important;
-            background: transparent !important;
-        }
-
-        .table thead th {
-            background: #000 !important;
-            color: #fff !important;
-            -webkit-print-color-adjust: exact;
-        }
-
-        a.btn, button.btn {
-            display: none !important;
-        }
-    }
-</style>
-
-<div class="sales-page-wrapper">
-    <div class="container-fluid py-3">
-
-        <!-- Page Header -->
-        <div class="d-flex justify-content-between align-items-center mb-3 page-header no-print">
-            <div class="page-header-main">
-                <div class="page-header-icon">
-                    <i class="fa fa-chart-line"></i>
-                </div>
-                <div>
-                    <h2 class="fw-bold mb-1">
-                        @ViewData["Title"]
-                    </h2>
-                    <div class="page-header-sub">
-                        <i class="fa fa-info-circle me-1"></i>
-                        Filter results ko A4 ya Thermal (80mm) par print karein.
-                    </div>
-                </div>
-            </div>
-            <div class="d-flex gap-2">
-                <a asp-action="POS" class="btn btn-light btn-soft px-3">
-                    <i class="fa fa-plus me-1"></i> New Sale
-                </a>
-            </div>
-        </div>
-
-        <!-- Filters -->
-        <div class="card shadow-sm mb-3 border-0 rounded-3 no-print filter-card">
-            <div class="card-body">
-                <form method="get" asp-action="Index" class="row g-3 align-items-end">
-                    <div class="col-md-2">
-                        <label class="form-label filter-label">
-                            <i class="fa fa-calendar-day me-1 text-primary"></i>From Date
-                        </label>
-                        <input id="fromDate" type="date" name="fromDate" class="form-control"
-                               value="@Model.FromDate?.ToString("yyyy-MM-dd")" />
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label filter-label">
-                            <i class="fa fa-calendar-day me-1 text-primary"></i>To Date
-                        </label>
-                        <input id="toDate" type="date" name="toDate" class="form-control"
-                               value="@Model.ToDate?.ToString("yyyy-MM-dd")" />
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label filter-label">
-                            <i class="fa fa-magnifying-glass me-1 text-primary"></i>Search (Invoice / Cashier)
-                        </label>
-                        <input id="search" type="text" name="search" class="form-control"
-                               placeholder="Invoice # or Cashier" value="@Model.Search" />
-                    </div>
-                    <div id="customer" class="col-md-2">
-                        <label class="form-label filter-label">
-                            <i class="fa fa-users me-1 text-primary"></i>
-                            Customer
-                        </label>
-
-                        <select id="customerInput" name="customerId" class="form-control" asp-for="CustomerId">
-                            <option value="">-- Select Customer --</option>
-
-                            @foreach (var cus in ViewBag.Customers)
-                            {
-                                <option value="@cus.Id">
-                                    @cus.CustomerName
-                                </option>
-                            }
-                        </select>
-                    </div>
-                    <div id="category" class="col-md-2" style="display: none;">
-                        <label class="form-label filter-label">
-                            <i class="fa fa-list-alt me-1 text-primary"></i>
-                            Category
-                        </label>
-
-                        <select id="categoryInput" name="CategoryId" class="form-control">
-                            <option value="">-- Select Category --</option>
-
-                            @foreach (var cat in ViewBag.Categories)
-                            {
-                                <option value="@cat.Name">
-                                    @cat.Name
-                                </option>
-                            }
-                        </select>
-                    </div>
-
-                    <div class="col-md-2 text-end">
-                        <button type="submit" class="btn btn-success px-4 btn-soft">
-                            <i class="fa fa-search me-1"></i> Filter
-                        </button>
-                        <a asp-action="Index" class="btn btn-outline-secondary px-3 ms-2 btn-soft-outline" title="Reset">
-                            <i class="fa fa-sync"></i>
-                        </a>
-                    </div>
-
-                    <!-- Print toolbar -->
-                    <div class="col-12 d-flex justify-content-end gap-2 mt-2">
-                        <!-- ✅ SIMPLE Items Qty button -->
-                        <button type="button" id="itemQty"
-                                onclick="toggleItems()"
-                                class="btn btn-secondary btn-soft">
-                            <i class="fa fa-list-ul me-2"></i> Items Qty
-                        </button>
-
-                        <button type="button" class="btn btn-dark btn-soft" onclick="printA4()">
-                            <i class="fa fa-print me-2"></i> Print (A4)
-                        </button>
-                        <a asp-action="LastDaySales" asp-controller="Sales" type="button"
-                           class="btn btn-outline-dark btn-soft-outline">
-                            <i class="fa fa-receipt me-2"></i> Thermal Print (80mm)
-                        </a>
-                    </div>
-
-                </form>
-            </div>
-        </div>
-
-        <!-- KPIs -->
-        @if (Model?.Sales != null && Model.Sales.Any())
-        {
-
-            var grandSaleSubtotal = Model.Sales
-            .Where(s => s.SaleType == "Sale")
-            .Sum(s => s.SubTotal);
-
-            var grandReturnSubtotal = Model.Sales
-            .Where(s => s.SaleType == "Return")
-            .Sum(s => s.SubTotal);
-
-            var grandSubtotal = grandSaleSubtotal - grandReturnSubtotal;
-
-
-            var grandTax = Model.Sales.Sum(s => s.Tax);
-            var grandDiscount = Model.Sales.Sum(s => s.Discount);
-
-            var grandSaleTotal = Model.Sales
-            .Where(s => s.SaleType == "Sale")
-            .Sum(s => s.Total);
-
-            var grandReturnTotal = Model.Sales
-            .Where(s => s.SaleType == "Return")
-            .Sum(s => s.Total);
-
-            var grandTotal = grandSaleTotal - grandReturnTotal;
-
-
-            <div class="d-flex flex-wrap kpi-row mb-3 no-print">
-                <span class="kpi-badge kpi-primary">
-                    <span class="icon"><i class="fa fa-receipt"></i></span>
-                    <span>
-                        <div class="label">Invoices</div>
-                        <div class="val">@Model.Sales.Count()</div>
-                    </span>
-                </span>
-                <span class="kpi-badge kpi-primary">
-                    <span class="icon"><i class="fa fa-calculator"></i></span>
-                    <span>
-                        <div class="label">Subtotal</div>
-                        <div class="val">@grandSubtotal.ToString("N2")</div>
-                    </span>
-                </span>
-                <span class="kpi-badge kpi-tax">
-                    <span class="icon"><i class="fa fa-percent"></i></span>
-                    <span>
-                        <div class="label">Tax</div>
-                        <div class="val">@grandTax.ToString("N2")</div>
-                    </span>
-                </span>
-                <span class="kpi-badge kpi-discount">
-                    <span class="icon"><i class="fa fa-tag"></i></span>
-                    <span>
-                        <div class="label">Discount</div>
-                        <div class="val">-@grandDiscount.ToString("N2")</div>
-                    </span>
-                </span>
-                <span class="kpi-badge kpi-total">
-                    <span class="icon"><i class="fa fa-wallet"></i></span>
-                    <span>
-                        <div class="label">Total</div>
-                        <div class="val">@grandTotal.ToString("N2")</div>
-                    </span>
-                </span>
-            </div>
-        }
-
-        <!-- Report Table (screen / A4) -->
-        <div class="card shadow-lg border-0 rounded-3 table-card">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <!-- INVOICE-WISE TABLE -->
-                    <table class="main-table table table-hover table-striped mb-0 align-middle compact">
-                        <thead class="table-dark text-uppercase small">
-                            <tr>
-                                <th>#</th>
-                                <th>Sale Type</th>
-                                <th><i class="fa fa-receipt me-1"></i>Invoice</th>
-                                <th><i class="fa fa-calendar-alt me-1"></i>Date</th>
-                                <th><i class="fa fa-user me-1"></i>Cashier</th>
-                                <th class="text-end"><i class="fa fa-layer-group me-1"></i>Subtotal</th>
-                                <th class="text-end"><i class="fa fa-percent me-1"></i>Tax</th>
-                                <th class="text-end"><i class="fa fa-tag me-1"></i>Discount</th>
-                                <th class="text-end"><i class="fa fa-wallet me-1"></i>Total</th>
-                                <th class="text-center"><i class="fa fa-cogs"></i></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if (Model.Sales != null && Model.Sales.Any())
-                            {
-
-                                var index = 1;
-                                var grandSubtotal = 0m;
-                                var grandTax = 0m;
-                                var grandDiscount = 0m;
-                                var grandTotal = 0m;
-                                @foreach (var sale in Model.Sales)
-                                {
-                                    if (sale.SaleType == "Return")
-                                    {
-                                        grandSubtotal -= sale.SubTotal;
-                                        grandTax -= sale.Tax;
-                                        grandDiscount -= sale.Discount;
-                                        grandTotal -= sale.Total;
-                                    }
-                                    else
-                                    {
-                                        grandSubtotal += sale.SubTotal;
-                                        grandTax += sale.Tax;
-                                        grandDiscount += sale.Discount;
-                                        grandTotal += sale.Total;
-                                    }
-
-                                <!-- MAIN SALE ROW -->
-                                <tr>
-                                    <td class="fw-semibold text-muted">@index</td>
-                                    <td class="fw-semibold @(sale.SaleType == "Return" ? "text-danger" : "text-success")">
-                                        @sale.SaleType
-                                    </td>
-
-                                    <td>
-                                        <span class="badge-invoice">
-                                            <i class="fa fa-hashtag me-1"></i>@sale.InvoiceNumber
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <i class="fa fa-clock me-1 text-muted"></i>
-                                        @sale.SaleDate.ToString("g")
-                                    </td>
-                                    <td>
-                                        <span class="cashier-chip">
-                                            <i class="fa fa-user-gear me-1 text-primary"></i>@sale.CashierId
-                                        </span>
-                                    </td>
-
-                                    <td class="text-end @(sale.SaleType == "Return" ? "text-danger" : "")">
-                                        @(sale.SaleType == "Return"
-                                                                            ? "-" + sale.SubTotal.ToString("N2")
-                                                                            : sale.SubTotal.ToString("N2"))
-                                                                                                       </td>
-
-
-                                    <td class="text-end">@sale.Tax.ToString("N2")</td>
-                                    <td class="text-end text-danger">-@sale.Discount.ToString("N2")</td>
-                                    <td class="text-end fw-bold @(sale.SaleType == "Return" ? "text-danger" : "text-success")">
-                                        @(sale.SaleType == "Return"
-                                                                            ? "-" + sale.Total.ToString("N2")
-                                                                            : sale.Total.ToString("N2"))
-                                </td>
-
-                                                                <td class="text-center">
-                                                                    <div class="action-btn-group d-inline-flex">
-                                                                        <a asp-action="Receipt" asp-route-id="@sale.Id"
-                                                                           class="btn btn-sm btn-outline-secondary me-1"
-                                                                           title="View Receipt">
-                                                                            <i class="fa fa-file-invoice"></i>
-                                                                        </a>
-                                                                        <a asp-action="Edit" asp-route-id="@sale.Id"
-                                                                           class="btn btn-sm btn-outline-primary me-1"
-                                                                           title="Edit">
-                                                                            <i class="fa fa-edit"></i>
-                                                                        </a>
-                                                                        <button onclick="deleteSale(@sale.Id)"
-                                                                                class="btn btn-sm btn-outline-danger"
-                                                                                type="button"
-                                                                                title="Delete">
-                                                                            <i class="fa fa-trash"></i>
-                                                                        </button>
-                                                                    </div>
-                                                                </td>
-                                                            </tr>
-
-
-
-                                                            index++;
-                                }
-
-
-                                <!-- Totals Row -->
-                                <tr class="table-light fw-bold">
-                                    <td colspan="5" class="text-end">Totals:</td>
-                                    <td class="text-end">@grandSubtotal.ToString("N2")</td>
-                                    <td class="text-end">@grandTax.ToString("N2")</td>
-                                    <td class="text-end text-danger">-@grandDiscount.ToString("N2")</td>
-                                    <td class="text-end text-success">@grandTotal.ToString("N2")</td>
-                                    <td></td>
-                                </tr>
-                            }
-                            else
-                            {
-                                <tr>
-                                    <td colspan="9" class="text-center text-muted py-4">
-                                        <i class="fa fa-info-circle me-1"></i> No sales records found.
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-
-                    <table class="table table-bordered mb-3 saleItemsTbl" style="background:#fcfcfc; display: none;">
-                        <thead class="table-light">
-                            <tr>
-                                <th style="width:5%;" class="text-center">#</th>
-                                <th style="width:10%;">Item Code</th>
-                                <th style="width:10%;">Category</th>
-                                <th style="width:30%;">Item Name</th>
-                                <th class="text-center" style="width:10%;">Qty</th>
-                                <th class="text-center" style="width:8%;">Unit Price</th>
-                                <th class="text-center" style="width:10%;">Discount</th>
-                                <th class="text-center" style="width:15%;">Total</th>
-                            </tr>
-                        </thead>
-
-                        <tbody id="saleItemsBody">
-                            @{
-
-                                // Step 1: Flatten sale items + apply minus if Return
-                                var allSaleItemsQty = Model.Sales
-                                .SelectMany(s => s.SaleItems.Select(i => new
-                                {
-                                    s.SaleType,
-                                    ItemId = i.ItemId,
-                                    Category = i.Item.Category.Name,
-                                    ItemCode = i.Item?.ItemCode,
-                                    ItemName = i.Item?.ItemName,
-                                    Quantity = s.SaleType == "Return" ? -i.Quantity : i.Quantity,
-                                    UnitPrice = i.UnitPrice,
-                                    Discount = s.Discount         
-                                }))
-                                .ToList();
-
-                                // Step 2: Group items and sum quantity & total
-                                var groupedItems = allSaleItemsQty
-                                .GroupBy(x => x.ItemCode)
-                                .Select(g => new
-                                {
-                                    ItemCode = g.Key,
-                                    Category = g.First().Category,
-                                    ItemName = g.First().ItemName,
-                                    Quantity = g.Sum(x => x.Quantity),
-                                    Discount = g.Sum(x => x.Discount),
-                                    UnitPrice = g.First().UnitPrice,
-                                    Total = g.Sum(x => (x.Quantity * x.UnitPrice) - x.Discount),
-
-                                    PurchaseTotal = purchase
-                                    .Where(p => p.Items.Any(pi => pi.ItemId == g.First().ItemId))
-                                    .SelectMany(p => p.Items.Where(pi => pi.ItemId == g.First().ItemId))
-                                    .Sum(pi => pi.LineTotal)
-
-                                })
-                                .OrderBy(x => x.ItemName)
-                                .ToList();
-
-                                var itemIdx = 1;
-
-
-
-                                decimal purchaseTotal = groupedItems.Sum(p => p.PurchaseTotal);
-
-                                decimal grandItemTotalQty = allSaleItemsQty.Sum(i => (i.Quantity * i.UnitPrice) - i.Discount);
-
-                                var grandProfit = grandItemTotalQty - purchaseTotal;
-                            }
-
-                            @foreach (var item in groupedItems)
-                            {
-                                <tr>
-                                    <td class="text-center">@itemIdx</td>
-
-                                    <td>@item.ItemCode</td>
-                                    <td>@item.Category</td>
-                                    <td>@item.ItemName</td>
-
-                                    <td class="text-center">
-                                        @item.Quantity
-                                    </td>
-
-                                    <td class="text-center">
-                                        @item.UnitPrice.ToString("N2")
-                                    </td>
-
-                                    <td class="text-center text-danger">
-                                        -@item.Discount.ToString("N2")
-                                    </td>
-
-
-                                    <td class="text-center fw-semibold">
-                                        @item.Total.ToString("N2")
-                                    </td>
-                                    <td class="text-end fw-semibold" hidden>
-                                        @item.PurchaseTotal.ToString("N2")
-                                    </td>
-                                </tr>
-
-                                itemIdx++;
-                            }
-
-
-                            <tr class="table-light fw-bold">
-                                <td colspan="3" class="text-end">Grand Total:</td>
-                                <td id="grandTotalCell" class="text-end text-success">@grandItemTotalQty.ToString("N2")</td>
-
-                                <td class="text-end">Purchase:</td>
-                                <td id="purchaseCell" class="text-end text-success">@purchaseTotal.ToString("N2")</td>
-
-                                <td >Profit After Discount:</td>
-                                <td id="profitCell" class="text-center @(grandProfit < 0 ? "text-danger" : "text-success")">
-                                    @grandProfit.ToString("N2")
-                                </td>
-                            </tr>
-
-                        </tbody>
-                    </table>
-
-
-                </div>
-            </div>
-        </div>
-
-        <!-- ===== A4 PRINT TEMPLATE (INVOICE + ITEMS) ===== -->
-        <div id="a4Area" class="d-none">
-
-            <!-- INVOICE BLOCK (default) -->
-            <div id="a4InvoiceBlock" style="display:block;">
-                <div style="text-align:center;margin-bottom:10px;">
-                    <div style="font-size:20px;font-weight:800;text-transform:uppercase;">
-                    </div>
-                    <div style="font-size:14px;font-weight:600;margin-top:2px;">
-                        Sales Report
-                    </div>
-                    <div style="font-size:11px;color:#4b5563;margin-top:2px;">
-                        Range: @((Model.FromDate?.ToString("yyyy-MM-dd") ?? "--")) → @((Model.ToDate?.ToString("yyyy-MM-dd") ?? "--"))
-                        &nbsp; | &nbsp;
-                        Printed: @DateTime.Now.ToString("yyyy-MM-dd HH:mm")
-                    </div>
-                    <hr style="margin-top:8px;margin-bottom:8px;border:0;border-top:1px solid #9ca3af;" />
-                </div>
-
-                <table style="width:100%;border-collapse:collapse;font-size:11px;">
-                    <thead>
-                        <tr>
-                            <th style="padding:6px;border:1px solid #333;text-align:left;background:#111827;color:#f9fafb;">Invoice</th>
-                            <th style="padding:6px;border:1px solid #333;text-align:left;background:#111827;color:#f9fafb;">Date</th>
-                            <th style="padding:6px;border:1px solid #333;text-align:left;background:#111827;color:#f9fafb;">Cashier</th>
-                            <th style="padding:6px;border:1px solid #333;text-align:right;background:#111827;color:#f9fafb;">Subtotal</th>
-                            <th style="padding:6px;border:1px solid #333;text-align:right;background:#111827;color:#f9fafb;">Tax</th>
-                            <th style="padding:6px;border:1px solid #333;text-align:right;background:#111827;color:#f9fafb;">Discount</th>
-                            <th style="padding:6px;border:1px solid #333;text-align:right;background:#111827;color:#f9fafb;">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model.Sales != null && Model.Sales.Any())
-                        {
-                            decimal tSub = 0, tTax = 0, tDis = 0, tTot = 0;
-                            foreach (var s in Model.Sales)
-                            {
-                                tSub += s.SubTotal; tTax += s.Tax; tDis += s.Discount; tTot += s.Total;
-                                <tr>
-                                    <td style="padding:6px;border:1px solid #ddd;">@s.InvoiceNumber</td>
-                                    <td style="padding:6px;border:1px solid #ddd;">@s.SaleDate.ToString("yyyy-MM-dd HH:mm")</td>
-                                    <td style="padding:6px;border:1px solid #ddd;">@s.CashierId</td>
-                                    <td style="padding:6px;border:1px solid #ddd;text-align:right;">@s.SubTotal.ToString("N2")</td>
-                                    <td style="padding:6px;border:1px solid #ddd;text-align:right;">@s.Tax.ToString("N2")</td>
-                                    <td style="padding:6px;border:1px solid #ddd;text-align:right;">-@s.Discount.ToString("N2")</td>
-                                    <td style="padding:6px;border:1px solid #ddd;text-align:right;">
-                                        <strong>@s.Total.ToString("N2")</strong>
-                                    </td>
-                                </tr>
-                            }
-                            <tr>
-                                <td colspan="4" style="padding:7px;border-top:2px solid #111827;text-align:right;font-weight:700;">Totals</td>
-                                <td style="padding:7px;border-top:2px solid #111827;text-align:right;font-weight:700;">@tSub.ToString("N2")</td>
-                                <td style="padding:7px;border-top:2px solid #111827;text-align:right;font-weight:700;">@tTax.ToString("N2")</td>
-                                <td style="padding:7px;border-top:2px solid #111827;text-align:right;font-weight:700;">-@tDis.ToString("N2")</td>
-                                <td style="padding:7px;border-top:2px solid #111827;text-align:right;font-weight:700;">@tTot.ToString("N2")</td>
-                            </tr>
-                        }
-                        else
-                        {
-                            <tr><td colspan="7" style="text-align:center;padding:10px;">No sales records</td></tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- ITEMS BLOCK (item qty mode ke liye) -->
-            <div id="a4ItemsBlock" style="display:none;">
-                <div style="text-align:center;margin-bottom:10px;">
-                    <div style="font-size:20px;font-weight:800;text-transform:uppercase;">
-                    </div>
-                    <div style="font-size:14px;font-weight:600;margin-top:2px;">
-                        Sales Items Report
-                    </div>
-                    <div style="font-size:11px;color:#4b5563;margin-top:2px;">
-                        Range: @((Model.FromDate?.ToString("yyyy-MM-dd") ?? "--")) → @((Model.ToDate?.ToString("yyyy-MM-dd") ?? "--"))
-                        &nbsp; | &nbsp;
-                        Printed: @DateTime.Now.ToString("yyyy-MM-dd HH:mm")
-                    </div>
-                    <hr style="margin-top:8px;margin-bottom:8px;border:0;border-top:1px solid #9ca3af;" />
-                </div>
-
-                <table style="width:100%;border-collapse:collapse;font-size:11px;">
-                    <thead>
-                        <tr>
-                            <th style="padding:6px;border:1px solid #333;text-align:center;background:#111827;color:#f9fafb;width:5%;">#</th>
-                            <th style="padding:6px;border:1px solid #333;text-align:left;background:#111827;color:#f9fafb;">Item Code</th>
-                            <th style="padding:6px;border:1px solid #333;text-align:left;background:#111827;color:#f9fafb;">Category</th>
-                            <th style="padding:6px;border:1px solid #333;text-align:left;background:#111827;color:#f9fafb;">Item Name</th>
-                            <th style="padding:6px;border:1px solid #333;text-align:right;background:#111827;color:#f9fafb;">Qty</th>
-                            <th style="padding:6px;border:1px solid #333;text-align:right;background:#111827;color:#f9fafb;">Unit Price</th>
-                            <th style="padding:6px;border:1px solid #333;text-align:right;background:#111827;color:#f9fafb;">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (groupedItems != null && groupedItems.Any())
-                        {
-                            var pIdx = 1;
-                            foreach (var item in groupedItems)
-                            {
-                                var itemTotal = item.Quantity * item.UnitPrice;
-                                <tr>
-                                    <td style="padding:6px;border:1px solid #ddd;text-align:center;">@pIdx</td>
-                                    <td style="padding:6px;border:1px solid #ddd;">@item.ItemCode</td>
-                                    <td style="padding:6px;border:1px solid #ddd;">@item.Category</td>
-                                    <td style="padding:6px;border:1px solid #ddd;">@item.ItemName</td>
-                                    <td style="padding:6px;border:1px solid #ddd;text-align:right;">@item.Quantity</td>
-                                    <td style="padding:6px;border:1px solid #ddd;text-align:right;">@item.UnitPrice.ToString("N2")</td>
-                                    <td style="padding:6px;border:1px solid #ddd;text-align:right;">
-                                        <strong>@itemTotal.ToString("N2")</strong>
-                                    </td>
-                                </tr>
-                                pIdx++;
-                            }
-                            <tr>
-                                <td colspan="6" style="padding:7px;border-top:2px solid #111827;text-align:right;font-weight:700;">
-                                    Grand Total
-                                </td>
-                                <td style="padding:7px;border-top:2px solid #111827;text-align:right;font-weight:700;">
-                                    @grandItemTotal.ToString("N2")
-                                </td>
-                            </tr>
-                        }
-                        else
-                        {
-                            <tr><td colspan="5" style="text-align:center;padding:10px;">No items found</td></tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-
-        <!-- ITEMS BLOCK -->
-        <div id="a4ItemsBlock" style="display:none;">
-            <div style="text-align:center;margin-bottom:8px;">
-                <div style="font-size:18px;font-weight:700;">Sales Items Report</div>
-                <div style="font-size:12px;">
-                    Range: @((Model.FromDate?.ToString("yyyy-MM-dd") ?? "--")) → @((Model.ToDate?.ToString("yyyy-MM-dd") ?? "--"))
-                    <br />Printed: @DateTime.Now.ToString("yyyy-MM-dd HH:mm")
-                </div>
-            </div>
-            <table style="width:100%;border-collapse:collapse;font-size:12px;">
-                <thead>
-                    <tr>
-                        <th style="padding:6px;border:1px solid #333;text-align:left;">Item Name</th>
-                        <th style="padding:6px;border:1px solid #333;text-align:right;">Qty</th>
-                        <th style="padding:6px;border:1px solid #333;text-align:right;">Unit Price</th>
-                        <th style="padding:6px;border:1px solid #333;text-align:right;">Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (allSaleItems != null && allSaleItems.Any())
-                    {
-                        foreach (var item in allSaleItems.OrderBy(x => x.Item?.ItemName))
-                        {
-                            var itemTotal = item.Quantity * item.UnitPrice;
-                            <tr>
-                                <td style="padding:6px;border:1px solid #ddd;">@item.Item?.ItemName</td>
-                                <td style="padding:6px;border:1px solid #ddd;text-align:right;">@item.Quantity</td>
-                                <td style="padding:6px;border:1px solid #ddd;text-align:right;">@item.UnitPrice.ToString("N2")</td>
-                                <td style="padding:6px;border:1px solid #ddd;text-align:right;">
-                                    <strong>@itemTotal.ToString("N2")</strong>
-                                </td>
-                            </tr>
-                        }
-                        <tr>
-                            <td colspan="3" style="padding:8px;border-top:2px solid #333;text-align:right;">
-                                <strong>Grand Total</strong>
-                            </td>
-                            <td style="padding:8px;border-top:2px solid #333;text-align:right;">
-                                <strong>@grandItemTotal.ToString("N2")</strong>
-                            </td>
-                        </tr>
-                    }
-                    else
-                    {
-                        <tr><td colspan="4" style="text-align:center;padding:10px;">No items found</td></tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- ===== SIMPLE ITEMS SUMMARY MODAL (ITEM NAME + TOTAL QTY) ===== -->
-    <div class="modal fade" id="itemsSummaryModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header items-modal-header">
-                    <div>
-                        <div class="items-modal-title">Sales Items Summary</div>
-                        <div class="small text-muted">
-                            Items with total quantity sold in current filter.
-                        </div>
-                    </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
-                </div>
-
-                <div class="modal-body">
-                    @if (Model.ItemsSummary != null && Model.ItemsSummary.Any())
-                    {
-                        var totalQtyAll = Model.ItemsSummary.Sum(x => x.TotalQty);
-                        <div class="table-responsive">
-                            <table class="table table-sm items-table align-middle">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">#</th>
-                                        <th scope="col">Item Name</th>
-                                        <th scope="col" class="text-center">Total Qty</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @{
-                                        var idx = 1;
-                                    }
-                                    @foreach (var row in Model.ItemsSummary)
-                                    {
-                                        <tr>
-                                            <td>@idx</td>
-                                            <td>@row.ItemName</td>
-                                            <td class="text-center fw-semibold">@row.TotalQty</td>
-                                        </tr>
-                                        idx++;
-                                    }
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td colspan="2" class="text-end">Total Qty:</td>
-                                        <td class="text-center">@totalQtyAll</td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="text-muted text-center py-3">
-                            No item details found for current filter.
-                        </div>
-                    }
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button"
-                            class="btn btn-outline-secondary btn-soft-outline"
-                            data-bs-dismiss="modal">
-                        Close
-                    </button>
-                    <button type="button"
-                            class="btn btn-dark btn-soft"
-                            onclick="printItemsSummary()">
-                        <i class="fa fa-print me-1"></i> Print Items Qty
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- PRINT AREA FOR ITEMS SUMMARY (NEW WINDOW) -->
-    <div id="itemsPrintArea" class="d-none">
-        <div style="text-align:center;margin-bottom:8px;">
-            <div style="font-size:18px;font-weight:700;">Sales Items Summary</div>
-            <div style="font-size:12px;">
-                Range: @((Model.FromDate?.ToString("yyyy-MM-dd") ?? "--")) → @((Model.ToDate?.ToString("yyyy-MM-dd") ?? "--"))
-                <br />Printed: @DateTime.Now.ToString("yyyy-MM-dd HH:mm")
-            </div>
-        </div>
-
-        @if (Model.ItemsSummary != null && Model.ItemsSummary.Any())
-        {
-            var totalQtyAllPrint = Model.ItemsSummary.Sum(x => x.TotalQty);
-
-            <table style="width:100%;border-collapse:collapse;font-size:12px;">
-                <thead>
-                    <tr>
-                        <th style="padding:6px;border:1px solid #333;text-align:left;">#</th>
-                        <th style="padding:6px;border:1px solid #333;text-align:left;">Item Name</th>
-                        <th style="padding:6px;border:1px solid #333;text-align:right;">Total Qty</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @{
-                        var pIdx = 1;
-                    }
-                    @foreach (var row in Model.ItemsSummary)
-                    {
-                        <tr>
-                            <td style="padding:6px;border:1px solid #ddd;">@pIdx</td>
-                            <td style="padding:6px;border:1px solid #ddd;">@row.ItemName</td>
-                            <td style="padding:6px;border:1px solid #ddd;text-align:right;">@row.TotalQty</td>
-                        </tr>
-                        pIdx++;
-                    }
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <td colspan="2"
-                            style="padding:8px;border-top:2px solid #333;text-align:right;">
-                            <strong>Total Qty</strong>
-                        </td>
-                        <td style="padding:8px;border-top:2px solid #333;text-align:right;">
-                            <strong>@totalQtyAllPrint</strong>
-                        </td>
-                    </tr>
-                </tfoot>
-            </table>
-        }
-        else
-        {
-            <div style="text-align:center;padding:10px;">No sales records</div>
-        }
-    </div>
-
-</div>
-</div>
-
-<style>
-    /* PRINT OVERRIDE: sirf A4 template dikhayega (items modal alag window se print ho gi) */
-    @@media print {
-        body * {
-            visibility: hidden !important;
-        }
-
-        #a4Area, #a4Area * {
-            visibility: visible !important;
-        }
-
-        #a4Area {
-            display: block !important;
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100% !important;
-            margin: 0;
+        .sales-dashboard {
             padding: 0;
         }
 
-        @@page {
-            size: A4 portrait;
-            margin: 8mm;
+        .dashboard-header, .filter-section, .kpi-section {
+            display: none !important;
+        }
+
+        .table-container {
+            box-shadow: none !important;
+            border: 1px solid #000 !important;
+        }
+
+        .data-table th, .items-table th {
+            background: #000 !important;
+            color: #fff !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
     }
 </style>
 
-<link href="~/lib/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
-<script src="~/lib/sweetalert2/sweetalert2.min.js"></script>
+<div class="sales-dashboard">
+
+    <!-- ✅ Anti-forgery token (for AJAX delete) -->
+    <form id="antiForgeryForm" class="d-none">
+        @Html.AntiForgeryToken()
+    </form>
+
+    <!-- HEADER -->
+    <div class="dashboard-header">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="header-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="header-text">
+                    <h1 class="header-title">Sales Analytics Dashboard</h1>
+                    <div class="header-subtitle">
+                        <i class="fas fa-chart-bar"></i>
+                        Real-time sales performance and detailed analytics
+                    </div>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <!-- ✅ New Sale button header me (System Administrator ke sath) -->
+                <a asp-action="POS" class="btn header-cta no-print">
+                    <i class="fas fa-plus-circle me-2"></i> New Sale
+                </a>
+
+                <div class="header-badge">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>@Model.FromDate?.ToString("dd MMM yyyy") - @Model.ToDate?.ToString("dd MMM yyyy")</span>
+                </div>
+
+                <div class="header-badge">
+                    <i class="fas fa-user-circle"></i>
+                    <span>@(ViewBag.CurrentUser ?? "System Administrator")</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FILTER -->
+    <div class="filter-section">
+        <div class="section-title">
+            <i class="fas fa-sliders-h"></i>
+            Filter & Search Options
+        </div>
+
+        <form method="get" asp-action="Index" class="filter-form no-print">
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label class="filter-label"><i class="fas fa-calendar-day"></i> Start Date</label>
+                    <input id="fromDate" type="date" name="fromDate" class="filter-input"
+                           value="@Model.FromDate?.ToString("yyyy-MM-dd")" />
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label"><i class="fas fa-calendar-check"></i> End Date</label>
+                    <input id="toDate" type="date" name="toDate" class="filter-input"
+                           value="@Model.ToDate?.ToString("yyyy-MM-dd")" />
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label"><i class="fas fa-search"></i> Search Invoice / Cashier</label>
+                    <input id="search" type="text" name="search" class="filter-input"
+                           placeholder="Invoice # or Cashier" value="@Model.Search" />
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label"><i class="fas fa-users"></i> Select Customer</label>
+                    <select id="customerInput" name="customerId" class="filter-input" asp-for="CustomerId">
+                        <option value="">-- All Customers --</option>
+                        @foreach (var cus in ViewBag.Customers)
+                        {
+                            <option value="@cus.Id">@cus.CustomerName</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search me-2"></i>Apply Filters
+                </button>
+
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-redo me-2"></i>Reset Filters
+                </a>
+
+                <button type="button" id="showInvoicesBtn" class="btn btn-primary" onclick="showInvoicesTable()">
+                    <i class="fas fa-table me-2"></i>Invoices
+                </button>
+
+                <button type="button" id="showItemsBtn" class="btn btn-secondary" onclick="showItemsTable()">
+                    <i class="fas fa-boxes me-2"></i>Items
+                </button>
+
+                <button type="button" class="btn btn-dark" onclick="printA4()">
+                    <i class="fas fa-print me-2"></i>Print A4
+                </button>
+
+                <a asp-action="LastDaySales" asp-controller="Sales" class="btn btn-light">
+                    <i class="fas fa-receipt me-2"></i>Thermal
+                </a>
+            </div>
+        </form>
+    </div>
+
+    @if (Model?.Sales != null && Model.Sales.Any())
+    {
+        <!-- KPI -->
+        <div class="kpi-section">
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-content">
+                        <div class="kpi-info">
+                            <div class="kpi-label"><i class="fas fa-file-invoice-dollar"></i> Total Invoices</div>
+                            <div class="kpi-value">@Model.Sales.Count()</div>
+                        </div>
+                        <div class="kpi-icon"><i class="fas fa-receipt"></i></div>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-content">
+                        <div class="kpi-info">
+                            <div class="kpi-label"><i class="fas fa-calculator"></i> Gross Amount</div>
+                            <div class="kpi-value">@grandSubtotal.ToString("N2")</div>
+                        </div>
+                        <div class="kpi-icon"><i class="fas fa-layer-group"></i></div>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-content">
+                        <div class="kpi-info">
+                            <div class="kpi-label"><i class="fas fa-percentage"></i> Total Tax</div>
+                            <div class="kpi-value">@grandTax.ToString("N2")</div>
+                        </div>
+                        <div class="kpi-icon"><i class="fas fa-file-invoice"></i></div>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-content">
+                        <div class="kpi-info">
+                            <div class="kpi-label"><i class="fas fa-tag"></i> Total Discount</div>
+                            <div class="kpi-value">@grandDiscount.ToString("N2")</div>
+                        </div>
+                        <div class="kpi-icon"><i class="fas fa-percent"></i></div>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-content">
+                        <div class="kpi-info">
+                            <div class="kpi-label"><i class="fas fa-wallet"></i> Net Total</div>
+                            <div class="kpi-value">@grandTotal.ToString("N2")</div>
+                        </div>
+                        <div class="kpi-icon"><i class="fas fa-money-bill-wave"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CATEGORY FILTER (Items view only) -->
+        <div class="category-filter no-print" id="categoryFilter">
+            <div class="filter-group">
+                <label class="filter-label"><i class="fas fa-filter"></i> Filter by Category</label>
+                <select id="categoryInput" class="filter-input">
+                    <option value="">-- All Categories --</option>
+                    @if (ViewBag.Categories != null)
+                    {
+                        foreach (var cat in ViewBag.Categories)
+                        {
+                            <option value="@cat.Name">@cat.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+        </div>
+
+        <!-- INVOICES TABLE -->
+        <div class="table-section" id="invoicesTable">
+            <div class="table-container">
+                <div class="table-header">
+                    <div class="table-title"><i class="fas fa-table"></i> Sales Transactions</div>
+                    <div class="table-stats">
+                        <span><i class="fas fa-file-alt"></i> @Model.Sales.Count() Records</span>
+                        <span><i class="fas fa-chart-bar"></i> Total: @grandTotal.ToString("N2")</span>
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Type</th>
+                                <th><i class="fas fa-hashtag"></i> Invoice</th>
+                                <th><i class="fas fa-calendar"></i> Date & Time</th>
+                                <th><i class="fas fa-user-tie"></i> Cashier</th>
+                                <th class="text-end"><i class="fas fa-layer-group"></i> Subtotal</th>
+                                <th class="text-end"><i class="fas fa-percent"></i> Tax</th>
+                                <th class="text-end"><i class="fas fa-tag"></i> Discount</th>
+                                <th class="text-end"><i class="fas fa-wallet"></i> Total</th>
+                                <th class="text-center"><i class="fas fa-cogs"></i> Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                var index = 1;
+                                foreach (var sale in Model.Sales)
+                                {
+                                    <tr>
+                                        <td class="fw-semibold text-muted">@index</td>
+                                        <td>
+                                            <span class="sale-type-badge sale-type-@sale.SaleType.ToLower()">@sale.SaleType</span>
+                                        </td>
+                                        <td>
+                                            <span class="invoice-badge">
+                                                <i class="fas fa-file-invoice"></i>
+                                                @sale.InvoiceNumber
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <i class="far fa-clock me-1 text-muted"></i>
+                                            @sale.SaleDate.ToString("dd MMM • HH:mm")
+                                        </td>
+                                        <td>
+                                            <span class="cashier-chip">
+                                                <i class="fas fa-user-circle"></i>
+                                                @sale.CashierId
+                                            </span>
+                                        </td>
+                                        <td class="text-end @(sale.SaleType == "Return" ? "text-danger" : "")">
+                                            @(sale.SaleType == "Return" ? "-" : "")@sale.SubTotal.ToString("N2")
+                                        </td>
+                                        <td class="text-end">@sale.Tax.ToString("N2")</td>
+                                        <td class="text-end text-danger">-@sale.Discount.ToString("N2")</td>
+                                        <td class="text-end fw-bold @(sale.SaleType == "Return" ? "text-danger" : "text-success")">
+                                            @(sale.SaleType == "Return" ? "-" : "")@sale.Total.ToString("N2")
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="action-buttons">
+                                                <a asp-action="Receipt" asp-route-id="@sale.Id"
+                                                   class="action-btn action-btn-view" title="View Receipt">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+
+                                                <a asp-action="Edit" asp-route-id="@sale.Id"
+                                                   class="action-btn action-btn-edit" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+
+                                                <!-- ✅ FIX: type="button" so form submit na ho -->
+                                                <button type="button" onclick="deleteSale(@sale.Id)"
+                                                        class="action-btn action-btn-delete" title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    index++;
+                                }
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
+                                <td colspan="5" class="text-end fw-bold">Grand Totals:</td>
+                                <td class="text-end fw-bold">@runningSubtotal.ToString("N2")</td>
+                                <td class="text-end fw-bold">@runningTax.ToString("N2")</td>
+                                <td class="text-end fw-bold text-danger">-@runningDiscount.ToString("N2")</td>
+                                <td class="text-end fw-bold text-success">@runningTotal.ToString("N2")</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ITEMS TABLE -->
+        <div class="table-section" id="itemsTable" style="display:none;">
+            <div class="table-container">
+                <div class="table-header">
+                    <div class="table-title"><i class="fas fa-boxes"></i> Items Summary Analysis</div>
+                    <div class="table-stats">
+                        <span><i class="fas fa-cube"></i> @itemsCount Items</span>
+                        <span><i class="fas fa-chart-pie"></i> Profit/Loss Analysis</span>
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    @if (itemsList.Count > 0)
+                    {
+                        <table class="items-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Item Code</th>
+                                    <th>Category</th>
+                                    <th>Item Name</th>
+                                    <th class="text-end">Quantity</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-end">Discount</th>
+                                    <th class="text-end">Sale Total</th>
+                                    <th class="text-end">Cost</th>
+                                    <th class="text-end">Profit/Loss</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemsTableBody">
+                                @for (int i = 0; i < itemsList.Count; i++)
+                                {
+                                    dynamic item = itemsList[i];
+                                    decimal profit = (decimal)item.Total - (decimal)item.CostPrice;
+
+                                    <tr data-category="@((string)item.Category?.ToLower() ?? "")">
+                                        <td>@(i + 1)</td>
+                                        <td>@item.ItemCode</td>
+                                        <td>@item.Category</td>
+                                        <td>@item.ItemName</td>
+                                        <td class="text-end fw-bold">@(((decimal)item.Quantity).ToString("N2"))</td>
+                                        <td class="text-end">@(((decimal)item.UnitPrice).ToString("N2"))</td>
+                                        <td class="text-end text-danger">-@(((decimal)item.Discount).ToString("N2"))</td>
+                                        <td class="text-end fw-bold">@(((decimal)item.Total).ToString("N2"))</td>
+                                        <td class="text-end text-danger">-@(((decimal)item.CostPrice).ToString("N2"))</td>
+                                        <td class="text-end fw-bold @(profit < 0 ? "profit-negative" : "profit-positive")">
+                                            @profit.ToString("N2")
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
+                                    <td colspan="4" class="text-end fw-bold">Grand Totals:</td>
+                                    <td class="text-end fw-bold" id="ftQty">
+                                        @{
+                                            decimal totalQtySum = 0m;
+                                            foreach (dynamic it in itemsList)
+                                            {
+                                                totalQtySum += (decimal)it.Quantity;
+                                            }
+                                        }
+                                        @totalQtySum.ToString("N2")
+                                    </td>
+                                    <td class="text-end">-</td>
+                                    <td class="text-end fw-bold text-danger" id="ftDiscount">
+                                        @{
+                                            decimal totalDiscountSum = 0m;
+                                            foreach (dynamic it in itemsList)
+                                            {
+                                                totalDiscountSum += (decimal)it.Discount;
+                                            }
+                                        }
+                                        -@totalDiscountSum.ToString("N2")
+                                    </td>
+                                    <td class="text-end fw-bold text-success" id="ftTotal">@grandItemTotalQty.ToString("N2")</td>
+                                    <td class="text-end fw-bold" id="ftPurchase">@purchaseTotal.ToString("N2")</td>
+                                    <td class="text-end fw-bold @(grandProfit < 0 ? "profit-negative" : "profit-positive")" id="ftProfit">
+                                        @grandProfit.ToString("N2")
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="empty-state" style="padding: 40px 20px; margin: 20px;">
+                            <div class="empty-icon" style="width: 80px; height: 80px; font-size: 40px;">
+                                <i class="fas fa-box"></i>
+                            </div>
+                            <h3 class="empty-title" style="font-size: 20px;">No Items Data Available</h3>
+                            <p class="empty-subtitle" style="font-size: 14px;">
+                                No items found for the selected filter criteria.
+                            </p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-icon"><i class="fas fa-chart-line"></i></div>
+            <h3 class="empty-title">No Sales Data Available</h3>
+            <p class="empty-subtitle">Try adjusting your date filters or check back later for new sales transactions.</p>
+            <div class="mt-4 no-print">
+                <a asp-action="Index" class="btn btn-primary">
+                    <i class="fas fa-redo"></i> Reset Filters
+                </a>
+                <a asp-action="POS" class="btn header-cta ms-3">
+                    <i class="fas fa-plus-circle"></i> Create New Sale
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    document.getElementById("categoryInput").addEventListener("change", function () {
-        const selectedCategory = this.value.trim().toLowerCase();
-        const rows = document.querySelectorAll("#saleItemsBody tr");
-        let grandTotal = 0;
-        let purchaseTotal = 0;
-        
-        rows.forEach(row => {
-            // Skip grand total row
-            if (row.classList.contains("table-light")) {
-                return;
-            }
+    let isItemsView = false;
 
-            const categoryCell = row.querySelector("td:nth-child(3)"); // Category col
-            const totalCell = row.querySelector("td:nth-child(8)"); // Total col
-            const purchaseCell = row.querySelector("td:nth-child(9)"); // Total col
+    document.addEventListener('DOMContentLoaded', function () {
+        const fromDate = document.getElementById('fromDate');
+        const toDate = document.getElementById('toDate');
 
-            if (!selectedCategory) {
-                // Show all rows
-                row.style.display = "";
-                grandTotal += parseFloat(totalCell.innerText.replace(/,/g, ""));
-                purchaseTotal += parseFloat(purchaseCell.innerText.replace(/,/g, ""));
-            } else {
-                const rowCategory = categoryCell.innerText.trim().toLowerCase();
-                if (rowCategory === selectedCategory) {
-                    row.style.display = "";
-                    grandTotal += parseFloat(totalCell.innerText.replace(/,/g, ""));
-                    purchaseTotal += parseFloat(purchaseCell.innerText.replace(/,/g, ""));
-                } else {
-                    row.style.display = "none";
-                }
-            }
-        });
-
-        let profit = grandTotal - purchaseTotal;
-
-        // Update Grand Total Cell
-        document.getElementById("grandTotalCell").innerText = grandTotal.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-        document.getElementById("purchaseCell").innerText = purchaseTotal.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-        document.getElementById("profitCell").innerText = profit.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-    });
-</script>
-
-
-<script>
-    // global mode: false = invoice mode, true = items mode
-    let isItemsMode = false;
-
-    function toggleItems() {
-        var items = document.querySelector(".saleItemsTbl");
-        var sale = document.querySelector(".main-table");
-        var category = document.getElementById("category");
-
-        if (!items || !sale) return;
-
-        if (items.style.display === "none" || items.style.display === "") {
-            // items mode ON
-            items.style.display = "table";
-            category.style.display = "block";
-            sale.style.display = "none";
-            isItemsMode = true;
-        } else {
-            // wapas invoice mode
-            items.style.display = "none";
-            category.style.display = "none";
-            sale.style.display = "table";
-            isItemsMode = false;
+        if (fromDate && !fromDate.value) {
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            fromDate.valueAsDate = firstDay;
         }
+        if (toDate && !toDate.value) {
+            toDate.valueAsDate = new Date();
+        }
+
+        showInvoicesTable();
+    });
+
+    function showInvoicesTable() {
+        document.getElementById('invoicesTable').style.display = 'block';
+        document.getElementById('itemsTable').style.display = 'none';
+        document.getElementById('categoryFilter').classList.remove('active');
+
+        document.getElementById('showInvoicesBtn').classList.add('btn-primary');
+        document.getElementById('showInvoicesBtn').classList.remove('btn-secondary');
+
+        document.getElementById('showItemsBtn').classList.add('btn-secondary');
+        document.getElementById('showItemsBtn').classList.remove('btn-primary');
+
+        isItemsView = false;
     }
 
+    function showItemsTable() {
+        document.getElementById('invoicesTable').style.display = 'none';
+        document.getElementById('itemsTable').style.display = 'block';
+        document.getElementById('categoryFilter').classList.add('active');
+
+        document.getElementById('showItemsBtn').classList.add('btn-primary');
+        document.getElementById('showItemsBtn').classList.remove('btn-secondary');
+
+        document.getElementById('showInvoicesBtn').classList.add('btn-secondary');
+        document.getElementById('showInvoicesBtn').classList.remove('btn-primary');
+
+        isItemsView = true;
+        initializeCategoryFilter();
+    }
+
+    function recalculateFooterTotals() {
+        let qty = 0, discount = 0, total = 0, purchase = 0, profit = 0;
+
+        const rows = document.querySelectorAll('#itemsTableBody tr');
+
+        rows.forEach(row => {
+            if (row.style.display === 'none') return;
+
+            const cells = row.querySelectorAll('td');
+
+            qty      += parseFloat(cells[4].innerText.replace(/,/g, '')) || 0;
+            discount += Math.abs(parseFloat(cells[6].innerText.replace(/,/g, ''))) || 0;
+            total    += parseFloat(cells[7].innerText.replace(/,/g, '')) || 0;
+            purchase += parseFloat(cells[8].innerText.replace(/,/g, '')) || 0;
+            profit   += parseFloat(cells[9].innerText.replace(/,/g, '')) || 0;
+        });
+
+        document.getElementById('ftQty').innerText      = qty.toFixed(2);
+        document.getElementById('ftDiscount').innerText = '-' + discount.toFixed(2);
+        document.getElementById('ftTotal').innerText    = total.toFixed(2);
+        document.getElementById('ftPurchase').innerText = purchase.toFixed(2);
+
+        const profitCell = document.getElementById('ftProfit');
+        profitCell.innerText = profit.toFixed(2);
+        profitCell.className = profit < 0
+            ? 'text-end fw-bold profit-negative'
+            : 'text-end fw-bold profit-positive';
+    }
+
+
+    function initializeCategoryFilter() {
+        const categorySelect = document.getElementById('categoryInput');
+        if (!categorySelect) return;
+
+        categorySelect.onchange = function () {
+            const selectedCategory = (this.value || '').toLowerCase().trim();
+            const rows = document.querySelectorAll('#itemsTableBody tr');
+
+            rows.forEach(row => {
+                const category = (row.getAttribute('data-category') || '').toLowerCase().trim();
+                const show = (!selectedCategory || category === selectedCategory);
+                row.style.display = show ? '' : 'none';
+            });
+            recalculateFooterTotals();
+        };
+        recalculateFooterTotals();
+    }
+
+    function printA4() { window.print(); }
+
+    // ✅ Single clean deleteSale
     function deleteSale(saleId) {
         Swal.fire({
-            title: "Are you sure?",
-            text: "This will permanently delete the sale.",
-            icon: "warning",
+            title: 'Delete sale?',
+            text: "This will permanently delete the invoice!",
+            icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: "Yes, delete it!",
-            cancelButtonText: "Cancel"
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, delete',
+            cancelButtonText: 'Cancel'
         }).then((result) => {
-            if (result.isConfirmed) {
-                fetch(`/Sales/Delete/${saleId}`, {
-                    method: "POST"
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({
-                                title: "Deleted!",
-                                text: data.message,
-                                icon: "success",
-                                showConfirmButton: false,
-                                timer: 1500,
-                                timerProgressBar: true
-                            });
+            if (!result.isConfirmed) return;
 
-                            setTimeout(() => {
-                                location.reload();
-                            }, 1500);
-                        } else {
-                            Swal.fire({
-                                title: "Access Denied",
-                                text: data.message,
-                                icon: "error",
-                                showConfirmButton: false,
-                                timer: 2000
-                            });
-                        }
-                    })
-                    .catch(() => {
-                        Swal.fire({
-                            title: "Error",
-                            text: "Something went wrong!",
-                            icon: "error",
-                            showConfirmButton: false,
-                            timer: 2000
-                        });
-                    });
-            }
+            const tokenEl = document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]')
+                || document.querySelector('input[name="__RequestVerificationToken"]');
+
+            const token = tokenEl ? tokenEl.value : '';
+            const deleteUrl = '@Url.Action("Delete", "Sales")';
+
+            fetch(deleteUrl + '?id=' + saleId, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    'RequestVerificationToken': token,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: '__RequestVerificationToken=' + encodeURIComponent(token)
+            })
+            .then(async (res) => {
+                const ct = res.headers.get('content-type') || '';
+                if (!res.ok) throw new Error('Request failed');
+
+                if (ct.includes('application/json')) return res.json();
+                return { success: false, message: 'Delete endpoint did not return JSON. Controller fix needed.' };
+            })
+            .then(data => {
+                if (data && data.success) {
+                    Swal.fire({
+                        title: 'Deleted!',
+                        text: 'Sale deleted successfully.',
+                        icon: 'success',
+                        timer: 1200,
+                        showConfirmButton: false
+                    }).then(() => location.reload());
+                } else {
+                    Swal.fire('Error', data.message || 'Failed to delete sale.', 'error');
+                }
+            })
+            .catch(() => {
+                Swal.fire('Error', 'An error occurred while deleting the sale.', 'error');
+            });
         });
-    }
-
-    function printA4() {
-        var invBlock = document.getElementById('a4InvoiceBlock');
-        var itemsBlock = document.getElementById('a4ItemsBlock');
-
-        if (invBlock && itemsBlock) {
-            if (isItemsMode) {
-                // item mode → items A4 show
-                invBlock.style.display = 'none';
-                itemsBlock.style.display = 'block';
-            } else {
-                // invoice mode → invoice A4 show
-                invBlock.style.display = 'block';
-                itemsBlock.style.display = 'none';
-            }
-        }
-
-        window.print();
     }
 </script>

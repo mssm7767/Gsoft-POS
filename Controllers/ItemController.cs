@@ -44,7 +44,11 @@ namespace GSoftPosNew.Controllers
                 SupplierList = GetSupplierList(),
                 UnitList = GetUnitList(),
                 LocationList = GetLocationList(),
-                ExistingItems = _context.Items.ToList()
+                ExistingItems = _context.Items
+                    .OrderByDescending(x => x.Id)
+                    .Take(20)
+                    .ToList(),
+
             };
 
             ViewBag.CategoryList = vm.CategoryList;

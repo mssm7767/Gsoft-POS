@@ -9,80 +9,360 @@
     var allowedModules = ViewBag.AllowedModules as List<string> ?? new List<string>();
 }
 
-<div class="container mt-4" style="max-width:800px;">
-    <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="fa fa-user-shield"></i> Assign Permissions</h5>
+<div class="container mt-4" style="max-width:900px;">
+    <div class="card shadow-lg border-0">
+        <!-- Header with gradient background -->
+        <div class="card-header bg-gradient-primary text-white py-3">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0 bg-white rounded-circle p-2 me-3 shadow-sm">
+                    <i class="fa fa-user-shield text-primary fa-lg"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <h5 class="mb-0 fw-bold">Permission Management</h5>
+                    <small class="opacity-75">Assign and manage module access for roles</small>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            @using (Html.BeginForm("SavePermissions", "Role", FormMethod.Post))
+
+        <div class="card-body p-4">
+            @using (Html.BeginForm("SavePermissions", "Role", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
             {
                 @Html.AntiForgeryToken()
 
-                <div class="mb-3">
-                    @Html.Label("RoleId", "Select Role", new { @class = "form-label" })
-                    @Html.DropDownList("RoleId", Model.RoleList, "-- Select Role --", new { @class = "form-select" })
+                <!-- Role Selection Card -->
+                <div class="card mb-4 border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="card-title text-primary mb-3">
+                            <i class="fa fa-user-tag me-2"></i>Select Role
+                        </h6>
+                        @Html.DropDownList("RoleId", Model.RoleList, "-- Select Role --",
+                        new { @class = "form-select form-select-lg border-primary border-2", required = "required" })
+                    <div class="invalid-feedback">Please select a role.</div>
                 </div>
+            </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Modules Access</label>
-                    <div class="row">
-                        @foreach (var module in Model.Modules)
-                        {
-                            var isChecked = allowedModules.Contains(module);
-                            <div class="col-md-4">
-                                <div class="form-check">
-                                    <input class="form-check-input"
-                                           type="checkbox"
-                                           name="SelectedModules"
-                                           value="@module"
-                                           id="@module"
-                                           @(isChecked ? "checked" : "") />
-                                    <label class="form-check-label" for="@module">@module</label>
+            <!-- Modules Access Card -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-0">
+                    <h6 class="mb-0">
+                        <i class="fa fa-cubes me-2"></i>Module Permissions
+                        <small class="text-muted ms-2">Select modules to grant access</small>
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        @{
+                                var colorClasses = new[] { "border-primary", "border-success", "border-warning",
+                                                "border-danger", "border-info", "border-purple", "border-teal" };
+                                var index = 0;
+                            }
+
+                            @foreach (var module in Model.Modules)
+                            {
+                                var isChecked = allowedModules.Contains(module);
+                                var colorClass = colorClasses[index % colorClasses.Length];
+
+                                <div class="col-md-4 col-lg-3">
+                                    <div class="module-card">
+                                        <input class="form-check-input module-checkbox d-none"
+                                               type="checkbox"
+                                               name="SelectedModules"
+                                               value="@module"
+                                               id="@module"
+                                               @(isChecked ? "checked" : "") />
+                                        <label class="form-check-label module-label @colorClass @(isChecked ? "active" : "")"
+                                               for="@module">
+                                            <div class="module-icon">
+                                                <i class="fa fa-cube"></i>
+                                            </div>
+                                            <span class="module-name">@module</span>
+                                            <div class="module-badge @(isChecked ? "bg-success" : "bg-secondary")">
+                                                <i class="fa @(isChecked ? "fa-check" : "fa-times")"></i>
+                                            </div>
+                                        </label>
+                                    </div>
                                 </div>
-                            </div>
-                        }
+                                index++;
+                            }
+                        </div>
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-success">
-                    <i class="fa fa-save"></i> Save Permissions
-                </button>
-                <a asp-action="Index" class="btn btn-secondary ms-2">
-                    <i class="fa fa-arrow-left"></i> Back
-                </a>
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                    <div>
+                        <button type="button" id="selectAll" class="btn btn-outline-primary btn-sm me-2">
+                            <i class="fa fa-check-double"></i> Select All
+                        </button>
+                        <button type="button" id="deselectAll" class="btn btn-outline-secondary btn-sm">
+                            <i class="fa fa-times"></i> Clear All
+                        </button>
+                    </div>
+                    <div>
+                        <a asp-action="Index" class="btn btn-outline-secondary me-2">
+                            <i class="fa fa-arrow-left"></i> Back
+                        </a>
+                        <button type="submit" class="btn btn-gradient-success px-4">
+                            <i class="fa fa-save me-2"></i> Save Permissions
+                        </button>
+                    </div>
+                </div>
             }
         </div>
     </div>
 </div>
 
+@section Styles {
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+            --purple-color: #6f42c1;
+            --teal-color: #20c997;
+        }
+
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, var(--primary-color), #3a56d4);
+        }
+
+        .btn-gradient-success {
+            background: linear-gradient(135deg, var(--success-color), #1e7e34);
+            border: none;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+            .btn-gradient-success:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+            }
+
+        .border-purple {
+            border-color: var(--purple-color) !important;
+        }
+
+        .border-teal {
+            border-color: var(--teal-color) !important;
+        }
+
+        .module-card {
+            position: relative;
+            height: 100%;
+        }
+
+        .module-label {
+            display: block;
+            padding: 1.25rem 1rem;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .module-label:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            }
+
+            .module-label.active {
+                border-width: 3px;
+                background: linear-gradient(135deg, rgba(67, 97, 238, 0.05), rgba(67, 97, 238, 0.02));
+                box-shadow: 0 4px 15px rgba(67, 97, 238, 0.15);
+            }
+
+        .module-icon {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 1rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            background: rgba(67, 97, 238, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .module-label.active .module-icon {
+            transform: scale(1.1);
+            background: rgba(67, 97, 238, 0.2);
+        }
+
+        .module-name {
+            display: block;
+            text-align: center;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 0.95rem;
+        }
+
+        .module-label.active .module-name {
+            color: var(--primary-color);
+        }
+
+        .module-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .form-select-lg {
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            border-radius: 8px;
+        }
+
+        .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+        }
+
+        .card {
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .card-header:first-child {
+            border-radius: 12px 12px 0 0 !important;
+        }
+    </style>
+}
+
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const roleDropdown = document.getElementById('RoleId');
-            const checkboxes = document.querySelectorAll('.form-check-input');
+            const moduleCheckboxes = document.querySelectorAll('.module-checkbox');
+            const moduleLabels = document.querySelectorAll('.module-label');
+            const selectAllBtn = document.getElementById('selectAll');
+            const deselectAllBtn = document.getElementById('deselectAll');
 
+            // Enhanced role change handler
             roleDropdown.addEventListener('change', function () {
                 const roleId = this.value;
 
-                // Uncheck all first
-                checkboxes.forEach(cb => cb.checked = false);
+                if (!roleId) {
+                    // Reset to initial state when no role selected
+                    moduleCheckboxes.forEach(cb => cb.checked = false);
+                    moduleLabels.forEach(label => label.classList.remove('active'));
+                    return;
+                }
 
-                if (!roleId) return; // Skip if "-- Select Role --"
+                // Show loading state
+                moduleLabels.forEach(label => {
+                    label.style.opacity = '0.7';
+                    label.querySelector('.module-icon').innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+                });
 
                 fetch(`/Role/GetRolePermissions?roleId=${roleId}`)
                     .then(response => response.json())
                     .then(data => {
+                        // Reset all checkboxes
+                        moduleCheckboxes.forEach(cb => cb.checked = false);
+                        moduleLabels.forEach(label => label.classList.remove('active'));
+
+                        // Check modules based on response
                         if (Array.isArray(data)) {
                             data.forEach(moduleName => {
                                 const checkbox = document.getElementById(moduleName);
-                                if (checkbox) checkbox.checked = true;
+                                const label = document.querySelector(`label[for="${moduleName}"]`);
+                                if (checkbox) {
+                                    checkbox.checked = true;
+                                }
+                                if (label) {
+                                    label.classList.add('active');
+                                }
                             });
                         }
                     })
-                    .catch(error => console.error('Error loading role permissions:', error));
+                    .catch(error => {
+                        console.error('Error loading role permissions:', error);
+                        showToast('Error', 'Failed to load permissions', 'danger');
+                    })
+                    .finally(() => {
+                        // Restore icons and opacity
+                        moduleLabels.forEach(label => {
+                            label.style.opacity = '1';
+                            label.querySelector('.module-icon').innerHTML = '<i class="fa fa-cube"></i>';
+                        });
+                    });
             });
+
+            // Toggle active class when module label is clicked
+            moduleLabels.forEach(label => {
+                label.addEventListener('click', function() {
+                    const checkbox = document.querySelector(`#${this.htmlFor}`);
+                    if (checkbox) {
+                        this.classList.toggle('active');
+                    }
+                });
+            });
+
+            // Select All functionality
+            selectAllBtn.addEventListener('click', function() {
+                moduleCheckboxes.forEach(cb => cb.checked = true);
+                moduleLabels.forEach(label => label.classList.add('active'));
+            });
+
+            // Deselect All functionality
+            deselectAllBtn.addEventListener('click', function() {
+                moduleCheckboxes.forEach(cb => cb.checked = false);
+                moduleLabels.forEach(label => label.classList.remove('active'));
+            });
+
+            // Form validation
+            const form = document.querySelector('.needs-validation');
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                } else {
+                    const checkedCount = document.querySelectorAll('.module-checkbox:checked').length;
+                    if (checkedCount === 0) {
+                        event.preventDefault();
+                        showToast('Warning', 'Please select at least one module', 'warning');
+                    }
+                }
+                form.classList.add('was-validated');
+            });
+
+            function showToast(title, message, type = 'info') {
+                // Simple toast notification implementation
+                const toast = document.createElement('div');
+                toast.className = `toast show position-fixed bottom-0 end-0 m-3 bg-${type} text-white`;
+                toast.style.zIndex = '1050';
+                toast.innerHTML = `
+                    <div class="toast-header bg-${type} text-white">
+                        <strong class="me-auto">${title}</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                `;
+                document.body.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            }
         });
     </script>
 }
-

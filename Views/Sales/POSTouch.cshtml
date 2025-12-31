@@ -184,27 +184,50 @@
         }
 
     /* Main layout override for left */
+    /* LEFT: make top(Menu+Categories) 50% and bottom(Items) 50% */
     .left-col {
-        display: flex;
-        flex-direction: column;
-        height: 100vh; /* full height layout */
+        display: grid !important;
+        grid-template-rows: 1fr 1fr; /* 50% / 50% */
+        gap: 10px;
+        height: 100vh;
         overflow: hidden;
+        min-height: 0;
     }
 
+        .left-col > * {
+            min-height: 0;
+        }
+    /* important for scroll inside halves */
+
+
     /* ========== CATEGORY SECTION ========== */
-    .cat-pane.card {
-        flex-shrink: 0;
-        height: 350px; /* fixed height for category area */
-        overflow-y: auto;
-        border-bottom: 1px dashed var(--line);
-    }
+        /* ========== CATEGORY SECTION (TOP 50%) ========== */
+        .left-col > .card.cat-pane {
+            height: 100%;
+            overflow: hidden; /* scroll child will handle */
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            border-bottom: none; /* grid gap handles spacing */
+        }
+
+            /* inner category scroller (the nested .cat-pane.card inside) */
+            .left-col > .card.cat-pane .cat-pane.card {
+                flex: 1;
+                height: auto;
+                overflow-y: auto;
+                min-height: 0;
+                border-bottom: none;
+            }
+
 
     .cat-grid {
         padding: 10px 12px;
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, minmax(0, 1fr)); /* 4 per row */
         gap: 10px;
     }
+
 
     .cat-btn {
         display: flex;
@@ -242,9 +265,12 @@
         .cat-meta .cat-name {
             font-weight: 800;
             color: #0f172a;
-            white-space: nowrap;
+            /* 2 lines wrap */
+            white-space: normal;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
             overflow: hidden;
-            text-overflow: ellipsis;
         }
 
         .cat-meta .cat-count {
@@ -278,10 +304,10 @@
     .left-items-grid {
         padding: 8px 10px;
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr)); /* exactly 3 per row */
+        grid-template-columns: repeat(4, minmax(0, 1fr)); /* 4 per row */
         gap: 10px;
         justify-content: flex-start;
-        overflow-x: auto; /* allows horizontal scroll if text is wide */
+        overflow-x: hidden; /* width fixed rahe */
     }
 
     /* Each Item */
@@ -315,10 +341,14 @@
     .li-name {
         font-weight: 800;
         color: #0f172a;
-        white-space: nowrap;
+        /* 2 lines wrap */
+        white-space: normal;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
         overflow: hidden;
-        text-overflow: ellipsis;
     }
+
 
     .li-meta {
         display: flex;
@@ -2075,24 +2105,35 @@
             });
         }
 
-        const doSearchTop = debounce(() => {
-            if (!itemSearchTop) return;
-            const q = (itemSearchTop.value || '').trim().toLowerCase();
-            if (!q) { return; }
-            const match = (categories || []).find(c =>
-                (c.name || '').toLowerCase().includes(q) ||
-                String(c.id) === q ||
-                (c.code && String(c.code).toLowerCase() === q)
-            );
-            if (match) { currentCat = match.id; renderLeftItems(); }
-        }, 150);
-        itemSearchTop?.addEventListener('input', doSearchTop);
+            /* --------------------------
+       Category name filtering
+    --------------------------- */
+    const doSearchTop = debounce(() => {
+        if (!itemSearchTop || !catGrid) return;
 
-        document.addEventListener('keydown', (e) => {
-            if (e.key === '/' && !/input|textarea/i.test(document.activeElement.tagName)) {
-                e.preventDefault(); itemSearchTop?.focus();
-            }
+        const q = (itemSearchTop.value || '').trim().toLowerCase();
+        const buttons = catGrid.querySelectorAll('.cat-btn');
+
+        buttons.forEach(btn => {
+            const nameEl = btn.querySelector('.cat-name');
+            const name = (nameEl?.innerText || '').toLowerCase();
+
+            const show = !q || name.includes(q);
+            btn.style.display = show ? '' : 'none';
         });
+    }, 150);
+
+    itemSearchTop.addEventListener('input', doSearchTop);
+
+    /* --------------------------
+       Keyboard shortcut (/)
+    --------------------------- */
+    document.addEventListener('keydown', (e) => {
+        if (e.key === '/' && !/input|textarea/i.test(document.activeElement.tagName)) {
+            e.preventDefault();
+            itemSearchTop.focus();
+        }
+    });
 
         const doSearchBottom = debounce(() => { renderLeftItems(); }, 150);
         itemSearchBottom?.addEventListener('input', doSearchBottom);

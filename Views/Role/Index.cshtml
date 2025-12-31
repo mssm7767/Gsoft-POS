@@ -5,54 +5,880 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container mt-4">
-    <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="fa fa-user-shield"></i> User Roles</h5>
-        </div>
-        <div class="card-body">
-            @if (TempData["Message"] != null)
-            {
-                <div class="alert alert-success">@TempData["Message"]</div>
+<style>
+    :root {
+        --primary: #0ea5e9; /* Sky Blue */
+        --primary-dark: #0284c7;
+        --primary-light: #e0f2fe;
+        --secondary: #10b981; /* Emerald Green */
+        --secondary-dark: #059669;
+        --secondary-light: #d1fae5;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --info: #0ea5e9;
+        --dark: #1f2937;
+        --light: #f8fafc;
+        --gray-100: #f1f5f9;
+        --gray-200: #e2e8f0;
+        --gray-300: #cbd5e1;
+        --gray-600: #64748b;
+        --gray-800: #334155;
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+        --radius-xl: 20px;
+        --shadow-sm: 0 2px 12px rgba(0,0,0,0.06);
+        --shadow-md: 0 6px 24px rgba(0,0,0,0.1);
+        --shadow-lg: 0 12px 48px rgba(0,0,0,0.15);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        background: linear-gradient(135deg, #f0f9ff 0%, #f0fdf4 100%);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        min-height: 100vh;
+        color: var(--dark);
+    }
+
+    /* ========== MAIN CONTAINER ========== */
+    .roles-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 24px;
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* ========== HEADER SECTION (Green-Blue Mix) ========== */
+    .roles-header {
+        background: linear-gradient(135deg, #0ea5e9 0%, #10b981 50%, #0d9488 100%);
+        border-radius: var(--radius-xl);
+        padding: 28px 32px;
+        margin-bottom: 30px;
+        color: white;
+        box-shadow: var(--shadow-lg);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .roles-header::before {
+            content: '';
+            position: absolute;
+            top: -80px;
+            right: -80px;
+            width: 250px;
+            height: 250px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
+            border-radius: 50%;
+        }
+
+        .roles-header::after {
+            content: '';
+            position: absolute;
+            bottom: -60px;
+            left: -60px;
+            width: 180px;
+            height: 180px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%);
+            border-radius: 50%;
+        }
+
+    .header-content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .header-icon {
+        width: 65px;
+        height: 65px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%);
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.25);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    }
+
+        .header-icon i {
+            font-size: 30px;
+            color: white;
+        }
+
+    .header-text {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .header-title {
+        font-size: 26px;
+        font-weight: 800;
+        margin: 0;
+        letter-spacing: -0.5px;
+        background: linear-gradient(90deg, #fff 0%, #e0f2fe 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .header-subtitle {
+        font-size: 15px;
+        opacity: 0.95;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+    }
+
+    .header-right {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-end;
+    }
+
+    .header-badge {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 18px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
+        border-radius: var(--radius-md);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.2);
+        font-weight: 600;
+        font-size: 14px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    /* ========== SUCCESS ALERT ========== */
+    .message-alert {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.95) 0%, rgba(5, 150, 105, 0.95) 100%);
+        color: white;
+        border: none;
+        border-radius: var(--radius-lg);
+        padding: 16px 20px;
+        margin-bottom: 25px;
+        box-shadow: var(--shadow-md);
+        animation: slideDown 0.5s ease-out;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .message-alert::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(180deg, #fff 0%, #d1fae5 100%);
+        }
+
+    @@keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* ========== TABLE SECTION ========== */
+    .table-section {
+        margin-bottom: 30px;
+        animation: slideUp 0.6s ease-out 0.2s both;
+    }
+
+    @@keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .table-container {
+        background: white;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--gray-200);
+        overflow: hidden;
+        position: relative;
+    }
+
+        .table-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #0ea5e9 0%, #10b981 50%, #0ea5e9 100%);
+        }
+
+    .table-header {
+        padding: 22px 28px;
+        border-bottom: 1px solid var(--gray-200);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    }
+
+    .table-title {
+        font-size: 19px;
+        font-weight: 700;
+        color: var(--dark);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+        .table-title i {
+            background: linear-gradient(135deg, #0ea5e9 0%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+    .table-stats {
+        display: flex;
+        gap: 15px;
+        font-size: 14px;
+        color: var(--gray-600);
+    }
+
+        .table-stats span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 15px;
+            background: white;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--gray-200);
+            font-weight: 600;
+            box-shadow: var(--shadow-sm);
+        }
+
+    .table-wrapper {
+        overflow-x: auto;
+        padding: 0;
+    }
+
+    .roles-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 900px;
+    }
+
+        .roles-table thead {
+            background: linear-gradient(135deg, #e0f2fe 0%, #d1fae5 100%);
+            border-bottom: 2px solid var(--gray-300);
+        }
+
+        .roles-table th {
+            padding: 18px 22px;
+            text-align: left;
+            font-weight: 700;
+            color: var(--gray-800);
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            border-bottom: 2px solid #cbd5e1;
+        }
+
+        .roles-table tbody tr {
+            border-bottom: 1px solid var(--gray-200);
+            transition: var(--transition);
+            position: relative;
+        }
+
+            .roles-table tbody tr::before {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 0;
+                height: 100%;
+                width: 4px;
+                background: linear-gradient(180deg, #0ea5e9 0%, #10b981 100%);
+                opacity: 0;
+                transition: var(--transition);
             }
 
-            <div class="mb-3 text-end">
-                <a asp-action="Create" class="btn btn-success">
-                    <i class="fa fa-plus"></i> Add New Role
-                </a>
-                <a asp-action="AssignPermissions" class="btn btn-primary ms-2">
-                    <i class="fa fa-shield-alt"></i> Assign Permissions
-                </a>
+            .roles-table tbody tr:hover::before {
+                opacity: 1;
+            }
+
+            .roles-table tbody tr:hover {
+                background: linear-gradient(90deg, rgba(14, 165, 233, 0.04) 0%, rgba(16, 185, 129, 0.04) 100%);
+                transform: translateX(8px);
+            }
+
+        .roles-table td {
+            padding: 18px 22px;
+            font-size: 14px;
+            color: var(--dark);
+            vertical-align: middle;
+        }
+
+    /* ========== ROLE ID BADGE ========== */
+    .role-id-badge {
+        background: linear-gradient(135deg, #e0f2fe 0%, #d1fae5 100%);
+        color: var(--dark);
+        padding: 6px 12px;
+        border-radius: var(--radius-md);
+        font-weight: 700;
+        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border: 1px solid rgba(14, 165, 233, 0.2);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    /* ========== ROLE NAME STYLE ========== */
+    .role-name {
+        font-weight: 700;
+        color: var(--dark);
+        position: relative;
+        padding-left: 10px;
+    }
+
+        .role-name::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: #0ea5e9;
+            font-size: 20px;
+        }
+
+    /* ========== ACTION BUTTONS ========== */
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+    }
+
+    .action-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        background: white;
+        transition: var(--transition);
+        cursor: pointer;
+        text-decoration: none;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .action-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: 0.5s;
+        }
+
+        .action-btn:hover::before {
+            left: 100%;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+        }
+
+    .action-btn-edit {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
+        color: var(--warning);
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+        .action-btn-edit:hover {
+            background: linear-gradient(135deg, var(--warning) 0%, #eab308 100%);
+            color: white;
+        }
+
+    .action-btn-delete {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
+        color: var(--danger);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+        .action-btn-delete:hover {
+            background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
+            color: white;
+        }
+
+    /* ========== BUTTONS CONTAINER ========== */
+    .buttons-container {
+        display: flex;
+        gap: 15px;
+        justify-content: flex-end;
+        margin-bottom: 25px;
+        animation: slideUp 0.6s ease-out 0.4s both;
+    }
+
+    .btn-main {
+        padding: 12px 24px;
+        border-radius: var(--radius-md);
+        font-size: 14px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        transition: var(--transition);
+        border: none;
+        text-decoration: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .btn-main::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: 0.5s;
+        }
+
+        .btn-main:hover::before {
+            left: 100%;
+        }
+
+    .btn-add {
+        background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-dark) 100%);
+        color: white;
+    }
+
+        .btn-add:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        }
+
+    .btn-permissions {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+    }
+
+        .btn-permissions:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(14, 165, 233, 0.3);
+        }
+
+    /* ========== EMPTY STATE ========== */
+    .empty-state {
+        padding: 60px 20px;
+        text-align: center;
+    }
+
+    .empty-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #e0f2fe 0%, #d1fae5 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+        font-size: 36px;
+        background: linear-gradient(135deg, #0ea5e9 0%, #10b981 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        box-shadow: var(--shadow-md);
+    }
+
+    .empty-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--gray-800);
+        margin-bottom: 12px;
+    }
+
+    .empty-subtitle {
+        font-size: 16px;
+        color: var(--gray-600);
+        max-width: 500px;
+        margin: 0 auto 24px;
+        line-height: 1.5;
+    }
+
+    /* ========== RESPONSIVE DESIGN ========== */
+    @@media (max-width: 1200px) {
+        .roles-container {
+            padding: 20px;
+        }
+
+        .roles-header {
+            padding: 22px;
+        }
+
+        .header-content {
+            flex-direction: column;
+            gap: 15px;
+            align-items: flex-start;
+        }
+
+        .header-right {
+            width: 100%;
+            align-items: flex-start;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .roles-container {
+            padding: 15px;
+        }
+
+        .roles-header {
+            padding: 18px;
+        }
+
+        .header-left {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .header-icon {
+            width: 55px;
+            height: 55px;
+        }
+
+            .header-icon i {
+                font-size: 26px;
+            }
+
+        .header-title {
+            font-size: 22px;
+        }
+
+        .table-header {
+            flex-direction: column;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .table-stats {
+            flex-wrap: wrap;
+        }
+
+        .buttons-container {
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn-main {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    /* ========== PRINT STYLES ========== */
+    @@media print {
+        .roles-header, .buttons-container, .action-buttons {
+            display: none !important;
+        }
+
+        .roles-container {
+            padding: 0;
+        }
+
+        .table-container {
+            box-shadow: none !important;
+            border: 1px solid #000 !important;
+        }
+
+        .roles-table th {
+            background: #000 !important;
+            color: #fff !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+    }
+</style>
+
+<div class="roles-container">
+    <!-- HEADER SECTION (Green-Blue Mix) -->
+    <div class="roles-header">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="header-icon">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <div class="header-text">
+                    <h1 class="header-title">Role Management System</h1>
+                    <div class="header-subtitle">
+                        <i class="fas fa-lock"></i>
+                        Define and manage user roles and permissions
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="header-badge">
+                    <i class="fas fa-layer-group"></i>
+                    <span>@Model.Count() Roles Defined</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MESSAGE ALERT -->
+    @if (TempData["Message"] != null)
+    {
+        <div id="messageAlert" class="message-alert">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="fas fa-check-circle fa-lg"></i>
+                    <span class="fw-semibold">@TempData["Message"]</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white" onclick="dismissAlert()"></button>
+            </div>
+        </div>
+    }
+
+    <!-- BUTTONS CONTAINER -->
+    <div class="buttons-container">
+        <a asp-action="Create" class="btn-main btn-add">
+            <i class="fas fa-plus-circle"></i>
+            Add New Role
+        </a>
+        <a asp-action="AssignPermissions" class="btn-main btn-permissions">
+            <i class="fas fa-shield-alt"></i>
+            Assign Permissions
+        </a>
+    </div>
+
+    <!-- TABLE SECTION -->
+    <div class="table-section">
+        <div class="table-container">
+            <div class="table-header">
+                <div class="table-title">
+                    <i class="fas fa-list-ol"></i>
+                    Role Directory
+                </div>
+                <div class="table-stats">
+                    <span><i class="fas fa-users-cog"></i> @Model.Count() Total Roles</span>
+                    <span><i class="fas fa-check-circle"></i> Active Management</span>
+                </div>
             </div>
 
-            <table class="table table-bordered">
-                <thead class="table-light">
-                    <tr>
-                        <th style="width:10%;">#</th>
-                        <th>Role Name</th>
-                        <th>Description</th>
-                        <th style="width:20%;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var r in Model)
-                    {
-                        <tr>
-                            <td>@r.Id</td>
-                            <td>@r.RoleName</td>
-                            <td>@r.Description</td>
-                            <td>
-                                <a asp-action="Edit" asp-route-id="@r.Id" class="btn btn-sm btn-warning">
-                                    <i class="fa fa-edit"></i>
-                                </a>
-                                <a asp-action="Delete" asp-route-id="@r.Id" class="btn btn-sm btn-danger ms-1" onclick="return confirm('Are you sure to delete?');">
-                                    <i class="fa fa-trash"></i>
-                                </a>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+            <div class="table-wrapper">
+                @if (Model.Any())
+                {
+                    <table class="roles-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">ID</th>
+                                <th>Role Name</th>
+                                <th>Description</th>
+                                <th style="width: 18%;" class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var r in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="role-id-badge">@r.Id</span>
+                                    </td>
+                                    <td>
+                                        <span class="role-name">@r.RoleName</span>
+                                    </td>
+                                    <td>
+                                        <div class="text-muted">
+                                            @if (!string.IsNullOrEmpty(r.Description))
+                                            {
+                                                @r.Description
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted fst-italic">No description provided</span>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="action-buttons justify-content-center">
+                                            <a asp-action="Edit" asp-route-id="@r.Id"
+                                               class="action-btn action-btn-edit" title="Edit Role">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a asp-action="Delete" asp-route-id="@r.Id"
+                                               class="action-btn action-btn-delete delete-role"
+                                               title="Delete Role"
+                                               onclick="return confirmDeleteRole(event, this)">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-user-lock"></i>
+                        </div>
+                        <h3 class="empty-title">No Roles Found</h3>
+                        <p class="empty-subtitle">
+                            Start by defining roles for your system. Click "Add New Role" to begin.
+                        </p>
+                    </div>
+                }
+            </div>
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    // Auto-dismiss message alert
+    document.addEventListener('DOMContentLoaded', function() {
+        const messageAlert = document.getElementById('messageAlert');
+        if (messageAlert) {
+            setTimeout(() => {
+                messageAlert.style.transition = "opacity 0.5s ease";
+                messageAlert.style.opacity = "0";
+                setTimeout(() => messageAlert.remove(), 500);
+            }, 3000);
+        }
+    });
+
+    // Manual dismiss function
+    function dismissAlert() {
+        const alert = document.getElementById('messageAlert');
+        if (alert) {
+            alert.style.transition = "opacity 0.3s ease";
+            alert.style.opacity = "0";
+            setTimeout(() => alert.remove(), 300);
+        }
+    }
+
+    // Enhanced delete confirmation for roles
+    function confirmDeleteRole(event, element) {
+        event.preventDefault();
+
+        const roleRow = element.closest('tr');
+        const roleName = roleRow.querySelector('.role-name').textContent.trim();
+        const roleId = roleRow.querySelector('.role-id-badge').textContent.trim();
+
+        Swal.fire({
+            title: '<strong style="color: #ef4444">Delete Role Confirmation</strong>',
+            html: `
+                <div class="text-center">
+                    <div class="mb-4">
+                        <div class="role-id-badge d-inline-flex mb-3" style="width: 60px; height: 60px; font-size: 18px;">
+                            ${roleId}
+                        </div>
+                        <h4 class="mb-2">${roleName}</h4>
+                        <p class="text-muted mb-0">This action will permanently remove the role</p>
+                    </div>
+                    <div class="alert alert-warning text-start small">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> Deleting this role may affect users assigned to it.
+                    </div>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#0ea5e9',
+            confirmButtonText: '<i class="fas fa-trash me-2"></i> Delete Role',
+            cancelButtonText: '<i class="fas fa-times me-2"></i> Cancel',
+            reverseButtons: true,
+            backdrop: 'rgba(0,0,0,0.7)',
+            customClass: {
+                popup: 'rounded-3',
+                confirmButton: 'btn btn-danger px-4',
+                cancelButton: 'btn btn-primary px-4'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Show loading animation
+                Swal.fire({
+                    title: 'Deleting Role...',
+                    text: 'Please wait while we remove the role',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Proceed with deletion after short delay
+                setTimeout(() => {
+                    window.location.href = element.href;
+                }, 800);
+            }
+        });
+
+        return false;
+    }
+
+    // Add hover effect to delete buttons
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteButtons = document.querySelectorAll('.delete-role');
+        deleteButtons.forEach(button => {
+            button.addEventListener('mouseenter', function() {
+                this.querySelector('i').classList.add('fa-bounce');
+            });
+            button.addEventListener('mouseleave', function() {
+                this.querySelector('i').classList.remove('fa-bounce');
+            });
+        });
+    });
+</script>

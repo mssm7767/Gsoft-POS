@@ -13,7 +13,7 @@
         // Totals
         public decimal SubTotal { get; set; }
         public decimal Tax { get; set; }
-        public decimal Discount { get; set; }
+        public decimal Discount { get; set; }          // ✅ invoice-wise discount total
         public decimal Total { get; set; }
         public decimal? ServiceCharges { get; set; }
 
@@ -35,9 +35,16 @@
     {
         public int SrNo { get; set; }
         public string ItemName { get; set; }
+
         public decimal UnitPrice { get; set; }
         public decimal Quantity { get; set; }
+
+        // ✅ Item-wise Discount (THIS WAS MISSING)
+        public decimal DiscountPercent { get; set; }
+
+        // ✅ Optional (agar future me show karna ho)
+        public decimal TaxAmount { get; set; }
+
         public decimal LineTotal { get; set; }
     }
-
 }

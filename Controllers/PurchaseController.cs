@@ -260,6 +260,8 @@ namespace GSoftPosNew.Controllers
                                 {
                                     // Existing product case → update stock & price
                                     existingProduct.SalePrice = item.UnitCost;
+                                    
+                                    
                                     existingProduct.MarkupPercentage = item.DiscountPercent;
 
                                     // Calculate percentage deduction
@@ -273,6 +275,8 @@ namespace GSoftPosNew.Controllers
                                         if (int.TryParse(existingProduct.PackSize, out packSize))
                                         {
                                             existingProduct.Quantity = existingProduct.Quantity + (item.Quantity * packSize);
+                                            existingProduct.PackPrice = item.UnitCost;
+                                            existingProduct.UnitPrice = item.UnitCost/packSize;
                                         }
                                         else
                                         {

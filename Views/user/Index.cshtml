@@ -1,111 +1,808 @@
 ﻿@model List<GSoftPosNew.Models.User>
 @{
-    ViewData["Title"] = "User List"; Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "User List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
-<link href="~/css/user.css" rel="stylesheet" />
 
-<h2 class="border-start border-4 border-success ps-3 mb-4">User List</h2>
-@if (TempData["Success"] != null)
-{
-    <div id="successAlert" class="alert alert-success">
-        @TempData["Success"]
+<style>
+    :root {
+        --primary: #3b82f6;
+        --primary-dark: #1d4ed8;
+        --primary-light: #dbeafe;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --info: #0ea5e9;
+        --dark: #1f2937;
+        --light: #f8fafc;
+        --gray-100: #f1f5f9;
+        --gray-200: #e2e8f0;
+        --gray-300: #cbd5e1;
+        --gray-600: #64748b;
+        --gray-800: #334155;
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+        --radius-xl: 20px;
+        --shadow-sm: 0 2px 12px rgba(0,0,0,0.06);
+        --shadow-md: 0 6px 24px rgba(0,0,0,0.1);
+        --shadow-lg: 0 12px 48px rgba(0,0,0,0.15);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        min-height: 100vh;
+        color: var(--dark);
+    }
+
+    /* ========== MAIN CONTAINER ========== */
+    .users-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 24px;
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* ========== HEADER SECTION ========== */
+    .users-header {
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        border-radius: var(--radius-xl);
+        padding: 25px 30px;
+        margin-bottom: 30px;
+        color: white;
+        box-shadow: var(--shadow-lg);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .users-header::before {
+            content: '';
+            position: absolute;
+            top: -60px;
+            right: -60px;
+            width: 200px;
+            height: 200px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+        }
+
+        .users-header::after {
+            content: '';
+            position: absolute;
+            bottom: -40px;
+            left: -40px;
+            width: 150px;
+            height: 150px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+        }
+
+    .header-content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .header-icon {
+        width: 60px;
+        height: 60px;
+        background: rgba(255,255,255,0.15);
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.25);
+    }
+
+        .header-icon i {
+            font-size: 28px;
+            color: white;
+        }
+
+    .header-text {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .header-title {
+        font-size: 24px;
+        font-weight: 800;
+        margin: 0;
+        letter-spacing: -0.5px;
+        background: linear-gradient(90deg, #fff 0%, #e0e7ff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .header-subtitle {
+        font-size: 14px;
+        opacity: 0.9;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* ========== SUCCESS ALERT ========== */
+    .success-alert {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.9) 0%, rgba(5, 150, 105, 0.9) 100%);
+        color: white;
+        border: none;
+        border-radius: var(--radius-lg);
+        padding: 16px 20px;
+        margin-bottom: 25px;
+        box-shadow: var(--shadow-md);
+        animation: slideDown 0.5s ease-out;
+    }
+
+    @@keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* ========== TABLE SECTION ========== */
+    .table-section {
+        margin-bottom: 30px;
+        animation: slideUp 0.6s ease-out 0.2s both;
+    }
+
+    @@keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .table-container {
+        background: white;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--gray-200);
+        overflow: hidden;
+    }
+
+    .table-header {
+        padding: 20px 25px;
+        border-bottom: 1px solid var(--gray-200);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    }
+
+    .table-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--dark);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+        .table-title i {
+            color: var(--primary);
+        }
+
+    .table-stats {
+        display: flex;
+        gap: 15px;
+        font-size: 14px;
+        color: var(--gray-600);
+    }
+
+        .table-stats span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: white;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--gray-200);
+            font-weight: 600;
+        }
+
+    .table-wrapper {
+        overflow-x: auto;
+        padding: 0;
+    }
+
+    .users-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1000px;
+    }
+
+        .users-table thead {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            border-bottom: 2px solid var(--gray-300);
+        }
+
+        .users-table th {
+            padding: 16px 20px;
+            text-align: left;
+            font-weight: 700;
+            color: var(--gray-800);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        .users-table tbody tr {
+            border-bottom: 1px solid var(--gray-200);
+            transition: var(--transition);
+        }
+
+            .users-table tbody tr:hover {
+                background: linear-gradient(90deg, rgba(59, 130, 246, 0.04) 0%, rgba(59, 130, 246, 0.02) 100%);
+                transform: translateX(5px);
+            }
+
+        .users-table td {
+            padding: 16px 20px;
+            font-size: 14px;
+            color: var(--dark);
+            vertical-align: middle;
+        }
+
+    /* ========== USER THUMBNAIL ========== */
+    .user-thumb {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--primary-light);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        transition: var(--transition);
+    }
+
+        .user-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.25);
+        }
+
+    /* ========== ROLE BADGE ========== */
+    .role-badge {
+        padding: 6px 12px;
+        border-radius: var(--radius-md);
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid;
+    }
+
+    .role-admin {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
+        color: var(--danger);
+        border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    .role-manager {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
+        color: var(--warning);
+        border-color: rgba(245, 158, 11, 0.2);
+    }
+
+    .role-staff {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
+        color: var(--primary);
+        border-color: rgba(59, 130, 246, 0.2);
+    }
+
+    .role-user {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+        color: var(--success);
+        border-color: rgba(16, 185, 129, 0.2);
+    }
+
+    /* ========== ACTION BUTTONS ========== */
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+    }
+
+    .action-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        background: white;
+        transition: var(--transition);
+        cursor: pointer;
+        text-decoration: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+
+    .action-btn-edit {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
+        color: var(--primary);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+        .action-btn-edit:hover {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%);
+        }
+
+    .action-btn-delete {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
+        color: var(--danger);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+        .action-btn-delete:hover {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.1) 100%);
+        }
+
+    /* ========== ADD USER BUTTON ========== */
+    .add-user-section {
+        text-align: center;
+        padding: 20px;
+        animation: slideUp 0.6s ease-out 0.4s both;
+    }
+
+    .btn-add-user {
+        padding: 12px 28px;
+        border-radius: var(--radius-md);
+        font-size: 15px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        transition: var(--transition);
+        border: none;
+        text-decoration: none;
+        background: linear-gradient(135deg, var(--success) 0%, #0d9c6d 100%);
+        color: white;
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .btn-add-user::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .btn-add-user:hover::before {
+            left: 100%;
+        }
+
+        .btn-add-user:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+        }
+
+    /* ========== EMPTY STATE ========== */
+    .empty-state {
+        padding: 60px 20px;
+        text-align: center;
+    }
+
+    .empty-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+        font-size: 36px;
+        color: var(--gray-600);
+        box-shadow: var(--shadow-md);
+    }
+
+    .empty-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--gray-800);
+        margin-bottom: 12px;
+    }
+
+    .empty-subtitle {
+        font-size: 16px;
+        color: var(--gray-600);
+        max-width: 500px;
+        margin: 0 auto 24px;
+        line-height: 1.5;
+    }
+
+    /* ========== RESPONSIVE DESIGN ========== */
+    @@media (max-width: 1200px) {
+        .users-container {
+            padding: 20px;
+        }
+
+        .users-header {
+            padding: 20px;
+        }
+
+        .header-left {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .header-icon {
+            width: 50px;
+            height: 50px;
+        }
+
+            .header-icon i {
+                font-size: 24px;
+            }
+
+        .header-title {
+            font-size: 20px;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .users-container {
+            padding: 15px;
+        }
+
+        .users-header {
+            padding: 15px;
+        }
+
+        .header-content {
+            flex-direction: column;
+            gap: 15px;
+            align-items: flex-start;
+        }
+
+        .table-header {
+            flex-direction: column;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .table-stats {
+            flex-wrap: wrap;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+        }
+    }
+
+    /* ========== PRINT STYLES ========== */
+    @@media print {
+        .users-header, .add-user-section, .action-buttons {
+            display: none !important;
+        }
+
+        .users-container {
+            padding: 0;
+        }
+
+        .table-container {
+            box-shadow: none !important;
+            border: 1px solid #000 !important;
+        }
+
+        .users-table th {
+            background: #000 !important;
+            color: #fff !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+    }
+</style>
+
+<div class="users-container">
+    <!-- HEADER SECTION -->
+    <div class="users-header">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="header-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="header-text">
+                    <h1 class="header-title">User Management System</h1>
+                    <div class="header-subtitle">
+                        <i class="fas fa-user-shield"></i>
+                        Manage all users and their permissions
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <script>
-        // Wait 2 seconds (2000 ms), then fade out or hide the alert
-        setTimeout(function () {
-            var alert = document.getElementById('successAlert');
-            if (alert) {
-                alert.style.transition = "opacity 0.5s ease";
-                alert.style.opacity = "0";
-                setTimeout(() => alert.remove(), 500); // remove from DOM after fade
-            }
-        }, 2000);
-    </script>
-}
+    <!-- SUCCESS ALERT -->
+    @if (TempData["Success"] != null)
+    {
+        <div id="successAlert" class="success-alert">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="fas fa-check-circle fa-lg"></i>
+                    <span class="fw-semibold">@TempData["Success"]</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white" onclick="dismissAlert()"></button>
+            </div>
+        </div>
+    }
 
+    <!-- TABLE SECTION -->
+    <div class="table-section">
+        <div class="table-container">
+            <div class="table-header">
+                <div class="table-title">
+                    <i class="fas fa-list-alt"></i>
+                    User Directory
+                </div>
+                <div class="table-stats">
+                    <span><i class="fas fa-user-friends"></i> @Model.Count Users</span>
+                    <span><i class="fas fa-user-tag"></i> @Model.Count(u => u.RoleId.HasValue) Active Roles</span>
+                </div>
+            </div>
 
-<table class="table table-hover">
-    <thead class="table-light">
-        <tr>
-            <th>Pic</th>
-            <th>Name</th>
-            <th>Username</th>
-            <th>Contact</th>
-            <th>Role</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var u in Model)
-        {
-            <tr>
-                <td>
-                    @if (!string.IsNullOrEmpty(u.ProfilePicUrl))
-                    {
-                        <img src="@u.ProfilePicUrl" class="user-thumb" />
-                    }
-                </td>
-                <td>@u.FullName</td>
-                <td>@u.Username</td>
-                <td>@u.ContactNumber</td>
-                <td>
-                    @{
-                        string roleName = "";
-                        if (u.RoleId.HasValue && ViewBag.Roles is List<SelectListItem> roleList)
-                        {
-                            var role = roleList.FirstOrDefault(r => r.Value == u.RoleId.Value.ToString());
-                            if (role != null)
+            <div class="table-wrapper">
+                @if (Model.Any())
+                {
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>Profile</th>
+                                <th>Full Name</th>
+                                <th>Username</th>
+                                <th>Contact</th>
+                                <th>Role</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var u in Model)
                             {
-                                roleName = role.Text;
+                                // Determine role class
+                                string roleClass = "role-user";
+                                string roleName = "User";
+
+                                if (u.RoleId.HasValue && ViewBag.Roles is List<SelectListItem> roleList)
+                                {
+                                    var role = roleList.FirstOrDefault(r => r.Value == u.RoleId.Value.ToString());
+                                    if (role != null)
+                                    {
+                                        roleName = role.Text;
+                                        roleClass = roleName.ToLower() switch
+                                        {
+                                            "admin" => "role-admin",
+                                            "administrator" => "role-admin",
+                                            "manager" => "role-manager",
+                                            "staff" => "role-staff",
+                                            "employee" => "role-staff",
+                                            _ => "role-user"
+                                        };
+                                    }
+                                }
+
+                                <tr>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(u.ProfilePicUrl))
+                                        {
+                                            <img src="@u.ProfilePicUrl" class="user-thumb" alt="@u.FullName" />
+                                        }
+                                        else
+                                        {
+                                            <div class="user-thumb" style="background: linear-gradient(135deg, var(--primary-light) 0%, #bfdbfe 100%); display: flex; align-items: center; justify-content: center;">
+                                                <i class="fas fa-user text-primary"></i>
+                                            </div>
+                                        }
+                                    </td>
+                                    <td class="fw-semibold">@u.FullName</td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border border-gray-300 px-3 py-1">
+                                            <i class="fas fa-at me-1"></i>@u.Username
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="fas fa-phone text-muted"></i>
+                                            <span>@u.ContactNumber</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="role-badge @roleClass">
+                                            <i class="fas fa-user-tag"></i>@roleName
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="action-buttons justify-content-center">
+                                            <a asp-action="Edit" asp-route-id="@u.Id"
+                                               class="action-btn action-btn-edit" title="Edit User">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a asp-action="Delete" asp-controller="User" asp-route-id="@u.Id"
+                                               class="action-btn action-btn-delete delete-user"
+                                               title="Delete User"
+                                               onclick="return confirmDelete(event, this)">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
                             }
-                        }
-                    }
-                    @roleName
-                </td>
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-users-slash"></i>
+                        </div>
+                        <h3 class="empty-title">No Users Found</h3>
+                        <p class="empty-subtitle">
+                            Start by adding new users to your system. Click the "Add New User" button below.
+                        </p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
 
-                <td>
-                    <a asp-action="Edit" asp-route-id="@u.Id" class="me-2 text-primary"><i class="fa fa-edit"></i></a>
-
-                    <a asp-action="Delete" asp-controller="User" asp-route-id="@u.Id"
-                       class="btn btn-link text-danger p-0"
-                       onclick="confirmDelete(event, this)">
-                        <i class="fa fa-trash"></i>
-                    </a>
-
-
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
-
-<a asp-action="Create" class="btn btn-success mt-3">
-    <i class="fa fa-user-plus me-1"></i> Add New User
-</a>
+    <!-- ADD USER BUTTON -->
+    <div class="add-user-section">
+        <a asp-action="Create" class="btn-add-user">
+            <i class="fas fa-user-plus"></i>
+            Add New User
+        </a>
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+    // Auto-dismiss success alert
+    document.addEventListener('DOMContentLoaded', function() {
+        const successAlert = document.getElementById('successAlert');
+        if (successAlert) {
+            setTimeout(() => {
+                successAlert.style.transition = "opacity 0.5s ease";
+                successAlert.style.opacity = "0";
+                setTimeout(() => successAlert.remove(), 500);
+            }, 3000);
+        }
+    });
+
+    // Manual dismiss function
+    function dismissAlert() {
+        const alert = document.getElementById('successAlert');
+        if (alert) {
+            alert.style.transition = "opacity 0.3s ease";
+            alert.style.opacity = "0";
+            setTimeout(() => alert.remove(), 300);
+        }
+    }
+
+    // Enhanced delete confirmation
     function confirmDelete(event, element) {
-        event.preventDefault(); // stop immediate navigation
+        event.preventDefault();
+
+        const userName = element.closest('tr').querySelector('td:nth-child(2)').textContent.trim();
 
         Swal.fire({
-            title: 'Are you sure?',
-            text: "This action cannot be undone!",
+            title: '<strong style="color: #ef4444">Confirm Deletion</strong>',
+            html: `
+                <div class="text-center">
+                    <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                    <p class="fs-5 mb-2">Are you sure you want to delete?</p>
+                    <p class="text-muted mb-0">User: <strong>${userName}</strong></p>
+                    <p class="text-danger small mt-2">This action cannot be undone!</p>
+                </div>
+            `,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'Cancel'
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: '<i class="fas fa-trash me-2"></i> Delete User',
+            cancelButtonText: '<i class="fas fa-times me-2"></i> Cancel',
+            reverseButtons: true,
+            backdrop: 'rgba(0,0,0,0.7)',
+            customClass: {
+                popup: 'rounded-3',
+                confirmButton: 'btn btn-danger px-4',
+                cancelButton: 'btn btn-secondary px-4'
+            }
         }).then((result) => {
             if (result.isConfirmed) {
-                // Redirect to delete URL
-                window.location.href = element.href;
+                // Show loading
+                Swal.fire({
+                    title: 'Deleting...',
+                    text: 'Please wait while we remove the user',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Proceed with deletion
+                setTimeout(() => {
+                    window.location.href = element.href;
+                }, 500);
             }
         });
+
+        return false;
     }
+
+    // Add hover effect to delete buttons
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteButtons = document.querySelectorAll('.delete-user');
+        deleteButtons.forEach(button => {
+            button.addEventListener('mouseenter', function() {
+                this.querySelector('i').classList.add('fa-shake');
+            });
+            button.addEventListener('mouseleave', function() {
+                this.querySelector('i').classList.remove('fa-shake');
+            });
+        });
+    });
 </script>
-
-
