@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace GSoftPosNew.Controllers
 {
-    [Authorize]
+
     public class IngredientController : Controller
     {
         private readonly AppDbContext _context;

@@ -1,24 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using GSoftPosNew.Data;
+﻿using GSoftPosNew.Data;
 using GSoftPosNew.Models;
 using GSoftPosNew.ViewModels;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using System.Drawing.Printing;
-// using System.Text.Json; // Iski zaroorat nahi, niche fully-qualified use ho raha hai
 
 namespace GSoftPosNew.Controllers
 {
-    [Authorize]
     public class SalesController : Controller
     {
         private readonly AppDbContext _context;
@@ -84,8 +74,41 @@ namespace GSoftPosNew.Controllers
             return View(model);
         }
 
-        public IActionResult POS()
+        public IActionResult POS(string search)
         {
+
+            var sale = new Sale();
+            var saleItems = new List<SaleItem>();
+            var customer = new Customer();
+            var payment = new Payment();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                
+
+                sale = _context.Sales.Where(s =>
+                    s.InvoiceNumber != null &&
+                    s.InvoiceNumber.Contains(search))
+                .OrderByDescending(s => s.SaleDate)
+                .FirstOrDefault();
+            }
+
+            if(sale != null)
+            {
+                saleItems = _context.SaleItems.Where(si => si.SaleId == sale.Id).ToList();
+                customer = _context.Customers.Where(c => c.Id == sale.CustomerId).FirstOrDefault();
+                payment = _context.Payments.Where(p => p.SaleId == sale.Id).FirstOrDefault();
+            }
+
+            sale.SaleItems = saleItems;
+            sale.Customers = customer;
+            sale.Payment = payment;
+
+            ViewBag.Sale = sale;
+
+            ViewBag.Search = search;
+
+
             var items = _context.Items.ToList();
             var categories = items.Select(i => i.GenericName).Distinct().ToList();
             ViewBag.CustomerList = _context.Customers.ToList();
@@ -107,6 +130,11 @@ namespace GSoftPosNew.Controllers
             ViewBag.ShopName = _context.ShopSettings
                 .OrderByDescending(s => s.Id)
                 .Select(s => s.ShopName)
+                .FirstOrDefault();
+
+            ViewBag.SaleLowStock = _context.ShopSettings
+                .OrderByDescending(s => s.Id)
+                .Select(s => s.SaleLowStock)
                 .FirstOrDefault();
 
             return View(items);

@@ -167,6 +167,52 @@
 </div>
 @section Scripts {
     <script>
+            var existingRows = @Html.Raw(
+                    JsonSerializer.Serialize(Model?.StockAdjustmentItems)
+            );
+        function loadExistingGridRows() {
+        if (!existingRows || existingRows.length === 0) return;
+
+            let table = document
+                .getElementById("adjGrid")
+                .getElementsByTagName("tbody")[0];
+
+            existingRows.forEach((row, index) => {
+
+                let total = row.Difference * row.PurchasePrice;
+
+                let tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${row.ItemCode}</td>
+                    <td>${row.ItemName}</td>
+                    <td>${row.PurchasePrice.toFixed(2)}</td>
+                    <td>${row.SalePrice.toFixed(2)}</td>
+                    <td>${row.ComputerStock}</td>
+                    <td>${row.PhysicalStock}</td>
+                    <td>${row.Difference}</td>
+                    <td class="rowTotal">${total.toFixed(2)}</td>
+                    <td>
+                        <button class="gpos-stockadj-del-btn"
+                                onclick="deleteRow(this)">🗑️</button>
+                    </td>
+                `;
+
+                table.appendChild(tr);
+            });
+
+            updateTotalDiffAmount();
+        }
+
+        window.addEventListener("load", function () {
+            barcodeInput.focus();
+            loadExistingGridRows(); // 👈 THIS IS THE KEY LINE
+        });
+
+
+    </script>
+
+    <script>
         let serverRef = "@(string.IsNullOrWhiteSpace(ViewBag.Reference) ? "ref-0001" : ViewBag.Reference)";
         let refNo = serverRef;
 

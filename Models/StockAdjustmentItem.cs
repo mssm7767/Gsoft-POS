@@ -1,9 +1,13 @@
-﻿namespace GSoftPosNew.Models
+﻿using System.Text.Json.Serialization;
+
+namespace GSoftPosNew.Models
 {
     public class StockAdjustmentItem
     {
         public int Id { get; set; }
         public int StockAdjustmentId { get; set; }
+
+        [JsonIgnore]
         public StockAdjustment StockAdjustment { get; set; }
         public string ItemCode { get; set; }
         public string? ItemName { get; set; }

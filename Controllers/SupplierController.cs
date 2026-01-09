@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace GSoftPosNew.Controllers
 {
-    [Authorize]
+
     public class SupplierController : Controller
     {
         private readonly AppDbContext _context;

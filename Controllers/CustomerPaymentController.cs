@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace GSoftPosNew.Controllers
 {
-    [Authorize]
+
     public class CustomerPaymentController : Controller
     {
         private readonly AppDbContext _context;

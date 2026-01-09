@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GSoftPosNew.Controllers
 {
-    [Authorize]
+
     public class LocationController : Controller
     {
         private readonly AppDbContext _context;

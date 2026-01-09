@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace GSoftPosNew.Controllers
 {
-    [Authorize]
+
     public class ExpenseController : Controller
     {
         private readonly AppDbContext _context;

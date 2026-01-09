@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace GSoftPosNew.Controllers
 {
-    [Authorize]
+
     public class StockAdjustmentController : Controller
     {
         private readonly AppDbContext _context;

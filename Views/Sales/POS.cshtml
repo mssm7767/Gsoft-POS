@@ -2,6 +2,7 @@
 @model IEnumerable<ItemModel>
 
 @{
+
     ViewBag.Title = "GSoft POS";
     Layout = "~/Views/Shared/_Layout.cshtml";
 
@@ -17,6 +18,8 @@
 
     // ✅ Correct Dashboard URL (your route)
     var dashboardUrl = Url.Action("Index", "Home") ?? "/Home/Index";
+
+    var searchSale = ViewBag.Sale as Sale;
 }
 
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
@@ -837,11 +840,15 @@
     <div class="pos-header">
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
             <div class="d-flex align-items-center flex-wrap gap-2">
-                <div class="input-group inv-group">
-                    <span class="input-group-text"><i class="bi bi-search"></i></span>
-                    <input id="tbInvoiceSearch" type="text" class="form-control inv-input" placeholder="Search invoice #">
-                    <button id="btnInvSearch" class="btn btn-search"><i class="bi bi-search"></i></button>
-                </div>
+                <form asp-action="POS" method="get">
+                    <div class="input-group inv-group">
+
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input id="tbInvoiceSearch" name="search" value="@ViewBag.Search" type="text" class="form-control inv-input" placeholder="Search invoice #">
+                        <button type="submit" id="btnInvSearch" class="btn btn-search"><i class="bi bi-search"></i></button>
+
+                    </div>
+                </form>
                 <button id="btnInvPrev" class="icon-btn" title="Previous (Alt+Left)"><i class="bi bi-chevron-left"></i></button>
                 <button id="btnInvNext" class="icon-btn" title="Next (Alt+Right)"><i class="bi bi-chevron-right"></i></button>
                 <span class="inv-badge"><i class="bi bi-receipt-cutoff"></i><span id="invoiceNoValue"></span></span>
@@ -1009,7 +1016,7 @@
                     <div class="section-title"><i class="bi bi-cash-coin"></i> Payment Method</div>
                     <div class="d-flex flex-wrap gap-2" id="paymentPills">
                         <span class="method-pill" data-value="credit"><i class="bi bi-journal-text"></i> Credit</span>
-                        <span class="method-pill active" data-value="cash"><i class="bi bi-cash"></i> Cash</span>
+                        <span class="method-pill" data-value="cash"><i class="bi bi-cash"></i> Cash</span>
                         <span class="method-pill" data-value="credit_card"><i class="bi bi-credit-card"></i> Card</span>
                         <span class="method-pill" data-value="bank"><i class="bi bi-bank"></i> Bank</span>
                         <span class="method-pill" data-value="online"><i class="bi bi-wifi"></i> Online</span>
@@ -1176,6 +1183,7 @@
 
 <link href="~/lib/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
 <script src="~/lib/sweetalert2/sweetalert2.min.js"></script>
+
 
 <script>
     /* -------- GLOBALS -------- */
@@ -1468,9 +1476,35 @@
         ensureActiveVisible();
     }
 
+    const allowSaleLowStock = @((ViewBag.SaleLowStock ?? false).ToString().ToLower());
+
     function selectItemSuggestion(i) {
         if (i < 0 || i >= filtered.length) return;
         const item = filtered[i];
+
+        if ((item.Quantity <= 0) && !allowSaleLowStock) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Stock Unavailable',
+                html: `
+                    <div style="font-size:14px;">
+                        This item is currently <b>out of stock</b>.<br><br>
+                        To proceed with this sale, please enable
+                        <b>"Allow Sale on Low Stock"</b>
+                        from 
+                         <a href="/Settings/Index"
+                           style="color:#0d6efd;font-weight:600;text-decoration:underline;">
+                            Shop Settings
+                        </a>.
+                    </div>
+                `,
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#dc3545'
+            });
+            return;
+        }
+
+
         addToSalesTable(item);
 
         const box = document.getElementById('itemSuggestions');
@@ -2284,6 +2318,8 @@
 
         document.getElementById('invoiceNoValue').innerText = generateInvoiceNumber();
 
+        
+
         focusBarcode();
         toast('New invoice created!', 'success', 1200);
     }
@@ -2376,8 +2412,10 @@
         applySaleTypeVisual();
 
         setItemDiscMode('percent', false);
+        const select = document.getElementById("paymentMethod");
+        const selectedOption = select.options[select.selectedIndex];
 
-        setPaymentMethod('cash');
+        setPaymentMethod(selectedOption.value);
         attachScannerHandlers();
 
         document.getElementById('rbSale')?.addEventListener('change', applySaleTypeVisual);
@@ -2433,6 +2471,7 @@
         window.addEventListener('keydown', globalKeyHandler, true);
 
         document.getElementById('invoiceNoValue').innerText = generateInvoiceNumber();
+
         updateLiveClock();
         setInterval(updateLiveClock, 1000);
 
@@ -2440,3 +2479,83 @@
         setTimeout(() => focusBarcode(), 50);
     });
 </script>
+
+<script>
+    const invoiceNo = '@((searchSale)?.InvoiceNumber ?? "")';
+
+        if (invoiceNo !== "") {
+            document.getElementById("invoiceNoValue").textContent = invoiceNo;
+        }
+
+        const saleType = '@((searchSale)?.SaleType ?? "Sale")';
+
+        if (saleType === "Return") {
+            document.getElementById("rbReturn").checked = true;
+        } else {
+            document.getElementById("rbSale").checked = true;
+        }
+
+
+    function setSelectedCustomer(select) {
+        const customerId = select.value;
+
+        if (!customerId) return;
+
+        document.getElementById("selectedCustomerId").value = customerId;
+
+        document.getElementById("customerBalance").textContent = '@(searchSale?.Customers?.OpeningBalance)';
+    }
+
+    const hasCustomer = @((searchSale?.Customers != null).ToString().ToLower());
+    const selectedCustomerId = '@(searchSale?.Customers?.Id)';
+
+    if (hasCustomer) {
+        // Select Registered
+        document.getElementById("customerRadio").checked = true;
+        document.getElementById("walkinRadio").checked = false;
+
+        // Show customer block
+        document.getElementById("customerBlock").style.display = "block";
+
+        // Set dropdown value
+        const ddl = document.getElementById("customerDropdown");
+        ddl.value = selectedCustomerId;
+
+        // Set hidden field
+        document.getElementById("selectedCustomerId").value = selectedCustomerId;
+
+        // Trigger change handler
+        if (ddl.value) {
+            setSelectedCustomer(ddl);
+        }
+    }
+
+    const paymentMethod = '@(searchSale?.Payment?.PaymentMethod ?? "cash")';
+
+    const select = document.getElementById("paymentMethod");
+
+    // Remove selected from all options
+    Array.from(select.options).forEach(opt => opt.selected = false);
+
+    // Select matching option
+    const match = Array.from(select.options)
+        .find(opt => opt.value === paymentMethod.toLowerCase());
+
+    if (match) {
+        match.selected = true;
+    }
+
+
+    const pills = document.querySelectorAll("#paymentPills .method-pill");
+
+    pills.forEach(pill => {
+        pill.classList.remove("active");
+
+        if (pill.dataset.value === paymentMethod.toLowerCase()) {
+            
+            pill.classList.add("active");
+        }
+    });
+
+</script>
+

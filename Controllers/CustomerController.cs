@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
 using System.IO;
 using System.Linq;
@@ -13,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace GSoftPosNew.Controllers
 {
-    [Authorize]
+
     public class CustomerController : Controller
     {
         private readonly AppDbContext _context;
@@ -187,9 +188,47 @@ namespace GSoftPosNew.Controllers
                 entity.Email = model.Email;
                 entity.Website = model.Website;
                 entity.OpeningBalance = model.OpeningBalance;
+                entity.UserName = model.UserName;
+                entity.Password = model.Password;
                 // entity.PictureUrl already set if new image posted
 
                 _context.SaveChanges();
+
+                if (model.UserName != null && model.Password != null)
+                {
+                    var hashPassword = _passwordHasher.HashPassword(entity.Password);
+
+                    var user = _context.Users.Where(u => u.CustomerId == entity.Id).FirstOrDefault();
+
+                    if (user != null)
+                    {
+                        user.FullName = model.FatherName;
+                        user.Username = model.UserName;
+                        user.PasswordHash = hashPassword;
+
+                        _context.Users.Update(user);
+                        _context.SaveChanges();
+
+                    }
+                    else
+                    {
+
+                            var userNew = new User
+                            {
+                                CustomerId = id,
+                                FullName = model.CustomerName,
+                                Username = model.UserName,
+                                PasswordHash = hashPassword,
+                                Role = "Customer",
+                                IsActive = false,
+                                EmailConfirmed = false,
+                            };
+
+                            _context.Users.Add(userNew);
+
+                            _context.SaveChanges();
+                    }
+                }
 
                 TempData["Success"] = $"Customer \"{entity.CustomerName}\" updated successfully!";
                 TempData["LastCustomerName"] = entity.CustomerName;

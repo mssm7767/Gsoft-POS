@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 
 namespace GSoftPosNew.Controllers
 {
-    [Authorize]
+
     public class ItemController : Controller
     {
         private readonly AppDbContext _context;

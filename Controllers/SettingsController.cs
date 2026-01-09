@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GSoftPosNew.Controllers
 {
-    [Authorize]
+
     public class SettingsController : Controller
     {
         private readonly AppDbContext _context;
@@ -94,6 +94,7 @@ namespace GSoftPosNew.Controllers
                 existing.STRN = model.STRN;
                 existing.POSId = model.POSId;
                 existing.ServiceCharges = model.ServiceCharges;
+                existing.SaleLowStock = model.SaleLowStock;
 
                 _context.ShopSettings.Update(existing);
                 await _context.SaveChangesAsync();

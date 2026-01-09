@@ -8,7 +8,7 @@ using System.Text.Json;
 
 namespace GSoftPosNew.Controllers
 {
-    [Authorize]
+
     public class PurchaseController : Controller
     {
         private readonly AppDbContext _context;

@@ -11,7 +11,7 @@ using System.Drawing;
 
 namespace GSoftPosNew.Controllers
 {
-    [Authorize]
+
     public class ReportsController : Controller
     {
         private readonly AppDbContext _context;
@@ -307,6 +307,9 @@ namespace GSoftPosNew.Controllers
             ViewBag.TotalSales = _context.SaleItems
                                 .Where(s => s.Sale.SaleType == "Sale")
                                 .Sum(s => (decimal?)s.Quantity * s.UnitPrice) ?? 0;
+            ViewBag.TotalPurchase = _context.Purchases
+                                .Where(p => p.PurchaseType == "New")
+                                .Sum(s => s.TotalAmount);
             
             ViewBag.TotalDiscount = _context.Sales
                                 .Where(s => s.SaleType == "Sale")

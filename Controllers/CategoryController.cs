@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace GSoftPosNew.Controllers
 {
-    [Authorize]
+
     public class CategoryController : Controller
     {
         private readonly AppDbContext _context;

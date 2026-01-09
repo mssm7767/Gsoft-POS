@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GSoftPosNew.Controllers
 {
-    [Authorize]
+
     public class ItemBarcodeController : Controller
     {
         private readonly AppDbContext _context;

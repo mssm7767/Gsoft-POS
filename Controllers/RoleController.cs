@@ -8,7 +8,7 @@ using System.Security.Claims;
 
 namespace GSoftPosNew.Controllers
 {
-    [Authorize]
+
     public class RoleController : Controller
     {
         private readonly AppDbContext _context;

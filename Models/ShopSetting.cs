@@ -25,8 +25,8 @@ namespace GSoftPosNew.Models
         public string? Message { get; set; }
 
         public int? ServiceCharges { get; set; }
+        public bool SaleLowStock { get; set; } = false;
 
-        // Store logo filename (in DB)
         public string? LogoPath { get; set; }
 
         [NotMapped]

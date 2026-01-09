@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GSoftPosNew.Controllers
 {
-    [Authorize]
+
     public class TableController : Controller
     {
         private readonly AppDbContext _context;

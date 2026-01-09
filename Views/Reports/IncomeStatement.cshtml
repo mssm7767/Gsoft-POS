@@ -584,13 +584,17 @@
                 <small>Total Discounts</small>
                 <h2 id="totalDiscounts">Rs. @ViewBag.TotalDiscount</h2>
             </div>
+            @* <div class="card">
+                <small>Total Purchase</small>
+                <h2 id="totalDiscounts">Rs. @ViewBag.TotalPurchase</h2>
+            </div> *@
             <div class="card">
                 <small>Total Expenses</small>
                 <h2 id="totalExpenses">Rs. 35,000.00</h2>
             </div>
             <div class="card">
-                <small>Gross Profit</small>
-                <h2 id="grossProfit">Rs. 110,000.00</h2>
+                <small>Net Profit</small>
+                <h2 id="netProfitMain">Rs. 110,000.00</h2>
             </div>
         </div>
 
@@ -631,6 +635,24 @@
                 </section>
 
                 <section style="margin-top:18px">
+                    <h3>Purchase</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Item / Category</th>
+                                <th class="text-right">Amount (Rs.)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="purchaseBody">
+                            <tr>
+                                <td>Product Purchase</td>
+                                <td class="text-right">@ViewBag.TotalPurchase</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section style="margin-top:18px">
                     <h3>Expenses</h3>
                     <table>
                         <thead>
@@ -660,12 +682,20 @@
                         <div id="netSales">Rs. 0.00</div>
                     </div>
                     <div class="summary-row">
+                        <div class="muted">Net Purchase</div>
+                        <div id="netPurchase">Rs. @ViewBag.TotalPurchase</div>
+                    </div>
+                    <div class="summary-row total">
+                        <div class="muted">Gross Profit</div>
+                        <div id="finalProfit">Rs. 0.00</div>
+                    </div>
+                    <div class="summary-row ">
                         <div class="muted">Total Expenses</div>
                         <div id="sumExpenses">Rs. 0.00</div>
                     </div>
                     <div class="summary-row total">
-                        <div>Gross Profit</div>
-                        <div id="finalProfit">Rs. 0.00</div>
+                        <div>Net Profit</div>
+                        <div id="netProfit">Rs. 0.00</div>
                     </div>
                 </div>
 
@@ -714,22 +744,27 @@
 
         function recalc() {
             const revenueRows = Array.from(document.querySelectorAll('#revenueBody tr'));
+            const purchaseRows = Array.from(document.querySelectorAll('#purchaseBody tr'));
             const expenseRows = Array.from(document.querySelectorAll('#expenseBody tr'));
 
             const totalRevenue = revenueRows.reduce((s, row) => s + parseFloat(row.cells[1].innerText.replace(/,/g, '')), 0);
+            const totalPurchase = purchaseRows.reduce((s, row) => s + parseFloat(row.cells[1].innerText.replace(/,/g, '')), 0);
             const totalExpenses = expenseRows.reduce((s, row) => s + parseFloat(row.cells[1].innerText.replace(/,/g, '')), 0);
 
-            const discounts = parseFloat(document.getElementById('totalDiscounts').innerText.replace(/[^0-9\.]/g, '')) || 0;
-            const netSales = totalRevenue - discounts;
-            const profit = netSales - totalExpenses;
-            const margin = netSales > 0 ? (profit / netSales * 100) : 0;
+            const totalDiscounts = Number('@ViewBag.TotalDiscount');
+
+            const netSales = totalRevenue - totalDiscounts;
+            const grossProfit = netSales - totalPurchase;
+            const netProfit = grossProfit - totalExpenses;
+            const margin = netSales > 0 ? (netProfit / netSales * 100) : 0;
 
             document.getElementById('totalSales').innerText = 'Rs. ' + fmt(totalRevenue);
             document.getElementById('totalExpenses').innerText = 'Rs. ' + fmt(totalExpenses);
             document.getElementById('netSales').innerText = 'Rs. ' + fmt(netSales);
             document.getElementById('sumExpenses').innerText = 'Rs. ' + fmt(totalExpenses);
-            document.getElementById('finalProfit').innerText = 'Rs. ' + fmt(profit);
-            document.getElementById('grossProfit').innerText = 'Rs. ' + fmt(profit);
+            document.getElementById('finalProfit').innerText = 'Rs. ' + fmt(grossProfit);
+            document.getElementById('netProfit').innerText = 'Rs. ' + fmt(netProfit);
+            document.getElementById('netProfitMain').innerText = 'Rs. ' + fmt(netProfit);
             document.getElementById('profitMargin').innerText = fmt(margin) + '%';
             document.getElementById('generatedAt').innerText = (new Date()).toLocaleString();
         }
