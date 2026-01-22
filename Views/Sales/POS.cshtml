@@ -1411,7 +1411,7 @@
     }
 
     /* -------- SUGGESTIONS / SCAN -------- */
-    function showItemSuggestions(term) {
+        function showItemSuggestions(term) {
         term = (term || '').trim();
         const listDiv = document.getElementById('itemSuggestions');
 
@@ -1435,7 +1435,9 @@
                 </div>`;
             selectedIdx = -1;
         } else {
-            selectedIdx = 0;
+            // ✅ only set selectedIdx if nothing is selected
+            if (selectedIdx < 0) selectedIdx = 0;
+
             listDiv.innerHTML = filtered.map((it, i) => {
                 const code = it.ItemCode || '—';
                 const qty = (it.Quantity ?? 0);
@@ -1518,37 +1520,52 @@
     const SCAN_MIN_LEN = 6, SCAN_AVG_MS = 35, SCAN_END_DELAY = 60;
 
     function attachScannerHandlers() {
-        itemInputEl.addEventListener('keydown', e => {
-            const now = performance.now();
-            if (scanState.count === 0) scanState.start = now;
-            scanState.count++;
-            scanState.last = now;
+        // itemInputEl.addEventListener('keydown', e => {
+        //     const now = performance.now();
+        //     if (scanState.count === 0) scanState.start = now;
+        //     scanState.count++;
+        //     scanState.last = now;
 
-            if (filtered.length && suggDiv.style.display === 'block') {
-                if (e.key === 'ArrowDown') { e.preventDefault(); selectedIdx = (selectedIdx + 1) % filtered.length; updateHighlight(); return; }
-                if (e.key === 'ArrowUp') { e.preventDefault(); selectedIdx = (selectedIdx - 1 + filtered.length) % filtered.length; updateHighlight(); return; }
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    if (selectedIdx === -1 && filtered.length > 0) selectedIdx = 0;
-                    if (selectedIdx >= 0) selectItemSuggestion(selectedIdx);
-                    return;
-                }
-                if (e.key === 'Escape') { suggDiv.style.display = 'none'; filtered = []; selectedIdx = -1; return; }
-            } else {
-                if (e.key === 'Enter') { e.preventDefault(); manualTryAdd(itemInputEl.value.trim()); return; }
-            }
+        //     if (filtered.length && suggDiv.style.display === 'block') {
+        //         if (e.key === 'ArrowDown') {
+        //         e.preventDefault();
+        //         if (selectedIdx < filtered.length - 1) {
+        //             selectedIdx++;
+        //             updateHighlight();
+        //         }
+        //         return;
+        //     }
 
-            clearTimeout(scanState.timer);
-            scanState.timer = setTimeout(() => {
-                const term = itemInputEl.value.trim();
-                const duration = scanState.last - scanState.start;
-                const avg = duration / Math.max(1, scanState.count);
-                const isScanner = term.length >= SCAN_MIN_LEN && avg <= SCAN_AVG_MS;
-                if (isScanner) scannerAutoAdd(term);
-                else showItemSuggestions(term);
-                scanState = { start: 0, last: 0, count: 0, timer: null };
-            }, SCAN_END_DELAY);
-        });
+        //     if (e.key === 'ArrowUp') {
+        //         e.preventDefault();
+        //         if (selectedIdx > 0) {
+        //             selectedIdx--;
+        //             updateHighlight();
+        //         }
+        //         return;
+        //     }
+        //         if (e.key === 'Enter') {
+        //             e.preventDefault();
+        //             if (selectedIdx === -1 && filtered.length > 0) selectedIdx = 0;
+        //             if (selectedIdx >= 0) selectItemSuggestion(selectedIdx);
+        //             return;
+        //         }
+        //         if (e.key === 'Escape') { suggDiv.style.display = 'none'; filtered = []; selectedIdx = -1; return; }
+        //     } else {
+        //         if (e.key === 'Enter') { e.preventDefault(); manualTryAdd(itemInputEl.value.trim()); return; }
+        //     }
+
+        //     clearTimeout(scanState.timer);
+        //     scanState.timer = setTimeout(() => {
+        //         const term = itemInputEl.value.trim();
+        //         const duration = scanState.last - scanState.start;
+        //         const avg = duration / Math.max(1, scanState.count);
+        //         const isScanner = term.length >= SCAN_MIN_LEN && avg <= SCAN_AVG_MS;
+        //         if (isScanner) scannerAutoAdd(term);
+        //         else showItemSuggestions(term);
+        //         scanState = { start: 0, last: 0, count: 0, timer: null };
+        //     }, SCAN_END_DELAY);
+        // });
 
         itemInputEl.addEventListener('input', () => {
             if (scanState.count === 0) showItemSuggestions(itemInputEl.value.trim());
@@ -2342,8 +2359,19 @@
         const listDiv = document.getElementById('itemSuggestions');
 
         if (filtered.length && listDiv.style.display === 'block') {
-            if (e.key === 'ArrowDown') { e.preventDefault(); selectedIdx = (selectedIdx + 1) % filtered.length; updateHighlight(); return; }
-            if (e.key === 'ArrowUp') { e.preventDefault(); selectedIdx = (selectedIdx - 1 + filtered.length) % filtered.length; updateHighlight(); return; }
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (selectedIdx < filtered.length - 1) selectedIdx++;
+                updateHighlight();
+                return;
+            }
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (selectedIdx > 0) selectedIdx--;
+                updateHighlight();
+                return;
+            }
+
             if (e.key === 'Enter') {
                 if (selectedIdx === -1 && filtered.length > 0) selectedIdx = 0;
                 if (selectedIdx >= 0) { e.preventDefault(); selectItemSuggestion(selectedIdx); }
