@@ -1,303 +1,697 @@
-﻿/* Layout & Sidebar */
-.item-layout {
-    display: flex;
-    min-height: 80vh;
-    gap: 24px;
-}
+﻿/* =========================
+   G-Soft Add Item Page CSS
+   ========================= */
 
-.sidebar-custom {
-    width: 230px;
-    background: linear-gradient(120deg, #2980d9 85%, #16b37c 100%);
-    color: #fff;
-    border-radius: 22px;
-    box-shadow: 0 6px 32px 0 rgba(35,152,239,0.10);
-    padding: 26px 16px 18px 16px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    margin-top: 18px;
-    min-width: 200px;
-    min-height: 640px;
-}
-
-.sidebar-header {
-    font-size: 1.1rem;
-    margin-bottom: 16px;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-.sidebar-time {
-    font-size: 1.2rem;
-    font-weight: 600;
-    letter-spacing: 0.03em;
-}
-
-.sidebar-date {
-    font-size: 0.95rem;
-    opacity: 0.9;
-    margin-bottom: 8px;
-}
-
-.sidebar-user {
-    font-size: 1.07rem;
-    font-weight: 600;
-    background: rgba(255,255,255,0.08);
-    border-radius: 12px;
-    padding: 7px 12px;
-    margin-bottom: 22px;
-    width: 100%;
-    display: flex;
-    align-items: center;
-}
-
-.sidebar-actions {
-    width: 100%;
-}
-
-.main-content-custom {
-    flex: 1;
-    margin-top: 18px;
-    min-width: 0;
-}
-
-/* Add Item Form Main Container */
 .add-item-container {
-    background: linear-gradient(120deg, #f4f8fb 65%, #d0e6fa 100%);
-    padding: 32px 24px;
-    border-radius: 20px;
-    max-width: 900px;
-    margin: 0 auto 28px auto;
-    box-shadow: 0 8px 40px 0 rgba(49,130,206,0.09);
-}
-
-/* Card Style */
-.card {
-    border-radius: 18px !important;
-    box-shadow: 0 2px 16px 0 rgba(80,120,200,0.08);
-    border: none !important;
-}
-
-.card-header {
-    background: #1664cc !important;
-    color: #fff !important;
-    border-radius: 18px 18px 0 0 !important;
-    font-size: 1rem;
-    font-weight: 600;
-    letter-spacing: 0.03em;
-}
-
-/* Form Labels & Controls */
-.form-label, .form-label-sm {
-    color: #235 !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.02em;
-}
-
-input.form-control, select.form-select {
-    border-radius: 12px !important;
-    border: 1px solid #b3c7e6;
-    font-size: 1rem !important;
-    background: #f7fafd !important;
-    transition: border 0.2s, box-shadow 0.2s;
-}
-
-    input.form-control:focus, select.form-select:focus {
-        border-color: #3498db !important;
-        box-shadow: 0 0 0 2px #b0e0ff55 !important;
-        background: #fff !important;
-    }
-
-.input-group-sm .btn, .input-group .btn {
-    border-radius: 12px !important;
-    font-size: 1rem !important;
-}
-
-.btn-primary {
-    background: linear-gradient(90deg, #2398ef 70%, #16b37c 100%) !important;
-    border: none !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.04em;
-    box-shadow: 0 4px 18px 0 rgba(35,152,239,0.10);
-}
-
-.btn-secondary {
-    background: #e3e6f0 !important;
-    color: #235 !important;
-    border: none !important;
-    font-weight: 500 !important;
-}
-
-.btn-success {
-    background: #16b37c !important;
-    border: none !important;
-    font-weight: 600;
-}
-
-/* Table Styles */
-.table {
     background: #fff;
-    border-radius: 16px;
-    overflow: hidden;
+    border: 1px solid #e6eef7;
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: 0 6px 16px rgba(16,24,40,.06);
 }
 
-    .table th, .table td {
-        vertical-align: middle !important;
-        font-size: 0.97rem;
-        color: #293e5e;
-    }
-
-.table-hover tbody tr:hover {
-    background-color: #eaf6ff !important;
-}
-
-/* Success Message */
-.alert-success {
-    background: linear-gradient(90deg, #d4fc79 0%, #96e6a1 100%);
-    color: #215f0a;
-    font-weight: 500;
-    border-radius: 12px;
-    border: none;
-    margin-bottom: 18px;
-    font-size: 1rem;
-}
-
-/* Responsive Layouts */
-@media (max-width: 900px) {
-    .item-layout {
-        flex-direction: column;
-    }
-
-    .sidebar-custom {
-        flex-direction: row;
-        width: 100%;
-        min-width: 0;
-        min-height: unset;
-        padding: 16px 10px;
-        border-radius: 16px;
-        margin-bottom: 10px;
-    }
-
-    .main-content-custom {
-        margin-top: 0;
-    }
-}
-
-@media (max-width: 700px) {
-    .add-item-container {
-        padding: 8px 2px;
-    }
-
-    .card, .card-header {
-        border-radius: 10px !important;
-    }
-}
-
-@media (max-width: 600px) {
-    .top-info-bar {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 3px;
-        padding: 8px 8px;
-        border-radius: 0 0 12px 12px;
-        font-size: 0.97rem;
-    }
-}
-
-@media (max-width: 1000px) {
-    .top-info-bar, .add-item-container, .card {
-        max-width: 99vw;
-    }
-}
-
-/* Top Info Bar */
 .top-info-bar {
-    width: 100%;
-    max-width: 900px;
-    margin: 0 auto 22px auto;
-    background: linear-gradient(90deg, #2398ef 80%, #16b37c 100%);
-    color: #fff;
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: flex-end;
-    padding: 9px 32px;
-    border-radius: 18px;
-    box-shadow: 0 2px 18px 0 rgba(49,130,206,0.07);
-    font-size: 1.13rem;
-    font-weight: 500;
-    gap: 32px;
+    padding: 10px 12px;
+    border: 1px solid #e6eef7;
+    border-radius: 12px;
+    background: linear-gradient(90deg,#e9f8fe 70%,#d0f9e6 100%);
+    font-size: .92rem;
+    color: #0f172a;
 }
 
-    .top-info-bar i {
-        margin-right: 7px;
-    }
-
-/* Search Bar Row */
-.search-bar-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 20px 6px 20px;
-    background: #f6faff;
-    border-radius: 16px 16px 0 0;
+.field-note {
+    font-size: 12px;
+    display: block;
+    min-height: 14px;
 }
 
-    .search-bar-row input {
-        border-radius: 8px !important;
-        border: 1px solid #c1d2ef;
-        padding: 5px 12px;
-        font-size: 1.04rem;
-        width: 230px;
-    }
+/* Markup bar */
+.markup-bar {
+    border: 1px solid #e5e7eb;
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+}
 
-    .search-bar-row .btn {
-        font-size: 1rem;
-        border-radius: 8px;
-        padding: 6px 20px;
-    }
+/* soft card */
+.soft-card {
+    background: linear-gradient(90deg,#e9f8fe 70%,#d0f9e6 100%);
+    border: 1px solid #bde4fb;
+}
 
-/* BARCODE BLINK EFFECT */
+/* barcode blink */
 .barcode-blink {
-    animation: barcodeGlow 1.2s infinite alternate;
-    border: 2px solid #16c0b0 !important;
-    background: linear-gradient(90deg, #e8ffff 60%, #fffbe7 100%);
-    box-shadow: 0 0 10px #16c0b088;
-    transition: border 0.25s, box-shadow 0.22s;
+    animation: blink 1s linear infinite;
 }
 
-@keyframes barcodeGlow {
+@keyframes blink {
     0% {
-        box-shadow: 0 0 0px #16c0b0, 0 0 10px #ffe082;
-        border-color: #16c0b0;
+        box-shadow: 0 0 0 0 rgba(35,152,239,.5);
+    }
+
+    50% {
+        box-shadow: 0 0 0 6px rgba(35,152,239,.12);
     }
 
     100% {
-        box-shadow: 0 0 12px #16c0b0, 0 0 18px #ffe082;
-        border-color: #ffe082;
+        box-shadow: 0 0 0 0 rgba(35,152,239,.0);
     }
 }
 
-/* Add.cshtml ka jo CSS chahiye usko yahan rakho */
+/* =========================
+   Multi barcode card
+   ========================= */
+.mb-card {
+    border: 1px solid #e6eef7;
+    border-radius: 16px;
+    background: #fff;
+    overflow: hidden;
+    box-shadow: 0 6px 16px rgba(16,24,40,.06);
+    position: sticky;
+    top: 12px;
+}
 
+.mb-card-header {
+    padding: 12px 12px 10px 12px;
+    background: linear-gradient(90deg,#2398ef 70%, #16b37c 100%);
+    color: #fff;
+}
+
+.mb-icon {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background: rgba(255,255,255,.22);
+}
+
+.mb-title {
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.mb-subtitle {
+    font-size: .78rem;
+    opacity: .9;
+    margin-top: 2px;
+}
+
+.mb-card-body {
+    padding: 12px;
+}
+
+.mb-input-row {
+    display: flex;
+    gap: 8px;
+}
+
+.mb-table-wrap {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.mb-empty {
+    padding: 10px 12px;
+    color: #64748b;
+    font-size: .85rem;
+}
+
+.mb-toast {
+    margin-top: 10px;
+    font-size: .85rem;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(255,255,255,.95);
+    color: #0f172a;
+}
+
+    .mb-toast.success {
+        border: 1px solid rgba(34,197,94,.35);
+    }
+
+    .mb-toast.danger {
+        border: 1px solid rgba(239,68,68,.35);
+    }
+
+/* Modal */
+.mb-modal {
+    border-radius: 18px;
+}
+
+.mb-modal-header {
+    background: linear-gradient(90deg,#2398ef 70%, #16b37c 100%);
+    color: #fff;
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+}
+
+/* =========================
+   Stock area
+   ========================= */
+.stock-card {
+    border: 1px solid #e6eef7;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 6px 16px rgba(16,24,40,.06);
+}
+
+.stock-toolbar {
+    padding: 12px;
+    background: #fff;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    border-bottom: 1px solid #eef2f7;
+}
+
+.stock-search {
+    position: relative;
+    flex: 1;
+    min-width: 240px;
+}
+
+    .stock-search i {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #64748b;
+    }
+
+    .stock-search input {
+        padding-left: 32px;
+    }
+
+.stock-select {
+    position: relative;
+    min-width: 190px;
+}
+
+    .stock-select i {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #64748b;
+        z-index: 2;
+    }
+
+    .stock-select select {
+        padding-left: 32px;
+    }
+
+.stock-header {
+    background: linear-gradient(90deg,#f8fafc 60%,#eefdf6 100%);
+}
+
+.stock-header-title {
+    font-weight: 700;
+}
+
+.stock-header-sub {
+    font-size: .8rem;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+/* =========================
+   Center toast (TempData + JS)
+   ========================= */
 .sms-message {
     position: fixed;
-    top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: #28a745;
-    color: white;
-    padding: 15px 25px;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    font-size: 18px;
-    z-index: 1000;
+    top: 18px;
+    transform: translateX(-50%);
+    z-index: 9999;
+    padding: 10px 14px;
+    border-radius: 12px;
+    color: #0f172a;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 6px 16px rgba(16,24,40,.10);
     opacity: 0;
-    transition: opacity 0.3s ease-in-out;
+    transition: opacity .25s ease, transform .25s ease;
 }
 
     .sms-message.show {
         opacity: 1;
+        transform: translateX(-50%) translateY(2px);
     }
+
+    .sms-message.success {
+        border-color: rgba(34,197,94,.35);
+    }
+
+    .sms-message.danger {
+        border-color: rgba(239,68,68,.35);
+    }
+
+/* =========================
+   ADD ITEM TOP ROW FIXES
+   ========================= */
+
+/* gap kam + left/right same height */
+#addItemTopRow {
+    --bs-gutter-x: 10px; /* left/right ka gap near */
+    --bs-gutter-y: 10px;
+    align-items: stretch;
+}
+
+    /* LEFT: corner tak */
+    #addItemTopRow .additem-left {
+        padding-left: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* RIGHT: near + proper width */
+    #addItemTopRow .additem-right {
+        padding-right: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* left card height fill */
+    #addItemTopRow .additem-left .add-item-container {
+        flex: 1 1 auto;
+        min-height: 100%;
+    }
+
+    /* right mb-card full width */
+    #addItemTopRow .additem-right .mb-card {
+        width: 100%;
+        margin-top: 0;
+    }
+
+
+/* ==========================================
+   MODERN PROFESSIONAL UI - ADD ITEM PAGE
+   (Only UI - no logic changes)
+   ========================================== */
+
+:root {
+    --gsoft-border: #e6eef7;
+    --gsoft-shadow: 0 10px 26px rgba(16,24,40,.08);
+    --gsoft-shadow-soft: 0 6px 16px rgba(16,24,40,.06);
+    --gsoft-radius: 16px;
+}
+
+/* page spacing */
+.additem-page {
+    padding: 4px 0;
+}
+
+/* Top info bar more premium */
+.top-info-bar {
+    border-radius: 14px;
+    border: 1px solid var(--gsoft-border);
+    box-shadow: var(--gsoft-shadow-soft);
+}
+
+/* Main Add Item card modern */
+.add-item-container {
+    border-radius: var(--gsoft-radius);
+    border: 1px solid var(--gsoft-border);
+    box-shadow: var(--gsoft-shadow);
+    padding: 16px;
+}
+
+    /* Title row style */
+    .add-item-container h4 {
+        font-weight: 800;
+        letter-spacing: .2px;
+    }
+
+    /* Small section divider line (optional feel) */
+    .add-item-container .section-divider {
+        height: 1px;
+        background: linear-gradient(90deg, rgba(35,152,239,.25), rgba(22,179,124,.25));
+        margin: 10px 0 12px;
+        border-radius: 99px;
+    }
+
+    /* Inputs: cleaner focus */
+    .add-item-container .form-control,
+    .add-item-container .form-select {
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        transition: box-shadow .2s ease, border-color .2s ease, transform .05s ease;
+    }
+
+        .add-item-container .form-control:focus,
+        .add-item-container .form-select:focus {
+            border-color: rgba(35,152,239,.55);
+            box-shadow: 0 0 0 4px rgba(35,152,239,.12);
+        }
+
+    /* Input groups nicer */
+    .add-item-container .input-group .btn {
+        border-radius: 12px;
+    }
+
+    .add-item-container .input-group .form-control,
+    .add-item-container .input-group .form-select {
+        border-radius: 12px;
+    }
+
+/* Markup bar looks like pill strip */
+.markup-bar {
+    border-radius: 14px;
+    background: #fbfdff;
+    border: 1px solid #e8f0fb;
+    box-shadow: 0 6px 14px rgba(16,24,40,.04);
+}
+
+/* Buttons consistent */
+#btnSaveNext, #btnClearAll {
+    border-radius: 12px;
+    padding: 8px 14px;
+    font-weight: 700;
+}
+
+.add-item-container .btn-sm {
+    border-radius: 12px;
+}
+
+/* More details + recipe links look like chips */
+#btnMoreDetails, #btnRecipeToggle {
+    background: rgba(35,152,239,.06);
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(35,152,239,.18);
+}
+
+#btnRecipeToggle {
+    background: rgba(22,179,124,.07);
+    border-color: rgba(22,179,124,.18);
+}
+
+/* Multi barcode card more premium */
+.mb-card {
+    border-radius: var(--gsoft-radius);
+    border: 1px solid var(--gsoft-border);
+    box-shadow: var(--gsoft-shadow);
+}
+
+.mb-card-header {
+    padding: 14px 14px 12px 14px;
+}
+
+.mb-card-body {
+    padding: 14px;
+}
+
+/* table wrap nicer */
+.mb-table-wrap {
+    border-radius: 14px;
+    border: 1px solid #e8eef7;
+}
+
+/* Stock section separation - THIS is your “neeche thora gap” */
+.stock-section {
+    margin-top: 18px; /* top se separate */
+}
+
+/* Stock card modern */
+.stock-card {
+    border-radius: var(--gsoft-radius);
+    border: 1px solid var(--gsoft-border);
+    box-shadow: var(--gsoft-shadow);
+    overflow: hidden;
+}
+
+/* Stock header more clean */
+.stock-header {
+    padding: 12px 14px;
+    border-bottom: 1px solid #eef2f7;
+}
+
+/* Toolbar spacing */
+.stock-toolbar {
+    background: #fff;
+    padding: 12px 14px;
+}
+
+/* Table header sticky (optional premium feel) */
+#stockTable thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #f8fafc;
+}
+
+/* Row hover smooth */
+#stockTable tbody tr {
+    transition: background .15s ease;
+}
+
+    #stockTable tbody tr:hover {
+        background: rgba(35,152,239,.045);
+    }
+
+/* ==========================================
+   BACKGROUND + SECTION SEPARATION (FINAL)
+   ========================================== */
+
+/* 1) Add New Item area background modern */
+.additem-page {
+    padding: 14px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(35,152,239,.10), rgba(22,179,124,.08));
+    border: 1px solid rgba(230,238,247,.9);
+    box-shadow: 0 10px 26px rgba(16,24,40,.06);
+}
+
+    /* top row inside spacing */
+    .additem-page #addItemTopRow {
+        margin: 0;
+    }
+
+/* Add item card thora “glass” look */
+.add-item-container {
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(230,238,247,.95);
+}
+
+/* Multi barcode card also same premium look */
+.mb-card {
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(230,238,247,.95);
+}
+
+/* 2) Stock section ko proper separate karo */
+.stock-section {
+    margin-top: 28px; /* yahan se gap barhao */
+    padding-top: 18px;
+    border-top: 2px dashed rgba(100,116,139,.25); /* separator line */
+}
+
+    /* Stock section background (alag block feel) */
+    .stock-section .stock-card {
+        margin-top: 0;
+    }
+
+/* Optional: stock area ko thora soft background */
+.stock-section {
+    background: linear-gradient(135deg, rgba(248,250,252,.9), rgba(238,253,246,.7));
+    border-radius: 18px;
+    padding: 18px;
+    border: 1px solid rgba(230,238,247,.95);
+}
+
+    /* Stock row inside remove extra outer spacing */
+    .stock-section .stock-fullwidth {
+        margin: 0;
+    }
+
+/* ==========================================
+   STOCK LIST PREMIUM LOOK
+   ========================================== */
+
+.stock-card {
+    border: 1px solid #e6eef7;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 10px 26px rgba(16,24,40,.08);
+}
+
+.stock-toolbar {
+    background: linear-gradient(90deg, rgba(35,152,239,.06), rgba(22,179,124,.05));
+    border-bottom: 1px solid #eef2f7;
+}
+
+.stock-header {
+    background: linear-gradient(90deg, rgba(248,250,252,1), rgba(238,253,246,.9));
+    border-bottom: 1px solid #eef2f7;
+    padding: 12px 14px;
+}
+
+/* Table premium */
+#stockTable {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+    #stockTable thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #f8fafc;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    #stockTable tbody tr {
+        transition: background .15s ease;
+    }
+
+        #stockTable tbody tr:nth-child(even) {
+            background: rgba(248,250,252,.6);
+        }
+
+        #stockTable tbody tr:hover {
+            background: rgba(35,152,239,.06);
+        }
+
+/* ==========================================
+   FORM AREA MODERN SECTIONS (NO WHITE LOOK)
+   ========================================== */
+
+/* Add New Item container background (not full white) */
+.add-item-container {
+    background: linear-gradient(135deg, rgba(248,250,252,.92), rgba(238,253,246,.78));
+    border: 1px solid #e6eef7;
+    border-radius: 18px;
+    box-shadow: 0 10px 26px rgba(16,24,40,.08);
+    padding: 16px;
+}
+
+/* Each section block */
+.form-section {
+    border: 1px solid rgba(230,238,247,.95);
+    background: rgba(255,255,255,.82);
+    border-radius: 16px;
+    padding: 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 6px 16px rgba(16,24,40,.05);
+}
+
+/* Section header */
+.form-section-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 800;
+    color: #0f172a;
+    padding: 8px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(35,152,239,.18);
+    background: linear-gradient(90deg, rgba(35,152,239,.08), rgba(22,179,124,.07));
+    margin-bottom: 10px;
+}
+
+/* Inputs look premium */
+.add-item-container .form-control,
+.add-item-container .form-select {
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    transition: box-shadow .2s ease, border-color .2s ease;
+}
+
+    .add-item-container .form-control:focus,
+    .add-item-container .form-select:focus {
+        border-color: rgba(35,152,239,.55);
+        box-shadow: 0 0 0 4px rgba(35,152,239,.12);
+    }
+
+/* Markup bar inside section */
+.markup-bar {
+    border-radius: 14px;
+    background: #fbfdff;
+    border: 1px solid rgba(35,152,239,.18);
+}
+
+/* Buttons look consistent */
+#btnSaveNext, #btnClearAll {
+    border-radius: 12px;
+    padding: 8px 14px;
+    font-weight: 800;
+}
+
+/* =========================
+   Compact header (title + admin/time)
+   ========================= */
+.additem-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+
+.additem-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: #0f172a;
+}
+
+.additem-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: linear-gradient(90deg,#e9f8fe 60%,#eefdf6 100%);
+    border: 1px solid #e6eef7;
+    font-size: .82rem;
+    color: #0f172a;
+}
+
+/* =========================
+   Compact headings (no extra cards)
+   ========================= */
+.mini-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    background: linear-gradient(90deg,#f8fafc 55%,#eefdf6 100%);
+    border: 1px solid #e6eef7;
+    font-weight: 800;
+    color: #0f172a;
+    margin-top: 4px;
+    margin-bottom: 2px;
+}
+
+/* Divider already used */
+.section-divider {
+    height: 1px;
+    background: #eef2f7;
+    margin: 8px 0 10px 0;
+}
 
