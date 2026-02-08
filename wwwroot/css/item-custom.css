@@ -226,80 +226,81 @@
 }
 
 /* =========================
-   Center toast (TempData + JS)
+   ✅ Center toast (TempData + JS) - UPDATED (Professional)
    ========================= */
 .sms-message {
     position: fixed;
     left: 50%;
     top: 18px;
-    transform: translateX(-50%);
-    z-index: 9999;
+    /* little premium motion */
+    transform: translateX(-50%) translateY(-6px);
+    z-index: 99999;
     padding: 10px 14px;
-    border-radius: 12px;
-    color: #0f172a;
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 6px 16px rgba(16,24,40,.10);
+    border-radius: 14px;
+    /* premium text */
+    font-weight: 800;
+    font-size: .90rem;
+    letter-spacing: .2px;
+    /* default hidden */
     opacity: 0;
+    pointer-events: none;
+    box-shadow: 0 12px 28px rgba(16,24,40,.14);
     transition: opacity .25s ease, transform .25s ease;
 }
 
     .sms-message.show {
         opacity: 1;
-        transform: translateX(-50%) translateY(2px);
+        transform: translateX(-50%) translateY(0);
     }
 
+    /* ✅ success (green small box) */
     .sms-message.success {
-        border-color: rgba(34,197,94,.35);
+        color: #064e3b;
+        background: linear-gradient(90deg, rgba(236,253,245,1), rgba(209,250,229,1));
+        border: 1px solid rgba(34,197,94,.45);
     }
 
+    /* ✅ danger (red small box) */
     .sms-message.danger {
-        border-color: rgba(239,68,68,.35);
+        color: #7f1d1d;
+        background: linear-gradient(90deg, rgba(254,242,242,1), rgba(254,226,226,1));
+        border: 1px solid rgba(239,68,68,.45);
     }
 
 /* =========================
    ADD ITEM TOP ROW FIXES
    ========================= */
-
-/* gap kam + left/right same height */
 #addItemTopRow {
-    --bs-gutter-x: 10px; /* left/right ka gap near */
+    --bs-gutter-x: 10px;
     --bs-gutter-y: 10px;
     align-items: stretch;
 }
 
-    /* LEFT: corner tak */
     #addItemTopRow .additem-left {
         padding-left: 0;
         display: flex;
         flex-direction: column;
     }
 
-    /* RIGHT: near + proper width */
     #addItemTopRow .additem-right {
         padding-right: 0;
         display: flex;
         flex-direction: column;
     }
 
-    /* left card height fill */
     #addItemTopRow .additem-left .add-item-container {
         flex: 1 1 auto;
         min-height: 100%;
     }
 
-    /* right mb-card full width */
     #addItemTopRow .additem-right .mb-card {
         width: 100%;
         margin-top: 0;
     }
 
-
 /* ==========================================
    MODERN PROFESSIONAL UI - ADD ITEM PAGE
-   (Only UI - no logic changes)
    ========================================== */
-
 :root {
     --gsoft-border: #e6eef7;
     --gsoft-shadow: 0 10px 26px rgba(16,24,40,.08);
@@ -327,13 +328,11 @@
     padding: 16px;
 }
 
-    /* Title row style */
     .add-item-container h4 {
         font-weight: 800;
         letter-spacing: .2px;
     }
 
-    /* Small section divider line (optional feel) */
     .add-item-container .section-divider {
         height: 1px;
         background: linear-gradient(90deg, rgba(35,152,239,.25), rgba(22,179,124,.25));
@@ -341,7 +340,6 @@
         border-radius: 99px;
     }
 
-    /* Inputs: cleaner focus */
     .add-item-container .form-control,
     .add-item-container .form-select {
         border-radius: 12px;
@@ -355,7 +353,6 @@
             box-shadow: 0 0 0 4px rgba(35,152,239,.12);
         }
 
-    /* Input groups nicer */
     .add-item-container .input-group .btn {
         border-radius: 12px;
     }
@@ -365,7 +362,6 @@
         border-radius: 12px;
     }
 
-/* Markup bar looks like pill strip */
 .markup-bar {
     border-radius: 14px;
     background: #fbfdff;
@@ -373,7 +369,6 @@
     box-shadow: 0 6px 14px rgba(16,24,40,.04);
 }
 
-/* Buttons consistent */
 #btnSaveNext, #btnClearAll {
     border-radius: 12px;
     padding: 8px 14px;
@@ -384,7 +379,6 @@
     border-radius: 12px;
 }
 
-/* More details + recipe links look like chips */
 #btnMoreDetails, #btnRecipeToggle {
     background: rgba(35,152,239,.06);
     padding: 6px 10px;
@@ -397,7 +391,6 @@
     border-color: rgba(22,179,124,.18);
 }
 
-/* Multi barcode card more premium */
 .mb-card {
     border-radius: var(--gsoft-radius);
     border: 1px solid var(--gsoft-border);
@@ -412,18 +405,16 @@
     padding: 14px;
 }
 
-/* table wrap nicer */
 .mb-table-wrap {
     border-radius: 14px;
     border: 1px solid #e8eef7;
 }
 
-/* Stock section separation - THIS is your “neeche thora gap” */
+/* Stock section separation */
 .stock-section {
-    margin-top: 18px; /* top se separate */
+    margin-top: 18px;
 }
 
-/* Stock card modern */
 .stock-card {
     border-radius: var(--gsoft-radius);
     border: 1px solid var(--gsoft-border);
@@ -431,19 +422,16 @@
     overflow: hidden;
 }
 
-/* Stock header more clean */
 .stock-header {
     padding: 12px 14px;
     border-bottom: 1px solid #eef2f7;
 }
 
-/* Toolbar spacing */
 .stock-toolbar {
     background: #fff;
     padding: 12px 14px;
 }
 
-/* Table header sticky (optional premium feel) */
 #stockTable thead th {
     position: sticky;
     top: 0;
@@ -451,7 +439,6 @@
     background: #f8fafc;
 }
 
-/* Row hover smooth */
 #stockTable tbody tr {
     transition: background .15s ease;
 }
@@ -463,8 +450,6 @@
 /* ==========================================
    BACKGROUND + SECTION SEPARATION (FINAL)
    ========================================== */
-
-/* 1) Add New Item area background modern */
 .additem-page {
     padding: 14px;
     border-radius: 18px;
@@ -473,38 +458,32 @@
     box-shadow: 0 10px 26px rgba(16,24,40,.06);
 }
 
-    /* top row inside spacing */
     .additem-page #addItemTopRow {
         margin: 0;
     }
 
-/* Add item card thora “glass” look */
 .add-item-container {
     background: rgba(255,255,255,.92);
     backdrop-filter: blur(6px);
     border: 1px solid rgba(230,238,247,.95);
 }
 
-/* Multi barcode card also same premium look */
 .mb-card {
     background: rgba(255,255,255,.92);
     backdrop-filter: blur(6px);
     border: 1px solid rgba(230,238,247,.95);
 }
 
-/* 2) Stock section ko proper separate karo */
 .stock-section {
-    margin-top: 28px; /* yahan se gap barhao */
+    margin-top: 28px;
     padding-top: 18px;
-    border-top: 2px dashed rgba(100,116,139,.25); /* separator line */
+    border-top: 2px dashed rgba(100,116,139,.25);
 }
 
-    /* Stock section background (alag block feel) */
     .stock-section .stock-card {
         margin-top: 0;
     }
 
-/* Optional: stock area ko thora soft background */
 .stock-section {
     background: linear-gradient(135deg, rgba(248,250,252,.9), rgba(238,253,246,.7));
     border-radius: 18px;
@@ -512,7 +491,6 @@
     border: 1px solid rgba(230,238,247,.95);
 }
 
-    /* Stock row inside remove extra outer spacing */
     .stock-section .stock-fullwidth {
         margin: 0;
     }
@@ -520,7 +498,6 @@
 /* ==========================================
    STOCK LIST PREMIUM LOOK
    ========================================== */
-
 .stock-card {
     border: 1px solid #e6eef7;
     border-radius: 18px;
@@ -539,7 +516,6 @@
     padding: 12px 14px;
 }
 
-/* Table premium */
 #stockTable {
     border-collapse: separate;
     border-spacing: 0;
@@ -566,10 +542,8 @@
         }
 
 /* ==========================================
-   FORM AREA MODERN SECTIONS (NO WHITE LOOK)
+   FORM AREA MODERN SECTIONS
    ========================================== */
-
-/* Add New Item container background (not full white) */
 .add-item-container {
     background: linear-gradient(135deg, rgba(248,250,252,.92), rgba(238,253,246,.78));
     border: 1px solid #e6eef7;
@@ -578,7 +552,6 @@
     padding: 16px;
 }
 
-/* Each section block */
 .form-section {
     border: 1px solid rgba(230,238,247,.95);
     background: rgba(255,255,255,.82);
@@ -588,7 +561,6 @@
     box-shadow: 0 6px 16px rgba(16,24,40,.05);
 }
 
-/* Section header */
 .form-section-head {
     display: flex;
     align-items: center;
@@ -602,7 +574,6 @@
     margin-bottom: 10px;
 }
 
-/* Inputs look premium */
 .add-item-container .form-control,
 .add-item-container .form-select {
     border-radius: 12px;
@@ -617,23 +588,19 @@
         box-shadow: 0 0 0 4px rgba(35,152,239,.12);
     }
 
-/* Markup bar inside section */
 .markup-bar {
     border-radius: 14px;
     background: #fbfdff;
     border: 1px solid rgba(35,152,239,.18);
 }
 
-/* Buttons look consistent */
 #btnSaveNext, #btnClearAll {
     border-radius: 12px;
     padding: 8px 14px;
     font-weight: 800;
 }
 
-/* =========================
-   Compact header (title + admin/time)
-   ========================= */
+/* Compact header */
 .additem-header {
     display: flex;
     align-items: center;
@@ -671,9 +638,7 @@
     color: #0f172a;
 }
 
-/* =========================
-   Compact headings (no extra cards)
-   ========================= */
+/* Compact headings */
 .mini-head {
     display: flex;
     align-items: center;
@@ -688,10 +653,8 @@
     margin-bottom: 2px;
 }
 
-/* Divider already used */
 .section-divider {
     height: 1px;
     background: #eef2f7;
     margin: 8px 0 10px 0;
 }
-

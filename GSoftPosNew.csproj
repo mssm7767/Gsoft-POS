@@ -11,6 +11,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="wwwroot\**" />
+	  <Content Remove="wwwroot\**" />
+	  <EmbeddedResource Remove="wwwroot\**" />
+	  <None Remove="wwwroot\**" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
 		<PackageReference Include="EPPlus" Version="8.0.7" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.6">
@@ -28,17 +35,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Content Remove="wwwroot\css\receipt.css" />
-		<Content Remove="wwwroot\css\sidebar.css" />
-		<Content Remove="wwwroot\css\favicon.ico" />
-		<Content Remove="wwwroot\css\site.css" />
-		<Content Remove="wwwroot\css\dashboard.css" />
-		<Content Remove="wwwroot\css\pos.css" />
-		<Content Remove="wwwroot\css\purchase.css" />
 
 		<Folder Include="Migrations\" />
-
-		<Folder Include="wwwroot\images\" />
 	</ItemGroup>
 
 	<ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JsonSchema="https://www.schemastore.org/aspire-8.0.json" /></VisualStudio></ProjectExtensions>

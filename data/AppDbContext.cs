@@ -38,7 +38,6 @@ namespace GSoftPosNew.Data
         public DbSet<IngredientPurchase> IngredientPurchases { get; set; }
         public DbSet<IngredientPurchaseItem> IngredientPurchaseItems { get; set; }
 
-
         public DbSet<StockAdjustment> StockAdjustments { get; set; }
         public DbSet<StockAdjustmentItem> StockAdjustmentItems { get; set; }
         public DbSet<CustomerVanStock> CustomerVanStocks { get; set; }
@@ -49,8 +48,11 @@ namespace GSoftPosNew.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
 
+            // ============================
             // Relationships
+            // ============================
             modelBuilder.Entity<Sale>()
                 .HasMany(s => s.SaleItems)
                 .WithOne(si => si.Sale)
@@ -72,7 +74,48 @@ namespace GSoftPosNew.Data
                 .HasForeignKey(ii => ii.ItemId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // ============================
+            // ✅ UNIQUE INDEXES (IMPORTANT)
+            // ============================
+
+            // ✅ Item Code / Barcode must be unique
+            modelBuilder.Entity<ItemModel>()
+                .HasIndex(x => x.ItemCode)
+                .IsUnique();
+
+            // Optional (Recommended): length limit
+            modelBuilder.Entity<ItemModel>()
+                .Property(x => x.ItemCode)
+                .HasMaxLength(50);
+
+            // ✅ OPTIONAL: Item Name unique (agar aap chaho)
+            // Agar same name allow karna hai to isko comment hi rehne dein
+            /*
+            modelBuilder.Entity<ItemModel>()
+                .HasIndex(x => x.ItemName)
+                .IsUnique();
+
+            modelBuilder.Entity<ItemModel>()
+                .Property(x => x.ItemName)
+                .HasMaxLength(200);
+            */
+
+            // ✅ MultiBarcodes: Barcode unique (GLOBAL) => same barcode kisi aur item me repeat nahi hoga
+            modelBuilder.Entity<MultiBarcodes>()
+                .HasIndex(x => x.Barcode)
+                .IsUnique();
+
+            modelBuilder.Entity<MultiBarcodes>()
+                .Property(x => x.Barcode)
+                .HasMaxLength(80);
+
+            // ✅ OPTION B (Per Item Unique) - agar aap global unique nahi chahte:
+            // Upar wala (HasIndex(x => x.Barcode).IsUnique()) comment kar ke ye enable kar den:
+            /*
+            modelBuilder.Entity<MultiBarcodes>()
+                .HasIndex(x => new { x.ItemId, x.Barcode })
+                .IsUnique();
+            */
         }
     }
 }
-

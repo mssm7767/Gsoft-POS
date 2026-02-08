@@ -1493,7 +1493,7 @@
                         This item is currently <b>out of stock</b>.<br><br>
                         To proceed with this sale, please enable
                         <b>"Allow Sale on Low Stock"</b>
-                        from 
+                        from
                          <a href="/Settings/Index"
                            style="color:#0d6efd;font-weight:600;text-decoration:underline;">
                             Shop Settings
@@ -1516,56 +1516,110 @@
         bi.value = '';
     }
 
-    let scanState = { start: 0, last: 0, count: 0, timer: null };
-    const SCAN_MIN_LEN = 6, SCAN_AVG_MS = 35, SCAN_END_DELAY = 60;
+    let scanState = {
+      start: 0,
+      last: 0,
+      count: 0,
+      timer: null,
+      buffer: ''
+    };
+    const SCAN_MIN_LEN = 6;        // minimum chars to qualify as scan
+    const SCAN_AVG_MS = 45;        // avg ms per key (scanner threshold)
+    const SCAN_END_DELAY = 120;    // wait after last key (slow grouping)
+    const SCANNER_ADD_DELAY = 600;
 
     function attachScannerHandlers() {
-        // itemInputEl.addEventListener('keydown', e => {
-        //     const now = performance.now();
-        //     if (scanState.count === 0) scanState.start = now;
-        //     scanState.count++;
-        //     scanState.last = now;
+        itemInputEl.addEventListener('keydown', e => {
+          const now = performance.now();
 
-        //     if (filtered.length && suggDiv.style.display === 'block') {
-        //         if (e.key === 'ArrowDown') {
-        //         e.preventDefault();
-        //         if (selectedIdx < filtered.length - 1) {
-        //             selectedIdx++;
-        //             updateHighlight();
-        //         }
-        //         return;
-        //     }
+          /* ─────── SCAN TIMING TRACK ─────── */
+            if (scanState.count === 0 || now - scanState.last > SCAN_END_DELAY) {
+              scanState.start = now;
+              scanState.buffer = '';
+              scanState.count = 0;
+            }
 
-        //     if (e.key === 'ArrowUp') {
-        //         e.preventDefault();
-        //         if (selectedIdx > 0) {
-        //             selectedIdx--;
-        //             updateHighlight();
-        //         }
-        //         return;
-        //     }
-        //         if (e.key === 'Enter') {
-        //             e.preventDefault();
-        //             if (selectedIdx === -1 && filtered.length > 0) selectedIdx = 0;
-        //             if (selectedIdx >= 0) selectItemSuggestion(selectedIdx);
-        //             return;
-        //         }
-        //         if (e.key === 'Escape') { suggDiv.style.display = 'none'; filtered = []; selectedIdx = -1; return; }
-        //     } else {
-        //         if (e.key === 'Enter') { e.preventDefault(); manualTryAdd(itemInputEl.value.trim()); return; }
-        //     }
 
-        //     clearTimeout(scanState.timer);
-        //     scanState.timer = setTimeout(() => {
-        //         const term = itemInputEl.value.trim();
-        //         const duration = scanState.last - scanState.start;
-        //         const avg = duration / Math.max(1, scanState.count);
-        //         const isScanner = term.length >= SCAN_MIN_LEN && avg <= SCAN_AVG_MS;
-        //         if (isScanner) scannerAutoAdd(term);
-        //         else showItemSuggestions(term);
-        //         scanState = { start: 0, last: 0, count: 0, timer: null };
-        //     }, SCAN_END_DELAY);
-        // });
+          scanState.count++;
+          scanState.last = now;
+
+          /* ─────── CAPTURE SCANNER CHARS ─────── */
+          if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+            scanState.buffer += e.key;
+          }
+
+          /* ─────── SUGGESTION NAVIGATION ─────── */
+          if (filtered.length && suggDiv.style.display === 'block') {
+            if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              if (selectedIdx < filtered.length - 1) {
+                selectedIdx++;
+                updateHighlight();
+              }
+              return;
+            }
+
+            if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              if (selectedIdx > 0) {
+                selectedIdx--;
+                updateHighlight();
+              }
+              return;
+            }
+
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              if (selectedIdx === -1 && filtered.length > 0) selectedIdx = 0;
+              if (selectedIdx >= 0) selectItemSuggestion(selectedIdx);
+              return;
+            }
+
+            if (e.key === 'Escape') {
+              suggDiv.style.display = 'none';
+              filtered = [];
+              selectedIdx = -1;
+              return;
+            }
+          } else {
+            /* ─────── MANUAL ENTER ─────── */
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              manualTryAdd(itemInputEl.value.trim());
+              return;
+            }
+          }
+
+          /* ─────── SCAN END DETECTION ─────── */
+          clearTimeout(scanState.timer);
+          scanState.timer = setTimeout(() => {
+            const term =
+              scanState.buffer.length
+                ? scanState.buffer.trim()        // scanner input
+                : itemInputEl.value.trim();      // manual input
+
+            const duration = scanState.last - scanState.start;
+            const avg = duration / Math.max(1, scanState.count);
+
+            const isScanner =
+              term.length >= SCAN_MIN_LEN &&
+              avg <= SCAN_AVG_MS;
+
+            if (isScanner) {
+              scannerAutoAdd(term);
+              itemInputEl.value = '';
+            } else {
+              showItemSuggestions(term);
+            }
+
+              scanState.start = 0;
+              scanState.last = 0;
+              scanState.count = 0;
+              scanState.buffer = '';
+              scanState.timer = null;
+
+            }, SCAN_END_DELAY);
+        });
 
         itemInputEl.addEventListener('input', () => {
             if (scanState.count === 0) showItemSuggestions(itemInputEl.value.trim());
@@ -1574,6 +1628,7 @@
 
     function scannerAutoAdd(term) {
         const lc = term.toLowerCase();
+
         let match =
             items.find(x => (x.ItemCode || '').toLowerCase() === lc) ||
             items.find(x => (x.ItemName || '').toLowerCase() === lc);
@@ -2335,7 +2390,7 @@
 
         document.getElementById('invoiceNoValue').innerText = generateInvoiceNumber();
 
-        
+
 
         focusBarcode();
         toast('New invoice created!', 'success', 1200);
@@ -2580,7 +2635,7 @@
         pill.classList.remove("active");
 
         if (pill.dataset.value === paymentMethod.toLowerCase()) {
-            
+
             pill.classList.add("active");
         }
     });

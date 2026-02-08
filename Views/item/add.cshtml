@@ -28,9 +28,7 @@
 
 @section Styles {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
     <link href="~/css/item-custom.css" rel="stylesheet" asp-append-version="true" />
 }
 
@@ -112,9 +110,10 @@
 
                     <!-- used by AJAX flow -->
                     <input type="hidden" id="ExistingItemId" name="ExistingItemId" />
+                    <input asp-for="ItemData.Id" type="hidden" id="itemId"/>
                     <div id="duplicateNotice" class="alert alert-warning d-none"></div>
 
-                    <!-- ✅ HEADING: Item Details (Basic + Category + Supplier together) -->
+                    <!-- ✅ HEADING: Item Details -->
                     <div class="col-12">
                         <div class="mini-head">
                             <i class="fa fa-pen-to-square"></i>
@@ -145,11 +144,6 @@
                         </div>
 
                         <span id="itemCodeMessage" class="field-note text-danger"></span>
-
-                        @if (TempData["Error"] != null)
-                        {
-                            <span class="text-danger small">@TempData["Error"]</span>
-                        }
                         @Html.ValidationMessageFor(m => m.ItemData.ItemCode, "", new { @class = "text-danger small" })
                     </div>
 
@@ -232,7 +226,7 @@
                         <span asp-validation-for="ItemData.SupplierId" class="text-danger small"></span>
                     </div>
 
-                    <!-- ✅ HEADING: Pricing + Qty + Image together -->
+                    <!-- ✅ HEADING: Pricing & Stock -->
                     <div class="col-12 mt-1">
                         <div class="mini-head">
                             <i class="fa fa-money-bill-wave"></i>
@@ -505,7 +499,7 @@
 
 </div>
 <!-- ✅ end additem-page -->
-<!-- ✅ STOCK SECTION WRAPPER (separate look) -->
+<!-- ✅ STOCK SECTION WRAPPER -->
 <div class="stock-section">
 
     <div class="row g-3 stock-fullwidth">
@@ -644,12 +638,10 @@
 </div>
 @section Scripts {
 
-    <!-- Bootstrap JS (required for modals, dropdowns, etc.) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-
     <script>
-        // ✅ Center TempData toast
+        // ✅ Center TempData toast (top)
         document.addEventListener('DOMContentLoaded', function () {
             ['centerSmsSuccess', 'centerSmsDanger'].forEach(function (id) {
                 const el = document.getElementById(id);
@@ -683,27 +675,18 @@
         const btnSaveNext = document.getElementById('btnSaveNext');
         const btnClearAll = document.getElementById('btnClearAll');
 
-        // 🔥 make global so multi module can use
+        // 🔥 global
         window.codeInput = document.getElementById('Item_ItemCode');
 
-        const itemCodeMessage = document.getElementById('itemCodeMessage');
         const refInput = document.getElementById('Item_ReferenceCode');
-        const nameInput2 = document.getElementById('Item_ItemName');
         const flavInput = document.getElementById('Item_Flavour');
-
-        const catSel = document.getElementById('CategoryId');
-        const supSel = document.getElementById('SupplierId');
-        const qtyInput = document.getElementById('Item_Quantity');
-
-        const duplicateNotice = document.getElementById('duplicateNotice');
 
         function getToken() {
             return document.querySelector('input[name="__RequestVerificationToken"]')?.value || "";
         }
 
-        // ✅ Center toast helper (1 sec)
+        // ✅ Center toast helper (2 sec)
         function showCenterToast(type, msg) {
-
             let el = document.getElementById("centerToast");
             if (!el) {
                 el = document.createElement("div");
@@ -717,11 +700,293 @@
             el.textContent = msg;
 
             setTimeout(() => el.classList.add("show"), 10);
-
-            setTimeout(() => el.classList.remove("show"), 900);
-            setTimeout(() => { try { el.remove(); } catch { } }, 1100);
+            setTimeout(() => el.classList.remove("show"), 1200);   // ✅ 1.2 sec (as you want)
+            setTimeout(() => { try { el.remove(); } catch { } }, 1500);
         }
         window.showCenterToast = showCenterToast;
+
+        // ✅ Select helper
+        function setSelectValue(selectId, value) {
+            const sel = document.getElementById(selectId);
+            if (!sel) return;
+
+            const v = (value ?? "").toString();
+            sel.value = v;
+
+            // option exists?
+            const ok = Array.from(sel.options).some(o => o.value === v);
+            if (!ok) return;
+
+            sel.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+
+        // ✅ Fill item form (MUST be defined before checkNow)
+        function fillItemForm(item) {
+            if (!item) return;
+
+            // ✅ hidden existing id
+            const hid = document.getElementById("ExistingItemId");
+            const id = document.getElementById("itemId");
+            if (hid) hid.value = item.id || item.Id || "";
+            if (id) id.value = item.id || item.Id || "";
+
+            console.log(id.value);
+
+            // ✅ basic fields
+            const code = document.getElementById("Item_ItemCode");
+            if (code) code.value = item.itemCode ?? item.ItemCode ?? "";
+
+            const ref = document.getElementById("Item_ReferenceCode");
+            if (ref) ref.value = item.referenceCode ?? item.ReferenceCode ?? "";
+
+            const name = document.getElementById("Item_ItemName");
+            if (name) name.value = item.itemName ?? item.ItemName ?? "";
+
+            const flav = document.getElementById("Item_Flavour");
+            if (flav) flav.value = item.flavour ?? item.Flavour ?? "";
+
+            // ✅ dropdowns
+            setSelectValue("CategoryId", item.categoryId ?? item.CategoryId);
+            setSelectValue("SupplierId", item.supplierId ?? item.SupplierId);
+            setSelectValue("UnitId", item.unitId ?? item.UnitId);
+            setSelectValue("LocationId", item.locationId ?? item.LocationId);
+
+            // ✅ prices
+            const mrp = document.getElementById("mrpPrice");
+            if (mrp) mrp.value = (item.salePrice ?? item.SalePrice ?? 0).toString();
+
+            const cost = document.getElementById("purchasePrice");
+            if (cost) cost.value = (item.purchasePrice ?? item.PurchasePrice ?? 0).toString();
+
+            const pct = document.getElementById("markupPct");
+            if (pct) pct.value = (item.markupPercentage ?? item.MarkupPercentage ?? 0).toString();
+
+            // ✅ qty
+            const qty = document.getElementById("Item_Quantity");
+            if (qty) qty.value = (item.quantity ?? item.Quantity ?? 0).toString();
+
+            // ✅ more details (pack)
+            const packsize = document.getElementById("packsize");
+            if (packsize) packsize.value = item.packSize ?? item.PackSize ?? "";
+
+            const unitprice = document.getElementById("unitprice");
+            if (unitprice) unitprice.value = item.unitPrice ?? item.UnitPrice ?? "";
+
+            const packprice = document.getElementById("packprice");
+            if (packprice) packprice.value = item.packPrice ?? item.PackPrice ?? "";
+
+            // ✅ auto open MoreDetails if needed
+            const moreDetails = document.getElementById("moreDetailsSection");
+            if (moreDetails && (moreDetails.style.display === "none" || moreDetails.style.display === "")) {
+                if ((item.packSize ?? item.PackSize) || (item.unitId ?? item.UnitId) || (item.locationId ?? item.LocationId)) {
+                    moreDetails.style.display = "block";
+                    const icon = document.getElementById("iconMoreDetails");
+                    if (icon) { icon.classList.remove("fa-plus-circle"); icon.classList.add("fa-minus-circle"); }
+                }
+            }
+        }
+
+        window.fillItemForm = fillItemForm; // optional expose
+    </script>
+
+    <!-- ========================================================= -->
+    <!-- ✅ BARCODE CHECK: LOAD EXISTING OR BLOCK DUPLICATE -->
+    <!-- ========================================================= -->
+    <script>
+        (function () {
+            const codeInput = window.codeInput || document.getElementById('Item_ItemCode');
+            const msg = document.getElementById('itemCodeMessage');
+            const dupBox = document.getElementById('duplicateNotice');
+            const saveBtn = document.getElementById('btnSaveNext');
+            const hiddenExistingId = document.getElementById('ExistingItemId');
+            if (!codeInput) return;
+
+            const blockIds = [
+                'Item_ReferenceCode','Item_ItemName','Item_Flavour',
+                'CategoryId','SupplierId','mrpPrice','markupPct','purchasePrice',
+                'Item_Quantity','ImageFile'
+            ];
+
+            let lastKeyAt = 0;
+            let fastHits = 0;
+            let scanEndTimer = null;
+
+            // ✅ This flag means: "BLOCK form because barcode duplicate for NEW item"
+            window.__isItemCodeDuplicate = false;
+
+            function setSaveBtnText(isUpdate) {
+                const sb = document.getElementById("btnSaveNext");
+                if (!sb) return;
+                sb.innerHTML = isUpdate ? 'Update &amp; Next' : 'Save &amp; Next';
+            }
+
+            function clearUI() {
+                if (msg) msg.textContent = "";
+                if (dupBox) { dupBox.classList.add("d-none"); dupBox.innerHTML = ""; }
+                // ⚠️ hiddenExistingId yahan clear mat karo, kyun ke edit mode me we need it
+                if (saveBtn) saveBtn.disabled = false;
+            }
+
+            function setDup(on, text) {
+                window.__isItemCodeDuplicate = on;
+
+                if (!on) {
+                    clearUI();
+                    return;
+                }
+
+                if (msg) msg.textContent = text || "Already exists!";
+                if (dupBox) {
+                    dupBox.classList.remove("d-none");
+                    dupBox.innerHTML = `<b>Duplicate:</b> ${text || "Already exists!"}`;
+                }
+                if (saveBtn) saveBtn.disabled = true;
+
+                window.showCenterToast?.("danger", text || "This barcode already exists!");
+
+                setTimeout(() => {
+                    if (window.__isItemCodeDuplicate && dupBox) dupBox.classList.add("d-none");
+                }, 1200);
+
+                setTimeout(() => { codeInput.focus(); codeInput.select?.(); }, 10);
+            }
+
+            async function checkNow() {
+                const code = (codeInput.value || "").trim();
+                if (!code) {
+                    window.__isItemCodeDuplicate = false;
+                    clearUI();
+                    setSaveBtnText(false);
+                    if (hiddenExistingId) hiddenExistingId.value = "";
+                    return;
+                }
+
+                try {
+                    // ✅ this endpoint must return { exists:true/false, item:{...} }
+                    const url = '@Url.Action("GetItemByCode", "Item")' + '?code=' + encodeURIComponent(code);
+
+                    const res = await fetch(url, { cache: "no-store" });
+                    const data = await res.json();
+
+                    // ✅ CASE 1: exists => LOAD item and switch to UPDATE mode
+                    if (data && data.exists && data.item) {
+
+                        const nm = data.item.itemName ? ` (${data.item.itemName})` : "";
+                        if (msg) msg.textContent = `Already exists, loaded:${nm}`;
+
+                        // ✅ success toast
+                        window.showCenterToast?.("success", "Item loaded from database");
+
+                        // ✅ fill all fields
+                        window.fillItemForm?.(data.item);
+
+                        // ✅ edit mode: do NOT block
+                        window.__isItemCodeDuplicate = false;
+                        if (saveBtn) saveBtn.disabled = false;
+                        setSaveBtnText(true);
+
+                        // ✅ focus next
+                        setTimeout(() => {
+                            document.getElementById('Item_ReferenceCode')?.focus();
+                            document.getElementById('Item_ReferenceCode')?.select?.();
+                        }, 50);
+
+                        return;
+                    }
+
+                    // ✅ CASE 2: not exists => NEW item mode (no block)
+                    setDup(false);
+                    if (hiddenExistingId) hiddenExistingId.value = "";
+                    setSaveBtnText(false);
+
+                } catch {
+                    // network fail => allow user to continue (no block)
+                    setDup(false);
+                    setSaveBtnText(false);
+                }
+            }
+
+            // ✅ HARD BLOCK next fields ONLY when duplicate-block ON
+            function hardBlock(e) {
+                if (!window.__isItemCodeDuplicate) return;
+                if (e.target && e.target.id !== 'Item_ItemCode') {
+                    e.preventDefault(); e.stopPropagation();
+                    codeInput.focus(); codeInput.select?.();
+                    return false;
+                }
+            }
+
+            blockIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.addEventListener("focus", hardBlock, true);
+                el.addEventListener("mousedown", hardBlock, true);
+                el.addEventListener("keydown", function (e) {
+                    if (!window.__isItemCodeDuplicate) return;
+                    if (e.key === "Enter" || e.key === "Tab") {
+                        e.preventDefault(); e.stopPropagation();
+                        codeInput.focus(); codeInput.select?.();
+                    }
+                }, true);
+            });
+
+            // ✅ scanner detect + manual typing
+            codeInput.addEventListener("input", function () {
+                // typing during: clear warnings
+                if (msg) msg.textContent = "";
+                if (dupBox) { dupBox.classList.add("d-none"); dupBox.innerHTML = ""; }
+
+                // IMPORTANT: input pe hum block false rakhte hain,
+                // final decision checkNow karega
+                window.__isItemCodeDuplicate = false;
+                if (saveBtn) saveBtn.disabled = false;
+
+                const now = Date.now();
+                const gap = now - lastKeyAt;
+                lastKeyAt = now;
+
+                if (gap > 0 && gap < 50) fastHits++;
+                else fastHits = Math.max(0, fastHits - 1);
+
+                clearTimeout(scanEndTimer);
+
+                // ✅ scanner: pause => check
+                if (fastHits >= 4) {
+                    scanEndTimer = setTimeout(checkNow, 120);
+                }
+            });
+
+            // ✅ Enter => check then move focus
+            codeInput.addEventListener("keydown", function (e) {
+                if (e.key !== "Enter") return;
+                e.preventDefault();
+
+                checkNow().then(() => {
+                    if (window.__isItemCodeDuplicate) return;
+                    document.getElementById('Item_ReferenceCode')?.focus();
+                    document.getElementById('Item_ReferenceCode')?.select?.();
+                });
+            });
+
+            // ✅ blur => check
+            codeInput.addEventListener("blur", function () {
+                if ((codeInput.value || "").trim()) checkNow();
+            });
+
+            // ✅ submit block ONLY if duplicate lock ON
+            document.getElementById("addItemForm")?.addEventListener("submit", function (e) {
+                if (window.__isItemCodeDuplicate) {
+                    e.preventDefault();
+                    window.showCenterToast?.("danger", "Duplicate barcode! Please change it.");
+                    codeInput.focus();
+                    codeInput.select?.();
+                }
+            });
+
+            // expose if needed
+            window.__checkBarcodeNow = checkNow;
+
+        })();
     </script>
 
     <script>
@@ -879,7 +1144,7 @@
     </script>
 
     <!-- ========================================================= -->
-    <!-- ✅ STOCK (SEARCH + RECENT 20 + DELETE AJAX) -->
+    <!-- ✅ STOCK (SEARCH + DELETE AJAX) -->
     <!-- ========================================================= -->
     <script>
         function renderStockRows(items) {
@@ -1032,7 +1297,7 @@
     </script>
 
     <!-- ========================================================= -->
-    <!-- ✅ MULTI BARCODE MODULE (FIXED) -->
+    <!-- ✅ MULTI BARCODE MODULE -->
     <!-- ========================================================= -->
     <script>
         (function () {
@@ -1155,13 +1420,11 @@
                 addBarcode(mbInput.value);
             });
 
-            // ✅ global functions (ONLY ONCE)
             window.gsoftMB = {
                 enableForItem: function (itemId) {
                     currentItemId = parseInt(itemId || "0") || 0;
                     enabled = currentItemId > 0;
 
-                    // backups
                     const h = document.getElementById("ExistingItemId");
                     if (h && enabled) h.value = String(currentItemId);
                     window.__lastSavedItemId = currentItemId;
@@ -1176,12 +1439,11 @@
                 reset: resetAll
             };
 
-            // ✅ save multi barcodes
             mbSaveBtn.addEventListener("click", async () => {
                 const safeId = getSafeItemId();
 
-                        currentItemId = safeId;          // ✅ lock id for this save
-                      enabled = safeId > 0;            // ✅ ensure enabled true
+                currentItemId = safeId;
+                enabled = safeId > 0;
 
                 if (!enabled || safeId <= 0) { toastError("Invalid itemId. Item dobara Save karo."); return; }
                 if (list.length === 0) { toastError("No barcodes"); return; }
@@ -1189,8 +1451,8 @@
                 try {
                     const token = getToken();
                     const payload = {
-                        itemId: safeId,     // ✅ REQUIRED
-                        multiBarcodes: list        // ✅ name must match DTO
+                        itemId: safeId,
+                        multiBarcodes: list
                     };
 
                     const res = await fetch('@Url.Action("SaveMultiBarcodesAjax", "Item")', {
@@ -1209,9 +1471,8 @@
                         return;
                     }
 
-                    if (window.showCenterToast) window.showCenterToast("success", "Multi barcodes saved");
+                    window.showCenterToast?.("success", "Multi barcodes saved");
 
-                    // reset everything for next item
                     resetAll();
                     addForm?.reset();
 
@@ -1245,8 +1506,7 @@
                 if (!mbModalEl) return null;
                 try {
                     return bootstrap.Modal.getOrCreateInstance(mbModalEl);
-                } catch (err) {
-                    console.error("Bootstrap modal error:", err);
+                } catch {
                     return null;
                 }
             }
@@ -1255,26 +1515,45 @@
                 btnSaveNext.disabled = busy;
                 btnSaveNext.innerHTML = busy
                     ? `<span class="spinner-border spinner-border-sm me-1"></span> Saving...`
-                    : `Save &amp; Next`;
+                    : (btnSaveNext.innerHTML.includes("Update") ? 'Update &amp; Next' : 'Save &amp; Next');
             }
 
-            async function postAddAjax() {
-                const fd = new FormData(addForm);
-                const token = getToken();
+        async function postAddAjax() {
+            const fd = new FormData(addForm);
 
-                const res = await fetch('@Url.Action("AddAjax", "Item")', {
-                    method: "POST",
-                    body: fd,
-                    headers: token ? { "RequestVerificationToken": token } : {}
-                });
+            const res = await fetch('@Url.Action("AddAjax", "Item")', {
+                method: "POST",
+                body: fd
+                // headers ki zarurat nahi, token already formdata me hota hai
+            });
 
-                const data = await res.json().catch(() => null);
-                if (!res.ok || !data || !data.ok) return { ok: false, error: data?.error || "Save failed" };
-                return data;
+            // ✅ try json first
+            let data = null;
+            try { data = await res.json(); } catch { data = null; }
+
+            // ✅ if not json, read text (real error page)
+            if (!data) {
+                const txt = await res.text().catch(() => "");
+                return { ok: false, error: (txt || "Save failed").substring(0, 300) };
             }
 
-            addForm.addEventListener("submit", async function (e) {
+            if (!res.ok || !data.ok) {
+                return { ok: false, error: data.error || "Save failed" };
+            }
+
+            return data;
+        }
+
+        addForm.addEventListener("submit", async function (e) {
                 e.preventDefault();
+
+                if (window.__isItemCodeDuplicate) {
+                    showCenterToast("danger", "Duplicate barcode! Please change it.");
+                    window.codeInput?.focus();
+                    window.codeInput?.select?.();
+                    return;
+                }
+
                 setBusy(true);
 
                 try {
@@ -1297,20 +1576,29 @@
                     document.getElementById("ExistingItemId").value = newId;
                     window.__lastSavedItemId = newId;
 
-                    showCenterToast("success", data.message || "Item saved");
+                    showCenterToast("success", data.message || "Saved");
 
-                    // ✅ Show modal safely
-                    const modal = bsModal();
-                    if (modal) {
-                        try {
-                            modal.show();
-                            console.log("Modal shown successfully");
-                        } catch (err) {
-                            console.error("Error showing modal:", err);
-                        }
+                    const isUpdate = parseInt(document.getElementById("itemId")?.value || "0") > 0;
+
+                    // ✅ If update => reset & next item (no modal)
+                    if (isUpdate) {
+                        addForm.reset();
+                        document.getElementById("ExistingItemId").value = "";
+                        window.__lastSavedItemId = 0;
+
+                        const sb = document.getElementById("btnSaveNext");
+                        if (sb) sb.innerHTML = 'Save &amp; Next';
+
+                        window.codeInput?.focus();
+                        window.codeInput?.select?.();
+                        setBusy(false);
+                        return;
                     }
 
-                    // ✅ YES => enable + focus multi barcode input
+
+                    const modal = bsModal();
+                    if (modal) { try { modal.show(); } catch { } }
+
                     if (mbYesBtn) {
                         mbYesBtn.onclick = function () {
                             try { bsModal()?.hide(); } catch { }
@@ -1318,7 +1606,6 @@
                         };
                     }
 
-                    // ✅ NO => reset multi + new item start
                     if (mbNoBtn) {
                         mbNoBtn.onclick = function () {
                             try { bsModal()?.hide(); } catch { }
@@ -1326,6 +1613,11 @@
                             addForm.reset();
                             document.getElementById("ExistingItemId").value = "";
                             window.__lastSavedItemId = 0;
+
+                            // reset button text
+                            const sb = document.getElementById("btnSaveNext");
+                            if (sb) sb.innerHTML = 'Save &amp; Next';
+
                             window.codeInput?.focus();
                             window.codeInput?.select?.();
                         };
@@ -1333,19 +1625,17 @@
 
                     setBusy(false);
 
-                } catch (err) {
-                    console.error(err);
+                } catch {
                     setBusy(false);
                     showCenterToast("danger", "Network/Server error");
                 }
             });
         });
+
     </script>
 
-
-
     <!-- ========================================================= -->
-    <!-- ✅ ENTER TO NEXT FIELD FLOW (STABLE) -->
+    <!-- ✅ ENTER TO NEXT FIELD FLOW (STABLE + DUP BLOCK) -->
     <!-- ========================================================= -->
     <script>
         (function () {
@@ -1395,6 +1685,15 @@
                 if (e.target && e.target.tagName === 'TEXTAREA') return;
                 if (e.ctrlKey || e.altKey) return;
 
+                // ✅ only block when duplicate lock is ON
+                if (window.__isItemCodeDuplicate) {
+                    e.preventDefault();
+                    window.codeInput?.focus();
+                    window.codeInput?.select?.();
+                    window.showCenterToast?.("danger", "Barcode already exists!");
+                    return;
+                }
+
                 const curr = e.currentTarget;
                 if (!curr || !curr.id) return;
 
@@ -1434,5 +1733,40 @@
         function recalcRecipeRowTotal() { /* TODO */ }
         function recalcRecipeGrandTotal() { /* TODO */ }
     </script>
-}
 
+    <!-- ✅ Optional: ItemName exists check -->
+    <script>
+        (function () {
+            const nameInput = document.getElementById('Item_ItemName');
+            const msg = document.getElementById('itemNameMessage');
+            if (!nameInput) return;
+
+            let t = null;
+
+            async function checkName() {
+                const v = (nameInput.value || "").trim();
+                if (!v) { if (msg) msg.textContent = ""; return; }
+
+                try {
+                    const url = '@Url.Action("CheckItemName", "Item")' + '?itemName=' + encodeURIComponent(v);
+                    const res = await fetch(url, { cache: "no-store" });
+                    const exists = await res.json();
+
+                    if (exists) {
+                        if (msg) msg.textContent = "Item Name already exists!";
+                        window.showCenterToast?.("danger", "Item Name already exists!");
+                    } else {
+                        if (msg) msg.textContent = "";
+                    }
+                } catch { }
+            }
+
+            nameInput.addEventListener("input", function () {
+                clearTimeout(t);
+                t = setTimeout(checkName, 300);
+            });
+
+            nameInput.addEventListener("blur", checkName);
+        })();
+    </script>
+}

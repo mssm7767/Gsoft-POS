@@ -19,9 +19,9 @@ namespace GSoftPosNew.Models
         public string? GenericName { get; set; }
 
         [Required(ErrorMessage = "Category is required")]
-        public int CategoryId { get; set; }
+        public int CategoryId { get; set; }       // ✅ best
 
-        public Category Category { get; set; }
+        public Category? Category { get; set; }
 
         [Required(ErrorMessage = "Supplier is required")]
         public int SupplierId { get; set; }
@@ -30,6 +30,9 @@ namespace GSoftPosNew.Models
 
         public string Unit { get; set; } = "0";
         public decimal? UnitPrice { get; set; }
+
+        public int? UnitId { get; set; }
+    
 
         public int? LocationId { get; set; }
 

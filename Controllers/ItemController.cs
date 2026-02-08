@@ -158,14 +158,127 @@ namespace GSoftPosNew.Controllers
         }
 
         // ============================================================
-        // ✅ ADD AJAX (NO RELOAD) => JSON return
+        // ✅ ADD AJAX (NO RELOAD) => INSERT + UPDATE (ExistingItemId se)
         // ============================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddAjax(AddItemViewModel vm, IFormFile? ImageFile)
+        public async Task<IActionResult> AddAjax(AddItemViewModel vm, IFormFile? ImageFile, int ExistingItemId)
         {
             if (vm?.ItemData == null)
                 return BadRequest(new { ok = false, error = "Invalid data." });
+
+            if (vm?.ItemData == null)
+                return BadRequest(new { ok = false, error = "Invalid data." });
+
+            // ✅ yahan paste karo
+            ModelState.Remove("ItemData.Category");
+            ModelState.Remove("ItemData.Supplier");
+            ModelState.Remove("ItemData.Unit");
+            ModelState.Remove("ItemData.Location");
+
+            //if (!ModelState.IsValid)
+            //{
+            //    var err = ModelState.Values.SelectMany(v => v.Errors)
+            //        .Select(e => e.ErrorMessage).FirstOrDefault() ?? "Validation failed.";
+            //    return BadRequest(new { ok = false, error = err });
+            //}
+
+
+
+            // ✅ trim code
+            vm.ItemData.ItemCode = (vm.ItemData.ItemCode ?? "").Trim();
+
+            // ✅ UPDATE MODE (ExistingItemId > 0)
+            if (vm.ItemData.Id > 0)
+            {
+                var tracked = _context.Items.FirstOrDefault(x => x.Id == vm.ItemData.Id);
+                if (tracked == null)
+                {
+                    TempData["Error"] = "Item not found.";
+                    return RedirectToAction("Index");
+                }
+
+                if (ImageFile != null && ImageFile.Length > 0)
+                {
+                    if (!string.IsNullOrEmpty(tracked.ImagePath))
+                    {
+                        var oldFilePath = Path.Combine(
+                            Directory.GetCurrentDirectory(),
+                            "wwwroot",
+                            tracked.ImagePath.TrimStart('/')
+                        );
+                        if (System.IO.File.Exists(oldFilePath))
+                            System.IO.File.Delete(oldFilePath);
+                    }
+
+                    var fileName = Guid.NewGuid() + Path.GetExtension(ImageFile.FileName);
+                    var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images");
+                    if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+
+                    var filePath = Path.Combine(folder, fileName);
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await ImageFile.CopyToAsync(stream);
+                    }
+
+                    vm.ItemData.ImagePath = "/images/" + fileName;
+                }
+                else
+                {
+                    vm.ItemData.ImagePath = tracked.ImagePath;
+                }
+
+                // ✅ make sure vm.ItemData.Id matches tracked
+                vm.ItemData.Id = tracked.Id;
+
+                _context.Entry(tracked).CurrentValues.SetValues(vm.ItemData);
+                await _context.SaveChangesAsync();
+
+                // ✅ OPTIONAL: update recipe for this item (delete old then add new)
+                // (Agar recipe feature use ho raha hai)
+                try
+                {
+                    // remove old recipe rows
+                    var oldRows = _context.ItemIngredients.Where(x => x.ItemId == tracked.Id);
+                    _context.ItemIngredients.RemoveRange(oldRows);
+                    await _context.SaveChangesAsync();
+
+                    // add new
+                    SaveRecipeInternal(vm);
+                    await _context.SaveChangesAsync();
+                }
+                catch
+                {
+                    // ignore if recipe tables not used
+                }
+
+                return Json(new
+                {
+                    ok = true,
+                    itemId = tracked.Id,
+                    itemCode = tracked.ItemCode,
+                    message = "Item updated successfully!"
+                });
+            }
+
+            // ✅ INSERT MODE (New item)
+            // AUTO ITEM CODE
+            if (string.IsNullOrWhiteSpace(vm.ItemData.ItemCode))
+            {
+                var numericCodes = _context.Items
+                    .Select(i => i.ItemCode)
+                    .Where(c => !string.IsNullOrEmpty(c) && Regex.IsMatch(c, @"^\d+$"))
+                    .Select(c => int.Parse(c));
+
+                int max = numericCodes.Any() ? numericCodes.Max() : 0;
+                vm.ItemData.ItemCode = (max + 1).ToString("D4");
+                vm.ItemData.ItemCode = (vm.ItemData.ItemCode ?? "").Trim();
+            }
+
+            // DUPLICATE CODE CHECK
+            bool exists = await _context.Items.AnyAsync(i => i.ItemCode == vm.ItemData.ItemCode);
+            if (exists)
+                return BadRequest(new { ok = false, error = $"Item Code '{vm.ItemData.ItemCode}' already exists!" });
 
             // IMAGE UPLOAD
             if (ImageFile != null && ImageFile.Length > 0)
@@ -181,25 +294,6 @@ namespace GSoftPosNew.Controllers
                 }
                 vm.ItemData.ImagePath = "/images/" + fileName;
             }
-
-            // AUTO ITEM CODE
-            if (string.IsNullOrWhiteSpace(vm.ItemData.ItemCode))
-            {
-                var numericCodes = _context.Items
-                    .Select(i => i.ItemCode)
-                    .Where(c => !string.IsNullOrEmpty(c) && Regex.IsMatch(c, @"^\d+$"))
-                    .Select(c => int.Parse(c));
-
-                int max = numericCodes.Any() ? numericCodes.Max() : 0;
-                vm.ItemData.ItemCode = (max + 1).ToString("D4");
-            }
-
-            vm.ItemData.ItemCode = (vm.ItemData.ItemCode ?? "").Trim();
-
-            // DUPLICATE CODE CHECK
-            bool exists = _context.Items.Any(i => i.ItemCode == vm.ItemData.ItemCode);
-            if (exists)
-                return BadRequest(new { ok = false, error = $"Item Code '{vm.ItemData.ItemCode}' already exists!" });
 
             // NORMALIZATION
             if (vm.ItemData.Quantity < 0) vm.ItemData.Quantity = 0;
@@ -223,36 +317,85 @@ namespace GSoftPosNew.Controllers
             });
         }
 
+
         // ============================================================
         // ✅ SAVE MULTI BARCODES AJAX (NO RELOAD)
         // ============================================================
-
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult SaveMultiBarcodesAjax([FromBody] SaveMultiBarcodesDto model)
         {
-            if (model.ItemId <= 0)
+            if (model == null || model.ItemId <= 0)
                 return Json(new { ok = false, error = "Invalid item id" });
 
-            if (model.MultiBarcodes == null || !model.MultiBarcodes.Any())
+            if (model.MultiBarcodes == null || model.MultiBarcodes.Count == 0)
                 return Json(new { ok = false, error = "No barcodes received" });
 
-            foreach (var code in model.MultiBarcodes)
+            // ✅ Clean + distinct
+            var cleaned = model.MultiBarcodes
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x => x.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (cleaned.Count == 0)
+                return Json(new { ok = false, error = "No valid barcodes" });
+
+            // ✅ Item exist check
+            var itemExists = _context.Items.Any(x => x.Id == model.ItemId);
+            if (!itemExists)
+                return Json(new { ok = false, error = "Item not found" });
+
+            // ✅ Check duplicates in DB (GLOBAL)
+            // Agar aap chahtay ho ke 1 barcode sirf 1 item ke sath ho => global check zaroori hai
+            var existingGlobal = _context.MultiBarcodes
+                .Where(m => cleaned.Contains(m.Barcode))
+                .Select(m => new { m.Barcode, m.ItemId })
+                .ToList();
+
+            // ✅ If barcode already linked to another item -> BLOCK and tell user
+            var conflict = existingGlobal
+                .Where(x => x.ItemId != model.ItemId)
+                .Select(x => x.Barcode)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (conflict.Any())
             {
-                var barcode = new MultiBarcodes
+                return Json(new
+                {
+                    ok = false,
+                    error = "These barcodes already exist for another item: " + string.Join(", ", conflict)
+                });
+            }
+
+            // ✅ For same item duplicates -> just skip
+            var alreadyForSameItem = existingGlobal
+                .Where(x => x.ItemId == model.ItemId)
+                .Select(x => x.Barcode)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var toInsert = cleaned
+                .Where(bc => !alreadyForSameItem.Contains(bc, StringComparer.OrdinalIgnoreCase))
+                .ToList();
+
+            if (toInsert.Count == 0)
+                return Json(new { ok = true, count = 0, message = "Nothing new to save." });
+
+            foreach (var bc in toInsert)
+            {
+                _context.MultiBarcodes.Add(new MultiBarcodes
                 {
                     ItemId = model.ItemId,
-                    Barcode = code.Trim()
-                };
-                _context.MultiBarcodes.Add(barcode);
+                    Barcode = bc
+                });
             }
 
             _context.SaveChanges();
-
-            return Json(new { ok = true });
+            return Json(new { ok = true, count = toInsert.Count, message = "Multi barcodes saved." });
         }
-
 
         //[HttpPost]
         //[ValidateAntiForgeryToken]
@@ -519,8 +662,11 @@ namespace GSoftPosNew.Controllers
                 vm.ItemData.ImagePath = tracked.ImagePath;
             }
 
+            // ✅ make sure vm.ItemData.Id matches tracked
+            vm.ItemData.Id = tracked.Id;
+
             _context.Entry(tracked).CurrentValues.SetValues(vm.ItemData);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             TempData["Success"] = "Item updated successfully!";
             return RedirectToAction("Add");
@@ -586,6 +732,51 @@ namespace GSoftPosNew.Controllers
                 .OrderBy(l => l.Text)
                 .ToList();
         }
+
+        [HttpGet]
+        public IActionResult GetItemByCode(string code)
+        {
+            if (string.IsNullOrWhiteSpace(code))
+                return Json(new { ok = false, exists = false });
+
+            code = code.Trim();
+
+            // ✅ apne DB context ka name yahan use karo (example: _context)
+            var it = _context.Items
+                .Where(x => x.ItemCode == code)
+                .Select(x => new
+                {
+                    id = x.Id,
+                    itemCode = x.ItemCode,
+                    referenceCode = x.ReferenceCode,
+                    itemName = x.ItemName,
+                    flavour = x.Flavour,
+
+                    categoryId = x.CategoryId,
+                    supplierId = x.SupplierId,
+
+                    salePrice = x.SalePrice,
+                    purchasePrice = x.PurchasePrice,
+                    markupPercentage = x.MarkupPercentage,
+
+                    quantity = x.Quantity,
+
+                    packSize = x.PackSize,
+                    unitId = x.UnitId,
+
+                    locationId = x.LocationId,
+
+                    unitPrice = x.UnitPrice,
+                    packPrice = x.PackPrice
+                })
+                .FirstOrDefault();
+
+            if (it == null)
+                return Json(new { ok = true, exists = false });
+
+            return Json(new { ok = true, exists = true, item = it });
+        }
+
 
         // ==================== INTERNAL HELPERS (private) ====================
         private void SaveMultiBarcodesInternal(int itemId, List<string> multiBarcodes)
