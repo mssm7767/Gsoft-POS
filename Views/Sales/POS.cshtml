@@ -1183,234 +1183,217 @@
 
 <link href="~/lib/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
 <script src="~/lib/sweetalert2/sweetalert2.min.js"></script>
-
+<script>
+    /* =========================================================
+       GS POS — FULL SCRIPT SECTION (FIXED)
+       - Scanner exact match add
+       - Hold/Retrieve restored
+       - Cost removed
+       - F8 prints only saved invoice
+       - Partial payment blocked (except Credit)
+    ========================================================= */
+    <link href="~/lib/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
+    <script src="~/lib/sweetalert2/sweetalert2.min.js"></script>
 
 <script>
-    /* -------- GLOBALS -------- */
-    let filtered = [];
-    let selectedIdx = -1;
+    /* =========================================================
+       GS POS — FULL SCRIPT SECTION (UPDATED / FIXED)
+       ✅ Scanner auto add (no Enter)
+       ✅ Cost removed
+       ✅ Hold success message (English) + clear screen
+       ✅ Retrieve fixed
+       ✅ F8 prints only saved invoice
+       ✅ Partial payment blocked (except Credit)
+       ✅ IMPORTANT: F12 spam fix (empty screen par invoice number aage nahi bhagega)
+    ========================================================= */
 
-    let focusMode = 'scan';
-
-    // ✅ Default: percent
-    let itemDiscMode = 'percent'; // 'percent' | 'amount'
-
-    let currentEditingPrice = null;
+    /* ---------- SERVER DATA ---------- */
     const items = @Html.Raw(itemsJson);
-    const TAX_PERCENT = 0;
-
-    var invoiceCounter = "@invoiceNo";
-    let pendingAction = null;
-
-    let itemInputEl, suggDiv, posShell, btnFullscreen;
-    let invoiceDiscountPercentEl, invoiceDiscountAmountEl;
-
-    // ✅ Dashboard URL from server
+    const allowSaleLowStock = @((ViewBag.SaleLowStock ?? false).ToString().ToLower());
     const DASHBOARD_URL = "@dashboardUrl";
 
-    /* -------- UTILS -------- */
+    const SEARCH_INVOICE_NO = '@((searchSale)?.InvoiceNumber ?? "")';
+    const SEARCH_SALETYPE   = '@((searchSale)?.SaleType ?? "Sale")';
+    const SEARCH_CUSTOMERID = '@((searchSale?.Customers?.Id) ?? 0)';
+    const SEARCH_HAS_CUSTOMER = @((searchSale?.Customers != null).ToString().ToLower());
+    const SEARCH_PAYMENT_METHOD = '@(searchSale?.Payment?.PaymentMethod ?? "cash")'.toLowerCase();
+    const SEARCH_SALE_ID = @((searchSale?.Id ?? 0));
+
+    /* ---------- GLOBALS ---------- */
+    let filtered = [];
+    let selectedIdx = -1;
+    let focusMode = 'scan';
+    let itemDiscMode = 'percent'; // 'percent' | 'amount'
+
+    let posShell, btnFullscreen, itemInputEl, suggDiv;
+    let invoiceDiscountPercentEl, invoiceDiscountAmountEl;
+
+    let invoiceCounter = "@invoiceNo";
+    let pendingAction = null;
+
+    let lastSavedSaleId = 0; // ✅ used by F8 printing (current saved)
+
+    /* ✅ F12 SPAM FIX FLAG */
+    let invoiceIsFresh = true;   // empty/new invoice = true (F12 spam block)
+    function markDirty(){ invoiceIsFresh = false; }
+
+    /* ---------- UTILS ---------- */
     function getToastTarget() {
-        return document.fullscreenElement || document.webkitFullscreenElement || document.body;
+      return document.fullscreenElement || document.webkitFullscreenElement || document.body;
     }
 
     function toast(msg, icon = 'info', ms = 1500) {
-        Swal.fire({
-            toast: true,
-            icon: icon,
-            title: msg,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: ms,
-            timerProgressBar: true,
-            target: getToastTarget(),
-            didOpen: (container) => {
-                const c = container?.closest?.('.swal2-container');
-                if (c) c.classList.add('gpos-swal-fixed');
-            }
-        });
-    }
-
-    function nowIso() { return new Date().toISOString(); }
-    function selectAllContent(el) {
-        const r = document.createRange(); r.selectNodeContents(el);
-        const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
-    }
-    function money(n) { return `₨${(n || 0).toFixed(2)}`; }
-    function hasLineItems() { return !!document.querySelector('#salesTable tbody tr:not(#noDataRow)'); }
-    function clamp(n, min, max) {
-        n = parseFloat(n);
-        if (isNaN(n)) n = 0;
-        return Math.min(Math.max(n, min), max);
-    }
-
-    /* ✅✅ SAVE FIX HELPERS (JSON/HTML + CSRF) */
-    function getAntiForgeryToken() {
-        return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
-    }
-
-    async function readResponseSmart(res) {
-        const ct = (res.headers.get('content-type') || '').toLowerCase();
-        const text = await res.text();
-
-        let json = null;
-        if (ct.includes('application/json')) {
-            try { json = JSON.parse(text); } catch { json = null; }
+      Swal.fire({
+        toast: true,
+        icon,
+        title: msg,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: ms,
+        timerProgressBar: true,
+        target: getToastTarget(),
+        didOpen: (container) => {
+          const c = container?.closest?.('.swal2-container');
+          if (c) c.classList.add('gpos-swal-fixed');
         }
-        return { ct, text, json };
+      });
     }
 
     function showServerError(title, details) {
-        Swal.fire({
-            icon: 'error',
-            title: title || 'Error',
-            html: `<div style="text-align:left;white-space:pre-wrap;font-family:ui-monospace,Consolas,monospace;font-size:12px;max-height:260px;overflow:auto;border:1px solid #e5e7eb;padding:10px;border-radius:10px;background:#f9fafb;">${String(details || '').replace(/</g, '&lt;')}</div>`,
-            target: getToastTarget()
-        });
+      Swal.fire({
+        icon: 'error',
+        title: title || 'Error',
+        html: `<div style="text-align:left;white-space:pre-wrap;font-family:ui-monospace,Consolas,monospace;font-size:12px;max-height:280px;overflow:auto;border:1px solid #e5e7eb;padding:10px;border-radius:10px;background:#f9fafb;">${String(details||'').replace(/</g,'&lt;')}</div>`,
+        target: getToastTarget()
+      });
     }
 
-    /* ✅✅ EXIT / CLOSE */
+    function money(n) { return `₨${(Number(n)||0).toFixed(2)}`; }
+
+    function clamp(n, min, max) {
+      n = parseFloat(n);
+      if (isNaN(n)) n = 0;
+      return Math.min(Math.max(n, min), max);
+    }
+
+    function hasLineItems() {
+      return !!document.querySelector('#salesTable tbody tr:not(#noDataRow)');
+    }
+
+    function nowIso() { return new Date().toISOString(); }
+
+    function getAntiForgeryToken() {
+      return document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]')?.value
+          || document.querySelector('input[name="__RequestVerificationToken"]')?.value
+          || '';
+    }
+
+    async function readResponseSmart(res) {
+      const ct = (res.headers.get('content-type') || '').toLowerCase();
+      const text = await res.text();
+      let json = null;
+      if (ct.includes('application/json')) {
+        try { json = JSON.parse(text); } catch { json = null; }
+      }
+      return { ct, text, json };
+    }
+
+    /* ---------- EXIT / CLOSE ---------- */
     function exitToDashboard() {
-        window.location.href = DASHBOARD_URL || '/Home/Index';
+      window.location.href = DASHBOARD_URL || '/Home/Index';
     }
 
     function closeSoftware() {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Close Software?',
-            text: 'Browser apps normally cannot force-close tabs. If allowed, it will close. Otherwise it will take you to Dashboard.',
-            showCancelButton: true,
-            confirmButtonText: 'Close',
-            cancelButtonText: 'Cancel',
-            target: getToastTarget()
-        }).then(r => {
-            if (!r.isConfirmed) return;
-
-            try {
-                window.open('', '_self');
-                window.close();
-            } catch { }
-
-            setTimeout(() => {
-                window.location.href = DASHBOARD_URL || '/Home/Index';
-            }, 200);
-        });
+      Swal.fire({
+        icon: 'warning',
+        title: 'Close Software?',
+        text: 'Browser apps normally cannot force-close tabs. If allowed, it will close. Otherwise it will take you to Dashboard.',
+        showCancelButton: true,
+        confirmButtonText: 'Close',
+        cancelButtonText: 'Cancel',
+        target: getToastTarget()
+      }).then(r => {
+        if (!r.isConfirmed) return;
+        try { window.open('', '_self'); window.close(); } catch {}
+        setTimeout(() => window.location.href = DASHBOARD_URL || '/Home/Index', 200);
+      });
     }
 
-    /* ✅ ITEM DISC MODE (Percent / Amount) — show ONLY one in grid */
+    /* ---------- DISC MODE (Percent / Amount) ---------- */
     function setItemDiscMode(mode, showToast = true) {
-        itemDiscMode = (mode === 'amount') ? 'amount' : 'percent';
+      itemDiscMode = (mode === 'amount') ? 'amount' : 'percent';
 
-        document.body.classList.remove('disc-mode-percent', 'disc-mode-amount');
-        document.body.classList.add(itemDiscMode === 'percent' ? 'disc-mode-percent' : 'disc-mode-amount');
+      document.body.classList.remove('disc-mode-percent','disc-mode-amount');
+      document.body.classList.add(itemDiscMode === 'percent' ? 'disc-mode-percent' : 'disc-mode-amount');
 
-        const chip = document.getElementById('itemDiscModeChip');
-        const bP = document.getElementById('itemDiscModePercentBtn');
-        const bA = document.getElementById('itemDiscModeAmountBtn');
+      const chip = document.getElementById('itemDiscModeChip');
+      const bP = document.getElementById('itemDiscModePercentBtn');
+      const bA = document.getElementById('itemDiscModeAmountBtn');
 
-        if (chip) chip.textContent = (itemDiscMode === 'percent') ? 'Item Disc: %' : 'Item Disc: PKR';
-        bP?.classList.toggle('active', itemDiscMode === 'percent');
-        bA?.classList.toggle('active', itemDiscMode === 'amount');
+      if (chip) chip.textContent = (itemDiscMode === 'percent') ? 'Item Disc: %' : 'Item Disc: PKR';
+      bP?.classList.toggle('active', itemDiscMode === 'percent');
+      bA?.classList.toggle('active', itemDiscMode === 'amount');
 
-        recalculateTotals();
+      recalculateTotals();
 
-        if (showToast) {
-            toast(itemDiscMode === 'percent'
-                ? 'Item discount mode: %'
-                : 'Item discount mode: PKR (Less)', 'info', 1100);
-        }
+      if (showToast) toast(itemDiscMode === 'percent' ? 'Item discount: %' : 'Item discount: PKR', 'info', 900);
     }
 
-    /* -------- FOCUS / MODES -------- */
-    function initializeFocusMode() { setFocusMode('scan', false); }
-
-    // ✅✅ FIX: F2/F3 se grid focus nahi jayega — barcode pe hi rahega
+    /* ---------- FOCUS MODE ---------- */
     function setFocusMode(mode, showToast = true) {
-        focusMode = mode;
+      focusMode = mode;
 
-        document.body.classList.remove('focus-mode-qty', 'focus-mode-price', 'focus-mode-scan');
-        if (mode === 'qty') document.body.classList.add('focus-mode-qty');
-        else if (mode === 'price') document.body.classList.add('focus-mode-price');
-        else document.body.classList.add('focus-mode-scan');
+      document.body.classList.remove('focus-mode-qty','focus-mode-price','focus-mode-scan');
+      if (mode === 'qty') document.body.classList.add('focus-mode-qty');
+      else if (mode === 'price') document.body.classList.add('focus-mode-price');
+      else document.body.classList.add('focus-mode-scan');
 
-        const lbl = document.getElementById('currentFocusMode');
-        const chip = document.getElementById('modeChip');
+      const lbl = document.getElementById('currentFocusMode');
+      const chip = document.getElementById('modeChip');
 
-        const text = (mode === 'qty' ? 'Quantity' : mode === 'price' ? 'Price' : 'Scan');
-        if (lbl) lbl.textContent = text;
-        if (chip) chip.textContent = text;
+      const text = (mode === 'qty' ? 'Quantity' : mode === 'price' ? 'Price' : 'Scan');
+      if (lbl) lbl.textContent = text;
+      if (chip) chip.textContent = text;
 
-        updateFocusModeIndicator();
+      updateFocusModeIndicator();
+      if (showToast) toast(`Mode: ${text}`, 'info', 800);
 
-        if (showToast) toast(`Mode: ${text}`, 'info', 900);
-
-        // ✅ always keep barcode focus
-        focusBarcode();
+      focusBarcode();
     }
 
     function updateFocusModeIndicator() {
-        let i = document.getElementById('focusModeIndicator');
-        if (!i) {
-            i = document.createElement('div');
-            i.id = 'focusModeIndicator';
-            i.className = 'focus-mode-indicator';
-            const p = document.getElementById('itemSearchInput')?.parentNode;
-            if (p) { p.style.position = 'relative'; p.appendChild(i); }
-        }
-        if (!i) return;
-
-        i.textContent = (focusMode === 'qty' ? 'Q' : focusMode === 'price' ? 'P' : 'S');
-        i.style.background = (focusMode === 'qty' ? '#22c55e' : focusMode === 'price' ? '#3b82f6' : '#64748b');
+      let i = document.getElementById('focusModeIndicator');
+      if (!i) {
+        i = document.createElement('div');
+        i.id = 'focusModeIndicator';
+        i.className = 'focus-mode-indicator';
+        const p = document.getElementById('itemSearchInput')?.parentNode;
+        if (p) { p.style.position = 'relative'; p.appendChild(i); }
+      }
+      if (!i) return;
+      i.textContent = (focusMode === 'qty' ? 'Q' : focusMode === 'price' ? 'P' : 'S');
+      i.style.background = (focusMode === 'qty' ? '#22c55e' : focusMode === 'price' ? '#3b82f6' : '#64748b');
     }
 
-    function focusLastPriceCell() {
-        const r = document.querySelector('#salesTable tbody tr:last-child');
-        if (!r || r.id === 'noDataRow') return;
-        const c = r.querySelector('.price-cell'); if (!c) return;
-        makePriceEditable(c); selectAllContent(c); c.focus();
-    }
-
-    function focusLastQtyInput() {
-        const r = document.querySelector('#salesTable tbody tr:last-child');
-        if (!r || r.id === 'noDataRow') return;
-        const q = r.querySelector('.qty-main'); if (!q) return;
-        q.focus(); q.select();
-    }
-
-    function focusBarcode() {
-        const bi = document.getElementById('itemSearchInput');
-        if (!bi) return;
-        bi.classList.add('blinking');
-        bi.focus();
-        bi.select();
-    }
-
-    function focusQtyOnRow(row) {
-        const q = row?.querySelector('.qty-main');
-        if (q) { q.focus(); q.select(); }
-    }
-
-    function focusPriceOnRow(row) {
-        const p = row?.querySelector('.price-cell');
-        if (p) { makePriceEditable(p); selectAllContent(p); p.focus(); }
-    }
-
-    function postAddFocus(row) {
-        if (focusMode === 'price') focusPriceOnRow(row);
-        else if (focusMode === 'qty') focusQtyOnRow(row);
-        else focusBarcode();
-    }
-
-    function toggleQtyMode() { (focusMode === 'qty') ? setFocusMode('scan') : setFocusMode('qty'); }
+    function toggleQtyMode()   { (focusMode === 'qty')   ? setFocusMode('scan') : setFocusMode('qty'); }
     function togglePriceMode() { (focusMode === 'price') ? setFocusMode('scan') : setFocusMode('price'); }
 
-    function applySaleTypeVisual() {
-        const isReturn = document.getElementById('rbReturn')?.checked;
-        document.body.classList.toggle('return-mode', !!isReturn);
-        const bi = document.getElementById('itemSearchInput');
-        if (bi) bi.placeholder = isReturn ? "Return item scan karein… (Alt + B)" : "Sale item scan karein… (Alt + B)";
+    function focusBarcode() {
+      const bi = document.getElementById('itemSearchInput');
+      if (!bi) return;
+      bi.classList.add('blinking');
+      bi.focus();
+      bi.select();
     }
 
-    /* -------- SUGGESTIONS / SCAN -------- */
+    function applySaleTypeVisual() {
+      const isReturn = document.getElementById('rbReturn')?.checked;
+      document.body.classList.toggle('return-mode', !!isReturn);
+      const bi = document.getElementById('itemSearchInput');
+      if (bi) bi.placeholder = isReturn ? "Return item scan karein… (Alt + B)" : "Sale item scan karein… (Alt + B)";
+    }
+
+    /* ---------- SUGGESTIONS ---------- */
         function showItemSuggestions(term) {
         term = (term || '').trim();
         const listDiv = document.getElementById('itemSuggestions');
@@ -1423,19 +1406,28 @@
         }
 
         const lc = term.toLowerCase();
+
+        // Filter items
         filtered = items.filter(x =>
             (x.ItemCode || '').toLowerCase().includes(lc) ||
             (x.ItemName || '').toLowerCase().includes(lc)
         );
 
+        // Check for exact match
+        const exactMatchIndex = filtered.findIndex(x => (x.ItemCode || '').toLowerCase() === lc);
+        if (exactMatchIndex > 0) {
+            // Move exact match to the top
+            const exactMatch = filtered.splice(exactMatchIndex, 1)[0];
+            filtered.unshift(exactMatch);
+        }
+
         if (filtered.length === 0) {
             listDiv.innerHTML = `
-                <div class="suggestion-item">
-                    <span class="suggestion-name text-muted">No items found</span>
-                </div>`;
+            <div class="suggestion-item">
+                <span class="suggestion-name text-muted">No items found</span>
+            </div>`;
             selectedIdx = -1;
         } else {
-            // ✅ only set selectedIdx if nothing is selected
             if (selectedIdx < 0) selectedIdx = 0;
 
             listDiv.innerHTML = filtered.map((it, i) => {
@@ -1456,1189 +1448,1123 @@
         listDiv.style.display = 'block';
     }
 
-    // ✅✅ NEW: keep active suggestion visible while moving up/down
     function ensureActiveVisible() {
-        const box = document.getElementById('itemSuggestions');
-        if (!box || box.style.display !== 'block') return;
+      const box = document.getElementById('itemSuggestions');
+      if (!box || box.style.display !== 'block') return;
+      const active = box.querySelector('.suggestion-item.active');
+      if (!active) return;
 
-        const active = box.querySelector('.suggestion-item.active');
-        if (!active) return;
+      const top = active.offsetTop;
+      const bottom = top + active.offsetHeight;
 
-        const top = active.offsetTop;
-        const bottom = top + active.offsetHeight;
-
-        if (top < box.scrollTop) box.scrollTop = top - 6;
-        else if (bottom > box.scrollTop + box.clientHeight) box.scrollTop = bottom - box.clientHeight + 6;
+      if (top < box.scrollTop) box.scrollTop = top - 6;
+      else if (bottom > box.scrollTop + box.clientHeight) box.scrollTop = bottom - box.clientHeight + 6;
     }
 
     function updateHighlight() {
-        document.querySelectorAll('#itemSuggestions .suggestion-item')
-            .forEach((el, i) => el.classList.toggle('active', i === selectedIdx));
-
-        ensureActiveVisible();
+      document.querySelectorAll('#itemSuggestions .suggestion-item')
+        .forEach((el, i) => el.classList.toggle('active', i === selectedIdx));
+      ensureActiveVisible();
     }
-
-    const allowSaleLowStock = @((ViewBag.SaleLowStock ?? false).ToString().ToLower());
 
     function selectItemSuggestion(i) {
-        if (i < 0 || i >= filtered.length) return;
-        const item = filtered[i];
+      if (i < 0 || i >= filtered.length) return;
+      const item = filtered[i];
 
-        if ((item.Quantity <= 0) && !allowSaleLowStock) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Stock Unavailable',
-                html: `
-                    <div style="font-size:14px;">
-                        This item is currently <b>out of stock</b>.<br><br>
-                        To proceed with this sale, please enable
-                        <b>"Allow Sale on Low Stock"</b>
-                        from
-                         <a href="/Settings/Index"
-                           style="color:#0d6efd;font-weight:600;text-decoration:underline;">
-                            Shop Settings
-                        </a>.
-                    </div>
-                `,
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#dc3545'
-            });
-            return;
-        }
+      if ((item.Quantity <= 0) && !allowSaleLowStock) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Stock Unavailable',
+          html: `
+            <div style="font-size:14px;">
+              This item is currently <b>out of stock</b>.<br><br>
+              To proceed, enable <b>"Allow Sale on Low Stock"</b> from
+              <a href="/Settings/Index" style="color:#0d6efd;font-weight:600;text-decoration:underline;">Shop Settings</a>.
+            </div>
+          `,
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#dc3545',
+          target: getToastTarget()
+        });
+        return;
+      }
 
+      addToSalesTable(item);
 
-        addToSalesTable(item);
-
-        const box = document.getElementById('itemSuggestions');
-        box.style.display = 'none';
-
-        const bi = document.getElementById('itemSearchInput');
-        bi.value = '';
+      const box = document.getElementById('itemSuggestions');
+      box.style.display = 'none';
+      const bi = document.getElementById('itemSearchInput');
+      bi.value = '';
+      filtered = [];
+      selectedIdx = -1;
     }
 
-    let scanState = {
-      start: 0,
-      last: 0,
-      count: 0,
-      timer: null,
-      buffer: ''
-    };
-    const SCAN_MIN_LEN = 6;        // minimum chars to qualify as scan
-    const SCAN_AVG_MS = 45;        // avg ms per key (scanner threshold)
-    const SCAN_END_DELAY = 120;    // wait after last key (slow grouping)
-    const SCANNER_ADD_DELAY = 600;
+    /* ---------- ✅ SCANNER FIX (NO ENTER REQUIRED) ---------- */
+    let scanTimer = null;
 
-    function attachScannerHandlers() {
-        itemInputEl.addEventListener('keydown', e => {
-          const now = performance.now();
+    function scannerSmartAdd(term) {
+      const t = (term || '').trim();
+      if (!t) return;
 
-          /* ─────── SCAN TIMING TRACK ─────── */
-            if (scanState.count === 0 || now - scanState.last > SCAN_END_DELAY) {
-              scanState.start = now;
-              scanState.buffer = '';
-              scanState.count = 0;
-            }
+      const lc = t.toLowerCase();
 
-
-          scanState.count++;
-          scanState.last = now;
-
-          /* ─────── CAPTURE SCANNER CHARS ─────── */
-          if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
-            scanState.buffer += e.key;
-          }
-
-          /* ─────── SUGGESTION NAVIGATION ─────── */
-          if (filtered.length && suggDiv.style.display === 'block') {
-            if (e.key === 'ArrowDown') {
-              e.preventDefault();
-              if (selectedIdx < filtered.length - 1) {
-                selectedIdx++;
-                updateHighlight();
-              }
-              return;
-            }
-
-            if (e.key === 'ArrowUp') {
-              e.preventDefault();
-              if (selectedIdx > 0) {
-                selectedIdx--;
-                updateHighlight();
-              }
-              return;
-            }
-
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              if (selectedIdx === -1 && filtered.length > 0) selectedIdx = 0;
-              if (selectedIdx >= 0) selectItemSuggestion(selectedIdx);
-              return;
-            }
-
-            if (e.key === 'Escape') {
-              suggDiv.style.display = 'none';
-              filtered = [];
-              selectedIdx = -1;
-              return;
-            }
-          } else {
-            /* ─────── MANUAL ENTER ─────── */
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              manualTryAdd(itemInputEl.value.trim());
-              return;
-            }
-          }
-
-          /* ─────── SCAN END DETECTION ─────── */
-          clearTimeout(scanState.timer);
-          scanState.timer = setTimeout(() => {
-            const term =
-              scanState.buffer.length
-                ? scanState.buffer.trim()        // scanner input
-                : itemInputEl.value.trim();      // manual input
-
-            const duration = scanState.last - scanState.start;
-            const avg = duration / Math.max(1, scanState.count);
-
-            const isScanner =
-              term.length >= SCAN_MIN_LEN &&
-              avg <= SCAN_AVG_MS;
-
-            if (isScanner) {
-              scannerAutoAdd(term);
-              itemInputEl.value = '';
-            } else {
-              showItemSuggestions(term);
-            }
-
-              scanState.start = 0;
-              scanState.last = 0;
-              scanState.count = 0;
-              scanState.buffer = '';
-              scanState.timer = null;
-
-            }, SCAN_END_DELAY);
-        });
-
-        itemInputEl.addEventListener('input', () => {
-            if (scanState.count === 0) showItemSuggestions(itemInputEl.value.trim());
-        });
-    }
-
-    function scannerAutoAdd(term) {
-        const lc = term.toLowerCase();
-
-        let match =
-            items.find(x => (x.ItemCode || '').toLowerCase() === lc) ||
-            items.find(x => (x.ItemName || '').toLowerCase() === lc);
-
-        if (!match) {
-            const poss = items.filter(x => (x.ItemCode || '').toLowerCase().includes(lc) || (x.ItemName || '').toLowerCase().includes(lc));
-            if (poss.length === 1) match = poss[0];
-        }
-        if (!match) { toast('Item not found', 'warning'); showItemSuggestions(term); return; }
-
-        addToSalesTable(match);
+      //1) exact barcode match first
+      let exact = items.find(x => (x.ItemCode || '').toLowerCase() === lc);
+      if (exact) {
+          addToSalesTable(exact);
         suggDiv.style.display = 'none';
         itemInputEl.value = '';
+        filtered = [];
+        selectedIdx = -1;
+        return;
+      }
+
+      // 2) if barcode length and only ONE possible match, auto add
+      const poss = items.filter(x => (x.ItemCode || '').toLowerCase().includes(lc) || (x.ItemName || '').toLowerCase().includes(lc));
+      if (t.length >= 6 && poss.length === 1) {
+        addToSalesTable(poss[0]);
+        suggDiv.style.display = 'none';
+        itemInputEl.value = '';
+        filtered = [];
+        selectedIdx = -1;
+        return;
+      }
+
+      // 3) otherwise show suggestions
+      showItemSuggestions(t);
     }
 
-    function manualTryAdd(term) {
-        const lc = (term || '').toLowerCase();
-        if (!lc) return;
+        function attachScannerHandlers() {
 
-        let match =
-            items.find(x => (x.ItemCode || '').toLowerCase() === lc) ||
-            items.find(x => (x.ItemName || '').toLowerCase() === lc);
+        // Manual typing → always show suggestions
+        itemInputEl.addEventListener('input', () => {
+            const term = itemInputEl.value.trim();
 
-        if (match) {
-            addToSalesTable(match);
-            suggDiv.style.display = 'none';
-            itemInputEl.value = '';
-            return;
-        }
-        showItemSuggestions(term);
+            if (!term) {
+                document.getElementById('itemSuggestions').style.display = 'none';
+                return;
+            }
+
+            showItemSuggestions(term);
+        });
+
+        // Scanner (or manual Enter) → Smart Add
+        itemInputEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+
+                const term = itemInputEl.value.trim();
+                if (!term) return;
+
+                scannerSmartAdd(term);
+                itemInputEl.value = '';
+            }
+        });
     }
 
-    /* -------- GRID OPS -------- */
+
+
+    /* ---------- GRID OPS ---------- */
     function makePriceEditable(cell) {
-        cell.contentEditable = true;
-        cell.classList.add('editable-price');
-        currentEditingPrice = cell;
+      cell.contentEditable = true;
+      cell.classList.add('editable-price');
     }
 
     function savePrice(cell) {
-        cell.contentEditable = false;
-        cell.classList.remove('editable-price');
+      // user edited price => invoice dirty
+      markDirty();
 
-        let val = parseFloat((cell.textContent || '').replace('₨', '').trim());
-        if (isNaN(val) || val < 0) {
-            const orig = cell.dataset.originalPrice;
-            cell.textContent = `₨${parseFloat(orig || 0).toFixed(2)}`;
-        } else {
-            cell.textContent = `₨${val.toFixed(2)}`;
-            updateRowTotal(cell.closest('tr'));
-        }
+      cell.contentEditable = false;
+      cell.classList.remove('editable-price');
 
-        currentEditingPrice = null;
-        recalculateTotals();
+      let val = parseFloat((cell.textContent || '').replace('₨','').trim());
+      if (isNaN(val) || val < 0) {
+        const orig = cell.dataset.originalPrice;
+        cell.textContent = `₨${parseFloat(orig || 0).toFixed(2)}`;
+      } else {
+        cell.textContent = `₨${val.toFixed(2)}`;
+        updateRowTotal(cell.closest('tr'));
+      }
+      recalculateTotals();
     }
 
-    function encodeItem(obj) { return encodeURIComponent(JSON.stringify(obj || {})); }
-
+    /* ✅ UPDATED addToSalesTable (Cost removed + markDirty) */
     function addToSalesTable(item) {
-        const tb = document.querySelector('#salesTable tbody');
-        document.getElementById('noDataRow')?.remove();
+      markDirty(); // ✅ invoice now used
 
-        const existing = tb.querySelector(`tr[data-item-id="${item.Id}"]`);
-        if (existing) {
-            const q = existing.querySelector('.qty-main');
-            if (focusMode === 'price') {
-                postAddFocus(existing);
-            } else {
-                q.value = (parseFloat(q.value) || 0) + 1;
-                qtyInputChanged(q);
-                postAddFocus(existing);
-            }
-            recalculateTotals();
-            return;
+      const tb = document.querySelector('#salesTable tbody');
+      document.getElementById('noDataRow')?.remove();
+
+      // if already exists
+      const existing = tb.querySelector(`tr[data-item-id="${item.Id}"]`);
+      if (existing) {
+        const q = existing.querySelector('.qty-main');
+        if (focusMode !== 'price') {
+          q.value = (parseFloat(q.value) || 0) + 1;
+          qtyInputChanged(q);
         }
+        recalculateTotals();
+        focusBarcode();
+        return;
+      }
 
-        const row = document.createElement('tr');
-        row.dataset.itemId = item.Id;
+      const row = document.createElement('tr');
+      row.dataset.itemId = item.Id;
 
-        const originalPrice = item.PackSize ? item.UnitPrice : item.SalePrice;
-        const safeItem = encodeItem(item);
+      const originalPrice = item.PackSize ? item.UnitPrice : item.SalePrice;
+      const codeSafe = (item.ItemCode || ('I' + item.Id)).replace(/[^a-zA-Z0-9_-]/g, '');
 
-        const codeSafe = (item.ItemCode || ('I' + item.Id)).replace(/[^a-zA-Z0-9_-]/g, '');
-
-        row.innerHTML = `
+      row.innerHTML = `
         <td>${tb.rows.length + 1}</td>
-        <td>${item.ItemName ?? ''}</td>
-        <td><span tabindex="0" class="price-cell" data-original-price="${Number(originalPrice).toFixed(2)}">₨${Number(originalPrice).toFixed(2)}</span></td>
+        <td>
+          <div class="fw-bold">${item.ItemName ?? ''}</div>
+
+          <!-- ✅ Stock only (Cost removed) -->
+          <div class="small text-muted mt-1">
+            <span class="badge text-bg-light">
+              Stock: <span class="js-stock">${(item.Quantity ?? 0)}</span>
+            </span>
+          </div>
+        </td>
+
+        <td>
+          <span tabindex="0" class="price-cell" data-original-price="${Number(originalPrice||0).toFixed(2)}">₨${Number(originalPrice||0).toFixed(2)}</span>
+        </td>
+
         <td>
           <div class="d-inline-flex gap-1 align-items-center">
             <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(this,-1)"><i class="bi bi-dash-lg"></i></button>
-            <input type="number" class="qty-input qty-main" value="1" min="1" onchange="qtyInputChanged(this)" data-item="${safeItem}" />
+            <input type="number" class="qty-input qty-main" value="1" min="1" onchange="qtyInputChanged(this)" />
             <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(this,1)"><i class="bi bi-plus-lg"></i></button>
           </div>
         </td>
 
         <td>
           <div class="d-inline-flex gap-1 align-items-center disc-percent-wrap">
-            <input type="number" class="qty-input disc-percent" value="0" min="0" max="100" step="0.01"
-                   onchange="discPercentChanged(this)" />
+            <input type="number" class="qty-input disc-percent" value="0" min="0" max="100" step="0.01" onchange="discPercentChanged(this)" />
             <span class="text-muted">%</span>
           </div>
 
           <div class="d-inline-flex gap-1 align-items-center disc-amount-wrap">
-            <input type="number" class="qty-input disc-amount" value="0" min="0" step="0.01"
-                   onchange="discAmountChanged(this)" />
+            <input type="number" class="qty-input disc-amount" value="0" min="0" step="0.01" onchange="discAmountChanged(this)" />
             <span class="text-muted">₨</span>
           </div>
         </td>
 
-        <td>₨0.00</td>
-        <td id="salePrice-${codeSafe}">₨${Number(originalPrice).toFixed(2)}</td>
-        <td><button class="delete-row-btn" onclick="deleteRow(this)"><i class="bi bi-trash3"></i></button></td>`;
+        <td>0</td>
+        <td id="salePrice-${codeSafe}" class="line-total">₨0.00</td>
+        <td><button class="delete-row-btn" onclick="deleteRow(this)"><i class="bi bi-trash3"></i></button></td>
+      `;
 
-        tb.appendChild(row);
+      tb.appendChild(row);
 
-        const priceCell = row.querySelector('.price-cell');
-        const qtyInput = row.querySelector('.qty-main');
+      refreshRowLiveInfo(item.Id, row);
 
-        const discPercentEl = row.querySelector('.disc-percent');
-        const discAmountEl = row.querySelector('.disc-amount');
+      const priceCell = row.querySelector('.price-cell');
+      const qtyInput = row.querySelector('.qty-main');
+      const discPercentEl = row.querySelector('.disc-percent');
+      const discAmountEl  = row.querySelector('.disc-amount');
 
-        priceCell.addEventListener('dblclick', () => { makePriceEditable(priceCell); selectAllContent(priceCell); priceCell.focus(); });
+      priceCell.addEventListener('dblclick', () => { makePriceEditable(priceCell); selectAllContent(priceCell); priceCell.focus(); });
 
-        priceCell.addEventListener('keydown', e => {
-            if (e.key === 'Enter') { e.preventDefault(); savePrice(priceCell); qtyInput?.focus(); qtyInput?.select(); }
-            else if (e.key === 'Escape') {
-                e.preventDefault();
-                const orig = priceCell.dataset.originalPrice;
-                priceCell.textContent = `₨${parseFloat(orig || 0).toFixed(2)}`;
-                savePrice(priceCell);
-                focusBarcode();
-            }
-        });
-        priceCell.addEventListener('blur', () => { if (priceCell.isContentEditable) savePrice(priceCell); });
+      priceCell.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); savePrice(priceCell); qtyInput?.focus(); qtyInput?.select(); }
+        else if (e.key === 'Escape') {
+          e.preventDefault();
+          const orig = priceCell.dataset.originalPrice;
+          priceCell.textContent = `₨${parseFloat(orig||0).toFixed(2)}`;
+          savePrice(priceCell);
+          focusBarcode();
+        }
+      });
 
-        qtyInput.addEventListener('keydown', e => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                if (itemDiscMode === 'amount') { discAmountEl?.focus(); discAmountEl?.select?.(); }
-                else { discPercentEl?.focus(); discPercentEl?.select?.(); }
-            }
-        });
+      priceCell.addEventListener('blur', () => { if (priceCell.isContentEditable) savePrice(priceCell); });
 
-        discPercentEl?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); focusBarcode(); } });
-        discAmountEl?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); focusBarcode(); } });
+      qtyInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (itemDiscMode === 'amount') { discAmountEl?.focus(); discAmountEl?.select?.(); }
+          else { discPercentEl?.focus(); discPercentEl?.select?.(); }
+        }
+      });
 
-        updateRowTotal(row);
-        postAddFocus(row);
-        recalculateTotals();
+      discPercentEl?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); focusBarcode(); } });
+      discAmountEl?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); focusBarcode(); } });
+
+      updateRowTotal(row);
+      recalculateTotals();
+      focusBarcode();
     }
 
+    function selectAllContent(el) {
+      const r = document.createRange(); r.selectNodeContents(el);
+      const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    }
+
+    /* ✅ markDirty added */
     function discPercentChanged(inp) {
-        inp.value = clamp(inp.value, 0, 100);
-        const row = inp.closest('tr');
-        updateRowTotal(row);
-        recalculateTotals();
+      markDirty();
+      inp.value = clamp(inp.value, 0, 100);
+      updateRowTotal(inp.closest('tr'));
+      recalculateTotals();
     }
 
     function discAmountChanged(inp) {
-        let v = parseFloat(inp.value) || 0;
-        if (v < 0) v = 0;
-        inp.value = v;
-        const row = inp.closest('tr');
-        updateRowTotal(row);
-        recalculateTotals();
+      markDirty();
+      let v = parseFloat(inp.value) || 0;
+      if (v < 0) v = 0;
+      inp.value = v;
+      updateRowTotal(inp.closest('tr'));
+      recalculateTotals();
     }
 
     function updateRowTotal(row) {
-        if (!row) return;
+      if (!row) return;
 
-        const p = parseFloat(row.querySelector('.price-cell')?.textContent.replace(/[₨,]/g, '')) || 0;
-        const q = parseFloat(row.querySelector('.qty-main')?.value || 0) || 0;
+      const p = parseFloat(row.querySelector('.price-cell')?.textContent.replace(/[₨,]/g, '')) || 0;
+      const q = parseFloat(row.querySelector('.qty-main')?.value || 0) || 0;
+      const gross = p * q;
 
+      let discAmt = 0;
+      if (itemDiscMode === 'percent') {
+        const dp = clamp(row.querySelector('.disc-percent')?.value || 0, 0, 100);
+        discAmt = gross * (dp / 100);
+      } else {
+        const da = Math.max(parseFloat(row.querySelector('.disc-amount')?.value || 0), 0);
+        discAmt = Math.min(da, gross);
+      }
+
+      const net = Math.max(gross - discAmt, 0);
+      const lineCell = row.querySelector('.line-total');
+      if (lineCell) lineCell.textContent = `₨${net.toFixed(2)}`;
+    }
+
+    /* ✅ markDirty added */
+    function qtyInputChanged(input) {
+      markDirty();
+      updateRowTotal(input.closest('tr'));
+      recalculateTotals();
+    }
+
+    function changeQty(btn, d) {
+      markDirty();
+      const inp = btn.parentNode.querySelector('.qty-main');
+      let v = parseFloat(inp.value || 1);
+      v = Math.max(1, v + d);
+      inp.value = v;
+      qtyInputChanged(inp);
+    }
+
+    /* ✅ UPDATED deleteRow (markDirty) */
+    function deleteRow(btn) {
+      markDirty();
+      btn.closest('tr').remove();
+      const tb = document.querySelector('#salesTable tbody');
+      if (tb.rows.length === 0) {
+        const tr = document.createElement('tr'); tr.id = 'noDataRow';
+        tr.innerHTML = `<td colspan="8" class="text-center text-muted py-4"><i class="bi bi-bag-x fs-4 d-block mb-2"></i>No items added yet</td>`;
+        tb.appendChild(tr);
+      }
+      recalculateTotals();
+    }
+
+    /* ---------- TOTALS ---------- */
+    const TAX_PERCENT = 0;
+
+    function recalculateTotals() {
+      const rows = [...document.querySelectorAll('#salesTable tbody tr')].filter(r => r.id !== 'noDataRow');
+
+      if (!rows.length) {
+        document.getElementById('subTotal').innerText = '₨0.00';
+        document.getElementById('sumQty').innerText = '0';
+        document.getElementById('sumItems').innerText = '0';
+        document.getElementById('sumTax').innerText = '₨0.00';
+        document.getElementById('grandTotal').innerText = '₨0.00';
+        document.getElementById('invoiceDiscountComputed').innerText = '₨0.00';
+        document.getElementById('sumPayable').innerText = '0.00';
+        return;
+      }
+
+      let subNet = 0, qtySum = 0, lineDiscTotal = 0;
+
+      rows.forEach(r => {
+        const p = parseFloat(r.querySelector('.price-cell')?.textContent.replace(/[₨,]/g, '')) || 0;
+        const q = parseFloat(r.querySelector('.qty-main')?.value || 0) || 0;
         const gross = p * q;
 
         let discAmt = 0;
         if (itemDiscMode === 'percent') {
-            const dp = clamp(row.querySelector('.disc-percent')?.value || 0, 0, 100);
-            discAmt = gross * (dp / 100);
+          const dp = clamp(r.querySelector('.disc-percent')?.value || 0, 0, 100);
+          discAmt = gross * (dp / 100);
         } else {
-            const da = Math.max(parseFloat(row.querySelector('.disc-amount')?.value || 0), 0);
-            discAmt = Math.min(da, gross);
+          const da = Math.max(parseFloat(r.querySelector('.disc-amount')?.value || 0), 0);
+          discAmt = Math.min(da, gross);
         }
 
         const net = Math.max(gross - discAmt, 0);
+        r.querySelector('.line-total').textContent = `₨${net.toFixed(2)}`;
 
-        const lineCell = row.querySelector('td[id^="salePrice-"]') || row.querySelector('td:nth-child(7)');
-        if (lineCell) lineCell.textContent = `₨${net.toFixed(2)}`;
+        subNet += net;
+        lineDiscTotal += discAmt;
+        qtySum += q;
+      });
+
+      const discP = clamp(invoiceDiscountPercentEl?.value || 0, 0, 100);
+      const discL = Math.max(parseFloat(invoiceDiscountAmountEl?.value || 0), 0);
+
+      const invDiscFromP = subNet * (discP / 100);
+      const invDisc = Math.min(invDiscFromP + discL, subNet);
+
+      const taxable = Math.max(subNet - invDisc, 0);
+      const tax = TAX_PERCENT > 0 ? taxable * (TAX_PERCENT / 100) : 0;
+      const grand = taxable + tax;
+
+      const totalDiscountShown = lineDiscTotal + invDisc;
+
+      document.getElementById('subTotal').innerText = money(subNet);
+      document.getElementById('sumQty').innerText = String(qtySum);
+      document.getElementById('sumItems').innerText = String(rows.length);
+      document.getElementById('sumTax').innerText = money(tax);
+      document.getElementById('invoiceDiscountComputed').innerText = money(totalDiscountShown);
+      document.getElementById('grandTotal').innerText = money(grand);
+      document.getElementById('sumPayable').innerText = grand.toFixed(2);
     }
 
-    function qtyInputChanged(input) {
-        const row = input.closest('tr');
-        updateRowTotal(row);
-        recalculateTotals();
-    }
-
-    function changeQty(btn, d) {
-        const inp = btn.parentNode.querySelector('.qty-main');
-        let v = parseFloat(inp.value || 1);
-        v = Math.max(1, v + d);
-        inp.value = v;
-        qtyInputChanged(inp);
-    }
-
-    function deleteRow(btn) {
-        btn.closest('tr').remove();
-        const tb = document.querySelector('#salesTable tbody');
-        if (tb.rows.length === 0) {
-            const tr = document.createElement('tr'); tr.id = 'noDataRow';
-            tr.innerHTML = `<td colspan="8" class="text-center text-muted py-4">No items added yet</td>`;
-            tb.appendChild(tr);
-        }
-        recalculateTotals();
-    }
-
-    /* -------- TOTALS -------- */
-    function recalculateTotals() {
-        const rows = [...document.querySelectorAll('#salesTable tbody tr')].filter(r => r.id !== 'noDataRow');
-
-        if (!rows.length) {
-            document.querySelector('.gpos-total').innerText = '₨0.00';
-            document.querySelector('.gpos-items').innerText = '0';
-            document.querySelector('.gpos-quantity').innerText = '0';
-            document.querySelector('.gpos-tax').innerText = '₨0.00';
-            document.querySelector('.gpos-grand-value').innerText = '₨0.00';
-            document.getElementById('invoiceDiscountComputed').innerText = '₨0.00';
-            document.getElementById('sumPayable').innerText = '0.00';
-            return;
-        }
-
-        let subNet = 0, qtySum = 0, lineDiscTotal = 0;
-
-        rows.forEach(r => {
-            const p = parseFloat(r.querySelector('.price-cell')?.textContent.replace(/[₨,]/g, '')) || 0;
-            const q = parseFloat(r.querySelector('.qty-main')?.value || 0) || 0;
-
-            const gross = p * q;
-
-            let discAmt = 0;
-            if (itemDiscMode === 'percent') {
-                const dp = clamp(r.querySelector('.disc-percent')?.value || 0, 0, 100);
-                discAmt = gross * (dp / 100);
-            } else {
-                const da = Math.max(parseFloat(r.querySelector('.disc-amount')?.value || 0), 0);
-                discAmt = Math.min(da, gross);
-            }
-
-            const net = Math.max(gross - discAmt, 0);
-
-            const lineCell = r.querySelector('td[id^="salePrice-"]') || r.querySelector('td:nth-child(7)');
-            if (lineCell) lineCell.textContent = `₨${net.toFixed(2)}`;
-
-            subNet += net;
-            lineDiscTotal += discAmt;
-            qtySum += q;
-        });
-
-        const discP = clamp(invoiceDiscountPercentEl?.value || 0, 0, 100);
-        const discL = Math.max(parseFloat(invoiceDiscountAmountEl?.value || 0), 0);
-
-        const invDiscFromP = subNet * (discP / 100);
-        const invDisc = Math.min(invDiscFromP + discL, subNet);
-
-        const taxable = Math.max(subNet - invDisc, 0);
-        const tax = TAX_PERCENT > 0 ? taxable * (TAX_PERCENT / 100) : 0;
-        const grand = taxable + tax;
-
-        const totalDiscountShown = lineDiscTotal + invDisc;
-
-        document.querySelector('.gpos-total').innerText = money(subNet);
-        document.querySelector('.gpos-items').innerText = qtySum;
-        document.querySelector('.gpos-quantity').innerText = rows.length;
-        document.querySelector('.gpos-tax').innerText = money(tax);
-        document.getElementById('invoiceDiscountComputed').innerText = money(totalDiscountShown);
-        document.querySelector('.gpos-grand-value').innerText = money(grand);
-        document.getElementById('sumPayable').innerText = grand.toFixed(2);
-    }
-
-    /* -------- CUSTOMER -------- */
+    /* ---------- CUSTOMER ---------- */
     function toggleCustomerType() {
-        const walkin = document.getElementById("walkinRadio").checked;
-        document.getElementById("walkinBlock").style.display = walkin ? "block" : "none";
-        document.getElementById("customerBlock").style.display = walkin ? "none" : "block";
-        if (walkin) clearCustomer();
+      const walkin = document.getElementById("walkinRadio").checked;
+      document.getElementById("walkinBlock").style.display = walkin ? "block" : "none";
+      document.getElementById("customerBlock").style.display = walkin ? "none" : "block";
+      if (walkin) clearCustomer();
     }
 
     function setSelectedCustomer(sel) {
-        const opt = sel.options[sel.selectedIndex];
-        if (!opt.value) { clearCustomer(); return; }
-
-        const id = parseInt(opt.getAttribute('data-id') || "0", 10);
-        const pays = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(customerPayments));
-        const forCust = pays.filter(p => p.CustomerId === id);
-
-        document.getElementById("selectedCustomerBlock").style.display = "block";
-        document.getElementById("customerBalance").innerText = "₨" + (forCust[0]?.Remaining || "0");
-        document.getElementById("selectedCustomerId").value = parseInt(opt.value) || 0;
+      const id = parseInt(sel?.value || "0", 10);
+      if (!id) { clearCustomer(); return; }
+      document.getElementById("selectedCustomerId").value = id;
+      document.getElementById("selectedCustomerBlock").style.display = "block";
     }
 
     function clearCustomer() {
-        const dd = document.getElementById("customerDropdown");
-        if (dd) dd.selectedIndex = 0;
-        document.getElementById("selectedCustomerBlock").style.display = "none";
-        document.getElementById("selectedCustomerId").value = "";
+      const dd = document.getElementById("customerDropdown");
+      if (dd) dd.selectedIndex = 0;
+      document.getElementById("selectedCustomerBlock").style.display = "none";
+      document.getElementById("selectedCustomerId").value = "";
     }
 
-    /* -------- PAYMENT METHOD -------- */
+    /* ---------- PAYMENT METHOD ---------- */
     function setPaymentMethod(val) {
-        const sel = document.getElementById('paymentMethod');
-        if (sel) sel.value = val;
+      const sel = document.getElementById('paymentMethod');
+      if (sel) sel.value = val;
 
-        document.querySelectorAll('#paymentPills .method-pill').forEach(x => x.classList.remove('active'));
-        const pill = document.querySelector(`#paymentPills .method-pill[data-value="${val}"]`);
-        pill?.classList.add('active');
+      document.querySelectorAll('#paymentPills .method-pill').forEach(x => x.classList.remove('active'));
+      const pill = document.querySelector(`#paymentPills .method-pill[data-value="${val}"]`);
+      pill?.classList.add('active');
     }
 
-    /* -------- PAYMENT MODAL -------- */
+    /* ---------- PAYMENT MODAL ---------- */
     function openTenderModal(_, actionFn) {
-        if (!hasLineItems()) return toast('Please add at least one item', 'warning');
-        pendingAction = actionFn;
+      if (!hasLineItems()) return toast('Please add at least one item', 'warning');
+      pendingAction = actionFn;
 
-        const overlay = document.getElementById('paymentModalOverlay');
-        overlay.style.display = 'flex';
+      const overlay = document.getElementById('paymentModalOverlay');
+      overlay.style.display = 'flex';
 
-        document.getElementById('btnPayConfirm').textContent = (actionFn === handleSaveOnly ? 'Confirm (Save)' : 'Confirm & Print');
+      document.getElementById('btnPayConfirm').textContent = (actionFn === handleSaveOnly ? 'Confirm (Save)' : 'Confirm & Print');
 
-        const method = document.getElementById('paymentMethod')?.value || 'cash';
-        const iconMap = { cash: 'bi-cash', credit: 'bi-journal-text', credit_card: 'bi-credit-card', bank: 'bi-bank', online: 'bi-wifi' };
-        const labelMap = { cash: 'Cash', credit: 'Credit', credit_card: 'Card', bank: 'Bank', online: 'Online' };
-        document.getElementById('modalMethod').innerHTML = `<i class="bi ${iconMap[method] || 'bi-cash'}"></i> ${labelMap[method] || method}`;
+      const method = (document.getElementById('paymentMethod')?.value || 'cash').toLowerCase();
+      const iconMap = { cash: 'bi-cash', credit: 'bi-journal-text', credit_card: 'bi-credit-card', bank: 'bi-bank', online: 'bi-wifi' };
+      const labelMap = { cash: 'Cash', credit: 'Credit', credit_card: 'Card', bank: 'Bank', online: 'Online' };
+      document.getElementById('modalMethod').innerHTML = `<i class="bi ${iconMap[method] || 'bi-cash'}"></i> ${labelMap[method] || method}`;
 
-        const grand = parseFloat(document.querySelector('.gpos-grand-value').textContent.replace(/[₨,]/g, '')) || 0;
-        const tax = parseFloat(document.getElementById('sumTax')?.textContent?.replace(/[₨,]/g, '') || 0) || 0;
-        const disc = parseFloat(document.getElementById('invoiceDiscountComputed').textContent.replace(/[₨,]/g, '')) || 0;
+      const grand = parseFloat(document.getElementById('grandTotal').textContent.replace(/[₨,]/g, '')) || 0;
+      const tax = parseFloat(document.getElementById('sumTax')?.textContent?.replace(/[₨,]/g, '') || 0) || 0;
+      const disc = parseFloat(document.getElementById('invoiceDiscountComputed').textContent.replace(/[₨,]/g, '')) || 0;
 
-        document.getElementById('tenderGrandTotal').innerText = grand.toFixed(2);
-        document.getElementById('rowDiscount').style.display = disc > 0 ? 'flex' : 'none';
-        document.getElementById('tenderDiscount').innerText = disc.toFixed(2);
-        document.getElementById('rowTax').style.display = tax > 0 ? 'flex' : 'none';
-        document.getElementById('tenderTax').innerText = tax.toFixed(2);
+      document.getElementById('tenderGrandTotal').innerText = grand.toFixed(2);
+      document.getElementById('rowDiscount').style.display = disc > 0 ? 'flex' : 'none';
+      document.getElementById('tenderDiscount').innerText = disc.toFixed(2);
+      document.getElementById('rowTax').style.display = tax > 0 ? 'flex' : 'none';
+      document.getElementById('tenderTax').innerText = tax.toFixed(2);
 
-        const ti = document.getElementById('tenderInput');
-        ti.value = '';
-        ti.focus();
-        updateChange();
+      const ti = document.getElementById('tenderInput');
+      ti.value = '';
+      ti.focus();
+      updateChange();
     }
 
     function closePaymentModal() {
-        document.getElementById('paymentModalOverlay').style.display = 'none';
-        focusBarcode();
+      document.getElementById('paymentModalOverlay').style.display = 'none';
+      focusBarcode();
     }
 
     function updateChange() {
-        const tendered = parseFloat(document.getElementById('tenderInput').value) || 0;
-        const grand = parseFloat(document.getElementById('tenderGrandTotal').innerText) || 0;
-        const change = tendered - grand;
-        document.getElementById('modalRemaining').textContent = (change < 0 ? Math.abs(change) : 0).toFixed(2);
-        document.getElementById('tenderChangeText').textContent = (change > 0 ? change : 0).toFixed(2);
+      const tendered = parseFloat(document.getElementById('tenderInput').value) || 0;
+      const grand = parseFloat(document.getElementById('tenderGrandTotal').innerText) || 0;
+      const change = tendered - grand;
+      document.getElementById('modalRemaining').textContent = (change < 0 ? Math.abs(change) : 0).toFixed(2);
+      document.getElementById('tenderChangeText').textContent = (change > 0 ? change : 0).toFixed(2);
     }
 
+    /* ✅ PAYMENT RULE FIX */
     function handleTenderOk() {
-        const tendered = parseFloat(document.getElementById('tenderInput').value) || 0;
-        if (tendered < 0) {
-            Swal.fire({ icon: 'warning', title: 'Invalid Amount', text: 'Tendered amount cannot be negative!', target: getToastTarget() });
-            return;
-        }
-        if (typeof pendingAction === "function") { pendingAction(); pendingAction = null; }
-        closePaymentModal();
+      const tendered = parseFloat(document.getElementById('tenderInput').value) || 0;
+      const grand = parseFloat(document.getElementById('tenderGrandTotal').innerText) || 0;
+      const method = (document.getElementById('paymentMethod')?.value || 'cash').toLowerCase();
+
+      const allowPartial = (method === 'credit'); // ✅ only credit allows partial
+
+      if (tendered < 0) {
+        Swal.fire({ icon:'warning', title:'Invalid Amount', text:'Tendered amount negative nahi ho sakta.', target:getToastTarget() });
+        return;
+      }
+
+      if (!allowPartial && tendered < grand) {
+        Swal.fire({
+          icon:'error',
+          title:'Payment Short',
+          html:`Total: <b>₨${grand.toFixed(2)}</b><br>Received: <b>₨${tendered.toFixed(2)}</b><br><br>Please enter full payment (>= total).`,
+          confirmButtonText:'OK',
+          target:getToastTarget()
+        });
+        document.getElementById('tenderInput').focus();
+        document.getElementById('tenderInput').select();
+        return;
+      }
+
+      if (typeof pendingAction === "function") { pendingAction(); pendingAction = null; }
+      closePaymentModal();
     }
 
-    /* -------- SAVE / PRINT -------- */
+    /* ---------- SAVE / PRINT ---------- */
     async function handleSavePrint() { await saveSaleCommon(true); }
-    async function handleSaveOnly() { await saveSaleCommon(false); }
-
-    async function saveSaleCommon(printAfter) {
-        const grand = parseFloat(document.querySelector('.gpos-grand-value')?.textContent.replace(/[₨,]/g, '') || 0);
-        let cust = parseInt(document.getElementById("selectedCustomerId")?.value) || 0;
-        let tender = parseFloat(document.getElementById("tenderInput")?.value) || 0;
-
-        const subtotal = parseFloat(document.querySelector('.gpos-total')?.textContent.replace(/[₨,]/g, '') || 0);
-        const percent = Math.max(parseFloat(invoiceDiscountPercentEl?.value || 0), 0);
-        const less = Math.max(parseFloat(invoiceDiscountAmountEl?.value || 0), 0);
-        const discFromP = subtotal * (percent / 100);
-        const totalDisc = Math.min(discFromP + less, subtotal);
-
-        let saleData = {
-            InvoiceNumber: document.getElementById('invoiceNoValue').textContent,
-            SubTotal: subtotal,
-            Tax: parseFloat(document.querySelector('.gpos-tax')?.textContent.replace(/[₨,]/g, '') || 0),
-            Discount: totalDisc,
-            DiscountPercent: percent,
-            DiscountLessAmount: less,
-            SaleType: getSelectedSaleType(),
-            Total: grand,
-            custId: cust,
-            tender_amount: tender,
-            Payment: { Amount: tender, PaymentMethod: document.getElementById('paymentMethod')?.value, Change: Math.max(tender - grand, 0) },
-            SaleItems: getSaleItemsFromTable()
-        };
-
-        if (!saleData.SaleItems || saleData.SaleItems.length === 0) {
-            Swal.fire({ icon: 'warning', title: 'No Items Selected', text: 'Please select at least one item before proceeding!', target: getToastTarget() });
-            return;
-        }
-
-        saleData = cleanSaleData(saleData);
-
-        try {
-            const endpoint = printAfter ? '/Sales/SaveSale' : '/Sales/SaveOnly';
-            const token = getAntiForgeryToken();
-
-            const res = await fetch(endpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': token   // ✅ CSRF FIX (works with ValidateAntiForgeryToken)
-                },
-                body: JSON.stringify(saleData)
-            });
-
-            const rsp = await readResponseSmart(res);
-
-            // ❌ HTTP error
-            if (!res.ok) {
-                // If server actually returned JSON error {Message:"..."}
-                if (rsp.json && (rsp.json.Message || rsp.json.message)) {
-                    toast(rsp.json.Message || rsp.json.message, 'error', 2500);
-                    return;
-                }
-                // otherwise show raw response (HTML/stack trace etc)
-                showServerError(`Save Failed (HTTP ${res.status})`, rsp.text || 'No response body');
-                return;
-            }
-
-            // ✅ OK but response might be HTML/redirect -> not JSON
-            const result = rsp.json;
-            if (!result || typeof result !== 'object') {
-                showServerError('Saved/OK but response is not JSON', `Content-Type: ${rsp.ct}\n\n${rsp.text}`);
-                return;
-            }
-
-            toast(result.Message || 'Saved', 'success', 1000);
-
-            if (printAfter && result?.id) {
-                window.open(`/Sales/Receipt/${result.id}`, '_blank');
-            }
-
-            handleNewInvoice();
-
-        } catch (e) {
-            console.error(e);
-            showServerError('JS/Network Error', (e && e.message) ? e.message : String(e));
-        }
-    }
+    async function handleSaveOnly()  { await saveSaleCommon(false); }
 
     function getSelectedSaleType() {
-        const s = document.querySelector('input[name="SaleType"]:checked');
-        return s ? s.value : null;
+      const s = document.querySelector('input[name="SaleType"]:checked');
+      return s ? s.value : "Sale";
     }
 
     function getSaleItemsFromTable() {
-        const rows = document.querySelectorAll('#salesTable tbody tr');
-        const arr = [];
+      const rows = document.querySelectorAll('#salesTable tbody tr');
+      const arr = [];
 
-        rows.forEach(r => {
-            if (r.id === 'noDataRow') return;
+      rows.forEach(r => {
+        if (r.id === 'noDataRow') return;
 
-            const priceCell = r.querySelector('.price-cell');
-            const qtyInput = r.querySelector('input.qty-input.qty-main');
+        const unitPrice = parseFloat((r.querySelector('.price-cell')?.textContent || "0").replace(/[₨,]/g, '')) || 0;
+        const qty = parseFloat(r.querySelector('.qty-main')?.value || 0) || 0;
+        const gross = unitPrice * qty;
 
-            const lineTd =
-                r.querySelector('td.line-total') ||
-                r.querySelector('td[id^="salePrice-"]') ||
-                r.querySelector('td:nth-child(7)');
+        const discP = parseFloat(r.querySelector('.disc-percent')?.value || 0) || 0;
+        const discA = parseFloat(r.querySelector('.disc-amount')?.value || 0) || 0;
 
-            const unitPrice = parseFloat((priceCell?.textContent || "0").replace(/[₨,]/g, '')) || 0;
-            const qty = parseFloat(qtyInput?.value || 0) || 0;
-            const gross = unitPrice * qty;
+        let finalDiscPercent = 0;
+        let finalDiscAmount = 0;
 
-            const discP = parseFloat(r.querySelector('.disc-percent')?.value || 0) || 0;
-            const discA = parseFloat(r.querySelector('.disc-amount')?.value || 0) || 0;
+        if (itemDiscMode === 'percent') {
+          finalDiscPercent = clamp(discP, 0, 100);
+          finalDiscAmount = gross * (finalDiscPercent / 100);
+        } else {
+          finalDiscAmount = Math.min(Math.max(discA, 0), gross);
+          finalDiscPercent = gross > 0 ? (finalDiscAmount / gross) * 100 : 0;
+        }
 
-            let finalDiscPercent = 0;
-            let finalDiscAmount = 0;
+        const lineTotal = parseFloat((r.querySelector('.line-total')?.textContent || "0").replace(/[₨,]/g, '')) || 0;
 
-            if (itemDiscMode === 'percent') {
-                finalDiscPercent = clamp(discP, 0, 100);
-                finalDiscAmount = gross * (finalDiscPercent / 100);
-            } else {
-                finalDiscAmount = Math.min(Math.max(discA, 0), gross);
-                finalDiscPercent = gross > 0 ? (finalDiscAmount / gross) * 100 : 0;
-            }
-
-            arr.push({
-                ItemId: parseInt(r.dataset.itemId),
-                Quantity: qty,
-                UnitPrice: unitPrice,
-                DiscountPercent: finalDiscPercent,
-                DiscountAmount: finalDiscAmount,
-                TaxAmount: 0,
-                LineTotal: parseFloat((lineTd?.textContent || "0").replace(/[₨,]/g, '')) || 0
-            });
+        arr.push({
+          ItemId: parseInt(r.dataset.itemId),
+          Quantity: qty,
+          UnitPrice: unitPrice,
+          DiscountPercent: finalDiscPercent,
+          DiscountAmount: finalDiscAmount,
+          TaxAmount: 0,
+          LineTotal: lineTotal
         });
+      });
 
-        return arr;
+      return arr;
     }
 
     function cleanSaleData(sd) {
-        if (sd.Payment) delete sd.Payment.Id;
-        (sd.SaleItems || []).forEach(i => delete i.Id);
-        delete sd.Id;
-        return sd;
+      if (sd.Payment) delete sd.Payment.Id;
+      (sd.SaleItems || []).forEach(i => delete i.Id);
+      delete sd.Id;
+      return sd;
     }
 
-    /* -------- HOLD / RETRIEVE (localStorage) -------- */
+    async function saveSaleCommon(printAfter) {
+      const grand = parseFloat(document.getElementById('grandTotal')?.textContent.replace(/[₨,]/g, '') || 0);
+      const subtotal = parseFloat(document.getElementById('subTotal')?.textContent.replace(/[₨,]/g, '') || 0);
+
+      let cust = parseInt(document.getElementById("selectedCustomerId")?.value) || 0;
+      let tender = parseFloat(document.getElementById("tenderInput")?.value) || 0;
+
+      const percent = Math.max(parseFloat(invoiceDiscountPercentEl?.value || 0), 0);
+      const less = Math.max(parseFloat(invoiceDiscountAmountEl?.value || 0), 0);
+      const discFromP = subtotal * (percent / 100);
+      const totalDisc = Math.min(discFromP + less, subtotal);
+
+      const method = (document.getElementById('paymentMethod')?.value || 'cash').toLowerCase();
+      const allowPartial = (method === 'credit');
+
+      // ✅ double-protection (no bypass)
+      if (!allowPartial && tender < grand) {
+        Swal.fire({
+          icon:'error',
+          title:'Payment Short',
+          html:`Total: <b>₨${grand.toFixed(2)}</b><br>Received: <b>₨${tender.toFixed(2)}</b><br><br>Please enter full payment (>= total).`,
+          confirmButtonText:'OK',
+          target:getToastTarget()
+        });
+        return;
+      }
+
+      const saleData = cleanSaleData({
+        InvoiceNumber: document.getElementById('invoiceNoValue').textContent,
+        SubTotal: subtotal,
+        Tax: parseFloat(document.getElementById('sumTax')?.textContent.replace(/[₨,]/g,'') || 0),
+        Discount: totalDisc,
+        DiscountPercent: percent,
+        DiscountLessAmount: less,
+        SaleType: getSelectedSaleType(),
+        Total: grand,
+        custId: cust,
+        tender_amount: tender,
+        Payment: { Amount: tender, PaymentMethod: method, Change: Math.max(tender - grand, 0) },
+        SaleItems: getSaleItemsFromTable()
+      });
+
+      if (!saleData.SaleItems || saleData.SaleItems.length === 0) {
+        Swal.fire({ icon:'warning', title:'No Items', text:'Please add at least one item!', target:getToastTarget() });
+        return;
+      }
+
+      try {
+        const endpoint = printAfter ? '/Sales/SaveSale' : '/Sales/SaveOnly';
+        const token = getAntiForgeryToken();
+
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
+          body: JSON.stringify(saleData)
+        });
+
+        const rsp = await readResponseSmart(res);
+
+        if (!res.ok) {
+          if (rsp.json && (rsp.json.Message || rsp.json.message)) {
+            toast(rsp.json.Message || rsp.json.message, 'error', 2500);
+            return;
+          }
+          showServerError(`Save Failed (HTTP ${res.status})`, rsp.text || 'No response body');
+          return;
+        }
+
+        const result = rsp.json;
+        if (!result || typeof result !== 'object') {
+          showServerError('Saved but response is not JSON', `Content-Type: ${rsp.ct}\n\n${rsp.text}`);
+          return;
+        }
+
+        toast(result.Message || 'Saved', 'success', 1100);
+
+        if (result?.id) lastSavedSaleId = Number(result.id) || 0;
+
+        if (printAfter && result?.id) {
+          window.open(`/Sales/Receipt/${result.id}`, '_blank');
+        }
+
+        // ✅ after successful save -> new invoice generate (allowed)
+        handleNewInvoice(true);
+
+      } catch (e) {
+        console.error(e);
+        showServerError('JS/Network Error', e?.message || String(e));
+      }
+    }
+
+    /* ---------- F8 PRINT (Only saved invoice) ---------- */
+    function printCurrentSavedInvoice() {
+      const id = (Number(SEARCH_SALE_ID) > 0) ? Number(SEARCH_SALE_ID) : (Number(lastSavedSaleId) || 0);
+
+      if (!id) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Print Error',
+          text: 'Please Save (F5) or Save & Print (F4) first, then Print (F8).',
+          target: getToastTarget()
+        });
+        return;
+      }
+      window.open(`/Sales/Receipt/${id}`, '_blank');
+    }
+
+    /* ---------- HOLD / RETRIEVE ---------- */
     const HOLD_KEY = 'gposHeldInvoices';
 
     function getAllHeld() { try { return JSON.parse(localStorage.getItem(HOLD_KEY) || '[]'); } catch { return []; } }
     function saveAllHeld(list) { localStorage.setItem(HOLD_KEY, JSON.stringify(list)); }
 
     function cryptoRandomId() {
-        try { return [...crypto.getRandomValues(new Uint8Array(8))].map(x => x.toString(16).padStart(2, '0')).join(''); }
-        catch { return String(Date.now()); }
+      try { return [...crypto.getRandomValues(new Uint8Array(8))].map(x => x.toString(16).padStart(2,'0')).join(''); }
+      catch { return String(Date.now()); }
     }
 
+    /* ✅ HOLD FIX: English msg + clear screen */
     function holdCurrentInvoice() {
-        if (!hasLineItems()) return toast('No items to hold', 'warning');
+      if (!hasLineItems()) return toast('No items to hold', 'warning');
 
-        const itemsArr = getSaleItemsFromTable();
-        const invoiceNumber = document.getElementById('invoiceNoValue').textContent;
+      const itemsArr = getSaleItemsFromTable();
+      const invoiceNumber = document.getElementById('invoiceNoValue').textContent;
 
-        const sub = parseFloat(document.querySelector('.gpos-total').textContent.replace(/[₨,]/g, '')) || 0;
-        const tax = parseFloat(document.getElementById('sumTax')?.textContent?.replace(/[₨,]/g, '') || 0) || 0;
-        const grand = parseFloat(document.querySelector('.gpos-grand-value').textContent.replace(/[₨,]/g, '')) || 0;
+      const sub = parseFloat(document.getElementById('subTotal').textContent.replace(/[₨,]/g, '')) || 0;
+      const tax = parseFloat(document.getElementById('sumTax')?.textContent?.replace(/[₨,]/g, '') || 0) || 0;
+      const grand = parseFloat(document.getElementById('grandTotal').textContent.replace(/[₨,]/g, '')) || 0;
 
-        const invDiscPercent = clamp(invoiceDiscountPercentEl?.value || 0, 0, 100);
-        const invDiscLess = Math.max(parseFloat(invoiceDiscountAmountEl?.value || 0), 0);
-        const invDiscFromP = sub * (invDiscPercent / 100);
-        const invDisc = Math.min(invDiscFromP + invDiscLess, sub);
+      const invDiscPercent = clamp(invoiceDiscountPercentEl?.value || 0, 0, 100);
+      const invDiscLess = Math.max(parseFloat(invoiceDiscountAmountEl?.value || 0), 0);
+      const invDiscFromP = sub * (invDiscPercent / 100);
+      const invDisc = Math.min(invDiscFromP + invDiscLess, sub);
 
-        const held = {
-            id: cryptoRandomId(),
-            invoiceNumber,
-            items: itemsArr,
-            subTotal: sub,
-            discount: invDisc,
-            discountPercent: invDiscPercent,
-            discountLessAmount: invDiscLess,
-            tax: tax,
-            grandTotal: grand,
-            saleType: getSelectedSaleType(),
-            itemDiscMode: itemDiscMode,
-            heldAt: nowIso()
-        };
+      const held = {
+        id: cryptoRandomId(),
+        invoiceNumber,
+        items: itemsArr,
+        discount: invDisc,
+        discountPercent: invDiscPercent,
+        discountLessAmount: invDiscLess,
+        tax,
+        grandTotal: grand,
+        saleType: getSelectedSaleType(),
+        itemDiscMode,
+        heldAt: nowIso()
+      };
 
-        const list = getAllHeld();
-        list.unshift(held);
-        saveAllHeld(list);
-        toast('Invoice held', 'success', 1200);
-        handleNewInvoice();
+      const list = getAllHeld();
+      list.unshift(held);
+      saveAllHeld(list);
+
+      toast('Invoice held successfully', 'success', 1400);
+
+      // clear screen + generate next invoice ONCE
+      handleNewInvoice(true);
     }
 
     function openRetrieveModal() {
-        document.getElementById('retrieveOverlay').style.display = 'flex';
-        renderHeldTable();
-        document.getElementById('holdSearch').focus();
+      document.getElementById('retrieveOverlay').style.display = 'flex';
+      renderHeldTable();
+      document.getElementById('holdSearch')?.focus();
     }
     function closeRetrieveModal() { document.getElementById('retrieveOverlay').style.display = 'none'; }
 
     function renderHeldTable() {
-        const tbody = document.getElementById('heldTbody');
-        tbody.innerHTML = '';
+      const tbody = document.getElementById('heldTbody');
+      tbody.innerHTML = '';
 
-        const list = getAllHeld();
-        const q = (document.getElementById('holdSearch').value || '').trim().toLowerCase();
-        const view = list.filter(h => !q || (h.invoiceNumber || '').toLowerCase().includes(q));
+      const list = getAllHeld();
+      const q = (document.getElementById('holdSearch')?.value || '').trim().toLowerCase();
+      const view = list.filter(h => !q || (h.invoiceNumber || '').toLowerCase().includes(q));
 
-        document.getElementById('noHeldRow').style.display = view.length ? 'none' : 'block';
+      document.getElementById('noHeldRow').style.display = view.length ? 'none' : 'block';
 
-        view.forEach(h => {
-            const previewNames = (h.items || [])
-                .slice(0, 3)
-                .map(it => {
-                    const meta = (items || []).find(x => x.Id === it.ItemId);
-                    return meta?.ItemName || it.ItemName || (`Item#${it.ItemId}`);
-                })
-                .join(', ');
+      view.forEach(h => {
+        const previewNames = (h.items || [])
+          .slice(0, 3)
+          .map(it => (items.find(x => x.Id === it.ItemId)?.ItemName) || (`Item#${it.ItemId}`))
+          .join(', ');
 
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td><span class="badge text-bg-light">${h.invoiceNumber}</span></td>
-              <td>${h.items?.length || 0}</td>
-              <td>${previewNames || '—'}</td>
-              <td><strong>${money(h.grandTotal || 0)}</strong></td>
-              <td>${new Date(h.heldAt).toLocaleString()}</td>
-              <td class="text-end">
-                <button class="btn btn-sm btn-soft-green me-1" onclick="retrieveInvoice('${h.id}')">
-                  <i class="bi bi-pencil-square"></i> Edit
-                </button>
-                <button class="btn btn-sm btn-soft-amber" onclick="deleteHeld('${h.id}')">
-                  <i class="bi bi-trash3"></i> Delete
-                </button>
-              </td>`;
-            tbody.appendChild(tr);
-        });
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><span class="badge text-bg-light">${h.invoiceNumber}</span></td>
+          <td>${h.items?.length || 0}</td>
+          <td>${previewNames || '—'}</td>
+          <td><strong>${money(h.grandTotal || 0)}</strong></td>
+          <td>${new Date(h.heldAt).toLocaleString()}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-soft-green me-1" onclick="retrieveInvoice('${h.id}')"><i class="bi bi-pencil-square"></i> Edit</button>
+            <button class="btn btn-sm btn-soft-amber" onclick="deleteHeld('${h.id}')"><i class="bi bi-trash3"></i> Delete</button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
     }
 
     function deleteHeld(id) {
-        let list = getAllHeld();
-        list = list.filter(x => x.id !== id);
-        saveAllHeld(list);
-        renderHeldTable();
-        toast('Held invoice deleted', 'success', 1000);
+      let list = getAllHeld();
+      list = list.filter(x => x.id !== id);
+      saveAllHeld(list);
+      renderHeldTable();
+      toast('Held invoice deleted', 'success', 1000);
     }
 
     function clearAllHeld() {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Clear all held invoices?',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, Clear',
-            target: getToastTarget()
-        }).then(r => {
-            if (r.isConfirmed) {
-                localStorage.removeItem(HOLD_KEY);
-                renderHeldTable();
-                toast('All cleared', 'success', 1000);
-            }
-        });
+      Swal.fire({
+        icon: 'warning',
+        title: 'Clear all held invoices?',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Clear',
+        target: getToastTarget()
+      }).then(r => {
+        if (r.isConfirmed) {
+          localStorage.removeItem(HOLD_KEY);
+          renderHeldTable();
+          toast('All cleared', 'success', 1000);
+        }
+      });
     }
 
     function sortHeld(by) {
-        let list = getAllHeld();
-        if (by === 'time') list.sort((a, b) => new Date(b.heldAt) - new Date(a.heldAt));
-        if (by === 'grand') list.sort((a, b) => (b.grandTotal || 0) - (a.grandTotal || 0));
-        saveAllHeld(list);
-        renderHeldTable();
+      let list = getAllHeld();
+      if (by === 'time') list.sort((a, b) => new Date(b.heldAt) - new Date(a.heldAt));
+      if (by === 'grand') list.sort((a, b) => (b.grandTotal || 0) - (a.grandTotal || 0));
+      saveAllHeld(list);
+      renderHeldTable();
     }
 
     function retrieveInvoice(id) {
-        const list = getAllHeld();
-        const h = list.find(x => x.id === id);
-        if (!h) { toast('Not found', 'error'); return; }
+      const list = getAllHeld();
+      const h = list.find(x => x.id === id);
+      if (!h) { toast('Not found', 'error'); return; }
 
-        if (h.itemDiscMode) setItemDiscMode(h.itemDiscMode, false);
+      if (h.itemDiscMode) setItemDiscMode(h.itemDiscMode, false);
 
-        const tb = document.querySelector('#salesTable tbody');
-        tb.innerHTML = '';
+      const tb = document.querySelector('#salesTable tbody');
+      tb.innerHTML = '';
 
-        (h.items || []).forEach((it, idx) => {
-            const meta = items.find(x => x.Id === it.ItemId) || { Id: it.ItemId, ItemCode: "", ItemName: ("Item#" + it.ItemId) };
+      (h.items || []).forEach((it, idx) => {
+        const meta = items.find(x => x.Id === it.ItemId) || { Id: it.ItemId, ItemCode: "", ItemName: ("Item#" + it.ItemId) };
+        const row = document.createElement('tr');
+        row.dataset.itemId = it.ItemId;
 
-            const row = document.createElement('tr');
-            row.dataset.itemId = it.ItemId;
+        const codeSafe = (meta.ItemCode || ('X' + idx)).replace(/[^a-zA-Z0-9_-]/g, '');
+        const discPercent = Number(it.DiscountPercent || 0);
+        const discAmount = Number(it.DiscountAmount || 0);
 
-            const codeSafe = (meta.ItemCode || ('X' + idx)).replace(/[^a-zA-Z0-9_-]/g, '');
+        row.innerHTML = `
+          <td>${idx + 1}</td>
+          <td>
+            <div class="fw-bold">${meta.ItemName || ('Item#' + it.ItemId)}</div>
+            <div class="small text-muted mt-1">
+              <span class="badge text-bg-light">Stock: <span class="js-stock">0</span></span>
+            </div>
+          </td>
+          <td><span tabindex="0" class="price-cell" data-original-price="${Number(it.UnitPrice).toFixed(2)}">₨${Number(it.UnitPrice).toFixed(2)}</span></td>
+          <td>
+            <div class="d-inline-flex gap-1 align-items-center">
+              <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(this,-1)"><i class="bi bi-dash-lg"></i></button>
+              <input type="number" class="qty-input qty-main" value="${Number(it.Quantity)}" min="1" onchange="qtyInputChanged(this)" />
+              <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(this,1)"><i class="bi bi-plus-lg"></i></button>
+            </div>
+          </td>
+          <td>
+            <div class="d-inline-flex gap-1 align-items-center disc-percent-wrap">
+              <input type="number" class="qty-input disc-percent" value="${discPercent}" min="0" max="100" step="0.01" onchange="discPercentChanged(this)" />
+              <span class="text-muted">%</span>
+            </div>
+            <div class="d-inline-flex gap-1 align-items-center disc-amount-wrap">
+              <input type="number" class="qty-input disc-amount" value="${discAmount}" min="0" step="0.01" onchange="discAmountChanged(this)" />
+              <span class="text-muted">₨</span>
+            </div>
+          </td>
+          <td>0</td>
+          <td id="salePrice-${codeSafe}" class="line-total">₨${Number(it.LineTotal || (it.UnitPrice * it.Quantity)).toFixed(2)}</td>
+          <td><button class="delete-row-btn" onclick="deleteRow(this)"><i class="bi bi-trash3"></i></button></td>
+        `;
+        tb.appendChild(row);
 
-            const discPercent = Number(it.DiscountPercent || 0);
-            const discAmount = Number(it.DiscountAmount || 0);
+        refreshRowLiveInfo(meta.Id, row);
 
-            row.innerHTML = `
-              <td>${idx + 1}</td>
-              <td>${meta.ItemName || ('Item#' + it.ItemId)}</td>
-              <td><span tabindex="0" class="price-cell" data-original-price="${Number(it.UnitPrice).toFixed(2)}">₨${Number(it.UnitPrice).toFixed(2)}</span></td>
-              <td>
-                <div class="d-inline-flex gap-1 align-items-center">
-                  <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(this,-1)"><i class="bi bi-dash-lg"></i></button>
-                  <input type="number" class="qty-input qty-main" value="${Number(it.Quantity)}" min="1"
-                         onchange="qtyInputChanged(this)" />
-                  <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(this,1)"><i class="bi bi-plus-lg"></i></button>
-                </div>
-              </td>
+        const priceCell = row.querySelector('.price-cell');
+        const qtyInput = row.querySelector('.qty-main');
 
-              <td>
-                <div class="d-inline-flex gap-1 align-items-center disc-percent-wrap">
-                  <input type="number" class="qty-input disc-percent" value="${discPercent}" min="0" max="100" step="0.01"
-                         onchange="discPercentChanged(this)" />
-                  <span class="text-muted">%</span>
-                </div>
-
-                <div class="d-inline-flex gap-1 align-items-center disc-amount-wrap">
-                  <input type="number" class="qty-input disc-amount" value="${discAmount}" min="0" step="0.01"
-                         onchange="discAmountChanged(this)" />
-                  <span class="text-muted">₨</span>
-                </div>
-              </td>
-
-              <td>₨${Number(it.TaxAmount || 0).toFixed(2)}</td>
-              <td id="salePrice-${codeSafe}">₨${Number(it.LineTotal || (it.UnitPrice * it.Quantity)).toFixed(2)}</td>
-              <td><button class="delete-row-btn" onclick="deleteRow(this)"><i class="bi bi-trash3"></i></button></td>`;
-
-            tb.appendChild(row);
-
-            const priceCell = row.querySelector('.price-cell');
-            const qtyInput = row.querySelector('.qty-main');
-
-            priceCell.addEventListener('dblclick', () => { makePriceEditable(priceCell); selectAllContent(priceCell); priceCell.focus(); });
-
-            priceCell.addEventListener('keydown', e => {
-                if (e.key === 'Enter') { e.preventDefault(); savePrice(priceCell); qtyInput?.focus(); qtyInput?.select(); }
-                else if (e.key === 'Escape') { e.preventDefault(); const orig = priceCell.dataset.originalPrice; priceCell.textContent = `₨${parseFloat(orig || 0).toFixed(2)}`; savePrice(priceCell); focusBarcode(); }
-            });
-            priceCell.addEventListener('blur', () => { if (priceCell.isContentEditable) savePrice(priceCell); });
-
-            const discPercentEl = row.querySelector('.disc-percent');
-            const discAmountEl = row.querySelector('.disc-amount');
-
-            qtyInput.addEventListener('keydown', e => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    if (itemDiscMode === 'amount') { discAmountEl?.focus(); discAmountEl?.select?.(); }
-                    else { discPercentEl?.focus(); discPercentEl?.select?.(); }
-                }
-            });
-
-            discPercentEl?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); focusBarcode(); } });
-            discAmountEl?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); focusBarcode(); } });
-
-            updateRowTotal(row);
-        });
-
-        invoiceDiscountPercentEl.value = String(h.discountPercent ?? 0);
-        invoiceDiscountAmountEl.value = String(h.discountLessAmount ?? 0);
-
-        if (h.saleType === 'Return') document.getElementById('rbReturn').checked = true;
-        else document.getElementById('rbSale').checked = true;
-
-        applySaleTypeVisual();
-        recalculateTotals();
-
-        saveAllHeld(list.filter(x => x.id !== id));
-        closeRetrieveModal();
-        toast('Invoice retrieved', 'success', 1000);
-
-        postAddFocus(document.querySelector('#salesTable tbody tr:last-child'));
-    }
-
-    /* -------- NEW INVOICE -------- */
-    function handleNewInvoice() {
-        const tb = document.querySelector('#salesTable tbody');
-        tb.innerHTML = `<tr id="noDataRow"><td colspan="8" class="text-center text-muted py-4">No items added yet</td></tr>`;
-
-        invoiceDiscountPercentEl.value = '0';
-        invoiceDiscountAmountEl.value = '0';
-
-        document.querySelector('.gpos-total').innerText = '₨0.00';
-        document.querySelector('.gpos-items').innerText = '0';
-        document.querySelector('.gpos-quantity').innerText = '0';
-        document.querySelector('.gpos-tax').innerText = '₨0.00';
-        document.querySelector('.gpos-grand-value').innerText = '₨0.00';
-
-        document.getElementById('invoiceDiscountComputed').innerText = '₨0.00';
-        document.getElementById('sumPayable').innerText = '0.00';
-
-        document.getElementById('paymentModalOverlay').style.display = 'none';
-
-        setPaymentMethod('cash');
-
-        document.getElementById('invoiceNoValue').innerText = generateInvoiceNumber();
-
-
-
-        focusBarcode();
-        toast('New invoice created!', 'success', 1200);
-    }
-
-    function generateInvoiceNumber() {
-        const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-        invoiceCounter = (parseInt(invoiceCounter) || 0) + 1;
-        return `INV-${date}-${String(invoiceCounter).padStart(4, '0')}`;
-    }
-
-    function updateLiveClock() {
-        const n = new Date();
-        const d = n.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
-        const t = n.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        document.getElementById('liveClock').innerText = d + " | " + t;
-    }
-
-    /* -------- SHORTCUTS -------- */
-    function globalKeyHandler(e) {
-        const listDiv = document.getElementById('itemSuggestions');
-
-        if (filtered.length && listDiv.style.display === 'block') {
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                if (selectedIdx < filtered.length - 1) selectedIdx++;
-                updateHighlight();
-                return;
-            }
-            if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                if (selectedIdx > 0) selectedIdx--;
-                updateHighlight();
-                return;
-            }
-
-            if (e.key === 'Enter') {
-                if (selectedIdx === -1 && filtered.length > 0) selectedIdx = 0;
-                if (selectedIdx >= 0) { e.preventDefault(); selectItemSuggestion(selectedIdx); }
-                return;
-            }
-            if (e.key === 'Escape') { listDiv.style.display = 'none'; filtered = []; selectedIdx = -1; return; }
-        }
-
-        if (e.key === 'F2') { e.preventDefault(); e.stopPropagation(); toggleQtyMode(); return; }
-        if (e.key === 'F3') { e.preventDefault(); e.stopPropagation(); togglePriceMode(); return; }
-
-        // ✅ important: stopPropagation too (especially F5 refresh)
-        if (e.key === 'F4') { e.preventDefault(); e.stopPropagation(); openTenderModal(null, handleSavePrint); return; }
-        if (e.key === 'F5') { e.preventDefault(); e.stopPropagation(); openTenderModal(null, handleSaveOnly); return; }
-
-        if (e.key === 'F8') { e.preventDefault(); e.stopPropagation(); openTenderModal(null, handleSavePrint); return; }
-        if (e.key === 'F12') { e.preventDefault(); e.stopPropagation(); handleNewInvoice(); return; }
-
-        if (e.altKey && e.key.toLowerCase() === 'enter') { e.preventDefault(); toggleFullscreen(); return; }
-        if (e.altKey && e.key.toLowerCase() === 'b') { e.preventDefault(); focusBarcode(); return; }
-        if (e.altKey && e.key.toLowerCase() === 'n') { e.preventDefault(); document.getElementById('btnNewItem')?.click(); return; }
-        if (e.altKey && e.key.toLowerCase() === 's') { e.preventDefault(); document.getElementById('rbSale').checked = true; applySaleTypeVisual(); return; }
-        if (e.altKey && e.key.toLowerCase() === 'r') { e.preventDefault(); document.getElementById('rbReturn').checked = true; applySaleTypeVisual(); return; }
-
-        if (e.altKey && e.key.toLowerCase() === 'p') { e.preventDefault(); setItemDiscMode('percent'); return; }
-        if (e.altKey && e.key.toLowerCase() === 'a') { e.preventDefault(); setItemDiscMode('amount'); return; }
-
-        if (e.ctrlKey && e.key.toLowerCase() === 'd') {
+        priceCell.addEventListener('dblclick', () => { makePriceEditable(priceCell); selectAllContent(priceCell); priceCell.focus(); });
+        priceCell.addEventListener('keydown', e => {
+          if (e.key === 'Enter') { e.preventDefault(); savePrice(priceCell); qtyInput?.focus(); qtyInput?.select(); }
+          else if (e.key === 'Escape') {
             e.preventDefault();
-            invoiceDiscountPercentEl.focus();
-            invoiceDiscountPercentEl.select();
-            return;
-        }
+            const orig = priceCell.dataset.originalPrice;
+            priceCell.textContent = `₨${parseFloat(orig||0).toFixed(2)}`;
+            savePrice(priceCell);
+            focusBarcode();
+          }
+        });
+        priceCell.addEventListener('blur', () => { if (priceCell.isContentEditable) savePrice(priceCell); });
+
+        updateRowTotal(row);
+      });
+
+      invoiceDiscountPercentEl.value = String(h.discountPercent ?? 0);
+      invoiceDiscountAmountEl.value = String(h.discountLessAmount ?? 0);
+
+      if (h.saleType === 'Return') document.getElementById('rbReturn').checked = true;
+      else document.getElementById('rbSale').checked = true;
+
+      applySaleTypeVisual();
+      recalculateTotals();
+
+      // remove from held list after retrieving
+      saveAllHeld(list.filter(x => x.id !== id));
+      closeRetrieveModal();
+      toast('Invoice retrieved', 'success', 1000);
+
+      // restore invoice number
+      document.getElementById('invoiceNoValue').innerText = h.invoiceNumber || generateInvoiceNumber();
+
+      // retrieved invoice has data => not fresh
+      invoiceIsFresh = false;
+
+      focusBarcode();
     }
 
-    /* -------- FULLSCREEN -------- */
+    /* ---------- NEW INVOICE ---------- */
+    function generateInvoiceNumber() {
+      const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      invoiceCounter = (parseInt(invoiceCounter) || 0) + 1;
+      return `INV-${date}-${String(invoiceCounter).padStart(4, '0')}`;
+    }
+
+    /* ✅ F12 FIX inside handleNewInvoice */
+    function handleNewInvoice(saved = false) {
+      const hasItems = hasLineItems();
+
+      // block if has items and not saved
+      if (!saved && hasItems) {
+        Swal.fire({
+          icon:'warning',
+          title:'Unsaved Invoice',
+          text:'This invoice has items. Please Save (F5) or Save & Print (F4) first.',
+          target:getToastTarget()
+        });
+        return;
+      }
+
+      // ✅ KEY FIX: empty + fresh => don't advance invoice number
+      if (!saved && !hasItems && invoiceIsFresh === true) {
+        toast('Already on a new invoice', 'info', 900);
+        focusBarcode();
+        return;
+      }
+
+      const tb = document.querySelector('#salesTable tbody');
+      tb.innerHTML = `<tr id="noDataRow"><td colspan="8" class="text-center text-muted py-4"><i class="bi bi-bag-x fs-4 d-block mb-2"></i>No items added yet</td></tr>`;
+
+      invoiceDiscountPercentEl.value = '0';
+      invoiceDiscountAmountEl.value = '0';
+
+      document.getElementById('subTotal').innerText = '₨0.00';
+      document.getElementById('sumQty').innerText = '0';
+      document.getElementById('sumItems').innerText = '0';
+      document.getElementById('sumTax').innerText = '₨0.00';
+      document.getElementById('grandTotal').innerText = '₨0.00';
+      document.getElementById('invoiceDiscountComputed').innerText = '₨0.00';
+      document.getElementById('sumPayable').innerText = '0.00';
+
+      document.getElementById('paymentModalOverlay').style.display = 'none';
+
+      // ✅ new invoice number only when: saved/hold happened OR invoice was used (dirty)
+      if (saved === true || invoiceIsFresh === false) {
+        document.getElementById('invoiceNoValue').innerText = generateInvoiceNumber();
+      }
+
+      // now it's fresh
+      invoiceIsFresh = true;
+
+      setPaymentMethod('cash');
+      focusBarcode();
+
+      toast('New invoice ready', 'success', 900);
+    }
+
+    /* ---------- LIVE CLOCK ---------- */
+    function updateLiveClock() {
+      const n = new Date();
+      const d = n.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
+      const t = n.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      document.getElementById('liveClock').innerText = d + " | " + t;
+    }
+
+    /* ---------- FULLSCREEN ---------- */
     function isFullscreen() { return document.fullscreenElement === posShell || document.webkitFullscreenElement === posShell; }
     function enterFullscreen() { if (posShell.requestFullscreen) posShell.requestFullscreen(); else if (posShell.webkitRequestFullscreen) posShell.webkitRequestFullscreen(); }
     function exitFullscreen() { if (document.exitFullscreen) document.exitFullscreen(); else if (document.webkitExitFullscreen) document.webkitExitFullscreen(); }
     function toggleFullscreen() { isFullscreen() ? exitFullscreen() : enterFullscreen(); }
 
     function handleFsChange() {
-        const i = btnFullscreen?.querySelector('i');
-        if (!i) return;
-        if (isFullscreen()) {
-            i.classList.replace('bi-arrows-fullscreen', 'bi-fullscreen-exit');
-            btnFullscreen.title = "Exit Fullscreen (Alt+Enter)";
-            setTimeout(() => focusBarcode(), 50);
-        } else {
-            i.classList.replace('bi-fullscreen-exit', 'bi-arrows-fullscreen');
-            btnFullscreen.title = "Expand (Alt+Enter)";
-        }
-    }
-
-    /* -------- INIT -------- */
-    document.addEventListener('DOMContentLoaded', () => {
-        posShell = document.getElementById('posShell');
-        btnFullscreen = document.getElementById('btnFullscreen');
-        itemInputEl = document.getElementById('itemSearchInput');
-        suggDiv = document.getElementById('itemSuggestions');
-
-        invoiceDiscountPercentEl = document.getElementById('invoiceDiscountPercent');
-        invoiceDiscountAmountEl = document.getElementById('invoiceDiscountAmount');
-
-        initializeFocusMode();
-        applySaleTypeVisual();
-
-        setItemDiscMode('percent', false);
-        const select = document.getElementById("paymentMethod");
-        const selectedOption = select.options[select.selectedIndex];
-
-        setPaymentMethod(selectedOption.value);
-        attachScannerHandlers();
-
-        document.getElementById('rbSale')?.addEventListener('change', applySaleTypeVisual);
-        document.getElementById('rbReturn')?.addEventListener('change', applySaleTypeVisual);
-        document.querySelectorAll('.form-check-input.saletype').forEach(r => r.addEventListener('click', applySaleTypeVisual));
-
-        document.querySelectorAll('#paymentPills .method-pill').forEach(p => {
-            p.addEventListener('click', () => setPaymentMethod(p.getAttribute('data-value')));
-        });
-
-        document.getElementById('btnHold')?.addEventListener('click', holdCurrentInvoice);
-        document.getElementById('btnRetrieveHeld')?.addEventListener('click', openRetrieveModal);
-
-        document.getElementById('new-btn')?.addEventListener('click', handleNewInvoice);
-
-        document.querySelector('.saveprint-btn')?.addEventListener('click', () => openTenderModal(null, handleSavePrint));
-        document.querySelector('.saveonly-btn')?.addEventListener('click', () => openTenderModal(null, handleSaveOnly));
-        document.getElementById('tenderOkBtn')?.addEventListener('click', handleTenderOk);
-        document.getElementById('print-btn')?.addEventListener('click', () => openTenderModal(null, handleSavePrint));
-
-        document.getElementById('tenderInput')?.addEventListener('input', updateChange);
-        document.getElementById('tenderInput')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); handleTenderOk(); } });
-        document.getElementById('paymentModalCard')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); handleTenderOk(); } });
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && document.getElementById('paymentModalOverlay').style.display === 'flex') {
-                e.preventDefault();
-                closePaymentModal();
-            }
-        });
-
-        document.getElementById('holdSearch')?.addEventListener('input', renderHeldTable);
-
-        invoiceDiscountPercentEl?.addEventListener('input', () => {
-            let v = parseFloat(invoiceDiscountPercentEl.value) || 0;
-            if (v < 0) v = 0; if (v > 100) v = 100;
-            invoiceDiscountPercentEl.value = v;
-            recalculateTotals();
-        });
-
-        invoiceDiscountAmountEl?.addEventListener('input', () => {
-            let v = parseFloat(invoiceDiscountAmountEl.value) || 0;
-            if (v < 0) v = 0;
-            invoiceDiscountAmountEl.value = v;
-            recalculateTotals();
-        });
-
-        btnFullscreen?.addEventListener('click', toggleFullscreen);
-        document.addEventListener('fullscreenchange', handleFsChange);
-        document.addEventListener('webkitfullscreenchange', handleFsChange);
-
-        // ✅ capture = true so F5 refresh block works everywhere
-        window.addEventListener('keydown', globalKeyHandler, true);
-
-        document.getElementById('invoiceNoValue').innerText = generateInvoiceNumber();
-
-        updateLiveClock();
-        setInterval(updateLiveClock, 1000);
-
-        recalculateTotals();
+      const i = btnFullscreen?.querySelector('i');
+      if (!i) return;
+      if (isFullscreen()) {
+        i.classList.replace('bi-arrows-fullscreen', 'bi-fullscreen-exit');
+        btnFullscreen.title = "Exit Fullscreen (Alt+Enter)";
         setTimeout(() => focusBarcode(), 50);
-    });
-</script>
-
-<script>
-    const invoiceNo = '@((searchSale)?.InvoiceNumber ?? "")';
-
-        if (invoiceNo !== "") {
-            document.getElementById("invoiceNoValue").textContent = invoiceNo;
-        }
-
-        const saleType = '@((searchSale)?.SaleType ?? "Sale")';
-
-        if (saleType === "Return") {
-            document.getElementById("rbReturn").checked = true;
-        } else {
-            document.getElementById("rbSale").checked = true;
-        }
-
-
-    function setSelectedCustomer(select) {
-        const customerId = select.value;
-
-        if (!customerId) return;
-
-        document.getElementById("selectedCustomerId").value = customerId;
-
-        document.getElementById("customerBalance").textContent = '@(searchSale?.Customers?.OpeningBalance)';
+      } else {
+        i.classList.replace('bi-fullscreen-exit', 'bi-arrows-fullscreen');
+        btnFullscreen.title = "Expand (Alt+Enter)";
+      }
     }
 
-    const hasCustomer = @((searchSale?.Customers != null).ToString().ToLower());
-    const selectedCustomerId = '@(searchSale?.Customers?.Id)';
+    /* ---------- SHORTCUTS ---------- */
+    function globalKeyHandler(e) {
+      const listDiv = document.getElementById('itemSuggestions');
 
-    if (hasCustomer) {
-        // Select Registered
+      if (filtered.length && listDiv.style.display === 'block') {
+        if (e.key === 'ArrowDown') { e.preventDefault(); if (selectedIdx < filtered.length - 1) selectedIdx++; updateHighlight(); return; }
+        if (e.key === 'ArrowUp')   { e.preventDefault(); if (selectedIdx > 0) selectedIdx--; updateHighlight(); return; }
+        if (e.key === 'Enter') {
+          if (selectedIdx === -1 && filtered.length > 0) selectedIdx = 0;
+          if (selectedIdx >= 0) { e.preventDefault(); selectItemSuggestion(selectedIdx); }
+          return;
+        }
+        if (e.key === 'Escape') { listDiv.style.display = 'none'; filtered = []; selectedIdx = -1; return; }
+      }
+
+      if (e.key === 'F2') { e.preventDefault(); e.stopPropagation(); toggleQtyMode(); return; }
+      if (e.key === 'F3') { e.preventDefault(); e.stopPropagation(); togglePriceMode(); return; }
+
+      if (e.key === 'F4') { e.preventDefault(); e.stopPropagation(); openTenderModal(null, handleSavePrint); return; }
+      if (e.key === 'F5') { e.preventDefault(); e.stopPropagation(); openTenderModal(null, handleSaveOnly); return; }
+
+      if (e.key === 'F8') { e.preventDefault(); e.stopPropagation(); printCurrentSavedInvoice(); return; }
+
+      if (e.key === 'F12') { e.preventDefault(); e.stopPropagation(); handleNewInvoice(false); return; }
+
+      if (e.altKey && e.key.toLowerCase() === 'enter') { e.preventDefault(); toggleFullscreen(); return; }
+      if (e.altKey && e.key.toLowerCase() === 'b') { e.preventDefault(); focusBarcode(); return; }
+      if (e.altKey && e.key.toLowerCase() === 's') { e.preventDefault(); document.getElementById('rbSale').checked = true; applySaleTypeVisual(); return; }
+      if (e.altKey && e.key.toLowerCase() === 'r') { e.preventDefault(); document.getElementById('rbReturn').checked = true; applySaleTypeVisual(); return; }
+      if (e.altKey && e.key.toLowerCase() === 'p') { e.preventDefault(); setItemDiscMode('percent'); return; }
+      if (e.altKey && e.key.toLowerCase() === 'a') { e.preventDefault(); setItemDiscMode('amount'); return; }
+
+      if (e.ctrlKey && e.key.toLowerCase() === 'd') {
+        e.preventDefault();
+        invoiceDiscountPercentEl.focus();
+        invoiceDiscountPercentEl.select();
+        return;
+      }
+    }
+
+    /* ---------- LIVE STOCK API ---------- */
+    async function refreshRowLiveInfo(itemId, row) {
+      try {
+        const res = await fetch(`/Sales/GetItemLive?id=${itemId}`);
+        if (!res.ok) return;
+
+        const js = await res.json();
+        if (!js || !js.ok) return;
+
+        const stockEl = row.querySelector('.js-stock');
+        if (stockEl) stockEl.textContent = (js.qty ?? 0);
+      } catch (e) {
+        console.error('refreshRowLiveInfo', e);
+      }
+    }
+
+    /* ---------- INIT ---------- */
+    document.addEventListener('DOMContentLoaded', () => {
+      posShell = document.getElementById('posShell');
+      btnFullscreen = document.getElementById('btnFullscreen');
+      itemInputEl = document.getElementById('itemSearchInput');
+      suggDiv = document.getElementById('itemSuggestions');
+
+      invoiceDiscountPercentEl = document.getElementById('invoiceDiscountPercent');
+      invoiceDiscountAmountEl  = document.getElementById('invoiceDiscountAmount');
+
+      setFocusMode('scan', false);
+      applySaleTypeVisual();
+      setItemDiscMode('percent', false);
+
+      setPaymentMethod((document.getElementById("paymentMethod")?.value || "cash").toLowerCase());
+
+      attachScannerHandlers();
+
+      document.getElementById('rbSale')?.addEventListener('change', applySaleTypeVisual);
+      document.getElementById('rbReturn')?.addEventListener('change', applySaleTypeVisual);
+
+      document.querySelectorAll('#paymentPills .method-pill').forEach(p => {
+        p.addEventListener('click', () => setPaymentMethod(p.getAttribute('data-value')));
+      });
+
+      document.getElementById('btnHold')?.addEventListener('click', holdCurrentInvoice);
+      document.getElementById('btnRetrieveHeld')?.addEventListener('click', openRetrieveModal);
+
+      document.getElementById('new-btn')?.addEventListener('click', () => handleNewInvoice(false));
+
+      document.querySelector('.saveprint-btn')?.addEventListener('click', () => openTenderModal(null, handleSavePrint));
+      document.querySelector('.saveonly-btn')?.addEventListener('click', () => openTenderModal(null, handleSaveOnly));
+
+      document.getElementById('tenderOkBtn')?.addEventListener('click', handleTenderOk);
+      document.getElementById('tenderInput')?.addEventListener('input', updateChange);
+      document.getElementById('tenderInput')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); handleTenderOk(); }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && document.getElementById('paymentModalOverlay').style.display === 'flex') {
+          e.preventDefault();
+          closePaymentModal();
+        }
+      });
+
+      document.getElementById('holdSearch')?.addEventListener('input', renderHeldTable);
+
+      // ✅ markDirty on invoice discount edits
+      invoiceDiscountPercentEl?.addEventListener('input', () => {
+        markDirty();
+        let v = parseFloat(invoiceDiscountPercentEl.value) || 0;
+        if (v < 0) v = 0; if (v > 100) v = 100;
+        invoiceDiscountPercentEl.value = v;
+        recalculateTotals();
+      });
+
+      invoiceDiscountAmountEl?.addEventListener('input', () => {
+        markDirty();
+        let v = parseFloat(invoiceDiscountAmountEl.value) || 0;
+        if (v < 0) v = 0;
+        invoiceDiscountAmountEl.value = v;
+        recalculateTotals();
+      });
+
+      btnFullscreen?.addEventListener('click', toggleFullscreen);
+      document.addEventListener('fullscreenchange', handleFsChange);
+      document.addEventListener('webkitfullscreenchange', handleFsChange);
+
+      // ✅ capture true so browser refresh shortcuts won't override
+      window.addEventListener('keydown', globalKeyHandler, true);
+
+      // set invoice number (search or new)
+      if (SEARCH_INVOICE_NO) {
+        document.getElementById('invoiceNoValue').innerText = SEARCH_INVOICE_NO;
+
+        // searched invoice => not fresh
+        invoiceIsFresh = false;
+
+        if (SEARCH_SALE_ID > 0) lastSavedSaleId = Number(SEARCH_SALE_ID);
+      } else {
+        document.getElementById('invoiceNoValue').innerText = generateInvoiceNumber();
+        invoiceIsFresh = true;
+      }
+
+      if (SEARCH_SALETYPE === "Return") document.getElementById("rbReturn").checked = true;
+      else document.getElementById("rbSale").checked = true;
+      applySaleTypeVisual();
+
+      if (SEARCH_HAS_CUSTOMER && SEARCH_CUSTOMERID > 0) {
         document.getElementById("customerRadio").checked = true;
         document.getElementById("walkinRadio").checked = false;
-
-        // Show customer block
-        document.getElementById("customerBlock").style.display = "block";
-
-        // Set dropdown value
+        toggleCustomerType();
         const ddl = document.getElementById("customerDropdown");
-        ddl.value = selectedCustomerId;
+        if (ddl) ddl.value = String(SEARCH_CUSTOMERID);
+        document.getElementById("selectedCustomerId").value = String(SEARCH_CUSTOMERID);
+        document.getElementById("selectedCustomerBlock").style.display = "block";
+      }
 
-        // Set hidden field
-        document.getElementById("selectedCustomerId").value = selectedCustomerId;
+      if (SEARCH_PAYMENT_METHOD) setPaymentMethod(SEARCH_PAYMENT_METHOD);
 
-        // Trigger change handler
-        if (ddl.value) {
-            setSelectedCustomer(ddl);
-        }
-    }
+      updateLiveClock();
+      setInterval(updateLiveClock, 1000);
 
-    const paymentMethod = '@(searchSale?.Payment?.PaymentMethod ?? "cash")';
-
-    const select = document.getElementById("paymentMethod");
-
-    // Remove selected from all options
-    Array.from(select.options).forEach(opt => opt.selected = false);
-
-    // Select matching option
-    const match = Array.from(select.options)
-        .find(opt => opt.value === paymentMethod.toLowerCase());
-
-    if (match) {
-        match.selected = true;
-    }
-
-
-    const pills = document.querySelectorAll("#paymentPills .method-pill");
-
-    pills.forEach(pill => {
-        pill.classList.remove("active");
-
-        if (pill.dataset.value === paymentMethod.toLowerCase()) {
-
-            pill.classList.add("active");
-        }
+      recalculateTotals();
+      setTimeout(() => focusBarcode(), 50);
     });
-
 </script>
+
 

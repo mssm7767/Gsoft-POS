@@ -84,7 +84,7 @@ namespace GSoftPosNew.Controllers
 
             if (!string.IsNullOrWhiteSpace(search))
             {
-                
+
 
                 sale = _context.Sales.Where(s =>
                     s.InvoiceNumber != null &&
@@ -93,7 +93,7 @@ namespace GSoftPosNew.Controllers
                 .FirstOrDefault();
             }
 
-            if(sale != null)
+            if (sale != null)
             {
                 saleItems = _context.SaleItems.Where(si => si.SaleId == sale.Id).ToList();
                 customer = _context.Customers.Where(c => c.Id == sale.CustomerId).FirstOrDefault();

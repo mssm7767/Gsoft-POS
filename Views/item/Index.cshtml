@@ -1,72 +1,32 @@
-﻿@model IEnumerable<GSoftPosNew.Models.ItemModel>
+﻿@model object
 @using System
-@using System.Linq
 
 @{
     ViewData["Title"] = "Item List";
     Layout = "~/Views/Shared/_Layout.cshtml";
-
-    var items = Model?.ToList() ?? new List<GSoftPosNew.Models.ItemModel>();
-
-    // KPIs
-    var totalItems = items.Count;
-    var totalStock = items.Sum(x => x.Quantity);
-    var totalPurchaseValue = items.Sum(x => x.PurchasePrice * x.Quantity);
-    var totalSaleValue = items.Sum(x => x.SalePrice * x.Quantity);
-
-    string GetPropStr(object o, string name) =>
-        o?.GetType().GetProperty(name)?.GetValue(o)?.ToString();
-
-    // Supplier names from navigation property
-    var supplierOptions = items
-        .Where(i => i.Supplier != null && !string.IsNullOrWhiteSpace(i.Supplier.SupplierName))
-        .Select(i => i.Supplier.SupplierName)
-        .Distinct(StringComparer.OrdinalIgnoreCase)
-        .OrderBy(s => s)
-        .ToList();
-
-    // Category names from navigation property
-    var categoryOptions = items
-        .Where(i => i.Category != null && !string.IsNullOrWhiteSpace(i.Category.Name))
-        .Select(i => i.Category.Name)
-        .Distinct(StringComparer.OrdinalIgnoreCase)
-        .OrderBy(c => c)
-        .ToList();
-
-    // Flavour options
-    var flavourOptions = items
-        .Where(i => !string.IsNullOrWhiteSpace(i.Flavour))
-        .Select(i => i.Flavour)
-        .Distinct(StringComparer.OrdinalIgnoreCase)
-        .OrderBy(f => f)
-        .ToList();
 }
 
 @section Styles {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 
     <style>
-        /* Page background – halka soft gradient */
         body {
             min-height: 100vh;
             background: radial-gradient(circle at top, #eef2ff 0%, #f5f7fb 40%, #ffffff 100%);
         }
 
-        /* Global container */
         .container-fluid {
             max-width: 100% !important;
             padding-left: 12px;
             padding-right: 12px;
         }
 
-        /* ITEM LIST WRAPPER – LEFT align */
         .page-wrap-itemlist {
-            max-width: 900px; /* same width as Add Item */
-            margin: 12px 0 24px 0; /* left side */
+            max-width: 900px;
+            margin: 12px 0 24px 0;
             padding-right: 0;
         }
 
-        /* Top band */
         .inv-hero {
             position: sticky;
             top: 0;
@@ -79,21 +39,14 @@
             align-items: center;
             justify-content: space-between;
             padding: 10px 18px;
-            max-width: 900px; /* match list width */
-            margin: 0 0 0 12px; /* left side, thora andar */
+            max-width: 900px;
+            margin: 0 0 0 12px;
         }
 
         .inv-hero-accent {
             height: 4px;
             background: linear-gradient(90deg, #e0f2fe 0%, #ede9fe 50%, #d1fae5 100%);
             opacity: .95;
-        }
-
-        .card {
-            border-radius: 16px;
-            box-shadow: 0 6px 18px rgba(2, 6, 23, .08);
-            overflow: hidden;
-            border: 1px solid #e6eaf2;
         }
 
         .toolbar {
@@ -178,7 +131,6 @@
                 border-color: #2563eb;
             }
 
-        /* Inputs with icon (search / supplier / category / flavour) */
         .input-ico {
             position: relative;
             display: flex;
@@ -217,44 +169,6 @@
             width: 100%;
             min-width: 180px;
             background: transparent;
-        }
-
-        /* Suggest popup */
-        .suggest {
-            position: absolute;
-            top: 110%;
-            left: 0;
-            right: 0;
-            z-index: 20;
-            display: none;
-            background: #ffffff;
-            border: 1px solid #e6eaf2;
-            border-radius: 10px;
-            box-shadow: 0 10px 24px rgba(2, 6, 23, .08);
-            max-height: 280px;
-            overflow: auto;
-        }
-
-        .sug-item {
-            padding: .55rem .7rem;
-            display: flex;
-            justify-content: space-between;
-            gap: .75rem;
-            cursor: pointer;
-        }
-
-            .sug-item:hover {
-                background: #f5f7fb;
-            }
-
-        .s-name {
-            font-weight: 800;
-            color: #0f172a;
-        }
-
-        .s-meta {
-            font-size: .85rem;
-            color: #667085;
         }
 
         .btn-mini {
@@ -430,7 +344,6 @@
                 background: #fee2e2;
             }
 
-        /* Pagination bar */
         .pager-bar {
             display: flex;
             align-items: center;
@@ -516,10 +429,7 @@
         }
 
         @@media print {
-            .inv-hero,
-            .toolbar,
-            .pager-bar,
-            .btn-bottom {
+            .inv-hero, .toolbar, .pager-bar, .btn-bottom {
                 display: none !important;
             }
 
@@ -558,72 +468,54 @@
                     <i class="fa-regular fa-calendar"></i>
                     <span id="nowDate">--/--/----</span>
                 </div>
+
+                <!-- KPIs (AJAX) -->
                 <div class="kpi-wrap">
-                    <div class="kpi kpi-items"><i class="fa-solid fa-list"></i> Items: @totalItems</div>
-                    <div class="kpi kpi-stock"><i class="fa-solid fa-cubes"></i> Stock: @totalStock</div>
-                    <div class="kpi kpi-purchase"><i class="fa-solid fa-cart-arrow-down"></i> Purchase: @totalPurchaseValue.ToString("N2")</div>
-                    <div class="kpi kpi-sale"><i class="fa-solid fa-sack-dollar"></i> Sale: @totalSaleValue.ToString("N2")</div>
+                    <div class="kpi kpi-items"><i class="fa-solid fa-list"></i> Items: <span id="kpiItems">0</span></div>
+                    <div class="kpi kpi-stock"><i class="fa-solid fa-cubes"></i> Stock: <span id="kpiStock">0</span></div>
+                    <div class="kpi kpi-purchase"><i class="fa-solid fa-cart-arrow-down"></i> Purchase: <span id="kpiPurchase">0.00</span></div>
+                    <div class="kpi kpi-sale"><i class="fa-solid fa-sack-dollar"></i> Sale: <span id="kpiSale">0.00</span></div>
                 </div>
             </div>
+
             <div class="col-md-4 d-flex justify-content-md-end justify-content-start align-items-start">
                 <div id="chipLow" class="chip"><i class="fa-solid fa-triangle-exclamation"></i> Low Stock (≤5)</div>
             </div>
         </div>
 
-        <!-- Row 2: Search + Flavour + Supplier + Category + Import/Export + Add -->
+        <!-- Row 2: Search + Flavour + Supplier + Category + Export/Import + Add -->
         <div class="row g-2 mt-2">
-            <!-- Item search -->
             <div class="col-lg-3 col-md-4">
-                <div class="input-ico" style="position:relative" title="Search by item name, code, or barcode">
+                <div class="input-ico" title="Search by item name, code, barcode">
                     <i class="fa-solid fa-magnifying-glass"></i>
                     <input id="itemSearch" type="text" placeholder="Search item..." autocomplete="off" />
-                    <div id="suggestList" class="suggest"></div>
                 </div>
             </div>
 
-            <!-- Flavour search -->
             <div class="col-lg-2 col-md-3">
-                <div class="input-ico" title="Search by Flavour">
+                <div class="input-ico" title="Filter by Flavour">
                     <i class="fa-solid fa-ice-cream"></i>
                     <input id="flavourSel" class="type-input" list="flavourList" placeholder="Flavour..." />
-                    <datalist id="flavourList">
-                        @foreach (var f in flavourOptions)
-                        {
-                            <option value="@f"></option>
-                        }
-                    </datalist>
+                    <datalist id="flavourList"></datalist>
                 </div>
             </div>
 
-            <!-- Supplier -->
             <div class="col-lg-2 col-md-3">
                 <div class="input-ico" title="Filter by Supplier">
                     <i class="fa-solid fa-truck-field"></i>
                     <input id="supplierSel" class="type-input" list="supplierList" placeholder="Supplier..." />
-                    <datalist id="supplierList">
-                        @foreach (var s in supplierOptions)
-                        {
-                            <option value="@s"></option>
-                        }
-                    </datalist>
+                    <datalist id="supplierList"></datalist>
                 </div>
             </div>
 
-            <!-- Category -->
             <div class="col-lg-2 col-md-3">
                 <div class="input-ico" title="Filter by Category">
                     <i class="fa-solid fa-shapes"></i>
                     <input id="categorySel" class="type-input" list="categoryList" placeholder="Category..." />
-                    <datalist id="categoryList">
-                        @foreach (var c in categoryOptions)
-                        {
-                            <option value="@c"></option>
-                        }
-                    </datalist>
+                    <datalist id="categoryList"></datalist>
                 </div>
             </div>
 
-            <!-- Import/Export + Add -->
             <div class="col-lg-3 col-md-3 d-flex gap-2 justify-content-md-end justify-content-start">
                 <div class="btn-split" id="exportSplit">
                     <button type="button" class="btn-mini" id="btnExport"><i class="fa-solid fa-file-export"></i> Export</button>
@@ -662,81 +554,15 @@
                     <th>Flavour</th>
                     <th>Category</th>
                     <th>Supplier</th>
-                    <th class="num">Purchase Price (Cost Price)</th>
+                    <th class="num">Purchase Price</th>
                     <th class="num">Sale Price</th>
                     <th class="num">Stock</th>
                     <th>Status</th>
                     <th style="width:110px;">Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                @foreach (var item in items)
-                {
-                    var isLow = item.Quantity <= item.LowStockThreshold;
-                    var isExp = item.ExpiryDate.HasValue && item.ExpiryDate.Value < DateTime.Today;
-
-                    var barcode = GetPropStr(item, "Barcode") ?? "";
-                    var purchase = item.PurchasePrice;
-
-                    var flav = item.Flavour ?? "";
-                    var supplierName = item.Supplier?.SupplierName ?? "";
-                    var categoryName = item.Category?.Name ?? "";
-
-                    <tr data-name="@item.ItemName"
-                        data-code="@item.ItemCode"
-                        data-barcode="@barcode"
-                        data-sale="@item.SalePrice.ToString("0.####")"
-                        data-purchase="@purchase.ToString("0.####")"
-                        data-supplier="@supplierName"
-                        data-category="@categoryName"
-                        data-flavour="@flav"
-                        data-qty="@item.Quantity">
-                        <td>@item.Id</td>
-                        <td><span class="code-badge">@item.ItemCode</span></td>
-                        <td>@item.ItemName</td>
-                        <td>@flav</td>
-                        <td>@categoryName</td>
-                        <td>@supplierName</td>
-                        <td class="num">@purchase.ToString("N2")</td>
-                        <td class="num">@item.SalePrice.ToString("N2")</td>
-                        <td class="num @(isLow ? "text-danger" : "")">
-                            @item.Quantity pcs
-
-                            @if (!string.IsNullOrEmpty(item.PackSize) && int.TryParse(item.PackSize, out var packSizeInt) && packSizeInt != 0)
-                            {
-                                <text> (@(item.Quantity / packSizeInt) Packs)</text>
-                            }
-                        </td>
-                        <td>
-                            @if (isLow)
-                            {
-                                <span class="status-badge s-low">Low Stock</span>
-                            }
-                            else
-                            {
-                                <span class="status-badge s-ok">In Stock</span>
-                            }
-                            @if (isExp)
-                            {
-                                <span class="status-badge s-exp ms-1">Expired</span>
-                            }
-                        </td>
-                        <td>
-                            <div class="d-flex gap-1">
-                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn-icon btn-edit" title="Edit">
-                                    <i class="fa-solid fa-pen-to-square"></i>
-                                </a>
-                                <a asp-action="Delete"
-                                   asp-route-id="@item.Id"
-                                   class="btn-icon btn-del"
-                                   title="Delete"
-                                   onclick="return confirm('Are you sure to delete this item?');">
-                                    <i class="fa-solid fa-trash-can"></i>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                }
+            <tbody id="itemsTbody">
+                <tr><td colspan="11" class="text-center text-muted py-3">Loading...</td></tr>
             </tbody>
         </table>
     </div>
@@ -749,6 +575,7 @@
                 <option value="10">10 (A4 fit)</option>
                 <option value="25" selected>25</option>
                 <option value="50">50</option>
+                <option value="100">100</option>
             </select>
             <span class="ms-2 text-muted small" id="pageInfo"></span>
         </div>
@@ -772,6 +599,7 @@
 @section Scripts {
     <script>
         (function () {
+
             // Time/Date live
             function tick() {
                 const n = new Date();
@@ -780,214 +608,151 @@
             }
             setInterval(tick, 1000); tick();
 
-            const box = document.getElementById('itemSearch');
-            const sug = document.getElementById('suggestList');
-            const rowsQ = () => Array.from(document.querySelectorAll('#itemsTable tbody tr'));
+            // Elements
+            const tbody = document.getElementById("itemsTbody");
 
-            const supplierSel = document.getElementById('supplierSel');
-            const categorySel = document.getElementById('categorySel');
-            const flavourSel = document.getElementById('flavourSel');
-            const chipLow = document.getElementById('chipLow');
+            const itemSearch = document.getElementById("itemSearch");
+            const supplierSel = document.getElementById("supplierSel");
+            const categorySel = document.getElementById("categorySel");
+            const flavourSel  = document.getElementById("flavourSel");
+            const chipLow     = document.getElementById("chipLow");
 
-            // Import/Export menus
+            const pageSizeSel = document.getElementById("pageSize");
+            const pageNumbers = document.getElementById("pageNumbers");
+            const pageInfo    = document.getElementById("pageInfo");
+            const prevBtn     = document.getElementById("prevPage");
+            const nextBtn     = document.getElementById("nextPage");
+
+            const kpiItems    = document.getElementById("kpiItems");
+            const kpiStock    = document.getElementById("kpiStock");
+            const kpiPurchase = document.getElementById("kpiPurchase");
+            const kpiSale     = document.getElementById("kpiSale");
+
+            // Export/Import menus
             const exportSplit = document.getElementById('exportSplit');
             const importSplit = document.getElementById('importSplit');
-            document.getElementById('btnExport').addEventListener('click', () => exportSplit.classList.toggle('open'));
-            document.getElementById('btnImport').addEventListener('click', () => importSplit.classList.toggle('open'));
+            document.getElementById('btnExport')?.addEventListener('click', () => exportSplit.classList.toggle('open'));
+            document.getElementById('btnImport')?.addEventListener('click', () => importSplit.classList.toggle('open'));
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('#exportSplit')) exportSplit.classList.remove('open');
                 if (!e.target.closest('#importSplit')) importSplit.classList.remove('open');
             });
 
-            // Items cache for suggest
-            function buildItems() {
-                return rowsQ().map(r => ({
-                    el: r,
-                    name: (r.dataset.name || '').trim(),
-                    code: (r.dataset.code || '').trim(),
-                    barcode: (r.dataset.barcode || '').trim(),
-                    sale: parseFloat(r.dataset.sale || '0'),
-                    supplier: (r.dataset.supplier || '').toLowerCase(),
-                    category: (r.dataset.category || '').toLowerCase(),
-                    flavour: (r.dataset.flavour || '').toLowerCase(),
-                    qty: parseFloat(r.dataset.qty || '0')
-                }));
-            }
-            let ITEMS = buildItems();
-
-            function showSuggest(list) {
-                if (!list.length) { sug.style.display = 'none'; sug.innerHTML = ''; return; }
-                const html = list.slice(0, 12).map(it => `
-                    <div class="sug-item" data-code="${it.code}">
-                        <div class="s-name">${it.name}</div>
-                        <div class="s-meta">
-                            ${it.code ? `<i class="fa-solid fa-hashtag"></i> ${it.code}` : ''}
-                            ${it.barcode ? ` · <i class="fa-solid fa-barcode"></i> ${it.barcode}` : ''}
-                        </div>
-                    </div>
-                `).join('');
-                sug.innerHTML = html; sug.style.display = 'block';
-            }
-
-            // Pagination state
-            const pageSizeSel = document.getElementById('pageSize');
-            const pageNumbers = document.getElementById('pageNumbers');
-            const pageInfo = document.getElementById('pageInfo');
-            const prevPageBtn = document.getElementById('prevPage');
-            const nextPageBtn = document.getElementById('nextPage');
-
-            let filteredRows = [];
+            // State
             let currentPage = 1;
+            let totalCount  = 0;
+            let debounceT   = null;
 
-            function getPageSize() { return parseInt(pageSizeSel.value || '25', 10); }
-            function rebuildFilteredRows() { filteredRows = rowsQ().filter(r => r.style.display !== 'none'); }
+            function esc(s){
+                return String(s ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+            }
 
-            function renderPagination() {
-                const total = filteredRows.length;
-                const ps = getPageSize();
-                const totalPages = Math.max(1, Math.ceil(total / ps));
-                if (currentPage > totalPages) currentPage = totalPages;
+            function num(v){
+                const x = parseFloat(v);
+                return isNaN(x) ? 0 : x;
+            }
 
-                pageNumbers.innerHTML = '';
-                function makeBtn(p) {
-                    const b = document.createElement('button');
-                    b.className = 'page-btn' + (p === currentPage ? ' active' : '');
-                    b.textContent = p;
-                    b.addEventListener('click', () => { currentPage = p; applyPaginationOnly(); });
-                    return b;
+            function getFilters(){
+                return {
+                    search: (itemSearch?.value || "").trim(),
+                    supplier: (supplierSel?.value || "").trim(),
+                    category: (categorySel?.value || "").trim(),
+                    flavour: (flavourSel?.value || "").trim(),
+                    low: chipLow?.classList.contains("active") || false,
+                    pageSize: parseInt(pageSizeSel?.value || "25", 10) || 25
+                };
+            }
+
+            function renderRows(items){
+                if(!tbody) return;
+
+                if(!items || !items.length){
+                    tbody.innerHTML = `<tr><td colspan="11" class="text-center text-muted py-3">No items found</td></tr>`;
+                    return;
                 }
+
+                tbody.innerHTML = items.map(it => {
+                    const isLow = (num(it.quantity) <= 5);
+                    const status = it.isExpired ? `<span class="status-badge s-exp ms-1">Expired</span>` : "";
+                    const lowBadge = isLow ? `<span class="status-badge s-low">Low Stock</span>` : `<span class="status-badge s-ok">In Stock</span>`;
+
+                    return `
+                    <tr data-id="${it.id}">
+                        <td>${it.id}</td>
+                        <td><span class="code-badge">${esc(it.itemCode)}</span></td>
+                        <td>${esc(it.itemName)}</td>
+                        <td>${esc(it.flavour || "")}</td>
+                        <td>${esc(it.categoryName || "")}</td>
+                        <td>${esc(it.supplierName || "")}</td>
+                        <td class="num">${num(it.purchasePrice).toFixed(2)}</td>
+                        <td class="num">${num(it.salePrice).toFixed(2)}</td>
+                        <td class="num ${isLow ? "text-danger":""}">${num(it.quantity)} pcs</td>
+                        <td>${lowBadge}${status}</td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <a class="btn-icon btn-edit" title="Edit" href="@Url.Action("Edit", "Item")/${it.id}">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                                <a class="btn-icon btn-del" title="Delete" href="@Url.Action("Delete", "Item")/${it.id}"
+                                   onclick="return confirm('Are you sure to delete this item?');">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>`;
+                }).join("");
+            }
+
+            function renderPager(){
+                const pageSize = getFilters().pageSize;
+                const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+
+                if(currentPage > totalPages) currentPage = totalPages;
+
+                prevBtn.disabled = currentPage <= 1;
+                nextBtn.disabled = currentPage >= totalPages;
+
+                if(totalCount <= 0){
+                    pageInfo.textContent = "No rows";
+                } else {
+                    const start = (currentPage - 1) * pageSize + 1;
+                    const end = Math.min(currentPage * pageSize, totalCount);
+                    pageInfo.textContent = `Showing ${start}–${end} of ${totalCount}`;
+                }
+
+                pageNumbers.innerHTML = "";
                 const windowSize = 5;
-                let start = Math.max(1, currentPage - Math.floor(windowSize / 2));
-                let end = Math.min(totalPages, start + windowSize - 1);
-                if (end - start + 1 < windowSize) { start = Math.max(1, end - windowSize + 1); }
+                let startP = Math.max(1, currentPage - Math.floor(windowSize/2));
+                let endP = Math.min(totalPages, startP + windowSize - 1);
+                if(endP - startP + 1 < windowSize){
+                    startP = Math.max(1, endP - windowSize + 1);
+                }
 
-                if (start > 1) pageNumbers.appendChild(makeBtn(1));
-                for (let p = start; p <= end; p++) pageNumbers.appendChild(makeBtn(p));
-                if (end < totalPages) pageNumbers.appendChild(makeBtn(totalPages));
+                function addBtn(p){
+                    const b = document.createElement("button");
+                    b.className = "page-btn" + (p === currentPage ? " active" : "");
+                    b.textContent = p;
+                    b.addEventListener("click", () => { currentPage = p; loadPage(); });
+                    pageNumbers.appendChild(b);
+                }
 
-                prevPageBtn.disabled = currentPage <= 1;
-                nextPageBtn.disabled = currentPage >= totalPages;
-
-                pageInfo.textContent = total ? `Showing ${(currentPage - 1) * ps + 1}–${Math.min(currentPage * ps, total)} of ${total}` : 'No rows';
+                if(startP > 1) addBtn(1);
+                for(let p = startP; p <= endP; p++) addBtn(p);
+                if(endP < totalPages) addBtn(totalPages);
             }
 
-            function applyPaginationOnly() {
-                const ps = getPageSize();
-                const startIdx = (currentPage - 1) * ps;
-                const endIdx = startIdx + ps - 1;
-
-                filteredRows.forEach((r, i) => {
-                    r.style.display = (i >= startIdx && i <= endIdx) ? '' : 'none';
-                });
-
-                renderPagination();
-            }
-
-            // Filters + search
-            function applyFilters() {
-                const q = (box.value || '').toLowerCase().trim();
-                const supp = (supplierSel.value || '').toLowerCase().trim();
-                const cat = (categorySel.value || '').toLowerCase().trim();
-                const flav = (flavourSel.value || '').toLowerCase().trim();
-                const wantLow = chipLow.classList.contains('active');
-
-                let any = false;
-                rowsQ().forEach(r => {
-                    const name = (r.dataset.name || '').toLowerCase();
-                    const code = (r.dataset.code || '').toLowerCase();
-                    const bar = (r.dataset.barcode || '').toLowerCase();
-                    const qty = parseFloat(r.dataset.qty || '0');
-                    const rsup = (r.dataset.supplier || '').toLowerCase();
-                    const rcat = (r.dataset.category || '').toLowerCase();
-                    const rflv = (r.dataset.flavour || '').toLowerCase();
-
-                    let ok = true;
-
-                    if (q) {
-                        ok = (name.includes(q) || code.includes(q) || bar.includes(q));
-                    }
-                    if (ok && supp) {
-                        ok = rsup.includes(supp);
-                    }
-                    if (ok && cat) {
-                        ok = rcat.includes(cat);
-                    }
-                    if (ok && flav) {
-                        ok = rflv.includes(flav);
-                    }
-                    if (ok && wantLow) {
-                        ok = qty <= 5;
-                    }
-
-                    r.style.display = ok ? '' : 'none';
-                    if (ok) any = true;
-                });
-
-                let noRow = document.getElementById('noItemsRow');
-                if (!any) {
-                    if (!noRow) {
-                        document.querySelector('#itemsTable tbody')
-                            .insertAdjacentHTML('beforeend',
-                                "<tr id='noItemsRow'><td colspan='11' class='text-center text-muted py-3'>No items found</td></tr>");
-                    }
-                } else if (noRow) { noRow.remove(); }
-
-                rebuildFilteredRows();
-                currentPage = 1;
-                applyPaginationOnly();
-            }
-
-            // Search + suggest events
-            box.addEventListener('input', function () {
-                const q = (this.value || '').trim().toLowerCase();
-                if (!q) { sug.style.display = 'none'; sug.innerHTML = ''; applyFilters(); return; }
-                const list = ITEMS.filter(it =>
-                    it.name.toLowerCase().includes(q) ||
-                    it.code.toLowerCase().includes(q) ||
-                    (it.barcode || '').toLowerCase().includes(q)
-                );
-                showSuggest(list);
-                applyFilters();
-            });
-            sug.addEventListener('click', function (e) {
-                const row = e.target.closest('.sug-item'); if (!row) return;
-                const code = row.getAttribute('data-code');
-                const it = ITEMS.find(x => x.code === code);
-                if (it) { box.value = it.code; }
-                sug.style.display = 'none';
-                applyFilters();
-            });
-            box.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter') { e.preventDefault(); sug.style.display = 'none'; applyFilters(); }
-                if (e.key === 'Escape') { sug.style.display = 'none'; }
-            });
-            document.addEventListener('click', (e) => { if (!e.target.closest('.input-ico')) sug.style.display = 'none'; });
-
-            // live filters
-            flavourSel.addEventListener('input', applyFilters);
-            supplierSel.addEventListener('input', applyFilters);
-            categorySel.addEventListener('input', applyFilters);
-            chipLow.addEventListener('click', () => { chipLow.classList.toggle('active'); applyFilters(); });
-
-            // Bottom actions
-            document.getElementById('btnPrint')?.addEventListener('click', () => window.print());
-            document.getElementById('btnClear')?.addEventListener('click', () => {
-                box.value = ''; supplierSel.value = ''; categorySel.value = ''; flavourSel.value = '';
-                chipLow.classList.remove('active');
-                applyFilters();
-            });
-
-            // Export helpers
+            // CSV Export (only current visible page)
             function tableToCSV() {
-                const rows = Array.from(document.querySelectorAll('#itemsTable tr')).filter(r => r.style.display !== 'none');
+                const rows = Array.from(document.querySelectorAll('#itemsTable tr'));
                 return rows.map(row => {
                     return Array.from(row.querySelectorAll('th,td')).map(cell => {
-                        let t = cell.innerText.replace(/\s+/g, ' ').trim();
+                        let t = (cell.innerText || "").replace(/\s+/g, ' ').trim();
                         t = t.replaceAll('"', '""');
                         return `"${t}"`;
                     }).join(',');
                 }).join('\n');
             }
+
             function downloadBlob(data, filename, type) {
                 const blob = new Blob([data], { type });
                 const url = URL.createObjectURL(blob);
@@ -995,37 +760,128 @@
                 a.href = url; a.download = filename; a.click();
                 URL.revokeObjectURL(url);
             }
-            document.getElementById('expCsv').addEventListener('click', () => {
+
+            document.getElementById('expCsv')?.addEventListener('click', () => {
                 const csv = tableToCSV();
                 downloadBlob(csv, 'items-export.csv', 'text/csv;charset=utf-8;');
             });
-            document.getElementById('expPdf').addEventListener('click', () => { window.print(); });
-            document.getElementById('expCopy').addEventListener('click', async () => {
+            document.getElementById('expPdf')?.addEventListener('click', () => window.print());
+            document.getElementById('expCopy')?.addEventListener('click', async () => {
                 const csv = tableToCSV();
                 try { await navigator.clipboard.writeText(csv); alert('Table copied to clipboard (CSV format).'); }
                 catch { alert('Copy failed.'); }
             });
 
-            // Import (front-end demo stub)
-            document.getElementById('importFile').addEventListener('change', (e) => {
-                const file = e.target.files?.[0]; if (!file) return;
-                const reader = new FileReader();
-                reader.onload = function () {
-                    const text = String(reader.result || '').trim();
-                    const lines = text.split(/\r?\n/);
-                    if (!lines.length) { return; }
-                    // backend mapping yahan lagani hai
-                };
-                reader.readAsText(file);
+            // Print & Clear
+            document.getElementById('btnPrint')?.addEventListener('click', () => window.print());
+            document.getElementById('btnClear')?.addEventListener('click', () => {
+                itemSearch.value = "";
+                supplierSel.value = "";
+                categorySel.value = "";
+                flavourSel.value = "";
+                chipLow.classList.remove("active");
+                currentPage = 1;
+                loadPage();
             });
 
-            // Pager events
-            document.getElementById('pageSize').addEventListener('change', () => { currentPage = 1; rebuildFilteredRows(); applyPaginationOnly(); });
-            document.getElementById('prevPage').addEventListener('click', () => { if (currentPage > 1) { currentPage--; applyPaginationOnly(); } });
-            document.getElementById('nextPage').addEventListener('click', () => { currentPage++; applyPaginationOnly(); });
+            // ✅ MAIN LOAD
+            async function loadPage(){
+                const f = getFilters();
+                tbody.innerHTML = `<tr><td colspan="11" class="text-center text-muted py-3">Loading...</td></tr>`;
+
+                const url = '@Url.Action("SearchItemsAjax", "Item")'
+                    + `?search=${encodeURIComponent(f.search)}`
+                    + `&supplier=${encodeURIComponent(f.supplier)}`
+                    + `&category=${encodeURIComponent(f.category)}`
+                    + `&flavour=${encodeURIComponent(f.flavour)}`
+                    + `&low=${encodeURIComponent(f.low)}`
+                    + `&page=${encodeURIComponent(currentPage)}`
+                    + `&pageSize=${encodeURIComponent(f.pageSize)}`;
+
+                try{
+                    const res = await fetch(url, { cache:"no-store" });
+                    if(!res.ok) throw new Error("Network error");
+                    const data = await res.json();
+
+                    totalCount = Number(data.totalCount || 0);
+                    renderRows(data.items || []);
+                    renderPager();
+
+                    // KPIs (approx from current page + total)
+                    if(kpiItems) kpiItems.textContent = totalCount.toString();
+
+                    // simple KPIs from current page (fast)
+                    const items = data.items || [];
+                    const stock = items.reduce((a,x)=>a + num(x.quantity), 0);
+                    const purchase = items.reduce((a,x)=>a + (num(x.purchasePrice) * num(x.quantity)), 0);
+                    const sale = items.reduce((a,x)=>a + (num(x.salePrice) * num(x.quantity)), 0);
+
+                    if(kpiStock) kpiStock.textContent = stock.toFixed(0);
+                    if(kpiPurchase) kpiPurchase.textContent = purchase.toFixed(2);
+                    if(kpiSale) kpiSale.textContent = sale.toFixed(2);
+
+                    // datalist fill (collect from current page - light)
+                    fillDatalistFromPage(items);
+
+                } catch(e){
+                    console.error(e);
+                    tbody.innerHTML = `<tr><td colspan="11" class="text-center text-danger py-3">Load error</td></tr>`;
+                }
+            }
+
+            // Lightweight datalist fill (from current page only)
+            function fillDatalistFromPage(items){
+                const dFlav = document.getElementById("flavourList");
+                const dSup  = document.getElementById("supplierList");
+                const dCat  = document.getElementById("categoryList");
+                if(!dFlav || !dSup || !dCat) return;
+
+                const flavs = new Set();
+                const sups = new Set();
+                const cats = new Set();
+
+                (items || []).forEach(x=>{
+                    if((x.flavour||"").trim()) flavs.add((x.flavour||"").trim());
+                    if((x.supplierName||"").trim()) sups.add((x.supplierName||"").trim());
+                    if((x.categoryName||"").trim()) cats.add((x.categoryName||"").trim());
+                });
+
+                function up(dl, set){
+                    // keep previous + add new
+                    const existing = new Set(Array.from(dl.querySelectorAll("option")).map(o => o.value));
+                    set.forEach(v => existing.add(v));
+                    dl.innerHTML = Array.from(existing).sort().map(v => `<option value="${esc(v)}"></option>`).join("");
+                }
+
+                up(dFlav, flavs);
+                up(dSup, sups);
+                up(dCat, cats);
+            }
+
+            function debounceLoad(){
+                clearTimeout(debounceT);
+                debounceT = setTimeout(() => { currentPage = 1; loadPage(); }, 250);
+            }
+
+            itemSearch?.addEventListener("input", debounceLoad);
+            supplierSel?.addEventListener("input", debounceLoad);
+            categorySel?.addEventListener("input", debounceLoad);
+            flavourSel?.addEventListener("input", debounceLoad);
+
+            chipLow?.addEventListener("click", () => {
+                chipLow.classList.toggle("active");
+                currentPage = 1;
+                loadPage();
+            });
+
+            pageSizeSel?.addEventListener("change", () => { currentPage = 1; loadPage(); });
+
+            prevBtn?.addEventListener("click", () => { if(currentPage > 1){ currentPage--; loadPage(); } });
+            nextBtn?.addEventListener("click", () => { currentPage++; loadPage(); });
 
             // First render
-            applyFilters();
+            document.addEventListener("DOMContentLoaded", () => loadPage());
+
         })();
     </script>
 }

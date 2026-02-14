@@ -135,7 +135,7 @@ namespace GSoftPosNew.Controllers
             TempData["Message"] = "✅ Database Back-up successfully!";
 
             // Optionally: return file for download, or just redirect
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", "Home");
         }
 
         public async Task<IActionResult> ResetDb()

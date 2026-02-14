@@ -1,0 +1,40 @@
+﻿@{
+    ViewData["Title"] = "Redirecting...";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"]</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            @* Only show if TempData flag exists *@
+            var showPrompt = @((TempData["ShowBackupPrompt"] != null).ToString().ToLower());
+
+            if(showPrompt) {
+                Swal.fire({
+                    title: 'Do you want to backup the database?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, backup now',
+                    cancelButtonText: 'No, skip'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Redirect to database backup controller/action
+                        window.location.href = '@Url.Action("DatabaseBackup", "Settings")';
+                    } else {
+                        // Redirect directly to dashboard
+                        window.location.href = '@Url.Action("Index", "Home")';
+                    }
+                });
+            } else {
+                // fallback: go directly to dashboard
+                window.location.href = '@Url.Action("Index", "Home")';
+            }
+        });
+    </script>
+</body>
+</html>

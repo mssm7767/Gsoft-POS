@@ -7,10 +7,8 @@ using GSoftPosNew.ViewModels;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -87,8 +85,11 @@ namespace GSoftPosNew.Controllers
                         new ClaimsPrincipal(claimsIdentity),
                         authProperties);
 
+                    // Set TempData flag to show SweetAlert
+                    TempData["ShowBackupPrompt"] = true;
+
                     // ✅ Login success → redirect to Home
-                    return RedirectToAction("Index", "Home");
+                    return RedirectToAction("PostLogin", "Home");
                 }
             }
 

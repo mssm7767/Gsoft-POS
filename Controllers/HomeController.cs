@@ -30,6 +30,11 @@ namespace GSoftPosNew.Controllers
             return View();
         }
 
+        [Authorize]
+        public IActionResult PostLogin()
+        {
+            return View();
+        }
         public IActionResult Index(DateTime? fromDate, DateTime? toDate)
         {
             var expiry = _license.GetExpiryDate();

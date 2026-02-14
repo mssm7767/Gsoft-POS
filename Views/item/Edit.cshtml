@@ -413,9 +413,25 @@
                 </button>
             </div>
 
-            <div class="card-header">
-                Current Stock
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Current Stock</span>
+
+                <div class="d-flex align-items-center">
+                    <label class="me-1 mb-0 small">Rows:</label>
+                    <select id="stockPageSize" class="form-select form-select-sm me-2" style="width:70px;">
+                        <option value="10">10</option>
+                        <option value="25" selected>25</option>
+                        <option value="50">50</option>
+                    </select>
+
+                    <button class="btn btn-sm btn-outline-secondary me-1" id="prevStockPage">&laquo; Prev</button>
+                    <div id="stockPageNumbers" class="d-flex"></div>
+                    <button class="btn btn-sm btn-outline-secondary ms-1" id="nextStockPage">Next &raquo;</button>
+
+                    <span class="ms-2 small text-muted" id="stockPageInfo"></span>
+                </div>
             </div>
+
             <div class="card-body p-0">
                 <div class="table-responsive" style="max-height:300px; overflow-y:auto;">
                     <table id="stockTable" class="table table-hover table-sm mb-0">
@@ -471,6 +487,83 @@
 </div>
 
 @section Scripts {
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <script>
+                (function () {
+            const prevPageBtn = document.getElementById('prevStockPage');
+            const nextPageBtn = document.getElementById('nextStockPage');
+            const pageNumbers = document.getElementById('stockPageNumbers');
+            const pageInfo = document.getElementById('stockPageInfo');
+            const pageSizeSel = document.getElementById('stockPageSize');
+
+            // ───────────── SERVER STATE FROM VIEWBAG ─────────────
+            let currentPage = @ViewBag.ExistingItemsPage ?? 1;
+            let pageSize = @ViewBag.ExistingItemsPageSize ?? 50;
+            let totalItems = @ViewBag.ExistingItemsTotal ?? 0;
+            let totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+
+            // ───────────── HELPER: BUILD QUERY URL ─────────────
+            function buildUrl(page, size) {
+                const params = new URLSearchParams(window.location.search);
+                params.set('page', page);
+                params.set('pageSize', size);
+                return `${window.location.pathname}?${params.toString()}`;
+            }
+
+            // ───────────── PAGE SIZE CHANGE ─────────────
+            if (pageSizeSel) {
+                pageSizeSel.value = pageSize;
+                pageSizeSel.addEventListener('change', () => {
+                    const ps = parseInt(pageSizeSel.value, 10);
+                    window.location.href = buildUrl(1, ps); // go to first page
+                });
+            }
+
+            // ───────────── RENDER PAGINATION ─────────────
+            function renderPagination() {
+                pageNumbers.innerHTML = '';
+
+                const windowSize = 5;
+                let start = Math.max(1, currentPage - Math.floor(windowSize / 2));
+                let end = Math.min(totalPages, start + windowSize - 1);
+                if (end - start + 1 < windowSize) start = Math.max(1, end - windowSize + 1);
+
+                function makeBtn(p) {
+                    const b = document.createElement('button');
+                    b.className = 'btn btn-sm btn-outline-secondary me-1' + (p === currentPage ? ' active' : '');
+                    b.textContent = p;
+                    b.addEventListener('click', () => {
+                        window.location.href = buildUrl(p, pageSize);
+                    });
+                    return b;
+                }
+
+                if (start > 1) pageNumbers.appendChild(makeBtn(1));
+                for (let p = start; p <= end; p++) pageNumbers.appendChild(makeBtn(p));
+                if (end < totalPages) pageNumbers.appendChild(makeBtn(totalPages));
+
+                // Prev / Next buttons
+                prevPageBtn.disabled = currentPage <= 1;
+                nextPageBtn.disabled = currentPage >= totalPages;
+
+                prevPageBtn.onclick = () => {
+                    if (currentPage > 1) window.location.href = buildUrl(currentPage - 1, pageSize);
+                };
+                nextPageBtn.onclick = () => {
+                    if (currentPage < totalPages) window.location.href = buildUrl(currentPage + 1, pageSize);
+                };
+
+                // Page info
+                const startRecord = totalItems ? (currentPage - 1) * pageSize + 1 : 0;
+                const endRecord = Math.min(currentPage * pageSize, totalItems);
+                pageInfo.textContent = totalItems ? `Showing ${startRecord}-${endRecord} of ${totalItems}` : 'No records';
+            }
+
+            // ───────────── INITIALIZE ─────────────
+            document.addEventListener('DOMContentLoaded', renderPagination);
+        })();
+    </script>
     <script>
         // ========== Center SMS toast ==========
         document.addEventListener('DOMContentLoaded', function () {
@@ -803,21 +896,21 @@
                         <option value="">Select...</option>
                         @foreach (var ing in recipeIngredients)
                         {
-                                    var unitText = !string.IsNullOrWhiteSpace(ing.ConsumptionUnit)
-                                                                                                                    ? ing.ConsumptionUnit
-                                                                                                                    : ing.PurchaseUnit;
-                                    var avail = ing.PurchaseQty ?? 0;
-                                    var cpu = ing.CostPerUnit ?? 0;
+                                        var unitText = !string.IsNullOrWhiteSpace(ing.ConsumptionUnit)
+                                                                                                                                                                                                        ? ing.ConsumptionUnit
+                                                                                                                                                                                                        : ing.PurchaseUnit;
+                                        var avail = ing.PurchaseQty ?? 0;
+                                        var cpu = ing.CostPerUnit ?? 0;
 
-                                    <text>
-                                    <option value="@ing.Id"
-                                            data-cat="@Html.Raw(ing.Category?.Name ?? "")"
-                                            data-unit="@Html.Raw(unitText ?? "")"
-                                            data-avail="@avail"
-                                            data-cpu="@cpu">
-                                        @ing.Name (@unitText)
-                                    </option>
-                                    </text>
+                                        <text>
+                                        <option value="@ing.Id"
+                                                data-cat="@Html.Raw(ing.Category?.Name ?? "")"
+                                                data-unit="@Html.Raw(unitText ?? "")"
+                                                data-avail="@avail"
+                                                data-cpu="@cpu">
+                                            @ing.Name (@unitText)
+                                        </option>
+                                        </text>
                         }
                     </select>
                 </td>
