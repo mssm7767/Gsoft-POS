@@ -21,12 +21,21 @@
             line-height: 1;
         }
 
+        :root {
+            --line: #222; /* soft black */
+            --line2: #d9d9d9; /* light lines */
+            --text: #000;
+            --muted: #333; /* darker */
+            /* ✅ ONLY CHANGE: overall receipt font scale (slightly bigger) */
+            --fs: 1.14; /* was 1.10 -> now a little bigger (not too much) */
+        }
+
         body {
             width: 80mm;
             max-width: 80mm;
             margin: 0 auto;
             padding: 1.5mm;
-            font-size: 10px;
+            font-size: calc(10px * var(--fs)); /* ✅ scalable */
             background: white;
             color: #000;
         }
@@ -48,13 +57,6 @@
             .no-print {
                 display: none !important;
             }
-        }
-
-        :root {
-            --line: #222; /* soft black */
-            --line2: #d9d9d9; /* light lines */
-            --text: #000;
-            --muted: #333; /* ✅ darker than before (fix dim text) */
         }
 
         .receipt-container {
@@ -80,16 +82,16 @@
 
         .shop-title {
             font-weight: 900;
-            font-size: 14px;
+            font-size: calc(14px * var(--fs)); /* ✅ scalable */
             letter-spacing: 0.6px;
             margin: 3px 0;
             text-transform: uppercase;
             color: var(--text);
         }
 
-        /* ✅ Address + Contact more bold & dark (fix dim) */
+        /* Address + Contact */
         .shop-details {
-            font-size: 9px;
+            font-size: calc(9px * var(--fs)); /* ✅ scalable */
             line-height: 1.25;
             font-weight: 800;
             color: #111;
@@ -102,18 +104,18 @@
             padding: 2px 6px;
             border-radius: 3px;
             font-weight: 900;
-            font-size: 10px;
+            font-size: calc(10px * var(--fs)); /* ✅ scalable */
             display: inline-block;
             margin-bottom: 3px;
         }
 
-        /* ✅ Invoice Info: values darker + bolder */
+        /* Invoice Info */
         .invoice-details {
             margin: 6px 0;
             padding: 4px 0;
             border-top: none;
             border-bottom: 1px solid var(--line);
-            font-size: 10px;
+            font-size: calc(10px * var(--fs)); /* ✅ scalable */
             color: var(--text);
         }
 
@@ -124,24 +126,22 @@
             padding: 1px 0;
         }
 
-            /* ✅ Label strong */
             .detail-row .bold {
                 font-weight: 900;
                 color: #000;
             }
 
-            /* ✅ Values strong (THIS is your main issue) */
             .detail-row span:last-child {
                 font-weight: 800;
                 color: #000;
             }
 
-        /* ✅ ITEMS header line */
+        /* ITEMS header line */
         .items-header-line {
             display: flex;
             align-items: center;
             font-weight: 900;
-            font-size: 10px;
+            font-size: calc(10px * var(--fs)); /* ✅ scalable */
             border-top: none;
             border-bottom: 1px solid var(--line);
             padding: 3px 0;
@@ -171,7 +171,7 @@
             justify-content: space-between;
             padding: 3px 0;
             border-bottom: 1px solid var(--line2);
-            font-size: 10px;
+            font-size: calc(10px * var(--fs)); /* ✅ scalable */
             align-items: flex-start;
         }
 
@@ -189,7 +189,7 @@
         .srbox {
             width: 18px;
             font-weight: 900;
-            font-size: 10px;
+            font-size: calc(10px * var(--fs)); /* ✅ scalable */
             text-align: left;
             padding-top: 1px;
             flex-shrink: 0;
@@ -214,16 +214,14 @@
             color: #000;
         }
 
-        /* ✅ Qty/Price line was dim: make it darker & bolder */
         .item-meta {
-            font-size: 9px;
+            font-size: calc(9px * var(--fs)); /* ✅ scalable */
             line-height: 1.15;
-            color: #000; /* ✅ changed from #444 */
-            font-weight: 800; /* ✅ add bold */
-            opacity: 1; /* ✅ ensure not faint */
+            color: #000;
+            font-weight: 800;
+            opacity: 1;
         }
 
-        /* ✅ keep background but stronger border & text */
         .qty-price {
             background: #f3f3f3;
             padding: 1px 3px;
@@ -257,7 +255,7 @@
             color: #000;
         }
 
-        /* ✅ Totals */
+        /* Totals */
         .totals {
             margin: 8px 0;
             padding-top: 4px;
@@ -265,12 +263,11 @@
             color: #000;
         }
 
-        /* ✅ totals text darker + bolder */
         .total-line {
             display: flex;
             justify-content: space-between;
             margin: 3px 0;
-            font-size: 11px;
+            font-size: calc(11px * var(--fs)); /* ✅ scalable */
             padding: 1px 0;
             color: #000;
         }
@@ -283,24 +280,23 @@
                 font-weight: 900;
             }
 
-        /* Grand total underline only */
         .grand-total {
             font-weight: 900;
-            font-size: 13px;
+            font-size: calc(13px * var(--fs)); /* ✅ scalable */
             border-top: 1px solid var(--line);
             padding-top: 4px;
             margin-top: 4px;
             color: #000;
         }
 
-        /* ✅ Payment Information (was looking dim) */
+        /* Payment */
         .payment-section {
             background: #f3f3f3;
             padding: 5px;
             margin: 8px 0;
             border-radius: 3px;
             border: 1px solid #d0d0d0;
-            font-size: 11px;
+            font-size: calc(11px * var(--fs)); /* ✅ scalable */
             color: #000;
         }
 
@@ -320,7 +316,7 @@
                 font-weight: 900;
             }
 
-        /* ✅ QR Section */
+        /* QR */
         .qr-section {
             margin: 8px 0;
             padding: 5px 0;
@@ -330,15 +326,14 @@
             align-items: center;
         }
 
-        /* ✅ "For Customer" text was dim: make darker & slightly bold */
         .custom-message {
             flex: 1;
             text-align: left;
-            font-size: 9px;
+            font-size: calc(9px * var(--fs)); /* ✅ scalable */
             line-height: 1.35;
             padding-right: 5px;
-            color: #000; /* ✅ */
-            font-weight: 800; /* ✅ */
+            color: #000;
+            font-weight: 800;
         }
 
             .custom-message strong {
@@ -361,7 +356,7 @@
 
         .qr-text {
             font-weight: 900;
-            font-size: 8px;
+            font-size: calc(8px * var(--fs)); /* ✅ scalable */
             margin-top: 2px;
             text-align: center;
             color: #000;
@@ -373,23 +368,23 @@
             margin-top: 8px;
             padding-top: 6px;
             border-top: 1px solid var(--line);
-            font-size: 9px;
+            font-size: calc(9px * var(--fs)); /* ✅ scalable */
             line-height: 1.3;
             color: #000;
         }
 
         .company-info {
             margin: 4px 0;
-            font-size: 8px;
-            color: #000; /* ✅ was #555 */
-            font-weight: 800; /* ✅ */
+            font-size: calc(8px * var(--fs)); /* ✅ scalable */
+            color: #000;
+            font-weight: 800;
             line-height: 1.25;
         }
 
         .contact-info {
             font-weight: 900;
             margin: 4px 0 0 0;
-            font-size: 9px;
+            font-size: calc(9px * var(--fs)); /* ✅ scalable */
             line-height: 1.25;
             color: #000;
         }
@@ -414,7 +409,7 @@
             margin: 15px auto;
             display: block;
             font-weight: bold;
-            font-size: 12px;
+            font-size: calc(12px * var(--fs)); /* ✅ scalable */
         }
     </style>
 </head>
@@ -427,8 +422,8 @@
         <!-- Header -->
         <div class="header">
             <img src="@(!string.IsNullOrEmpty(ViewBag.Setting?.LogoPath)
-                                                                               ? Url.Content(ViewBag.Setting.LogoPath)
-                                                                               : "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTUiIGhlaWdodD0iNTUiIHZpZXdCb3g9IjAgMCA1NSA1NSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNTUiIGhlaWdodD0iNTUiIHJ4PSI1IiBmaWxsPSIjMjU2M2ViIi8+PHBhdGggZD0iTTE4IDM3TDM3IDE4TTM3IDM3TDE4IDE4IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==")"
+                                                                                                ? Url.Content(ViewBag.Setting.LogoPath)
+                                                                                                : "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTUiIGhlaWdodD0iNTUiIHZpZXdCb3g9IjAgMCA1NSA1NSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNTUiIGhlaWdodD0iNTUiIHJ4PSI1IiBmaWxsPSIjMjU2M2ViIi8+PHBhdGggZD0iTTE4IDM3TDM3IDE4TTM3IDM3TDE4IDE4IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==")"
                  alt="Logo"
                  class="logo" />
 
@@ -465,7 +460,7 @@
             </div>
         </div>
 
-        <!-- ITEMS header (single line) -->
+        <!-- ITEMS header -->
         <div class="items-header-line">
             <div class="h-sr">#</div>
             <div class="h-title">ITEMS</div>
@@ -574,7 +569,7 @@
             }
         </div>
 
-        <!-- QR (no dotted lines now) -->
+        <!-- QR -->
         <div class="qr-section">
             <div class="custom-message">
                 <strong>For Customer:</strong><br />

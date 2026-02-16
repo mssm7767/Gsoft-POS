@@ -256,8 +256,8 @@
         .barcode-suggestion-box {
             position: absolute;
             top: 100%;
-            left: 35px;
-            right: 0;
+            left: 0;
+            width: 600px; /* set exact width */
             background: #fff;
             border: 1px solid #c3d6f1;
             z-index: 1000;
@@ -268,6 +268,7 @@
             border-radius: 10px;
             margin-top: 6px;
         }
+
 
         .barcode-suggestion-item {
             padding: 10px 12px;
@@ -551,6 +552,44 @@
             border-radius: 999px;
             padding-inline: 10px;
         }
+
+        .suggestion-code {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 900;
+            font-family: ui-monospace, Menlo, Consolas, monospace;
+            color: #1e3a8a;
+            padding: 3px 8px;
+            border-radius: 8px;
+            border: 1px solid #c7d2fe;
+            background: #eef2ff;
+            white-space: nowrap;
+            line-height: 1.1;
+        }
+
+        .suggestion-qty {
+            font-weight: 800;
+            color: #065f46;
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            border-radius: 999px;
+            padding: 1px 8px;
+            white-space: nowrap;
+            font-size: .9rem;
+            line-height: 1.1;
+        }
+
+        .suggestion-name {
+            flex: 1;
+            min-width: 0;
+            font-weight: 800;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: .95rem;
+        }
     </style>
 }
 
@@ -729,7 +768,7 @@
                 </div>
 
                 <div class="col-md-2">
-                    <label class="form-label-sm mb-1">Item Name</label>
+                    <label class="form-label-sm mb-1">Item Name  <span id="stock" style="display: none;">( stock: 123)</span> </label>
                     <input type="text" id="itemName" class="form-control form-control-sm" placeholder="Name" readonly>
                 </div>
                 <div class="col-md-1">
@@ -1028,6 +1067,7 @@
                 const tp = toNum(getVal('taxPercent'));
                 const unitCost = mrp * (1 - ((dis + exd) / 100));
                 const taxUnit = unitCost * (tp / 100);
+
                 setVal('cost', unitCost.toFixed(2));
                 setVal('taxAmt', taxUnit.toFixed(2));
             }
@@ -1064,8 +1104,14 @@
 
             /* ===== FILL ITEM (BARCODE / SEARCH SE) ===== */
             function fillItem(found) {
-                const salePrice = (found.SalePrice != null) ? +found.SalePrice : 0;
+                const purchasePrice = +found.PurchasePrice || 0;
+                const salePrice = +found.SalePrice || 0;
+
+                var stock = document.getElementById('stock');
+                
+
                 const markupPct = (found.MarkupPercentage != null) ? +found.MarkupPercentage : 0;
+
                 const exDis = (found.ExDis != null) ? +found.ExDis : 0;
 
                 setVal('itemCode', found.ItemCode || "");
@@ -1074,6 +1120,11 @@
                 setVal('itemId', found.Id || 0);
                 setVal('expiry', found.Expiry || "");
                 setVal('qty', found.Qty ?? 1);
+
+                if (stock) {
+                    stock.style.display = "inline";
+                    stock.textContent = "(Stock: " + (found.Quantity || 0) +")";
+                }
 
                 // category + unit (agar property exist nahi bhi hogi to "" set ho jayega)
                 setVal('itemCategory', found.CategoryName || found.Category || "");
@@ -1099,89 +1150,196 @@
                 }
 
                 setVal('mrp', salePrice);
+                setVal('cost', found.PurchasePrice);
                 setVal('disPct', markupPct);
                 setVal('exDis', exDis);
                 setVal('taxPercent', found.TaxPercent ?? 0);
                 setVal('taxAmt', found.TaxAmt ?? 0);
 
-                entryState.lastEdited = 'dis';
+                entryState.lastEdited = 'cost';
                 recalcEntry();
                 setValAndFocusNext();
             }
 
             /* ===== SCAN / SUGGESTIONS ===== */
+           /* ===== POS STYLE: SMART EXACT PRIORITY ===== */
+
             const itemsFromDb = @Html.Raw(itemsJson);
             const barcodeInput = document.getElementById("barcodeInput");
             const suggestionBox = document.getElementById("barcodeSuggestions");
-            let activeIndex = -1, currentList = [];
 
+            let currentList = [];
+            let activeIndex = -1;
+
+            /* ===== Scanner Detection ===== */
+            let lastKeyTime = 0;
+            let keyIntervals = [];
+            const SCAN_THRESHOLD = 35;
+            const SCAN_MIN_KEYS = 4;
+
+            function detectScanner(now) {
+                const diff = now - lastKeyTime;
+                lastKeyTime = now;
+
+                keyIntervals.push(diff);
+                if (keyIntervals.length > SCAN_MIN_KEYS)
+                    keyIntervals.shift();
+
+                // If most recent keystrokes are very fast → scanner
+                return keyIntervals.length >= SCAN_MIN_KEYS &&
+                    keyIntervals.every(x => x < SCAN_THRESHOLD);
+            }
+
+            /* ===== Render Suggestions ===== */
             function renderSuggestions(list) {
+
                 if (!suggestionBox) return;
+
                 suggestionBox.innerHTML = "";
-                if (!list.length) {
-                    suggestionBox.style.display = 'none';
-                    activeIndex = -1; currentList = []; return;
+
+                if (!list || !list.length) {
+                    suggestionBox.style.display = "none";
+                    currentList = [];
+                    activeIndex = -1;
+                    return;
                 }
-                suggestionBox.style.display = 'block';
-                currentList = list;
-                list.slice(0, 20).forEach((item, idx) => {
-                    const div = document.createElement('div');
-                    div.className = 'barcode-suggestion-item' + (idx === activeIndex ? ' active' : '');
-                    div.innerHTML = `<strong>${item.ItemCode || ""}</strong> - ${item.ItemName || ""} <small>(PKR ${(+(item.SalePrice) || 0).toFixed(2)})</small>`;
-                    div.addEventListener('mouseenter', () => setActive(idx));
-                    div.addEventListener('click', () => chooseItem(item));
+
+                suggestionBox.style.display = "block";
+                currentList = list.slice(0, 20);
+                activeIndex = 0;
+
+                currentList.forEach((item, index) => {
+
+                    const div = document.createElement("div");
+                    div.className = "barcode-suggestion-item" + (index === 0 ? " active" : "");
+
+                    const code = item.ItemCode || "";
+                    const qty = item.Quantity ?? 0;
+                    const name = item.ItemName || "";
+                    const price = (+(item.SalePrice || 0)).toFixed(2);
+
+                    div.innerHTML = `
+                        <span class="suggestion-code">
+                            <i class="bi bi-upc-scan"></i> ${code}
+                        </span>
+                        <span class="suggestion-qty">(${qty})</span>
+                        <span class="suggestion-name">${name}</span>
+                        <span class="suggestion-price">PKR ${price}</span>
+                    `;
+
+                    div.addEventListener("mouseenter", () => setActive(index));
+                    div.addEventListener("click", () => chooseItem(item));
+
                     suggestionBox.appendChild(div);
                 });
             }
-            function setActive(i) {
-                activeIndex = i;
-                suggestionBox.querySelectorAll('.barcode-suggestion-item')
-                    .forEach((el, ix) => el.classList.toggle('active', ix === i));
-            }
-            function chooseItem(item) { fillItem(item); suggestionBox.style.display = 'none'; }
 
+            function setActive(index) {
+                activeIndex = index;
+                suggestionBox.querySelectorAll(".barcode-suggestion-item")
+                    .forEach((el, i) => el.classList.toggle("active", i === index));
+            }
+
+            function chooseItem(item) {
+                fillItem(item);
+                suggestionBox.style.display = "none";
+            }
+
+            /* ===== Exact + Smart Ordering ===== */
+            function buildSuggestionList(term) {
+
+                const q = term.toLowerCase();
+
+                const exact = itemsFromDb.find(x =>
+                    String(x.ItemCode || "").toLowerCase() === q
+                );
+
+                const matches = itemsFromDb.filter(x =>
+                    String(x.ItemCode || "").toLowerCase().includes(q) ||
+                    String(x.ItemName || "").toLowerCase().includes(q)
+                );
+
+                // Move exact match to TOP if exists
+                if (exact) {
+                    const withoutExact = matches.filter(x => x !== exact);
+                    return [exact, ...withoutExact];
+                }
+
+                return matches;
+            }
+
+            /* ===== Input Handling ===== */
             if (barcodeInput) {
-                barcodeInput.addEventListener('input', function () {
-                    const q = (this.value || '').trim().toLowerCase();
-                    if (!q) { renderSuggestions([]); return; }
-                    const matches = (itemsFromDb || []).filter(it =>
-                        (String(it.ItemCode || "").toLowerCase().includes(q)) ||
-                        (String(it.ItemName || "").toLowerCase().includes(q))
+
+                barcodeInput.addEventListener("input", function () {
+
+                    const value = this.value.trim();
+                    if (!value) {
+                        renderSuggestions([]);
+                        return;
+                    }
+
+                    const list = buildSuggestionList(value);
+                    renderSuggestions(list);
+                });
+
+                barcodeInput.addEventListener("keydown", function (e) {
+
+                    const now = Date.now();
+                    const isScanner = detectScanner(now);
+
+                    const value = this.value.trim();
+                    const exact = itemsFromDb.find(x =>
+                        String(x.ItemCode || "").toLowerCase() === value.toLowerCase()
                     );
-                    activeIndex = 0; renderSuggestions(matches);
-                });
-                barcodeInput.addEventListener('keydown', function (e) {
-                    const visible = suggestionBox && suggestionBox.style.display === 'block';
-                    if (e.key === 'ArrowDown' && visible) {
+
+                    /* ===== Scanner → Auto Select ===== */
+                    if (isScanner && exact) {
+                        chooseItem(exact);
                         e.preventDefault();
-                        activeIndex = Math.min(activeIndex + 1, currentList.length - 1); setActive(activeIndex); return;
+                        return;
                     }
-                    if (e.key === 'ArrowUp' && visible) {
+
+                    /* ===== Manual → Enter Required ===== */
+                    if (e.key === "Enter") {
                         e.preventDefault();
-                        activeIndex = Math.max(activeIndex - 1, 0); setActive(activeIndex); return;
-                    }
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        if (visible && currentList.length) {
-                            const pick = currentList[Math.max(0, activeIndex)];
-                            if (pick) { chooseItem(pick); return; }
+
+                        if (exact) {
+                            chooseItem(exact);   // exact always priority
+                            return;
                         }
-                        const v = (this.value || '').trim().toLowerCase(); if (!v) return;
-                        const found = (itemsFromDb || []).find(x =>
-                            (String(x.ItemCode || "")).toLowerCase() === v || (String(x.ItemName || "")).toLowerCase() === v
-                        ) || (itemsFromDb || []).find(x =>
-                            (String(x.ItemCode || "")).toLowerCase().includes(v) || (String(x.ItemName || "")).toLowerCase().includes(v)
-                        );
-                        if (found) chooseItem(found);
+
+                        if (currentList.length) {
+                            chooseItem(currentList[Math.max(0, activeIndex)]);
+                        }
                     }
-                    if (e.key === 'Escape' && suggestionBox) suggestionBox.style.display = 'none';
+
+                    /* ===== Arrow Navigation ===== */
+                    if (e.key === "ArrowDown" && currentList.length) {
+                        e.preventDefault();
+                        activeIndex = Math.min(activeIndex + 1, currentList.length - 1);
+                        setActive(activeIndex);
+                    }
+
+                    if (e.key === "ArrowUp" && currentList.length) {
+                        e.preventDefault();
+                        activeIndex = Math.max(activeIndex - 1, 0);
+                        setActive(activeIndex);
+                    }
+
+                    if (e.key === "Escape") {
+                        suggestionBox.style.display = "none";
+                    }
                 });
-                document.addEventListener('click', e => {
-                    if (!barcodeInput.contains(e.target) && !(suggestionBox && suggestionBox.contains(e.target))) {
-                        if (suggestionBox) suggestionBox.style.display = 'none';
+
+                document.addEventListener("click", function (e) {
+                    if (!barcodeInput.contains(e.target) &&
+                        !(suggestionBox && suggestionBox.contains(e.target))) {
+                        suggestionBox.style.display = "none";
                     }
                 });
             }
+
 
             /* ===== GRID / TOTALS (COST-BASED) ===== */
             let gridRows = [], editIndex = -1;
@@ -1246,6 +1404,10 @@
                     setEditingUI(false);
                 }
 
+                var stock = document.getElementById('stock');
+                if (stock) {
+                    stock.style.display = "none";  
+                }
                 clearEntry();
                 renderGrid();
                 if (barcodeInput) { barcodeInput.focus(); barcodeInput.select && barcodeInput.select(); }

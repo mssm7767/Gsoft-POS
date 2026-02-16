@@ -1467,101 +1467,127 @@
       ensureActiveVisible();
     }
 
-    function selectItemSuggestion(i) {
-      if (i < 0 || i >= filtered.length) return;
-      const item = filtered[i];
 
-      if ((item.Quantity <= 0) && !allowSaleLowStock) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Stock Unavailable',
-          html: `
-            <div style="font-size:14px;">
-              This item is currently <b>out of stock</b>.<br><br>
-              To proceed, enable <b>"Allow Sale on Low Stock"</b> from
-              <a href="/Settings/Index" style="color:#0d6efd;font-weight:600;text-decoration:underline;">Shop Settings</a>.
-            </div>
-          `,
-          confirmButtonText: 'OK',
-          confirmButtonColor: '#dc3545',
-          target: getToastTarget()
+    let itemCodeMap = {};
+
+    function buildItemLookup() {
+        itemCodeMap = {};
+
+        items.forEach(i => {
+            if (i.ItemCode) {
+                itemCodeMap[i.ItemCode.toLowerCase()] = i;
+            }
         });
-        return;
-      }
+    }
 
-      addToSalesTable(item);
+    // Call AFTER items are loaded
+    buildItemLookup();
 
-      const box = document.getElementById('itemSuggestions');
-      box.style.display = 'none';
-      const bi = document.getElementById('itemSearchInput');
-      bi.value = '';
-      filtered = [];
-      selectedIdx = -1;
+    function resetItemUI() {
+        suggDiv.style.display = 'none';
+        itemInputEl.value = '';
+        filtered = [];
+        selectedIdx = -1;
+    }
+
+    function checkStockBeforeAdd(item) {
+        if ((item.Quantity <= 0) && !allowSaleLowStock) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Stock Unavailable',
+                html: `
+                    <div style="font-size:14px;">
+                        This item is currently <b>out of stock</b>.<br><br>
+                        To proceed, enable <b>"Allow Sale on Low Stock"</b> from
+                        <a href="/Settings/Index"
+                           style="color:#0d6efd;font-weight:600;text-decoration:underline;">
+                           Shop Settings
+                        </a>.
+                    </div>
+                `,
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#dc3545'
+            });
+            return false;
+        }
+
+        return true;
+    }
+
+
+    function selectItemSuggestion(i) {
+
+        if (i < 0 || i >= filtered.length) return;
+
+        const item = filtered[i];
+
+        if (!checkStockBeforeAdd(item)) {
+            resetItemUI();
+            return;
+        }
+
+        addToSalesTable(item);
+        resetItemUI();
     }
 
     /* ---------- ✅ SCANNER FIX (NO ENTER REQUIRED) ---------- */
     let scanTimer = null;
 
     function scannerSmartAdd(term) {
-      const t = (term || '').trim();
-      if (!t) return;
 
-      const lc = t.toLowerCase();
+        const t = (term || '').trim();
+        if (!t) return;
 
-      //1) exact barcode match first
-      let exact = items.find(x => (x.ItemCode || '').toLowerCase() === lc);
-      if (exact) {
-          addToSalesTable(exact);
-        suggDiv.style.display = 'none';
-        itemInputEl.value = '';
-        filtered = [];
-        selectedIdx = -1;
-        return;
-      }
+        const lc = t.toLowerCase();
 
-      // 2) if barcode length and only ONE possible match, auto add
-      const poss = items.filter(x => (x.ItemCode || '').toLowerCase().includes(lc) || (x.ItemName || '').toLowerCase().includes(lc));
-      if (t.length >= 6 && poss.length === 1) {
-        addToSalesTable(poss[0]);
-        suggDiv.style.display = 'none';
-        itemInputEl.value = '';
-        filtered = [];
-        selectedIdx = -1;
-        return;
-      }
+        // 🔥 O(1) barcode lookup
+        const exact = itemCodeMap[lc];
 
-      // 3) otherwise show suggestions
-      showItemSuggestions(t);
+        if (exact) {
+
+            if (!checkStockBeforeAdd(exact)) {
+                resetItemUI();
+                return;
+            }
+
+            addToSalesTable(exact);
+            resetItemUI();
+            return;
+        }
+
+        // If not exact barcode → show suggestions
+        showItemSuggestions(t);
     }
 
-        function attachScannerHandlers() {
+     function attachScannerHandlers() {
 
-        // Manual typing → always show suggestions
+        // Manual typing → show suggestions
         itemInputEl.addEventListener('input', () => {
+
             const term = itemInputEl.value.trim();
 
             if (!term) {
-                document.getElementById('itemSuggestions').style.display = 'none';
+                suggDiv.style.display = 'none';
                 return;
             }
 
             showItemSuggestions(term);
         });
 
-        // Scanner (or manual Enter) → Smart Add
+        // Scanner OR manual Enter → instant add
         itemInputEl.addEventListener('keydown', (e) => {
+
             if (e.key === 'Enter') {
+
                 e.preventDefault();
 
                 const term = itemInputEl.value.trim();
                 if (!term) return;
 
                 scannerSmartAdd(term);
-                itemInputEl.value = '';
             }
         });
     }
-
 
 
     /* ---------- GRID OPS ---------- */
