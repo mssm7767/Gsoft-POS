@@ -590,6 +590,18 @@
             text-overflow: ellipsis;
             font-size: .95rem;
         }
+
+        .suggestion-price {
+            font-weight: 800;
+            color: #92400e;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 999px;
+            padding: 1px 8px;
+            white-space: nowrap;
+            font-size: .9rem;
+            line-height: 1.1;
+        }
     </style>
 }
 
@@ -1162,7 +1174,7 @@
             }
 
             /* ===== SCAN / SUGGESTIONS ===== */
-           /* ===== POS STYLE: SMART EXACT PRIORITY ===== */
+            /* ===== POS STYLE: SMART EXACT PRIORITY ===== */
 
             const itemsFromDb = @Html.Raw(itemsJson);
             const barcodeInput = document.getElementById("barcodeInput");
@@ -1171,24 +1183,6 @@
             let currentList = [];
             let activeIndex = -1;
 
-            /* ===== Scanner Detection ===== */
-            let lastKeyTime = 0;
-            let keyIntervals = [];
-            const SCAN_THRESHOLD = 35;
-            const SCAN_MIN_KEYS = 4;
-
-            function detectScanner(now) {
-                const diff = now - lastKeyTime;
-                lastKeyTime = now;
-
-                keyIntervals.push(diff);
-                if (keyIntervals.length > SCAN_MIN_KEYS)
-                    keyIntervals.shift();
-
-                // If most recent keystrokes are very fast → scanner
-                return keyIntervals.length >= SCAN_MIN_KEYS &&
-                    keyIntervals.every(x => x < SCAN_THRESHOLD);
-            }
 
             /* ===== Render Suggestions ===== */
             function renderSuggestions(list) {
@@ -1224,7 +1218,7 @@
                         </span>
                         <span class="suggestion-qty">(${qty})</span>
                         <span class="suggestion-name">${name}</span>
-                        <span class="suggestion-price">PKR ${price}</span>
+                        <span class="suggestion-price">(PKR ${price})</span>
                     `;
 
                     div.addEventListener("mouseenter", () => setActive(index));
@@ -1234,16 +1228,20 @@
                 });
             }
 
+
             function setActive(index) {
                 activeIndex = index;
                 suggestionBox.querySelectorAll(".barcode-suggestion-item")
                     .forEach((el, i) => el.classList.toggle("active", i === index));
             }
 
+
             function chooseItem(item) {
                 fillItem(item);
                 suggestionBox.style.display = "none";
+                if (barcodeInput) barcodeInput.value = "";
             }
+
 
             /* ===== Exact + Smart Ordering ===== */
             function buildSuggestionList(term) {
@@ -1259,7 +1257,6 @@
                     String(x.ItemName || "").toLowerCase().includes(q)
                 );
 
-                // Move exact match to TOP if exists
                 if (exact) {
                     const withoutExact = matches.filter(x => x !== exact);
                     return [exact, ...withoutExact];
@@ -1268,12 +1265,15 @@
                 return matches;
             }
 
+
             /* ===== Input Handling ===== */
             if (barcodeInput) {
 
+                /* Live Search */
                 barcodeInput.addEventListener("input", function () {
 
                     const value = this.value.trim();
+
                     if (!value) {
                         renderSuggestions([]);
                         return;
@@ -1283,55 +1283,53 @@
                     renderSuggestions(list);
                 });
 
-                barcodeInput.addEventListener("keydown", function (e) {
 
-                    const now = Date.now();
-                    const isScanner = detectScanner(now);
+                /* ENTER = Select (Scanner or Keyboard) */
+                barcodeInput.addEventListener("keydown", function (e) {
 
                     const value = this.value.trim();
                     const exact = itemsFromDb.find(x =>
                         String(x.ItemCode || "").toLowerCase() === value.toLowerCase()
                     );
 
-                    /* ===== Scanner → Auto Select ===== */
-                    if (isScanner && exact) {
-                        chooseItem(exact);
-                        e.preventDefault();
-                        return;
-                    }
-
-                    /* ===== Manual → Enter Required ===== */
+                    // ENTER key
                     if (e.key === "Enter") {
                         e.preventDefault();
 
                         if (exact) {
-                            chooseItem(exact);   // exact always priority
+                            chooseItem(exact);
                             return;
                         }
 
                         if (currentList.length) {
                             chooseItem(currentList[Math.max(0, activeIndex)]);
                         }
+
+                        return;
                     }
 
-                    /* ===== Arrow Navigation ===== */
+                    // Arrow Down
                     if (e.key === "ArrowDown" && currentList.length) {
                         e.preventDefault();
                         activeIndex = Math.min(activeIndex + 1, currentList.length - 1);
                         setActive(activeIndex);
                     }
 
+                    // Arrow Up
                     if (e.key === "ArrowUp" && currentList.length) {
                         e.preventDefault();
                         activeIndex = Math.max(activeIndex - 1, 0);
                         setActive(activeIndex);
                     }
 
+                    // Escape
                     if (e.key === "Escape") {
                         suggestionBox.style.display = "none";
                     }
                 });
 
+
+                /* Click Outside */
                 document.addEventListener("click", function (e) {
                     if (!barcodeInput.contains(e.target) &&
                         !(suggestionBox && suggestionBox.contains(e.target))) {

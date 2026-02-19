@@ -1,4 +1,5 @@
 ﻿@using System.Text.Json
+@using System.Text.Json.Serialization
 @model IEnumerable<ItemModel>
 
 @{
@@ -20,6 +21,31 @@
     var dashboardUrl = Url.Action("Index", "Home") ?? "/Home/Index";
 
     var searchSale = ViewBag.Sale as Sale;
+
+    // Prepare a simple DTO to avoid circular references
+    var saleItemsDto = searchSale?.SaleItems.Select(si => new
+    {
+        si.Id,
+        si.ItemId,
+        si.Quantity,
+        si.UnitPrice,
+        si.LineTotal,
+        si.DiscountPercent,
+        Item = new
+        {
+            si.Item.Id,
+            si.Item.ItemCode,
+            si.Item.ItemName,
+            si.Item.PackSize,
+            si.Item.SalePrice,
+            si.Item.Quantity // stock
+        }
+    });
+
+    var saleItemsJson = JsonSerializer.Serialize(
+        saleItemsDto,
+        new JsonSerializerOptions { ReferenceHandler = ReferenceHandler.IgnoreCycles }
+    );
 }
 
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
@@ -687,6 +713,18 @@
         font-size: .95rem;
     }
 
+    .suggestion-price {
+        font-weight: 800;
+        color: #92400e;
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        border-radius: 999px;
+        padding: 1px 8px;
+        white-space: nowrap;
+        font-size: .9rem;
+        line-height: 1.1;
+    }
+
     .swal2-container {
         z-index: 10000 !important;
     }
@@ -1209,6 +1247,7 @@
 
     /* ---------- SERVER DATA ---------- */
     const items = @Html.Raw(itemsJson);
+
     const allowSaleLowStock = @((ViewBag.SaleLowStock ?? false).ToString().ToLower());
     const DASHBOARD_URL = "@dashboardUrl";
 
@@ -1218,6 +1257,9 @@
     const SEARCH_HAS_CUSTOMER = @((searchSale?.Customers != null).ToString().ToLower());
     const SEARCH_PAYMENT_METHOD = '@(searchSale?.Payment?.PaymentMethod ?? "cash")'.toLowerCase();
     const SEARCH_SALE_ID = @((searchSale?.Id ?? 0));
+
+    const saleItems = @Html.Raw(saleItemsJson);
+
 
     /* ---------- GLOBALS ---------- */
     let filtered = [];
@@ -1235,6 +1277,7 @@
 
     /* ✅ F12 SPAM FIX FLAG */
     let invoiceIsFresh = true;   // empty/new invoice = true (F12 spam block)
+
     function markDirty(){ invoiceIsFresh = false; }
 
     /* ---------- UTILS ---------- */
@@ -1434,12 +1477,14 @@
                 const code = it.ItemCode || '—';
                 const qty = (it.Quantity ?? 0);
                 const name = it.ItemName || '';
+                const price = (+(it.SalePrice || 0)).toFixed(2);
                 return `
                 <div class="suggestion-item ${i === selectedIdx ? 'active' : ''}"
                      data-idx="${i}" onclick="selectItemSuggestion(${i})">
                     <span class="suggestion-code"><i class="bi bi-upc-scan"></i>${code}</span>
                     <span class="suggestion-qty">(${qty})</span>
                     <span class="suggestion-name">${name}</span>
+                    <span class="suggestion-price">(PKR ${price})</span>
                 </div>`;
             }).join('');
             updateHighlight();
@@ -1529,6 +1574,7 @@
         addToSalesTable(item);
         resetItemUI();
     }
+
 
     /* ---------- ✅ SCANNER FIX (NO ENTER REQUIRED) ---------- */
     let scanTimer = null;
@@ -1648,9 +1694,10 @@
           <!-- ✅ Stock only (Cost removed) -->
           <div class="small text-muted mt-1">
             <span class="badge text-bg-light">
-              Stock: <span class="js-stock">${(item.Quantity ?? 0)}</span>
+                Stock: <span class="js-stock">${(item.Stock && item.Stock > 0 ? item.Stock : (item.Quantity ?? 0))}</span>
             </span>
           </div>
+
         </td>
 
         <td>
@@ -2584,6 +2631,45 @@
       }
 
       if (SEARCH_PAYMENT_METHOD) setPaymentMethod(SEARCH_PAYMENT_METHOD);
+
+
+    // Add all sale items to the table
+    if (Array.isArray(saleItems) && saleItems.length > 0) {
+        saleItems.forEach(si => {
+            const tableItem = {
+                Id: si.ItemId,
+                ItemCode: si.Item.ItemCode,
+                ItemName: si.Item.ItemName,
+                PackSize: si.Item.PackSize,
+                SalePrice: si.Item.SalePrice ?? si.UnitPrice,
+                UnitPrice: si.UnitPrice,
+                Quantity: si.Quantity,
+                Stock: si.Item.Quantity,
+                LineTotal: si.LineTotal,
+                DiscountPercent: si.DiscountPercent
+            };
+
+            // Call your existing function
+            addToSalesTable(tableItem);
+
+            // Optionally update the row with LineTotal and DiscountPercent
+            const tb = document.querySelector('#salesTable tbody');
+            const row = tb.querySelector(`tr[data-item-id="${tableItem.Id}"]`);
+            if (row) {
+                // Set quantity, line total, discount
+                const qtyInput = row.querySelector('.qty-main');
+                qtyInput.value = tableItem.Quantity;
+
+                const discPercentEl = row.querySelector('.disc-percent');
+                discPercentEl.value = tableItem.DiscountPercent;
+
+                const lineTotalEl = row.querySelector('.line-total');
+                lineTotalEl.textContent = `₨${parseFloat(tableItem.LineTotal || 0).toFixed(2)}`;
+
+                updateRowTotal(row); // recalc totals in your function
+            }
+        });
+    }
 
       updateLiveClock();
       setInterval(updateLiveClock, 1000);
