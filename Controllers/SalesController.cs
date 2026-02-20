@@ -74,7 +74,7 @@ namespace GSoftPosNew.Controllers
             return View(model);
         }
 
-        public IActionResult POS(string search)
+        public IActionResult POS(string search, string next, string previous)
         {
 
             var sale = new Sale();
@@ -91,6 +91,108 @@ namespace GSoftPosNew.Controllers
                     s.InvoiceNumber.Contains(search))
                 .OrderByDescending(s => s.SaleDate)
                 .FirstOrDefault();
+            }
+
+            if (!string.IsNullOrWhiteSpace(previous))
+            {
+                string currentInvoice = previous.Trim();
+                var parts = currentInvoice.Split('-');
+
+                if (parts.Length == 3)
+                {
+                    string prefix = parts[0];       // INV
+                    string datePart = parts[1];     // 20260220
+                    string numberPart = parts[2];   // 0001
+
+                    if (int.TryParse(numberPart, out int numericPart))
+                    {
+                        numericPart--;
+
+                        // =============================
+                        // NORMAL CASE (still > 0)
+                        // =============================
+                        if (numericPart > 0)
+                        {
+                            string newInvoice =
+                                $"{prefix}-{datePart}-{numericPart.ToString("D4")}";
+
+                            sale = _context.Sales
+                                .FirstOrDefault(s => s.InvoiceNumber == newInvoice);
+                        }
+                        else
+                        {
+                            // =============================
+                            // IF BECOMES 0000 → GO TO PREVIOUS DAY
+                            // =============================
+
+                            if (DateTime.TryParseExact(
+                                datePart,
+                                "yyyyMMdd",
+                                null,
+                                System.Globalization.DateTimeStyles.None,
+                                out DateTime invoiceDate))
+                            {
+                                DateTime checkDate = invoiceDate.AddDays(-1);
+                                Sale foundSale = null;
+
+                                // Get earliest sale date in database (boundary safety)
+                                DateTime? earliestSaleDate = _context.Sales
+                                    .Where(s => s.SaleDate != null)
+                                    .Min(s => (DateTime?)s.SaleDate);
+
+                                while (earliestSaleDate.HasValue && checkDate.Date >= earliestSaleDate.Value.Date)
+                                {
+                                    string dateString = checkDate.ToString("yyyyMMdd");
+                                    string prefixToSearch = $"{prefix}-{dateString}-";
+
+                                    foundSale = _context.Sales
+                                        .Where(s =>
+                                            s.InvoiceNumber != null &&
+                                            s.InvoiceNumber.StartsWith(prefixToSearch))
+                                        .OrderByDescending(s => s.InvoiceNumber)
+                                        .FirstOrDefault();
+
+                                    if (foundSale != null)
+                                        break;
+
+                                    // subtract another day
+                                    checkDate = checkDate.AddDays(-1);
+                                }
+
+                                // If nothing found
+                                if (foundSale == null)
+                                {
+                                    foundSale = new Sale();
+                                }
+
+                                sale = foundSale;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(next))
+            {
+                string currentInvoice = next.Trim();
+                var parts = currentInvoice.Split('-');
+
+                if (parts.Length == 3 && int.TryParse(parts[2], out int numberPart))
+                {
+                    numberPart++;
+
+                    string newInvoice =
+                        $"{parts[0]}-{parts[1]}-{numberPart.ToString("D4")}";
+
+                    sale = _context.Sales
+                        .FirstOrDefault(s => s.InvoiceNumber == newInvoice);
+
+                    // If next invoice does not exist → get FIRST invoice
+                    if (sale == null)
+                    {
+                        sale = new Sale();
+                    }
+                }
             }
 
             if (sale != null)
