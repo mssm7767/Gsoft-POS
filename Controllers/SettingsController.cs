@@ -35,9 +35,12 @@ namespace GSoftPosNew.Controllers
         public async Task<IActionResult> Index(ShopSetting model)
         {
             var existing = await _context.ShopSettings.FindAsync(model.Id);
+            
 
             if (existing == null)
             {
+                
+
                 // Handle Logo Upload
                 if (model.LogoFile != null && model.LogoFile.Length > 0)
                 {
@@ -56,6 +59,8 @@ namespace GSoftPosNew.Controllers
                     model.LogoPath = "/uploads/" + uniqueFileName;
                 }
 
+                
+
                 model.ShopName = model.ShopName.ToUpper();
                 _context.ShopSettings.Update(model);
                 await _context.SaveChangesAsync();
@@ -65,6 +70,7 @@ namespace GSoftPosNew.Controllers
             }
             else
             {
+                model.LogoPath = existing.LogoPath;
                 // Handle Logo Upload
                 if (model.LogoFile != null && model.LogoFile.Length > 0)
                 {

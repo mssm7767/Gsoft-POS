@@ -505,6 +505,78 @@ namespace GSoftPosNew.Controllers
                 return BadRequest("Invalid sale data. Raw request: " + rawBody);
             }
 
+            if (sale.Id > 0)
+            {
+                var existingSale = await _context.Sales
+                    .Include(s => s.SaleItems)
+                    .Include(s => s.Payment)
+                    .FirstOrDefaultAsync(s => s.Id == sale.Id);
+
+                if (existingSale == null)
+                    return NotFound("Sale not found.");
+
+                // Reverse stock first (VERY IMPORTANT)
+                foreach (var oldItem in existingSale.SaleItems)
+                {
+                    var dbItem = await _context.Items.FindAsync(oldItem.ItemId);
+                    if (dbItem != null)
+                    {
+                        dbItem.Quantity += oldItem.Quantity; // rollback old deduction
+                    }
+                }
+
+                // Remove old SaleItems
+                _context.SaleItems.RemoveRange(existingSale.SaleItems);
+
+                // Remove old payment if exists
+                if (existingSale.Payment != null)
+                    _context.Payments.Remove(existingSale.Payment);
+
+                await _context.SaveChangesAsync();
+
+                // Update main fields
+                existingSale.InvoiceNumber = sale.InvoiceNumber;
+                existingSale.SubTotal = sale.SubTotal;
+                existingSale.Total = sale.Total;
+                existingSale.Discount = sale.Discount;
+                existingSale.SaleType = sale.SaleType;
+                existingSale.CustomerId = sale.custId;
+                existingSale.SaleDate = DateTime.Now;
+
+                // Add new SaleItems
+                foreach (var item in sale.SaleItems)
+                {
+                    item.Id = 0;
+                    item.SaleId = existingSale.Id;
+                    _context.SaleItems.Add(item);
+
+                    var dbItem = await _context.Items.FindAsync(item.ItemId);
+                    if (dbItem != null)
+                    {
+                        dbItem.Quantity -= item.Quantity; // apply new deduction
+                    }
+                }
+
+                // Add Payment again
+                if (sale.Payment != null)
+                {
+                    sale.Payment.Id = 0;
+                    sale.Payment.SaleId = existingSale.Id;
+                    _context.Payments.Add(sale.Payment);
+                }
+
+                await _context.SaveChangesAsync();
+
+
+
+                return Ok(new
+                {
+                    existingSale.Id,
+                    existingSale.InvoiceNumber,
+                    ReceiptUrl = Url.Action("Receipt", "Sales", new { id = existingSale.Id })
+                });
+            }
+
             var serviceChargesValue = _context.ShopSettings
                  .OrderByDescending(s => s.Id)
                  .Select(s => s.ServiceCharges)
@@ -1087,6 +1159,77 @@ namespace GSoftPosNew.Controllers
                 using var reader = new StreamReader(Request.Body);
                 var rawBody = await reader.ReadToEndAsync();
                 return BadRequest("Invalid sale data. Raw request: " + rawBody);
+            }
+
+            if (sale.Id > 0)
+            {
+                var existingSale = await _context.Sales
+                    .Include(s => s.SaleItems)
+                    .Include(s => s.Payment)
+                    .FirstOrDefaultAsync(s => s.Id == sale.Id);
+
+                if (existingSale == null)
+                    return NotFound("Sale not found.");
+
+                // Reverse stock first (VERY IMPORTANT)
+                foreach (var oldItem in existingSale.SaleItems)
+                {
+                    var dbItem = await _context.Items.FindAsync(oldItem.ItemId);
+                    if (dbItem != null)
+                    {
+                        dbItem.Quantity += oldItem.Quantity; // rollback old deduction
+                    }
+                }
+
+                // Remove old SaleItems
+                _context.SaleItems.RemoveRange(existingSale.SaleItems);
+
+                // Remove old payment if exists
+                if (existingSale.Payment != null)
+                    _context.Payments.Remove(existingSale.Payment);
+
+                await _context.SaveChangesAsync();
+
+                // Update main fields
+                existingSale.InvoiceNumber = sale.InvoiceNumber;
+                existingSale.SubTotal = sale.SubTotal;
+                existingSale.Total = sale.Total;
+                existingSale.Discount = sale.Discount;
+                existingSale.SaleType = sale.SaleType;
+                existingSale.CustomerId = sale.custId;
+                existingSale.SaleDate = DateTime.Now;
+
+                // Add new SaleItems
+                foreach (var item in sale.SaleItems)
+                {
+                    item.Id = 0;
+                    item.SaleId = existingSale.Id;
+                    _context.SaleItems.Add(item);
+
+                    var dbItem = await _context.Items.FindAsync(item.ItemId);
+                    if (dbItem != null)
+                    {
+                        dbItem.Quantity -= item.Quantity; // apply new deduction
+                    }
+                }
+
+                // Add Payment again
+                if (sale.Payment != null)
+                {
+                    sale.Payment.Id = 0;
+                    sale.Payment.SaleId = existingSale.Id;
+                    _context.Payments.Add(sale.Payment);
+                }
+
+                await _context.SaveChangesAsync();
+                //await transaction.CommitAsync();
+
+                return Ok(new
+                {
+                    existingSale.Id,
+                    existingSale.InvoiceNumber,
+                    ReceiptUrl = Url.Action("POS", "Sales")
+                });
             }
 
             var serviceChargesValue = _context.ShopSettings

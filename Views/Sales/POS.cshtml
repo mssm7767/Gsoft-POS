@@ -880,7 +880,7 @@
             <div class="d-flex align-items-center flex-wrap gap-2">
                 <form asp-action="POS" method="get">
                     <div class="input-group inv-group">
-
+                        <input id="saleId" value="0" hidden />
                         <span class="input-group-text"><i class="bi bi-search"></i></span>
                         <input id="tbInvoiceSearch" name="search" value="@ViewBag.Search" type="text" class="form-control inv-input" placeholder="Search invoice #">
                         <button type="submit" id="btnInvSearch" class="btn btn-search"><i class="bi bi-search"></i></button>
@@ -1273,6 +1273,7 @@
     const SEARCH_CUSTOMERID = '@((searchSale?.Customers?.Id) ?? 0)';
     const SEARCH_HAS_CUSTOMER = @((searchSale?.Customers != null).ToString().ToLower());
     const SEARCH_PAYMENT_METHOD = '@(searchSale?.Payment?.PaymentMethod ?? "cash")'.toLowerCase();
+    const SEARCH_PAYMENT = '@(searchSale?.Payment?.Amount ?? 0)';
     const SEARCH_SALE_ID = @((searchSale?.Id ?? 0));
 
     const saleItems = @Html.Raw(saleItemsJson);
@@ -1404,6 +1405,7 @@
       focusMode = mode;
 
       document.body.classList.remove('focus-mode-qty','focus-mode-price','focus-mode-scan');
+
       if (mode === 'qty') document.body.classList.add('focus-mode-qty');
       else if (mode === 'price') document.body.classList.add('focus-mode-price');
       else document.body.classList.add('focus-mode-scan');
@@ -1412,13 +1414,37 @@
       const chip = document.getElementById('modeChip');
 
       const text = (mode === 'qty' ? 'Quantity' : mode === 'price' ? 'Price' : 'Scan');
+
       if (lbl) lbl.textContent = text;
       if (chip) chip.textContent = text;
 
       updateFocusModeIndicator();
+
       if (showToast) toast(`Mode: ${text}`, 'info', 800);
 
-      focusBarcode();
+      // ✅ Focus behavior based on mode
+      setTimeout(() => {
+        if (mode === 'qty') {
+          const lastQty = document.querySelector('#salesTable tbody tr:last-child .qty-main');
+          if (lastQty) {
+            lastQty.focus();
+            lastQty.select();
+            return;
+          }
+        }
+
+        if (mode === 'price') {
+          const lastPrice = document.querySelector('#salesTable tbody tr:last-child .price-cell');
+          if (lastPrice) {
+            lastPrice.focus();
+            return;
+          }
+        }
+
+        // default scan mode
+        focusBarcode();
+
+      }, 0);
     }
 
     function updateFocusModeIndicator() {
@@ -1978,7 +2004,7 @@
       document.getElementById('tenderTax').innerText = tax.toFixed(2);
 
       const ti = document.getElementById('tenderInput');
-      ti.value = '';
+      // ti.value = '';
       ti.focus();
       updateChange();
     }
@@ -2079,7 +2105,7 @@
     function cleanSaleData(sd) {
       if (sd.Payment) delete sd.Payment.Id;
       (sd.SaleItems || []).forEach(i => delete i.Id);
-      delete sd.Id;
+      // delete sd.Id;
       return sd;
     }
 
@@ -2088,6 +2114,7 @@
       const subtotal = parseFloat(document.getElementById('subTotal')?.textContent.replace(/[₨,]/g, '') || 0);
 
       let cust = parseInt(document.getElementById("selectedCustomerId")?.value) || 0;
+      let id = parseInt(document.getElementById("saleId")?.value) || 0;
       let tender = parseFloat(document.getElementById("tenderInput")?.value) || 0;
 
       const percent = Math.max(parseFloat(invoiceDiscountPercentEl?.value || 0), 0);
@@ -2109,8 +2136,10 @@
         });
         return;
       }
+      console.log(id);
 
       const saleData = cleanSaleData({
+          Id:id,
         InvoiceNumber: document.getElementById('invoiceNoValue').textContent,
         SubTotal: subtotal,
         Tax: parseFloat(document.getElementById('sumTax')?.textContent.replace(/[₨,]/g,'') || 0),
@@ -2172,6 +2201,14 @@
         console.error(e);
         showServerError('JS/Network Error', e?.message || String(e));
       }
+    }
+
+    const printBtn = document.getElementById("print-btn");
+
+    if (printBtn) {
+        printBtn.addEventListener("click", function () {
+            printCurrentSavedInvoice();
+        });
     }
 
     /* ---------- F8 PRINT (Only saved invoice) ---------- */
@@ -2649,7 +2686,8 @@
 
       if (SEARCH_PAYMENT_METHOD) setPaymentMethod(SEARCH_PAYMENT_METHOD);
 
-
+      document.getElementById("tenderInput").value= SEARCH_PAYMENT;
+      document.getElementById("saleId").value= SEARCH_SALE_ID;
     // Add all sale items to the table
     if (Array.isArray(saleItems) && saleItems.length > 0) {
         saleItems.forEach(si => {
