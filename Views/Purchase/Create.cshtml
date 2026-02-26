@@ -1080,7 +1080,7 @@
                 const unitCost = mrp * (1 - ((dis + exd) / 100));
                 const taxUnit = unitCost * (tp / 100);
 
-                setVal('cost', unitCost.toFixed(2));
+                setVal('cost', unitCost.toFixed(0));
                 setVal('taxAmt', taxUnit.toFixed(2));
             }
 
@@ -1089,6 +1089,7 @@
                 const cost = toNum(getVal('cost'));
                 if (mrp > 0) {
                     const eff = Math.max(0, (1 - (cost / mrp)) * 100);
+
                     setVal('disPct', eff.toFixed(2));
                 } else {
                     setVal('disPct', '0');
@@ -1450,10 +1451,10 @@
                         + '<td>' + r.mrp.toFixed(2) + '</td>'
                         + '<td>' + r.disPct + '</td>'
                         + '<td>' + r.exDis + '</td>'
-                        + '<td>' + r.cost.toFixed(2) + '</td>'
+                        + '<td>' + r.cost.toFixed(0) + '</td>'
                         + '<td>' + r.taxPercent + '</td>'
                         + '<td>' + r.taxAmt.toFixed(2) + '</td>'
-                        + '<td>' + r.rowTotal.toFixed(2) + '</td>'
+                        + '<td>' + r.rowTotal.toFixed(0) + '</td>'
                         + '<td><button type="button" class="btn btn-sm btn-warning" onclick="editRow(' + i + ')"><i class="fa fa-edit"></i></button></td>'
                         + '<td><button type="button" class="btn btn-sm btn-danger" onclick="deleteRow(' + i + ')"><i class="fa fa-trash"></i></button></td>'
                         + '</tr>';
@@ -1465,11 +1466,11 @@
                 setText('tMRP', tMRP.toFixed(2));
                 setText('tDisPct', tDisPct);
                 setText('tExDis', tExDis);
-                setText('tCost', tCost.toFixed(2));
+                setText('tCost', tCost.toFixed(0));
                 setText('tTaxPercent', tTaxPercent);
                 setText('tTaxAmt', tTaxAmt.toFixed(2));
-                setText('tGrand', tGrand.toFixed(2));
-                setText('sumTotal', tGrand.toFixed(2));
+                setText('tGrand', tGrand.toFixed(0));
+                setText('sumTotal', tGrand.toFixed(0));
 
                 const paid = +(document.getElementById('paidAmount').value || 0),
                     remaining = tGrand - paid;
