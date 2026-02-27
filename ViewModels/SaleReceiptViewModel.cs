@@ -8,6 +8,7 @@
         public DateTime SaleDate { get; set; }
         public string CashierName { get; set; }
         public string? Waiter { get; set; }
+        public string? OrderType { get; set; }
         public string? TableNo { get; set; }
 
         // Totals

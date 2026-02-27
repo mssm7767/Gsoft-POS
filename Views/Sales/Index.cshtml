@@ -1345,9 +1345,7 @@
         const toDate = document.getElementById('toDate');
 
         if (fromDate && !fromDate.value) {
-            const today = new Date();
-            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-            fromDate.valueAsDate = firstDay;
+            fromDate.valueAsDate = new Date();
         }
         if (toDate && !toDate.value) {
             toDate.valueAsDate = new Date();

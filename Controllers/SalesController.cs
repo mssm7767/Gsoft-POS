@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using System.Text.Json;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace GSoftPosNew.Controllers
 {
@@ -601,9 +603,14 @@ namespace GSoftPosNew.Controllers
                 sale.Id = 0;
                 sale.CustomerId = sale.custId;
 
-                sale.Discount = sale.SaleItems
-                                .Where(x => x.DiscountPercent > 0)
-                                .Sum(x => (x.UnitPrice * x.Quantity) * x.DiscountPercent / 100m);
+                var itemDiscount = sale.SaleItems
+                    .Where(x => x.DiscountPercent > 0)
+                    .Sum(x => (x.UnitPrice * x.Quantity) * x.DiscountPercent / 100m);
+
+                if (itemDiscount > 0)
+                {
+                    sale.Discount = itemDiscount;
+                }
 
 
                 if (isApplied && serviceChargesValue.HasValue && serviceChargesValue > 0)
@@ -902,6 +909,8 @@ namespace GSoftPosNew.Controllers
                 return BadRequest("Invalid sale data. Raw request: " + rawBody);
             }
 
+            return View("KOTReceipt", sale);
+
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
@@ -1133,13 +1142,15 @@ namespace GSoftPosNew.Controllers
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
 
-                    return Ok(new
-                    {
-                        sale.Id,
-                        sale.InvoiceNumber,
-                        ReceiptUrl = Url.Action("KOTReceipt", "Sales", new { id = sale.Id }),
-                        Message = "Sale saved successfully"
-                    });
+                    
+
+                    //return Ok(new
+                    //{
+                    //    sale.Id,
+                    //    sale.InvoiceNumber,
+                    //    ReceiptUrl = Url.Action("KOTReceipt", "Sales", new { id = sale.Id }),
+                    //    Message = "Sale saved successfully"
+                    //});
                 }
 
             }
@@ -1149,6 +1160,81 @@ namespace GSoftPosNew.Controllers
                 var errorMessage = ex.InnerException?.Message ?? ex.Message;
                 return StatusCode(500, "Error saving sale: " + errorMessage);
             }
+        }
+
+        public IActionResult KOTReceipt()
+        {
+
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult KOTReceipt(string saleJson)
+        {
+            if (string.IsNullOrEmpty(saleJson))
+                return BadRequest("Sale not found");
+
+            var sale = JsonSerializer.Deserialize<Sale>(saleJson);
+
+            ViewBag.Setting = _context.ShopSettings
+                .OrderByDescending(s => s.Id)
+                .FirstOrDefault() ?? new ShopSetting();
+
+            if (sale == null)
+                return NotFound();
+
+            ViewBag.Balance = _context.Customers
+                .Where(c => c.Id == sale.CustomerId)
+                .Select(c => c.OpeningBalance)
+                .FirstOrDefault();
+
+            var vm = new SaleReceiptViewModel
+            {
+                SaleId = sale.Id,
+                InvoiceNumber = sale.InvoiceNumber,
+                SaleDate = sale.SaleDate,
+                CashierName = sale.CashierId,
+                Waiter = sale.Waiter,
+                TableNo = sale.TableNo,
+                SubTotal = sale.SubTotal,
+                Tax = sale.Tax,
+                Discount = sale.Discount,
+                Total = sale.Total,
+                CustomerId = sale.CustomerId,
+                CustomerName = _context.Customers
+                    .AsEnumerable()
+                    .Where(c => c.Id == sale.CustomerId)
+                    .Select(c => c.CustomerName)
+                    .FirstOrDefault() ?? "Walk-in Customer",
+                CustomerPhone = _context.Customers
+                    .AsEnumerable()
+                    .Where(c => c.Id == sale.CustomerId)
+                    .Select(c => c.ContactNumber)
+                    .FirstOrDefault(),
+                PaymentMethod = sale.Payment?.PaymentMethod ?? "Cash",
+                PaidAmount = sale.Payment?.Amount ?? sale.Total,
+                Change = (sale.Payment?.Amount ?? sale.Total) - sale.Total,
+                Items = sale.SaleItems
+                        .Select((si, index) => new SaleItemReceiptVM
+                        {
+                            SrNo = index + 1,
+                            ItemName = _context.Items
+                                .Where(i => i.Id == si.ItemId)
+                                .Select(i => i.ItemName)
+                                .FirstOrDefault(),
+                            UnitPrice = si.UnitPrice,
+                            Quantity = si.Quantity,
+                            LineTotal = si.LineTotal
+                        })
+                        .ToList()
+            };
+
+            for (int i = 0; i < vm.Items.Count; i++)
+            {
+                vm.Items[i].SrNo = i + 1;
+            }
+
+            return View(vm);
         }
 
         [HttpPost]
@@ -1256,9 +1342,14 @@ namespace GSoftPosNew.Controllers
                 sale.Id = 0;
                 sale.CustomerId = sale.custId;
 
-                sale.Discount = sale.SaleItems
-                                .Where(x => x.DiscountPercent > 0)
-                                .Sum(x => (x.UnitPrice * x.Quantity) * x.DiscountPercent / 100m);
+                var itemDiscount = sale.SaleItems
+                    .Where(x => x.DiscountPercent > 0)
+                    .Sum(x => (x.UnitPrice * x.Quantity) * x.DiscountPercent / 100m);
+
+                if (itemDiscount > 0)
+                {
+                    sale.Discount = itemDiscount;
+                }
 
                 if (isApplied && serviceChargesValue.HasValue && serviceChargesValue > 0)
                 {
@@ -1795,6 +1886,8 @@ namespace GSoftPosNew.Controllers
                 Discount = sale.Discount,
                 Total = sale.Total,
                 ServiceCharges = sale.ServiceCharges,
+                Waiter = sale.Waiter,
+                OrderType = sale.OrderType,
                 CustomerId = sale.CustomerId,
                 CustomerName = _context.Customers
                     .AsEnumerable()
@@ -1892,71 +1985,7 @@ namespace GSoftPosNew.Controllers
             return View(vmList);
         }
 
-        public IActionResult KOTReceipt(int id)
-        {
-            var sale = _context.Sales
-                .Include(s => s.Payment)
-                .Include(s => s.SaleItems)
-                .FirstOrDefault(s => s.Id == id);
-
-            ViewBag.Setting = _context.ShopSettings
-                .OrderByDescending(s => s.Id)
-                .FirstOrDefault() ?? new ShopSetting();
-
-            if (sale == null)
-                return NotFound();
-
-            ViewBag.Balance = _context.Customers
-                .Where(c => c.Id == sale.CustomerId)
-                .Select(c => c.OpeningBalance)
-                .FirstOrDefault();
-
-            var vm = new SaleReceiptViewModel
-            {
-                SaleId = sale.Id,
-                InvoiceNumber = sale.InvoiceNumber,
-                SaleDate = sale.SaleDate,
-                CashierName = sale.CashierId,
-                Waiter = sale.Waiter,
-                TableNo = sale.TableNo,
-                SubTotal = sale.SubTotal,
-                Tax = sale.Tax,
-                Discount = sale.Discount,
-                Total = sale.Total,
-                CustomerId = sale.CustomerId,
-                CustomerName = _context.Customers
-                    .AsEnumerable()
-                    .Where(c => c.Id == sale.CustomerId)
-                    .Select(c => c.CustomerName)
-                    .FirstOrDefault() ?? "Walk-in Customer",
-                CustomerPhone = _context.Customers
-                    .AsEnumerable()
-                    .Where(c => c.Id == sale.CustomerId)
-                    .Select(c => c.ContactNumber)
-                    .FirstOrDefault(),
-                PaymentMethod = sale.Payment?.PaymentMethod ?? "Cash",
-                PaidAmount = sale.Payment?.Amount ?? sale.Total,
-                Change = (sale.Payment?.Amount ?? sale.Total) - sale.Total,
-                Items = (from si in _context.SaleItems
-                         join i in _context.Items on si.ItemId equals i.Id
-                         where si.SaleId == sale.Id
-                         select new SaleItemReceiptVM
-                         {
-                             SrNo = 0,
-                             ItemName = i.ItemName,
-                             UnitPrice = si.UnitPrice,
-                             Quantity = si.Quantity,
-                             LineTotal = si.LineTotal
-                         }).ToList()
-            };
-
-            for (int i = 0; i < vm.Items.Count; i++)
-            {
-                vm.Items[i].SrNo = i + 1;
-            }
-
-            return View(vm);
-        }
+        
 
         private string GenerateInvoiceNumber()
         {

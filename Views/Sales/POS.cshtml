@@ -2188,6 +2188,9 @@
 
         toast(result.Message || 'Saved', 'success', 1100);
 
+            const ti = document.getElementById('tenderInput');
+            ti.value = '';
+
         if (result?.id) lastSavedSaleId = Number(result.id) || 0;
 
         if (printAfter && result?.id) {

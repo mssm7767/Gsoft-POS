@@ -446,6 +446,14 @@
                 <span class="bold">Invoice #:</span>
                 <span>@Model.InvoiceNumber</span>
             </div>
+            @if (Model.OrderType != null)
+            {
+                <div class="detail-row">
+                    <span class="bold">Order Type:</span>
+                    <span>@Model.OrderType</span>
+                </div>
+            }
+           
             <div class="detail-row">
                 <span class="bold">Date:</span>
                 <span>@Model.SaleDate.ToString("dd/MM/yyyy hh:mm tt")</span>
