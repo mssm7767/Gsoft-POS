@@ -176,7 +176,7 @@
                     <div class="col-md-7">
                         <div class="info-card">
                             <div class="row g-2">
-                                <div class="col-sm-6">
+                                <div class="col-sm-8">
                                     <div class="info-label">
                                         <i class="fas fa-user me-1 text-primary"></i> Customer
                                     </div>
@@ -189,8 +189,14 @@
                                             <i class="fas fa-phone me-1"></i>@Model.CustomerPhone
                                         </div>
                                     }
+                                    @if (!string.IsNullOrWhiteSpace(Model.CustomerAddress))
+                                    {
+                                        <div class="small text-muted">
+                                            <i class="fas fa-home me-1"></i>@Model.CustomerAddress
+                                        </div>
+                                    }
                                 </div>
-                                <div class="col-sm-6">
+                                <div class="col-sm-4">
                                     <div class="info-label">
                                         <i class="fas fa-wallet me-1 text-success"></i> Payment
                                     </div>
@@ -210,7 +216,7 @@
 
                         <div class="info-card">
                             <div class="row g-2">
-                                <div class="col-sm-6">
+                                <div class="col-sm-8">
                                     <div class="info-label">
                                         <i class="fas fa-store me-1 text-info"></i> Shop
                                     </div>
@@ -221,7 +227,7 @@
                                         @ViewBag.Setting?.Address
                                     </div>
                                 </div>
-                                <div class="col-sm-6">
+                                <div class="col-sm-4">
                                     <div class="info-label">
                                         <i class="fas fa-balance-scale me-1 text-warning"></i> Customer Balance
                                     </div>
@@ -270,9 +276,12 @@
                                 <tr>
                                     <th>#</th>
                                     <th>Item</th>
-                                    <th class="text-end">Price</th>
+                                    <th>Purchase Price</th>
+                                    <th class="text-end">Sale Price</th>
                                     <th class="text-end">Qty</th>
-                                    <th class="text-end">Line Total</th>
+                                    <th class="text-end">Sale Total</th>
+                                    <th class="text-end">Purchase Total</th>
+                                    <th class="text-end">Profit</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -283,12 +292,19 @@
                                         <tr>
                                             <td>@item.SrNo</td>
                                             <td>@item.ItemName</td>
+                                            <td>@item.PurchasePrice.ToString("C", new CultureInfo("ur-PK"))</td>
                                             <td class="text-end">
                                                 @item.UnitPrice.ToString("C", new CultureInfo("ur-PK"))
                                             </td>
                                             <td class="text-end">@item.Quantity</td>
                                             <td class="text-end">
                                                 @item.LineTotal.ToString("C", new CultureInfo("ur-PK"))
+                                            </td>
+                                            <td class="text-end">
+                                                @($"₨{((item.PurchasePrice) * (item.Quantity)):N2}")
+                                            </td>
+                                            <td class="text-end">
+                                                @($"₨{((item.LineTotal) - (item.PurchasePrice * item.Quantity)):N2}")
                                             </td>
                                         </tr>
                                     }

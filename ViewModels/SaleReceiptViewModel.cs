@@ -1,4 +1,6 @@
-﻿namespace GSoftPosNew.ViewModels
+﻿using System.Security.Policy;
+
+namespace GSoftPosNew.ViewModels
 {
     public class SaleReceiptViewModel
     {
@@ -22,6 +24,7 @@
         public int CustomerId { get; set; }
         public string CustomerName { get; set; }
         public string CustomerPhone { get; set; }
+        public string CustomerAddress { get; set; }
 
         // Items
         public List<SaleItemReceiptVM> Items { get; set; } = new List<SaleItemReceiptVM>();
@@ -36,7 +39,7 @@
     {
         public int SrNo { get; set; }
         public string ItemName { get; set; }
-
+        public decimal PurchasePrice { get; set; }
         public decimal UnitPrice { get; set; }
         public decimal Quantity { get; set; }
 

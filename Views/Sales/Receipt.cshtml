@@ -422,8 +422,8 @@
         <!-- Header -->
         <div class="header">
             <img src="@(!string.IsNullOrEmpty(ViewBag.Setting?.LogoPath)
-                                                                                                ? Url.Content(ViewBag.Setting.LogoPath)
-                                                                                                : "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTUiIGhlaWdodD0iNTUiIHZpZXdCb3g9IjAgMCA1NSA1NSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNTUiIGhlaWdodD0iNTUiIHJ4PSI1IiBmaWxsPSIjMjU2M2ViIi8+PHBhdGggZD0iTTE4IDM3TDM3IDE4TTM3IDM3TDE4IDE4IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==")"
+                                                                                                                 ? Url.Content(ViewBag.Setting.LogoPath)
+                                                                                                                 : "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTUiIGhlaWdodD0iNTUiIHZpZXdCb3g9IjAgMCA1NSA1NSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNTUiIGhlaWdodD0iNTUiIHJ4PSI1IiBmaWxsPSIjMjU2M2ViIi8+PHBhdGggZD0iTTE4IDM3TDM3IDE4TTM3IDM3TDE4IDE4IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==")"
                  alt="Logo"
                  class="logo" />
 
@@ -453,19 +453,39 @@
                     <span>@Model.OrderType</span>
                 </div>
             }
-           
+
             <div class="detail-row">
                 <span class="bold">Date:</span>
                 <span>@Model.SaleDate.ToString("dd/MM/yyyy hh:mm tt")</span>
             </div>
-            <div class="detail-row">
-                <span class="bold">Customer:</span>
-                <span>@Model.CustomerName (Bal: @ViewBag.Balance)</span>
-            </div>
+
             <div class="detail-row">
                 <span class="bold">Cashier:</span>
                 <span>@Model.CashierName</span>
             </div>
+        </div>
+
+        <div class="invoice-details">
+            <div class="detail-row">
+                <span class="bold">Customer:</span>
+                <span>@Model.CustomerName (Bal: @ViewBag.Balance)</span>
+            </div>
+            @if(Model.CustomerPhone != null)
+            {
+                <div class="detail-row">
+                    <span class="bold">Phone:</span>
+                    <span>@Model.CustomerPhone</span>
+                </div>
+            }
+            @if(Model.CustomerAddress != null)
+            {
+                <div class="detail-row">
+                    <span class="bold">Address:</span>
+                    <span>@Model.CustomerAddress</span>
+                </div>
+
+            }
+            
         </div>
 
         <!-- ITEMS header -->

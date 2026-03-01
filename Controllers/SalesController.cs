@@ -1899,6 +1899,11 @@ namespace GSoftPosNew.Controllers
                     .Where(c => c.Id == sale.CustomerId)
                     .Select(c => c.ContactNumber)
                     .FirstOrDefault(),
+                CustomerAddress = _context.Customers
+                    .AsEnumerable()
+                    .Where(c => c.Id == sale.CustomerId)
+                    .Select(c => c.Address1)
+                    .FirstOrDefault(),
                 PaymentMethod = sale.Payment?.PaymentMethod ?? "Cash",
                 PaidAmount = sale.Payment?.Amount ?? sale.Total,
                 Change = (sale.Payment?.Amount ?? sale.Total) - sale.Total,
@@ -2069,6 +2074,11 @@ namespace GSoftPosNew.Controllers
                     .Where(c => c.Id == sale.CustomerId)
                     .Select(c => c.ContactNumber)
                     .FirstOrDefault(),
+                CustomerAddress = _context.Customers
+                    .AsEnumerable()
+                    .Where(c => c.Id == sale.CustomerId)
+                    .Select(c => c.Address1)
+                    .FirstOrDefault(),
                 PaymentMethod = sale.Payment?.PaymentMethod ?? "Cash",
                 PaidAmount = sale.Payment?.Amount ?? sale.Total,
                 Change = (sale.Payment?.Amount ?? sale.Total) - sale.Total,
@@ -2079,6 +2089,7 @@ namespace GSoftPosNew.Controllers
                          {
                              SrNo = 0,
                              ItemName = i.ItemName,
+                             PurchasePrice = i.PurchasePrice,
                              UnitPrice = si.UnitPrice,
                              Quantity = si.Quantity,
                              LineTotal = si.LineTotal

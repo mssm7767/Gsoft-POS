@@ -50,6 +50,7 @@
 
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 <link href="~/lib/bootstrap-icons/bootstrap-icons-1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+<link href="~/lib/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
 
 <style>
     :root {
@@ -1219,10 +1220,11 @@
     </div>
 </div>
 
-<link href="~/lib/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
+
 <script src="~/lib/sweetalert2/sweetalert2.min.js"></script>
 
 <script>
+
     document.getElementById("btnInvPrev").addEventListener("click", function () {
         const invoiceNo = document.getElementById("invoiceNoValue").innerText.trim();
         if (!invoiceNo) return;
@@ -1236,31 +1238,7 @@
 
         window.location.href = `/Sales/POS?next=${invoiceNo}`;
     });
-</script>
 
-<script>
-    /* =========================================================
-       GS POS — FULL SCRIPT SECTION (FIXED)
-       - Scanner exact match add
-       - Hold/Retrieve restored
-       - Cost removed
-       - F8 prints only saved invoice
-       - Partial payment blocked (except Credit)
-    ========================================================= */
-    <link href="~/lib/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
-    <script src="~/lib/sweetalert2/sweetalert2.min.js"></script>
-
-<script>
-    /* =========================================================
-       GS POS — FULL SCRIPT SECTION (UPDATED / FIXED)
-       ✅ Scanner auto add (no Enter)
-       ✅ Cost removed
-       ✅ Hold success message (English) + clear screen
-       ✅ Retrieve fixed
-       ✅ F8 prints only saved invoice
-       ✅ Partial payment blocked (except Credit)
-       ✅ IMPORTANT: F12 spam fix (empty screen par invoice number aage nahi bhagega)
-    ========================================================= */
 
     /* ---------- SERVER DATA ---------- */
     const items = @Html.Raw(itemsJson);
@@ -1277,7 +1255,6 @@
     const SEARCH_SALE_ID = @((searchSale?.Id ?? 0));
 
     const saleItems = @Html.Raw(saleItemsJson);
-
 
     /* ---------- GLOBALS ---------- */
     let filtered = [];
@@ -1479,8 +1456,44 @@
       if (bi) bi.placeholder = isReturn ? "Return item scan karein… (Alt + B)" : "Sale item scan karein… (Alt + B)";
     }
 
+    function ensureActiveVisible() {
+      const box = document.getElementById('itemSuggestions');
+      if (!box || box.style.display !== 'block') return;
+      const active = box.querySelector('.suggestion-item.active');
+      if (!active) return;
+
+      const top = active.offsetTop;
+      const bottom = top + active.offsetHeight;
+
+      if (top < box.scrollTop) box.scrollTop = top - 6;
+      else if (bottom > box.scrollTop + box.clientHeight) box.scrollTop = bottom - box.clientHeight + 6;
+    }
+
+    function updateHighlight() {
+      document.querySelectorAll('#itemSuggestions .suggestion-item')
+        .forEach((el, i) => el.classList.toggle('active', i === selectedIdx));
+      ensureActiveVisible();
+    }
+
+    let itemCodeMap = {};
+
+    function buildItemLookup() {
+        itemCodeMap = {};
+
+        items.forEach(i => {
+            if (i.ItemCode) {
+                itemCodeMap[i.ItemCode.toLowerCase()] = i;
+            }
+        });
+    }
+
+    
+
+    // Call AFTER items are loaded
+    buildItemLookup();
+
     /* ---------- SUGGESTIONS ---------- */
-        function showItemSuggestions(term) {
+    function showItemSuggestions (term) {
         term = (term || '').trim();
         const listDiv = document.getElementById('itemSuggestions');
 
@@ -1536,41 +1549,6 @@
         listDiv.style.display = 'block';
     }
 
-    function ensureActiveVisible() {
-      const box = document.getElementById('itemSuggestions');
-      if (!box || box.style.display !== 'block') return;
-      const active = box.querySelector('.suggestion-item.active');
-      if (!active) return;
-
-      const top = active.offsetTop;
-      const bottom = top + active.offsetHeight;
-
-      if (top < box.scrollTop) box.scrollTop = top - 6;
-      else if (bottom > box.scrollTop + box.clientHeight) box.scrollTop = bottom - box.clientHeight + 6;
-    }
-
-    function updateHighlight() {
-      document.querySelectorAll('#itemSuggestions .suggestion-item')
-        .forEach((el, i) => el.classList.toggle('active', i === selectedIdx));
-      ensureActiveVisible();
-    }
-
-
-    let itemCodeMap = {};
-
-    function buildItemLookup() {
-        itemCodeMap = {};
-
-        items.forEach(i => {
-            if (i.ItemCode) {
-                itemCodeMap[i.ItemCode.toLowerCase()] = i;
-            }
-        });
-    }
-
-    // Call AFTER items are loaded
-    buildItemLookup();
-
     function resetItemUI() {
         suggDiv.style.display = 'none';
         itemInputEl.value = '';
@@ -1602,7 +1580,6 @@
         return true;
     }
 
-
     function selectItemSuggestion(i) {
 
         if (i < 0 || i >= filtered.length) return;
@@ -1617,7 +1594,6 @@
         addToSalesTable(item);
         resetItemUI();
     }
-
 
     /* ---------- ✅ SCANNER FIX (NO ENTER REQUIRED) ---------- */
     let scanTimer = null;
@@ -1677,7 +1653,6 @@
             }
         });
     }
-
 
     /* ---------- GRID OPS ---------- */
     function makePriceEditable(cell) {
@@ -2448,9 +2423,9 @@
 
     /* ---------- NEW INVOICE ---------- */
     function generateInvoiceNumber() {
-      const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-      invoiceCounter = (parseInt(invoiceCounter) || 0) + 1;
-      return `INV-${date}-${String(invoiceCounter).padStart(4, '0')}`;
+        const date = new Date().toISOString().slice(0, 10);
+        const random = Math.floor(Math.random() * 1000);
+        return `INV-${date}-${random}`;
     }
 
     /* ✅ F12 FIX inside handleNewInvoice */
@@ -2518,19 +2493,6 @@
     function enterFullscreen() { if (posShell.requestFullscreen) posShell.requestFullscreen(); else if (posShell.webkitRequestFullscreen) posShell.webkitRequestFullscreen(); }
     function exitFullscreen() { if (document.exitFullscreen) document.exitFullscreen(); else if (document.webkitExitFullscreen) document.webkitExitFullscreen(); }
     function toggleFullscreen() { isFullscreen() ? exitFullscreen() : enterFullscreen(); }
-
-    function handleFsChange() {
-      const i = btnFullscreen?.querySelector('i');
-      if (!i) return;
-      if (isFullscreen()) {
-        i.classList.replace('bi-arrows-fullscreen', 'bi-fullscreen-exit');
-        btnFullscreen.title = "Exit Fullscreen (Alt+Enter)";
-        setTimeout(() => focusBarcode(), 50);
-      } else {
-        i.classList.replace('bi-fullscreen-exit', 'bi-arrows-fullscreen');
-        btnFullscreen.title = "Expand (Alt+Enter)";
-      }
-    }
 
     /* ---------- SHORTCUTS ---------- */
     function globalKeyHandler(e) {
@@ -2654,8 +2616,8 @@
       });
 
       btnFullscreen?.addEventListener('click', toggleFullscreen);
-      document.addEventListener('fullscreenchange', handleFsChange);
-      document.addEventListener('webkitfullscreenchange', handleFsChange);
+      // document.addEventListener('fullscreenchange', handleFsChange);
+      // document.addEventListener('webkitfullscreenchange', handleFsChange);
 
       // ✅ capture true so browser refresh shortcuts won't override
       window.addEventListener('keydown', globalKeyHandler, true);
@@ -2691,43 +2653,44 @@
 
       document.getElementById("tenderInput").value= SEARCH_PAYMENT;
       document.getElementById("saleId").value= SEARCH_SALE_ID;
-    // Add all sale items to the table
-    if (Array.isArray(saleItems) && saleItems.length > 0) {
-        saleItems.forEach(si => {
-            const tableItem = {
-                Id: si.ItemId,
-                ItemCode: si.Item.ItemCode,
-                ItemName: si.Item.ItemName,
-                PackSize: si.Item.PackSize,
-                SalePrice: si.Item.SalePrice ?? si.UnitPrice,
-                UnitPrice: si.UnitPrice,
-                Quantity: si.Quantity,
-                Stock: si.Item.Quantity,
-                LineTotal: si.LineTotal,
-                DiscountPercent: si.DiscountPercent
-            };
 
-            // Call your existing function
-            addToSalesTable(tableItem);
+        // Add all sale items to the table
+        if (Array.isArray(saleItems) && saleItems.length > 0) {
+            saleItems.forEach(si => {
+                const tableItem = {
+                    Id: si.ItemId,
+                    ItemCode: si.Item.ItemCode,
+                    ItemName: si.Item.ItemName,
+                    PackSize: si.Item.PackSize,
+                    SalePrice: si.Item.SalePrice ?? si.UnitPrice,
+                    UnitPrice: si.UnitPrice,
+                    Quantity: si.Quantity,
+                    Stock: si.Item.Quantity,
+                    LineTotal: si.LineTotal,
+                    DiscountPercent: si.DiscountPercent
+                };
 
-            // Optionally update the row with LineTotal and DiscountPercent
-            const tb = document.querySelector('#salesTable tbody');
-            const row = tb.querySelector(`tr[data-item-id="${tableItem.Id}"]`);
-            if (row) {
-                // Set quantity, line total, discount
-                const qtyInput = row.querySelector('.qty-main');
-                qtyInput.value = tableItem.Quantity;
+                // Call your existing function
+                addToSalesTable(tableItem);
 
-                const discPercentEl = row.querySelector('.disc-percent');
-                discPercentEl.value = tableItem.DiscountPercent;
+                // Optionally update the row with LineTotal and DiscountPercent
+                const tb = document.querySelector('#salesTable tbody');
+                const row = tb.querySelector(`tr[data-item-id="${tableItem.Id}"]`);
+                if (row) {
+                    // Set quantity, line total, discount
+                    const qtyInput = row.querySelector('.qty-main');
+                    qtyInput.value = tableItem.Quantity;
 
-                const lineTotalEl = row.querySelector('.line-total');
-                lineTotalEl.textContent = `₨${parseFloat(tableItem.LineTotal || 0).toFixed(2)}`;
+                    const discPercentEl = row.querySelector('.disc-percent');
+                    discPercentEl.value = tableItem.DiscountPercent;
 
-                updateRowTotal(row); // recalc totals in your function
-            }
-        });
-    }
+                    const lineTotalEl = row.querySelector('.line-total');
+                    lineTotalEl.textContent = `₨${parseFloat(tableItem.LineTotal || 0).toFixed(2)}`;
+
+                    updateRowTotal(row); // recalc totals in your function
+                }
+            });
+        }
 
       updateLiveClock();
       setInterval(updateLiveClock, 1000);
