@@ -2,7 +2,6 @@
     var role = Context.Items["UserRole"] as string;
     var permissions = Context.Items["UserPermissions"] as Dictionary<string, bool> ?? new();
 }
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,46 +9,251 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@ViewData["Title"] - GSoft POS</title>
 
-    <!-- Bootstrap & Font-Awesome -->
+    <!-- Bootstrap & Font Awesome -->
     <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="~/lib/fontawesome/css/all.min.css" rel="stylesheet" />
 
-    @* <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" /> *@
-    <link href="~/css/sidebar.css" rel="stylesheet" />
-
     <style>
-        /* Default layout */
+        /* ===============================
+                           GLOBAL
+                =============================== */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f6fafd;
+        }
+
+        /* ===============================
+                           SIDEBAR
+                =============================== */
         .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 235px;
+            height: 100vh;
+            background: linear-gradient(135deg, #204266 65%, #13c4a3 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+            border-radius: 0 16px 16px 0;
+        }
+
+            .sidebar.collapsed {
+                width: 62px;
+            }
+
+            /* Logo */
+            .sidebar .logo {
+                display: flex;
+                justify-content: space-between; /* text left, button right */
+                align-items: center;
+                padding: 20px 18px;
+                font-weight: 600;
+                font-size: 1.4rem;
+                border-bottom: 1px solid rgba(255,255,255,0.07);
+                background: rgba(0,0,0,0.06);
+                border-radius: 0 16px 0 0;
+            }
+
+                .sidebar .logo span {
+                    transition: opacity 0.3s ease;
+                }
+
+            .sidebar.collapsed .logo span {
+                display: none; /* hide text when collapsed */
+            }
+
+        /* Sidebar Toggle Button */
+        .sidebar-toggle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg,#26c6da,#1682e9);
+            display: none; /* hide by default */
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+            .sidebar-toggle:hover {
+                transform: scale(1.1);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            }
+
+        /* Show toggle button only when sidebar is collapsed */
+        .sidebar.collapsed .sidebar-toggle {
+            display: flex;
+        }
+
+        /* Sidebar Menu */
+        .sidebar-menu {
+            flex: 1;
+            padding: 10px 0;
+            list-style: none;
+            margin: 0;
+        }
+
+            .sidebar-menu li a {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 18px;
+                color: #e7f6fa;
+                text-decoration: none;
+                border-radius: 8px;
+                margin: 4px 10px;
+                transition: all 0.2s ease;
+            }
+
+                .sidebar-menu li a i {
+                    width: 22px;
+                    text-align: center;
+                }
+
+                .sidebar-menu li a:hover,
+                .sidebar-menu li a.active {
+                    background: linear-gradient(92deg, #25dbde 64%, #1682e9 100%);
+                    color: #fff;
+                }
+
+        /* Submenu */
+        .submenu {
+            display: none;
+            flex-direction: column;
+            margin-left: 0;
+            padding-left: 10px;
+        }
+
+        .has-sub.open > .submenu {
+            display: flex;
+        }
+
+        .submenu li a {
+            font-size: 0.92rem;
+            padding-left: 32px;
+        }
+
+        /* Sidebar Bottom */
+        .sidebar-bottom {
+            padding: 10px 18px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+            .sidebar-bottom a {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                color: #fff;
+                text-decoration: none;
+                padding: 6px 10px;
+                border-radius: 6px;
+                transition: all 0.2s ease;
+            }
+
+                .sidebar-bottom a:hover {
+                    background: rgba(0,0,0,0.2);
+                }
+
+        .sidebar.collapsed .sidebar-bottom a span {
+            display: none;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 235px;
+            transition: margin-left 0.3s ease;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .sidebar.collapsed ~ .main-content {
+            margin-left: 62px;
+        }
+
+        /* Overlay for mobile */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.3);
+            z-index: 900;
+            display: none;
+            transition: all 0.2s ease;
+        }
+
+            .overlay.active {
+                display: block;
+            }
+
+        /* ===============================
+                           RESPONSIVE
+                =============================== */
+        @@media (max-width: 991px) {
+            .sidebar
+
+        {
+            left: -250px;
             width: 250px;
-            transition: width 0.3s;
+        }
+
+        .sidebar.mobile-open {
+            left: 0;
         }
 
         .main-content {
-            margin-left: 250px;
-            transition: margin-left 0.3s;
+            margin-left: 0 !important;
         }
 
-        /* Collapsed sidebar */
         .sidebar.collapsed {
-            width: 60px !important;
+            width: 250px;
         }
 
-        /* When sidebar collapses, main-content expands */
-        .main-content.collapsed {
-            margin-left: 60px !important;
+        .sidebar-toggle {
+            display: flex; /* always show toggle on mobile */
+            margin-left: 10px;
         }
+
+        }
+
+        @@media (max-width: 576px) {
+            .sidebar
+
+        {
+            width: 230px;
+        }
+
+        .sidebar .logo {
+            font-size: 1.2rem;
+            padding: 15px 12px;
+        }
+
+        }
+        
     </style>
-
-    @RenderSection("Styles", required: false)
 </head>
 <body>
+
+    <!-- Global Toggle Button -->
+    <button class="sidebar-toggle" id="sidebarToggle" style="top: 15px; left: 15px; z-index:1100;">
+        <i class="fa fa-bars"></i>
+    </button>
+
     <div class="sidebar" id="sidebar">
         <div class="logo">
-            G-Soft POS
-            <button class="sidebar-toggle" id="sidebarToggle" title="Collapse/Expand">
-                <span class="toggle-bar"><i class="fa fa-bars"></i></span>
-            </button>
+            <span class="logo-text">G-Soft POS</span>
         </div>
+
         <ul class="sidebar-menu">
 
             <li>
@@ -467,147 +671,55 @@
                 </li>
             }
         </ul>
+
         <div class="sidebar-bottom">
-            <a class="text-danger" href="/Account/Logout">
-                <i class="fa fa-sign-out-alt"></i> <span>Logout</span>
-            </a>
-            <a class="text-secondary" href="#" onclick="window.close(); return false;">
-                <i class="fa fa-power-off"></i> <span>Exit</span>
-            </a>
+            <a class="text-danger" href="/Account/Logout"><i class="fa fa-sign-out-alt"></i> <span>Logout</span></a>
+            <a class="text-secondary" href="#" onclick="window.close(); return false;"><i class="fa fa-power-off"></i> <span>Exit</span></a>
         </div>
     </div>
 
-    <div class="main-content" id="mainContent" style="padding: 20px !important;">
+    <!-- Overlay -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
         @RenderBody()
     </div>
 
+    <!-- JS -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            var sidebar = document.getElementById('sidebar');
-            var mainContent = document.getElementById('mainContent');
-            var sidebarToggle = document.getElementById('sidebarToggle');
-            sidebarToggle.addEventListener('click', function () {
-                sidebar.classList.toggle('collapsed');
-                mainContent.classList.toggle('collapsed');
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const toggleBtn = document.getElementById('sidebarToggle');
+            const overlay = document.getElementById('overlay');
+
+            toggleBtn.addEventListener('click', function () {
+                if (window.innerWidth <= 991) {
+                    // Mobile
+                    sidebar.classList.toggle('mobile-open');
+                    overlay.classList.toggle('active');
+                } else {
+                    // Desktop
+                    sidebar.classList.toggle('collapsed');
+                    mainContent.classList.toggle('collapsed');
+                }
             });
 
+            overlay.addEventListener('click', function () {
+                sidebar.classList.remove('mobile-open');
+                overlay.classList.remove('active');
+            });
+
+            // Submenu toggle
             document.querySelectorAll(".has-sub > a").forEach(item => {
                 item.addEventListener("click", function (e) {
                     e.preventDefault();
                     const parent = this.parentElement;
-                    const isOpen = parent.classList.contains("open");
-                    Array.from(parent.parentElement.children)
-                        .filter(el => el !== parent)
-                        .forEach(sib => sib.classList.remove("active", "open"));
-                    parent.classList.toggle("active", !isOpen);
-                    parent.classList.toggle("open", !isOpen);
-                });
-            });
-            document.querySelectorAll(".submenu.child a").forEach(link => {
-                link.addEventListener("click", function (e) {
-                    e.stopPropagation();
+                    parent.classList.toggle("open");
                 });
             });
         });
     </script>
-
-    @RenderSection("Scripts", required: false)
-
-    @section Scripts {
-        <script>
-            window.addEventListener('DOMContentLoaded', () => {
-                const notification = document.getElementById('notification');
-                if (notification) {
-                    setTimeout(() => {
-                        notification.style.opacity = '0';
-                        setTimeout(() => notification.style.display = 'none', 500);
-                    }, 1500);
-                }
-            });
-
-             @await RenderSectionAsync("Scripts", required: false)
-
-                         <script>
-            document.addEventListener('DOMContentLoaded', function () {
-              var table = document.getElementById('customersTable');
-              if (!table) return;
-              table.setAttribute('tabindex','0');
-
-              function firstVisibleRow() {
-                var rows = Array.from(table.querySelectorAll('tbody tr'));
-                return rows.find(function(r){ return r.style.display !== 'none'; }) || null;
-              }
-
-              function clearSelection() {
-                table.querySelectorAll('tbody tr.row-selected').forEach(function(r){
-                  r.classList.remove('row-selected');
-                });
-              }
-
-              function selectRow(r) {
-                if (!r || r.style.display === 'none') return;
-                clearSelection();
-                r.classList.add('row-selected');
-                r.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-              }
-
-              // Page load: thoda delay dekar focus + first row select
-              setTimeout(function () {
-                var r = firstVisibleRow();
-                if (r && !table.querySelector('tbody tr.row-selected')) {
-                  selectRow(r);
-                }
-                table.focus();
-              }, 60);
-            });
-
-                        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-              var toast = document.getElementById('successToast');
-              if (!toast) return;
-
-              // 1) chhota chime (optional)
-              try {
-                var ctx = new (window.AudioContext || window.webkitAudioContext)();
-                var now = ctx.currentTime;
-                function tone(freq, start, dur){
-                  var o = ctx.createOscillator(), g = ctx.createGain();
-                  o.type = 'sine'; o.frequency.value = freq;
-                  o.connect(g); g.connect(ctx.destination);
-                  g.gain.setValueAtTime(0.0001, start);
-                  g.gain.exponentialRampToValueAtTime(0.2, start + 0.01);
-                  g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
-                  o.start(start); o.stop(start + dur + 0.02);
-                }
-                tone(880,  now + 0.00, 0.12);
-                tone(1047, now + 0.12, 0.14);
-                setTimeout(function(){ if (ctx && ctx.state !== 'closed') ctx.close(); }, 600);
-              } catch(e){}
-
-              // 2) 1.5s baad toast fade + remove, phir list row par scroll + flash
-              setTimeout(function () {
-                toast.classList.add('fade-out');
-                setTimeout(function () {
-                  if (toast && toast.parentNode) toast.parentNode.removeChild(toast);
-
-                  // Controller ne bheja hua naam
-                  var name = '@(TempData["LastCustomerName"] as string ?? "")'.trim();
-                  if (!name) return;
-
-                  // CSS.escape fallback
-                  var safeName = (window.CSS && CSS.escape) ? CSS.escape(name) : name.replace(/["\\]/g, "\\$&");
-
-                  // Row locate
-                  var row = document.querySelector('tr[data-customer-name="' + safeName + '"]');
-                  if (row) {
-                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    row.classList.add('row-highlight');
-                    setTimeout(function(){ row.classList.remove('row-highlight'); }, 2000);
-                  }
-                }, 600); // fade duration match
-              }, 1500); // visible 1.5s
-            });
-        </script>
-    }
 </body>
 </html>
