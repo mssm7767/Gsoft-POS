@@ -2,6 +2,7 @@
     var role = Context.Items["UserRole"] as string;
     var permissions = Context.Items["UserPermissions"] as Dictionary<string, bool> ?? new();
 }
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,255 +14,550 @@
     <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="~/lib/fontawesome/css/all.min.css" rel="stylesheet" />
 
+    <!-- Modern Sidebar Styles -->
     <style>
-        /* ===============================
-                           GLOBAL
-                =============================== */
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #f6fafd;
+        /* Modern Color Variables */
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --primary-light: #e6e9ff;
+            --secondary: #764ba2;
+            --success: #48bb78;
+            --warning: #ed8936;
+            --danger: #f56565;
+            --dark: #1a202c;
+            --darker: #0f172a;
+            --light: #f7fafc;
+            --gray: #a0aec0;
+            --sidebar-bg: linear-gradient(180deg, #1a202c 0%, #2d3748 100%);
+            --sidebar-hover: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            --sidebar-active: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 30px 35px -10px rgba(0, 0, 0, 0.15);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* ===============================
-                           SIDEBAR
-                =============================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            min-height: 100%;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            overflow-x: hidden;
+            background: #f0f5fa;
+        }
+
+        /* Modern Sidebar */
         .sidebar {
+            width: 280px;
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(10px);
+            transition: var(--transition);
             position: fixed;
             top: 0;
             left: 0;
-            width: 235px;
             height: 100vh;
-            background: linear-gradient(135deg, #204266 65%, #13c4a3 100%);
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            z-index: 1000;
             overflow-y: auto;
-            transition: all 0.3s ease;
-            border-radius: 0 16px 16px 0;
+            overflow-x: hidden;
+            z-index: 1040;
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.15);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-            .sidebar.collapsed {
-                width: 62px;
+            /* Custom Scrollbar */
+            .sidebar::-webkit-scrollbar {
+                width: 5px;
             }
 
-            /* Logo */
-            .sidebar .logo {
-                display: flex;
-                justify-content: space-between; /* text left, button right */
-                align-items: center;
-                padding: 20px 18px;
-                font-weight: 600;
-                font-size: 1.4rem;
-                border-bottom: 1px solid rgba(255,255,255,0.07);
-                background: rgba(0,0,0,0.06);
-                border-radius: 0 16px 0 0;
+            .sidebar::-webkit-scrollbar-track {
+                background: rgba(255, 255, 255, 0.05);
             }
 
-                .sidebar .logo span {
-                    transition: opacity 0.3s ease;
+            .sidebar::-webkit-scrollbar-thumb {
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 10px;
+            }
+
+                .sidebar::-webkit-scrollbar-thumb:hover {
+                    background: rgba(255, 255, 255, 0.3);
                 }
 
-            .sidebar.collapsed .logo span {
-                display: none; /* hide text when collapsed */
-            }
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            transition: var(--transition);
+            min-height: 100vh;
+            padding: 25px !important;
+            background: #f0f5fa;
+        }
 
-        /* Sidebar Toggle Button */
+        /* Collapsed States */
+        .sidebar.collapsed {
+            width: 80px !important;
+        }
+
+        .main-content.collapsed {
+            margin-left: 80px !important;
+        }
+
+        .sidebar.collapsed .sidebar-menu span,
+        .sidebar.collapsed .sidebar-bottom span,
+        .sidebar.collapsed .logo-text,
+        .sidebar.collapsed .arrow-icon {
+            display: none;
+        }
+
+        .sidebar.collapsed .logo {
+            justify-content: center;
+            padding: 20px 0;
+        }
+
+        .sidebar.collapsed .sidebar-menu a,
+        .sidebar.collapsed .sidebar-bottom a {
+            justify-content: center;
+            padding: 15px 0;
+        }
+
+        .sidebar.collapsed .sidebar-menu i,
+        .sidebar.collapsed .sidebar-bottom i {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .sidebar.collapsed .has-sub > a::after {
+            display: none;
+        }
+
+        /* Logo Section */
+        .logo {
+            padding: 25px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .logo-text {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff, #e0e0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 0.5px;
+        }
+
+        /* Toggle Button */
         .sidebar-toggle {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: linear-gradient(135deg,#26c6da,#1682e9);
-            display: none; /* hide by default */
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: white;
+            width: 40px;
+            height: 40px;
+            display: flex;
             align-items: center;
             justify-content: center;
-            color: #fff;
-            border: none;
             cursor: pointer;
-            flex-shrink: 0;
-            transition: all 0.2s ease;
+            transition: var(--transition);
+            font-size: 18px;
         }
 
             .sidebar-toggle:hover {
-                transform: scale(1.1);
-                box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+                background: var(--sidebar-active);
+                transform: scale(1.05);
+                border-color: transparent;
             }
-
-        /* Show toggle button only when sidebar is collapsed */
-        .sidebar.collapsed .sidebar-toggle {
-            display: flex;
-        }
 
         /* Sidebar Menu */
         .sidebar-menu {
-            flex: 1;
-            padding: 10px 0;
             list-style: none;
+            padding: 20px 15px;
             margin: 0;
         }
 
-            .sidebar-menu li a {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                padding: 10px 18px;
-                color: #e7f6fa;
-                text-decoration: none;
-                border-radius: 8px;
-                margin: 4px 10px;
-                transition: all 0.2s ease;
+            .sidebar-menu li {
+                margin-bottom: 5px;
             }
 
-                .sidebar-menu li a i {
-                    width: 22px;
-                    text-align: center;
+            .sidebar-menu a {
+                display: flex;
+                align-items: center;
+                padding: 12px 15px;
+                color: rgba(255, 255, 255, 0.7);
+                text-decoration: none;
+                border-radius: 16px;
+                transition: var(--transition);
+                font-weight: 500;
+                font-size: 14px;
+                position: relative;
+                overflow: hidden;
+            }
+
+                .sidebar-menu a::before {
+                    content: '';
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    height: 100%;
+                    width: 3px;
+                    background: linear-gradient(180deg, var(--primary), var(--secondary));
+                    border-radius: 0 3px 3px 0;
+                    transform: scaleY(0);
+                    transition: transform 0.2s;
                 }
 
-                .sidebar-menu li a:hover,
-                .sidebar-menu li a.active {
-                    background: linear-gradient(92deg, #25dbde 64%, #1682e9 100%);
-                    color: #fff;
+                .sidebar-menu a:hover {
+                    background: var(--sidebar-hover);
+                    color: white;
+                    transform: translateX(5px);
                 }
+
+                    .sidebar-menu a:hover::before {
+                        transform: scaleY(1);
+                    }
+
+                .sidebar-menu a.active {
+                    background: var(--sidebar-active);
+                    color: white;
+                    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+                }
+
+                    .sidebar-menu a.active::before {
+                        transform: scaleY(1);
+                        background: white;
+                    }
+
+            .sidebar-menu i {
+                width: 30px;
+                font-size: 18px;
+                text-align: center;
+                margin-right: 12px;
+            }
 
         /* Submenu */
+        .has-sub {
+            position: relative;
+        }
+
+            .has-sub > a {
+                position: relative;
+            }
+
+                .has-sub > a::after {
+                    content: '\f107';
+                    font-family: 'Font Awesome 6 Free';
+                    font-weight: 900;
+                    position: absolute;
+                    right: 15px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    transition: var(--transition);
+                    font-size: 14px;
+                    color: rgba(255, 255, 255, 0.5);
+                }
+
+            .has-sub.open > a::after {
+                transform: translateY(-50%) rotate(180deg);
+            }
+
+            .has-sub.open > a {
+                background: var(--sidebar-hover);
+                color: white;
+            }
+
         .submenu {
+            list-style: none;
+            padding-left: 45px;
+            margin: 5px 0 10px 0;
             display: none;
-            flex-direction: column;
-            margin-left: 0;
-            padding-left: 10px;
+            animation: slideDown 0.3s ease;
         }
 
-        .has-sub.open > .submenu {
-            display: flex;
+        @@keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .submenu li a {
-            font-size: 0.92rem;
-            padding-left: 32px;
+        .has-sub.open .submenu {
+            display: block;
+        }
+
+        .submenu a {
+            padding: 10px 15px;
+            font-size: 13px;
+            background: rgba(255, 255, 255, 0.02);
+            margin-bottom: 3px;
+        }
+
+            .submenu a:hover {
+                background: rgba(255, 255, 255, 0.05);
+                transform: translateX(3px);
+            }
+
+        .submenu i {
+            font-size: 14px;
+            width: 25px;
         }
 
         /* Sidebar Bottom */
         .sidebar-bottom {
-            padding: 10px 18px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
+            padding: 20px 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: auto;
         }
 
             .sidebar-bottom a {
                 display: flex;
                 align-items: center;
-                gap: 10px;
-                color: #fff;
+                padding: 12px 15px;
+                color: rgba(255, 255, 255, 0.7);
                 text-decoration: none;
-                padding: 6px 10px;
-                border-radius: 6px;
-                transition: all 0.2s ease;
+                border-radius: 16px;
+                transition: var(--transition);
+                margin-bottom: 5px;
+                font-weight: 500;
             }
 
                 .sidebar-bottom a:hover {
-                    background: rgba(0,0,0,0.2);
+                    background: var(--sidebar-hover);
+                    color: white;
+                    transform: translateX(5px);
                 }
 
-        .sidebar.collapsed .sidebar-bottom a span {
-            display: none;
-        }
-
-        /* Main Content */
-        .main-content {
-            margin-left: 235px;
-            transition: margin-left 0.3s ease;
-            padding: 20px;
-            min-height: 100vh;
-        }
-
-        .sidebar.collapsed ~ .main-content {
-            margin-left: 62px;
-        }
-
-        /* Overlay for mobile */
-        .overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.3);
-            z-index: 900;
-            display: none;
-            transition: all 0.2s ease;
-        }
-
-            .overlay.active {
-                display: block;
+            .sidebar-bottom i {
+                width: 30px;
+                font-size: 18px;
+                margin-right: 12px;
             }
 
-        /* ===============================
-                           RESPONSIVE
-                =============================== */
-        @@media (max-width: 991px) {
-            .sidebar
+            .sidebar-bottom .text-danger {
+                color: #fc8181 !important;
+            }
 
-        {
-            left: -250px;
-            width: 250px;
+                .sidebar-bottom .text-danger:hover {
+                    background: linear-gradient(135deg, #f56565, #c53030);
+                    color: white !important;
+                }
+
+        /* End of Day Button */
+        .eod-button {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 16px;
+            padding: 15px 20px;
+            margin: 15px;
+            color: white;
+            font-weight: 700;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            width: calc(100% - 30px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
         }
 
-        .sidebar.mobile-open {
+            .eod-button:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
+            }
+
+            .eod-button i {
+                font-size: 18px;
+                margin: 0;
+            }
+
+        .sidebar.collapsed .eod-button span {
+            display: none;
+        }
+
+        .sidebar.collapsed .eod-button {
+            padding: 15px 0;
+            justify-content: center;
+        }
+
+        /* Mobile Overlay */
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1030;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+            .mobile-overlay.show {
+                display: block;
+                opacity: 1;
+            }
+
+        /* Responsive */
+        @@media (max-width: 991.98px) {
+            .sidebar {
+                left: -300px;
+                width: 280px !important;
+                box-shadow: 10px 0 30px rgba(0,0,0,0.3);
+            }
+
+                .sidebar.mobile-open {
+                    left: 0;
+                }
+
+            .main-content,
+            .main-content.collapsed {
+                margin-left: 0 !important;
+                padding: 15px !important;
+            }
+
+            .sidebar.collapsed {
+                width: 280px !important;
+            }
+
+                .sidebar.collapsed .sidebar-menu span,
+                .sidebar.collapsed .sidebar-bottom span,
+                .sidebar.collapsed .logo-text,
+                .sidebar.collapsed .arrow-icon {
+                    display: inline;
+                }
+
+                .sidebar.collapsed .logo {
+                    justify-content: space-between;
+                    padding: 25px 20px;
+                }
+
+                .sidebar.collapsed .sidebar-menu a,
+                .sidebar.collapsed .sidebar-bottom a {
+                    justify-content: flex-start;
+                    padding: 12px 15px;
+                }
+
+                .sidebar.collapsed .sidebar-menu i,
+                .sidebar.collapsed .sidebar-bottom i {
+                    margin-right: 12px;
+                    font-size: 18px;
+                }
+
+                .sidebar.collapsed .eod-button span {
+                    display: inline;
+                }
+
+                .sidebar.collapsed .eod-button {
+                    padding: 15px 20px;
+                    justify-content: center;
+                }
+
+            .mobile-overlay.show {
+                display: block;
+            }
+        }
+
+        /* Animations */
+        @@keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        /* Tooltip for collapsed mode */
+        .sidebar.collapsed [data-tooltip] {
+            position: relative;
+        }
+
+            .sidebar.collapsed [data-tooltip]:hover::after {
+                content: attr(data-tooltip);
+                position: absolute;
+                left: 100%;
+                top: 50%;
+                transform: translateY(-50%);
+                background: var(--dark);
+                color: white;
+                padding: 8px 12px;
+                border-radius: 8px;
+                font-size: 12px;
+                white-space: nowrap;
+                z-index: 1000;
+                margin-left: 10px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            }
+
+        /* Loading animation */
+        .loading-bar {
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            position: fixed;
+            top: 0;
             left: 0;
+            right: 0;
+            z-index: 9999;
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s;
         }
 
-        .main-content {
-            margin-left: 0 !important;
-        }
-
-        .sidebar.collapsed {
-            width: 250px;
-        }
-
-        .sidebar-toggle {
-            display: flex; /* always show toggle on mobile */
-            margin-left: 10px;
-        }
-
-        }
-
-        @@media (max-width: 576px) {
-            .sidebar
-
-        {
-            width: 230px;
-        }
-
-        .sidebar .logo {
-            font-size: 1.2rem;
-            padding: 15px 12px;
-        }
-
-        }
-        
+            .loading-bar.active {
+                transform: scaleX(1);
+            }
     </style>
+
+    @RenderSection("Styles", required: false)
 </head>
 <body>
+    <!-- Loading Bar -->
+    <div class="loading-bar" id="loadingBar"></div>
 
-    <!-- Global Toggle Button -->
-    <button class="sidebar-toggle" id="sidebarToggle" style="top: 15px; left: 15px; z-index:1100;">
-        <i class="fa fa-bars"></i>
-    </button>
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
 
+    <!-- Modern Sidebar -->
     <div class="sidebar" id="sidebar">
         <div class="logo">
             <span class="logo-text">G-Soft POS</span>
+            <button class="sidebar-toggle" id="sidebarToggle" title="Collapse/Expand" type="button">
+                <i class="fas fa-bars"></i>
+            </button>
         </div>
 
         <ul class="sidebar-menu">
+            @if (permissions.TryGetValue("Dashboard", out var canAccessDashboard) && canAccessDashboard)
+            {
 
-            <li>
-                <a asp-controller="Home" asp-action="Index"
-                   class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")">
-                    <i class="fa fa-th-large"></i> <span>Dashboard</span>
-                </a>
-            </li>
+                <li>
+                    <a asp-controller="Home" asp-action="Index"
+                       class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")">
+                        <i class="fa fa-th-large"></i> <span>Dashboard</span>
+                    </a>
+                </li>
+            }
             <!-- Add Submenu -->
             <li class="has-sub">
                 <a href="#">
@@ -301,11 +597,27 @@
                     {
                         <li><a asp-controller="Location" asp-action="Create"><i class="fa fa-map-marker-alt"></i> Add Location</a></li>
                     }
-                    <li>
-                        <a asp-controller="Table" asp-action="Create">
-                            <i class="fa fa-table"></i> Add Table
-                        </a>
-                    </li>
+                    @if (permissions.TryGetValue("AddTable", out var canAccessAddTable) && canAccessAddTable)
+                    {
+
+                        <li>
+                            <a asp-controller="Table" asp-action="Create">
+                                <i class="fa fa-table"></i> Add Table
+                            </a>
+                        </li>
+
+                    }
+
+                    @if (permissions.TryGetValue("Department", out var canAccessDepartment) && canAccessDepartment)
+                    {
+
+                        <li>
+                            <a asp-controller="PrinterDepartment" asp-action="Index">
+                                <i class="fa fa-print"></i> Department / Printer
+                            </a>
+                        </li>
+
+                    }
 
                 </ul>
 
@@ -390,6 +702,7 @@
             <!-- Sales Submenu -->
             @if (permissions.TryGetValue("Sales", out var canAccessSales) && canAccessSales)
             {
+
                 <li class="has-sub">
                     <a href="#">
                         <i class="fa fa-shopping-cart"></i> <span>Sales</span>
@@ -404,37 +717,65 @@
                         </i>
                     </a>
                     <ul class="submenu">
-                        <li><a asp-controller="Sales" asp-action="POS"><i class="fa fa-plus-circle"></i> POS New</a></li>
-                        <li><a asp-controller="Sales" asp-action="POSTouch"><i class="fa fa-plus-circle"></i> POS Touch</a></li>
-                        <li><a asp-controller="Sales" asp-action="Index"><i class="fa fa-list"></i> Sales List</a></li>
-                        <li>
-                            <a asp-controller="Sales" asp-action="SalesReturn">
-                                <i class="fa fa-rotate-left"></i> Sales Return
-                            </a>
-                        </li>
+                        @if (permissions.TryGetValue("POSNew", out var canAccessPOSNew) && canAccessPOSNew)
+
+                        {
+
+                            <li><a asp-controller="Sales" asp-action="POS"><i class="fa fa-plus-circle"></i> POS New</a></li>
+
+                        }
+                        @if (permissions.TryGetValue("POSTouch", out var canAccessPOSTouch) && canAccessPOSTouch)
+
+                        {
+
+                            <li><a asp-controller="Sales" asp-action="POSTouch"><i class="fa fa-plus-circle"></i> POS Touch</a></li>
+
+                        }
+                        @if (permissions.TryGetValue("SaleList", out var canAccessSaleList) && canAccessSaleList)
+
+                        {
+
+                            <li><a asp-controller="Sales" asp-action="Index"><i class="fa fa-list"></i> Sales List</a></li>
+
+                        }
+
+                        @if (permissions.TryGetValue("SaleReturn", out var canAccessSaleReturn) && canAccessSaleReturn)
+                        {
+
+                            <li>
+                                <a asp-controller="Sales" asp-action="SalesReturn">
+                                    <i class="fa fa-rotate-left"></i> Sales Return
+                                </a>
+                            </li>
+
+                        }
                     </ul>
                 </li>
             }
 
             <!-- Barcode Submenu -->
-            <li class="has-sub">
-                <a href="#">
-                    <i class="fa fa-barcode"></i> <span>Barcode</span>
-                    <i class="arrow-icon">
-                        <svg class="chevron-svg" width="15" height="15" viewBox="0 0 16 16" fill="none">
-                            <path d="M5 7L8 10L11 7"
-                                  stroke="currentColor"
-                                  stroke-width="1.7"
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round" />
-                        </svg>
-                    </i>
-                </a>
-                <ul class="submenu">
-                    <li><a asp-controller="ItemBarcode" asp-action="Index"><i class="fa fa-print"></i> Item Barcode</a></li>
-                    <li><a asp-controller="Barcode" asp-action="Print"><i class="fa fa-print"></i> Print Barcodes</a></li>
-                </ul>
-            </li>
+            @if (permissions.TryGetValue("Barcode", out var canAccessBarcode) && canAccessBarcode)
+            {
+
+                <li class="has-sub">
+                    <a href="#">
+                        <i class="fa fa-barcode"></i> <span>Barcode</span>
+                        <i class="arrow-icon">
+                            <svg class="chevron-svg" width="15" height="15" viewBox="0 0 16 16" fill="none">
+                                <path d="M5 7L8 10L11 7"
+                                      stroke="currentColor"
+                                      stroke-width="1.7"
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round" />
+                            </svg>
+                        </i>
+                    </a>
+                    <ul class="submenu">
+                        <li><a asp-controller="ItemBarcode" asp-action="Index"><i class="fa fa-print"></i> Item Barcode</a></li>
+                        <li><a asp-controller="Barcode" asp-action="Print"><i class="fa fa-print"></i> Print Barcodes</a></li>
+                    </ul>
+                </li>
+            }
 
             <!-- Customers Submenu -->
             @if (permissions.TryGetValue("Customers", out var canAccessCustomers) && canAccessCustomers)
@@ -672,54 +1013,202 @@
             }
         </ul>
 
+        <!-- End of Day Button -->
+        <button onclick="openEndOfDay()" class="eod-button" data-tooltip="End of Day">
+            <i class="fas fa-sun"></i>
+            <span>End of Day</span>
+        </button>
+
+        <!-- Sidebar Bottom -->
         <div class="sidebar-bottom">
-            <a class="text-danger" href="/Account/Logout"><i class="fa fa-sign-out-alt"></i> <span>Logout</span></a>
-            <a class="text-secondary" href="#" onclick="window.close(); return false;"><i class="fa fa-power-off"></i> <span>Exit</span></a>
+            <a class="text-danger" href="/Account/Logout" data-tooltip="Logout">
+                <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+            </a>
+            <a class="text-secondary" href="#" onclick="window.close(); return false;" data-tooltip="Exit">
+                <i class="fas fa-power-off"></i> <span>Exit</span>
+            </a>
         </div>
     </div>
-
-    <!-- Overlay -->
-    <div class="overlay" id="overlay"></div>
 
     <!-- Main Content -->
     <div class="main-content" id="mainContent">
         @RenderBody()
     </div>
 
-    <!-- JS -->
+    <!-- Scripts -->
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const sidebar = document.getElementById('sidebar');
             const mainContent = document.getElementById('mainContent');
-            const toggleBtn = document.getElementById('sidebarToggle');
-            const overlay = document.getElementById('overlay');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const mobileOverlay = document.getElementById('mobileOverlay');
+            const loadingBar = document.getElementById('loadingBar');
 
-            toggleBtn.addEventListener('click', function () {
-                if (window.innerWidth <= 991) {
-                    // Mobile
-                    sidebar.classList.toggle('mobile-open');
-                    overlay.classList.toggle('active');
+            // Loading bar animation
+            window.addEventListener('beforeunload', function() {
+                loadingBar.classList.add('active');
+            });
+
+            window.addEventListener('load', function() {
+                setTimeout(() => {
+                    loadingBar.classList.remove('active');
+                }, 300);
+            });
+
+            // Close mobile sidebar
+            function closeMobileSidebar() {
+                sidebar.classList.remove('mobile-open');
+                mobileOverlay?.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+
+            // Open mobile sidebar
+            function openMobileSidebar() {
+                sidebar.classList.add('mobile-open');
+                mobileOverlay?.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            }
+
+            // Toggle sidebar
+            sidebarToggle?.addEventListener('click', function (e) {
+                e.stopPropagation();
+                if (window.innerWidth <= 991.98) {
+                    if (sidebar.classList.contains('mobile-open')) {
+                        closeMobileSidebar();
+                    } else {
+                        openMobileSidebar();
+                    }
                 } else {
-                    // Desktop
                     sidebar.classList.toggle('collapsed');
                     mainContent.classList.toggle('collapsed');
+
+                    // Save preference
+                    localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
                 }
             });
 
-            overlay.addEventListener('click', function () {
-                sidebar.classList.remove('mobile-open');
-                overlay.classList.remove('active');
-            });
+            // Load saved preference
+            if (window.innerWidth > 991.98) {
+                const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                if (isCollapsed) {
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.add('collapsed');
+                }
+            }
 
-            // Submenu toggle
+            // Close on overlay click
+            mobileOverlay?.addEventListener('click', closeMobileSidebar);
+
+            // Handle submenus
             document.querySelectorAll(".has-sub > a").forEach(item => {
                 item.addEventListener("click", function (e) {
                     e.preventDefault();
+                    e.stopPropagation();
+
                     const parent = this.parentElement;
+                    const wasOpen = parent.classList.contains("open");
+
+                    // Close other open submenus
+                    if (!wasOpen) {
+                        document.querySelectorAll(".has-sub.open").forEach(el => {
+                            if (el !== parent) {
+                                el.classList.remove("open", "active");
+                            }
+                        });
+                    }
+
                     parent.classList.toggle("open");
+                    parent.classList.toggle("active", !wasOpen);
                 });
             });
+
+            // Handle window resize
+            window.addEventListener('resize', function () {
+                if (window.innerWidth > 991.98) {
+                    closeMobileSidebar();
+                    document.body.style.overflow = '';
+                }
+            });
+
+            // Handle escape key
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && sidebar.classList.contains('mobile-open')) {
+                    closeMobileSidebar();
+                }
+            });
+
+            // Active link handling
+            const currentPath = window.location.pathname.toLowerCase();
+            document.querySelectorAll('.sidebar-menu a, .sidebar-bottom a').forEach(link => {
+                const href = link.getAttribute('href')?.toLowerCase() || '';
+                if (href && currentPath.includes(href) && href !== '#') {
+                    link.classList.add('active');
+
+                    // Open parent submenu if exists
+                    const parentSub = link.closest('.has-sub');
+                    if (parentSub) {
+                        parentSub.classList.add('open', 'active');
+                    }
+                }
+            });
+
+            // Notification toast
+            const notification = document.getElementById('notification');
+            if (notification) {
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                    setTimeout(() => notification.style.display = 'none', 500);
+                }, 1500);
+            }
+
+            // Success toast with sound
+            const toast = document.getElementById('successToast');
+            if (toast) {
+                try {
+                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    const now = ctx.currentTime;
+
+                    function tone(freq, start, dur) {
+                        const o = ctx.createOscillator();
+                        const g = ctx.createGain();
+                        o.type = 'sine';
+                        o.frequency.value = freq;
+                        o.connect(g);
+                        g.connect(ctx.destination);
+                        g.gain.setValueAtTime(0.0001, start);
+                        g.gain.exponentialRampToValueAtTime(0.2, start + 0.01);
+                        g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+                        o.start(start);
+                        o.stop(start + dur + 0.02);
+                    }
+
+                    tone(880, now + 0.00, 0.12);
+                    tone(1047, now + 0.12, 0.14);
+
+                    setTimeout(() => {
+                        if (ctx && ctx.state !== 'closed') ctx.close();
+                    }, 600);
+                } catch (e) { }
+
+                setTimeout(() => {
+                    toast.classList.add('fade-out');
+                    setTimeout(() => {
+                        if (toast.parentNode) toast.parentNode.removeChild(toast);
+                    }, 600);
+                }, 1500);
+            }
         });
     </script>
+
+    <!-- End of Day Function -->
+    <script>
+        function openEndOfDay() {
+            window.open('/EndOfDay', 'EndOfDay', 'width=900,height=800,scrollbars=yes,resizable=yes');
+        }
+    </script>
+
+    @RenderSection("Scripts", required: false)
 </body>
 </html>

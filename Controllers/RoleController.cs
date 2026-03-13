@@ -79,6 +79,14 @@ namespace GSoftPosNew.Controllers
                     "SMS",
                     "Location",
                     "Database",
+                    "Dashboard",
+                    "POSNew",
+                    "POSTouch",
+                    "SaleList",
+                    "SaleReturn",
+                    "Barcode",
+                    "AddTable",
+                    "Department",
                 },
                 SelectedModules = new List<string>()
             };

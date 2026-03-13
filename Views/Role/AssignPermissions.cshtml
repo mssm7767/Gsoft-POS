@@ -70,18 +70,24 @@
                                                value="@module"
                                                id="@module"
                                                @(isChecked ? "checked" : "") />
+
                                         <label class="form-check-label module-label @colorClass @(isChecked ? "active" : "")"
                                                for="@module">
+
                                             <div class="module-icon">
                                                 <i class="fa fa-cube"></i>
                                             </div>
+
                                             <span class="module-name">@module</span>
+
                                             <div class="module-badge @(isChecked ? "bg-success" : "bg-secondary")">
-                                                <i class="fa @(isChecked ? "fa-check" : "fa-times")"></i>
+                                                <i class="fa @(isChecked ? "fa-check text-white" : "fa-times text-danger")"></i>
                                             </div>
+
                                         </label>
                                     </div>
                                 </div>
+
                                 index++;
                             }
                         </div>
@@ -248,121 +254,194 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+
             const roleDropdown = document.getElementById('RoleId');
             const moduleCheckboxes = document.querySelectorAll('.module-checkbox');
             const moduleLabels = document.querySelectorAll('.module-label');
             const selectAllBtn = document.getElementById('selectAll');
             const deselectAllBtn = document.getElementById('deselectAll');
 
-            // Enhanced role change handler
+            // =============================
+            // Update Module UI
+            // =============================
+            function updateModuleUI(checkbox) {
+
+                const label = document.querySelector(`label[for="${checkbox.id}"]`);
+                const badge = label.querySelector(".module-badge");
+                const icon = badge.querySelector("i");
+
+                if (checkbox.checked) {
+
+                    label.classList.add("active");
+
+                    badge.classList.remove("bg-secondary");
+                    badge.classList.add("bg-success");
+
+                    icon.classList.remove("fa-times","text-danger");
+                    icon.classList.add("fa-check","text-white");
+
+                } else {
+
+                    label.classList.remove("active");
+
+                    badge.classList.remove("bg-success");
+                    badge.classList.add("bg-secondary");
+
+                    icon.classList.remove("fa-check","text-white");
+                    icon.classList.add("fa-times","text-danger");
+                }
+            }
+
+            // =============================
+            // Checkbox Change
+            // =============================
+            moduleCheckboxes.forEach(cb => {
+                cb.addEventListener("change", function () {
+                    updateModuleUI(this);
+                });
+            });
+
+            // =============================
+            // Role Change
+            // =============================
             roleDropdown.addEventListener('change', function () {
+
                 const roleId = this.value;
 
                 if (!roleId) {
-                    // Reset to initial state when no role selected
-                    moduleCheckboxes.forEach(cb => cb.checked = false);
-                    moduleLabels.forEach(label => label.classList.remove('active'));
+                    moduleCheckboxes.forEach(cb => {
+                        cb.checked = false;
+                        updateModuleUI(cb);
+                    });
                     return;
                 }
 
-                // Show loading state
                 moduleLabels.forEach(label => {
                     label.style.opacity = '0.7';
-                    label.querySelector('.module-icon').innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+                    label.querySelector('.module-icon').innerHTML =
+                        '<i class="fa fa-spinner fa-spin"></i>';
                 });
 
                 fetch(`/Role/GetRolePermissions?roleId=${roleId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        // Reset all checkboxes
-                        moduleCheckboxes.forEach(cb => cb.checked = false);
-                        moduleLabels.forEach(label => label.classList.remove('active'));
+                .then(res => res.json())
+                .then(data => {
 
-                        // Check modules based on response
-                        if (Array.isArray(data)) {
-                            data.forEach(moduleName => {
-                                const checkbox = document.getElementById(moduleName);
-                                const label = document.querySelector(`label[for="${moduleName}"]`);
-                                if (checkbox) {
-                                    checkbox.checked = true;
-                                }
-                                if (label) {
-                                    label.classList.add('active');
-                                }
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error loading role permissions:', error);
-                        showToast('Error', 'Failed to load permissions', 'danger');
-                    })
-                    .finally(() => {
-                        // Restore icons and opacity
-                        moduleLabels.forEach(label => {
-                            label.style.opacity = '1';
-                            label.querySelector('.module-icon').innerHTML = '<i class="fa fa-cube"></i>';
-                        });
+                    moduleCheckboxes.forEach(cb => {
+                        cb.checked = false;
+                        updateModuleUI(cb);
                     });
-            });
 
-            // Toggle active class when module label is clicked
-            moduleLabels.forEach(label => {
-                label.addEventListener('click', function() {
-                    const checkbox = document.querySelector(`#${this.htmlFor}`);
-                    if (checkbox) {
-                        this.classList.toggle('active');
+                    if (Array.isArray(data)) {
+
+                        data.forEach(moduleName => {
+
+                            const checkbox = document.getElementById(moduleName);
+
+                            if (checkbox) {
+                                checkbox.checked = true;
+                                updateModuleUI(checkbox);
+                            }
+
+                        });
                     }
+
+                })
+                .catch(err => {
+                    console.error(err);
+                    showToast('Error','Failed to load permissions','danger');
+                })
+                .finally(() => {
+
+                    moduleLabels.forEach(label => {
+                        label.style.opacity = '1';
+                        label.querySelector('.module-icon').innerHTML =
+                            '<i class="fa fa-cube"></i>';
+                    });
+
                 });
+
             });
 
-            // Select All functionality
+            // =============================
+            // Select All
+            // =============================
             selectAllBtn.addEventListener('click', function() {
-                moduleCheckboxes.forEach(cb => cb.checked = true);
-                moduleLabels.forEach(label => label.classList.add('active'));
+
+                moduleCheckboxes.forEach(cb => {
+                    cb.checked = true;
+                    updateModuleUI(cb);
+                });
+
             });
 
-            // Deselect All functionality
+            // =============================
+            // Deselect All
+            // =============================
             deselectAllBtn.addEventListener('click', function() {
-                moduleCheckboxes.forEach(cb => cb.checked = false);
-                moduleLabels.forEach(label => label.classList.remove('active'));
+
+                moduleCheckboxes.forEach(cb => {
+                    cb.checked = false;
+                    updateModuleUI(cb);
+                });
+
             });
 
-            // Form validation
+            // =============================
+            // Form Validation
+            // =============================
             const form = document.querySelector('.needs-validation');
+
             form.addEventListener('submit', function(event) {
+
                 if (!form.checkValidity()) {
+
                     event.preventDefault();
                     event.stopPropagation();
+
                 } else {
-                    const checkedCount = document.querySelectorAll('.module-checkbox:checked').length;
+
+                    const checkedCount =
+                        document.querySelectorAll('.module-checkbox:checked').length;
+
                     if (checkedCount === 0) {
+
                         event.preventDefault();
-                        showToast('Warning', 'Please select at least one module', 'warning');
+                        showToast('Warning','Please select at least one module','warning');
+
                     }
+
                 }
+
                 form.classList.add('was-validated');
+
             });
 
-            function showToast(title, message, type = 'info') {
-                // Simple toast notification implementation
+            // =============================
+            // Toast
+            // =============================
+            function showToast(title,message,type='info') {
+
                 const toast = document.createElement('div');
-                toast.className = `toast show position-fixed bottom-0 end-0 m-3 bg-${type} text-white`;
+
+                toast.className =
+                    `toast show position-fixed bottom-0 end-0 m-3 bg-${type} text-white`;
+
                 toast.style.zIndex = '1050';
+
                 toast.innerHTML = `
-                    <div class="toast-header bg-${type} text-white">
-                        <strong class="me-auto">${title}</strong>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
-                    </div>
-                    <div class="toast-body">
-                        ${message}
-                    </div>
-                `;
+                <div class="toast-header bg-${type} text-white">
+                    <strong class="me-auto">${title}</strong>
+                    <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">${message}</div>`;
+
                 document.body.appendChild(toast);
 
-                setTimeout(() => {
-                    toast.remove();
-                }, 3000);
+                setTimeout(() => toast.remove(), 3000);
             }
+
         });
     </script>
 }
