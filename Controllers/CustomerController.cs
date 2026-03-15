@@ -106,6 +106,67 @@ namespace GSoftPosNew.Controllers
 
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateCustomerFromPOSTouch(Customer model, IFormFile? PictureFile)
+        {
+            // Save to database
+            try
+            {
+                
+
+                _context.Customers.Add(model);
+                _context.SaveChanges();
+
+                if (model.UserName != null && model.Password != null)
+                {
+                    var hashPassword = _passwordHasher.HashPassword(model.Password);
+
+                    var user = new User
+                    {
+                        CustomerId = model.Id,
+                        FullName = model.CustomerName,
+                        Username = model.UserName,
+                        PasswordHash = hashPassword,
+                        Role = "Customer",
+                        IsActive = false,
+                        EmailConfirmed = false,
+                    };
+
+                    _context.Users.Add(user);
+
+                    await _context.SaveChangesAsync();
+                }
+
+
+                var payment = new CustomerPayment
+                    {
+                        CustomerId = model.Id,
+                        ReceivedBy = "System", // or current user
+                        Amount = 0, // no cash received
+                        Advance = 0,
+                        PaymentMethod = "Opening Balance",
+                        Narration = "Opening balance credited to account",
+                        PaymentDate = DateTime.Now,
+                        Remaining = model.OpeningBalance ?? 0 // starting credit balance
+                    };
+
+                    _context.CustomerPayments.Add(payment);
+                    _context.SaveChanges();
+               
+
+                // Correct redirect to POSTouch action in Sale controller
+                return RedirectToAction("POSTouch", "Sales");
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Save failed: " + (ex.InnerException?.Message ?? ex.Message);
+                LoadCustomerList();
+                return View(model);
+            }
+
+        }
+
 
         // ---------- EDIT (GET) ----------
         [HttpGet]

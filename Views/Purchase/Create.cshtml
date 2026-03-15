@@ -254,21 +254,18 @@
 
         /* Suggestions */
         .barcode-suggestion-box {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            width: 600px; /* set exact width */
+            position: fixed; /* attach to screen */
+            top: 0; /* start from top of screen */
+            right: 0;
+            width: 500px;
             background: #fff;
             border: 1px solid #c3d6f1;
-            z-index: 1000;
-            max-height: 330px;
+            z-index: 2000;
+            max-height: 100vh; /* full screen height */
             overflow-y: auto;
             box-shadow: 0 6px 16px rgba(0,34,85,.14);
             display: none;
-            border-radius: 10px;
-            margin-top: 6px;
         }
-
 
         .barcode-suggestion-item {
             padding: 10px 12px;

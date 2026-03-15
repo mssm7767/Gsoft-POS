@@ -1279,6 +1279,48 @@
         position: relative;
         z-index: 1002; /* FRONT layer → interactable */
     }
+
+    .floating-modal {
+        display: none; /* hidden by default */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5); /* semi-transparent background */
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .floating-card {
+        background: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        width: 350px;
+        max-width: 90%;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @@keyframes fadeIn {
+        from
+
+    {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    }
+
+    .floating-card .form-control {
+        margin-bottom: 10px;
+    }
 </style>
 
 
@@ -1612,29 +1654,25 @@
         </div>
     </div>
 
-    <!-- Modal -->
-    <div class="modal fade" id="customerModal" tabindex="-1" aria-labelledby="customerModalLabel">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="customerForm">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="customerModalLabel">Add Customer</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="text" class="form-control mb-2" placeholder="Full Name" id="fullName" required>
-                        <input type="text" class="form-control mb-2" placeholder="Contact Number" id="contactNumber" required>
-                        <textarea class="form-control" placeholder="Address" id="address" rows="2"></textarea>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Add Customer</button>
-                    </div>
-                </form>
+    
+</div>
+
+<!-- Floating Customer Form -->
+<div id="floatingCustomerForm" class="floating-modal">
+    <div class="floating-card">
+        <h5>Add Customer</h5>
+        <form asp-action="CreateCustomerFromPOSTouch" asp-controller="Customer" id="customerForm">
+            <input type="text" name="CustomerName" class="form-control" placeholder="Full Name" id="fullName" required>
+            <input type="text" name="ContactNumber" class="form-control" placeholder="Contact Number" id="contactNumber" required>
+            <textarea name="Address1" class="form-control" placeholder="Address" id="address" rows="2"></textarea>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="closeFloatingForm">Cancel</button>
+                <button type="submit" class="btn btn-primary">Add Customer</button>
             </div>
-        </div>
+        </form>
     </div>
 </div>
+
 
 <script>
     $(document).ready(function() {
@@ -1667,11 +1705,30 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         const addCustomerBtn = document.getElementById('addCustomerBtn');
-        const customerModalEl = document.getElementById('customerModal');
-        const customerModal = new bootstrap.Modal(customerModalEl);
+        const floatingForm = document.getElementById('floatingCustomerForm');
+        const closeBtn = document.getElementById('closeFloatingForm');
 
         addCustomerBtn.addEventListener('click', () => {
-            customerModal.show();
+            floatingForm.style.display = 'flex'; // show overlay
+        });
+
+        closeBtn.addEventListener('click', () => {
+            floatingForm.style.display = 'none'; // hide overlay
+        });
+
+        // Optional: close when clicking outside the card
+        floatingForm.addEventListener('click', (e) => {
+            if (e.target === floatingForm) {
+                floatingForm.style.display = 'none';
+            }
+        });
+
+        // Submit event
+        document.getElementById('customerForm').addEventListener('submit', function(e) {
+            // e.preventDefault();
+            // // handle your form submission here
+            // alert('Customer added: ' + document.getElementById('fullName').value);
+            floatingForm.style.display = 'none'; // hide after submit
         });
     });
 </script>
