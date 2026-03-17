@@ -1581,6 +1581,35 @@
         return true;
     }
 
+    function checkSalePrice(item) {
+
+        if (item.SalePrice < item.PurchasePrice) {
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Low Sale Price',
+                html: `
+                    <div style="font-size:14px;">
+                        The <b>Sale Price</b> is lower than the <b>Purchase Price</b>.<br><br>
+                        This may cause a <b>loss on this item</b>.<br><br>
+
+                        To fix it, edit the item from
+                        <a href="/Item/Add?itemCode=${item.ItemCode}"
+                           style="color:#0d6efd;font-weight:600;text-decoration:underline;">
+                           Item Edit
+                        </a>
+                    </div>
+                `,
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#f39c12'
+            });
+
+            return false;
+        }
+
+        return true;
+    }
+
     function selectItemSuggestion(i) {
 
         if (i < 0 || i >= filtered.length) return;
@@ -1588,6 +1617,10 @@
         const item = filtered[i];
 
         if (!checkStockBeforeAdd(item)) {
+            resetItemUI();
+            return;
+        }
+        if (!checkSalePrice(item)) {
             resetItemUI();
             return;
         }
@@ -2174,7 +2207,9 @@
         }
 
         // ✅ after successful save -> new invoice generate (allowed)
-        handleNewInvoice(true);
+        // handleNewInvoice(true);
+
+        window.location.reload();
 
       } catch (e) {
         console.error(e);
@@ -2426,7 +2461,7 @@
     function generateInvoiceNumber() {
         const date = new Date().toISOString().slice(0, 10);
         const random = Math.floor(Math.random() * 1000);
-        return `INV-${date}-${random}`;
+        return `@ViewBag.NextInvoice`;
     }
 
     /* ✅ F12 FIX inside handleNewInvoice */

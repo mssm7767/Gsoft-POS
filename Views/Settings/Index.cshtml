@@ -10,7 +10,7 @@
     <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="~/lib/fontawesome/css/all.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-
+    <link href="~/lib/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
 
     <style>
         :root {
@@ -269,17 +269,22 @@
     <div class="page-wrap">
 
         <!-- Top header -->
-        <div class="page-head card-lite">
+        <div class="page-head card-lite d-flex align-items-center justify-content-between">
             <div class="title"><i class="fa-solid fa-sliders"></i> Shop Settings</div>
-            <div class="actions">
-                <div class="text-end d-flex justify-content-end gap-2">
-                    <button type="button" id="btnServiceCharges" class="btn btn-primary d-flex align-items-center gap-2 shadow-sm px-3 py-2 rounded-pill"
-                       style="background: linear-gradient(135deg, #0066ff, #0099ff); border:none;">
-                        <i class="fa-solid fa-screwdriver-wrench"></i>
-                        <span class="fw-semibold">Service Charges</span>
-                    </button>
 
-                </div>
+            <div class="actions d-flex align-items-center gap-2">
+                <!-- Service Charges Button -->
+                <button type="button" id="btnServiceCharges" class="btn btn-primary d-flex align-items-center gap-2 shadow-sm px-3 py-2 rounded-pill"
+                        style="background: linear-gradient(135deg, #0066ff, #0099ff); border:none;">
+                    <i class="fa-solid fa-screwdriver-wrench"></i>
+                    <span class="fw-semibold">Service Charges</span>
+                </button>
+
+                <!-- End Day Button -->
+                <button id="endDayBtn" class="btn btn-danger d-flex align-items-center gap-2 shadow-sm px-3 py-2 rounded-pill">
+                    <i class="fa-solid fa-calendar-check"></i>
+                    <span class="fw-semibold">End Day</span>
+                </button>
             </div>
         </div>
 
@@ -480,8 +485,31 @@
 
     <!-- Bootstrap JS (optional for components) -->
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-
+    <script src="~/lib/sweetalert2/sweetalert2.min.js"></script>
     <script>
+        document.getElementById("endDayBtn").addEventListener("click", function () {
+            Swal.fire({
+                title: 'End Day?',
+                text: 'All new invoices will stop for today.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, End Day',
+                confirmButtonColor: '#d33'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/Settings/EndDay', { method: 'POST' })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire('Done', data.message, 'success');
+                            } else {
+                                Swal.fire('Error', data.message, 'error');
+                            }
+                        });
+                }
+            });
+        });
+
         document.getElementById("btnServiceCharges").addEventListener("click", function () {
             const sec = document.getElementById("serviceChargesSection");
 

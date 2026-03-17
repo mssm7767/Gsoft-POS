@@ -13,13 +13,16 @@ namespace GSoftPosNew.Controllers
         private readonly AppDbContext _context;
         private readonly IWebHostEnvironment _environment;
         private readonly DatabaseResetService _dbResetService;
+        private readonly InvoiceService _invoiceService;
 
 
-        public SettingsController(AppDbContext context, IWebHostEnvironment environment, DatabaseResetService dbResetService)
+        public SettingsController(AppDbContext context, IWebHostEnvironment environment, DatabaseResetService dbResetService, InvoiceService invoiceService)
         {
             _context = context;
             _environment = environment;
             _dbResetService = dbResetService;
+            _invoiceService = invoiceService;
+
         }
 
         [HttpGet]
@@ -28,6 +31,20 @@ namespace GSoftPosNew.Controllers
             var settings = await _context.ShopSettings.OrderByDescending(s => s.Id).FirstOrDefaultAsync() ?? new ShopSetting();
 
             return View(settings);
+        }
+
+        [HttpPost]
+        public IActionResult EndDay()
+        {
+            try
+            {
+                _invoiceService.EndDay();  // Call your service method
+                return Json(new { success = true, message = "Day closed successfully." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpPost]

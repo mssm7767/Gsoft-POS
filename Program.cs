@@ -22,6 +22,7 @@ builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<DatabaseResetService>();
 builder.Services.AddScoped<LicenseService>();
+builder.Services.AddScoped<InvoiceService>();
 
 
 // Identity Password Hasher Registration

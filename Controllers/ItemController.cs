@@ -36,8 +36,11 @@ namespace GSoftPosNew.Controllers
         // ✅ ADD (GET)
         // ============================================================
         [HttpGet]
-        public IActionResult Add()
+        public IActionResult Add(string itemCode = "")
         {
+
+            ViewBag.Code = itemCode;
+
             var vm = new AddItemViewModel
             {
                 ItemData = new ItemModel(),
@@ -46,12 +49,12 @@ namespace GSoftPosNew.Controllers
                 UnitList = GetUnitList(),
                 LocationList = GetLocationList(),
                 ExistingItems = _context.Items
-    .AsNoTracking()
-    .Include(x => x.Category)
-    .Include(x => x.Supplier)
-    .OrderByDescending(x => x.Id)
-    .Take(15)
-    .ToList()
+                .AsNoTracking()
+                .Include(x => x.Category)
+                .Include(x => x.Supplier)
+                .OrderByDescending(x => x.Id)
+                .Take(15)
+                .ToList()
 
             };
 

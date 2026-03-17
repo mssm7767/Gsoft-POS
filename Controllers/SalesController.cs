@@ -1,5 +1,6 @@
 ﻿using GSoftPosNew.Data;
 using GSoftPosNew.Models;
+using GSoftPosNew.Services;
 using GSoftPosNew.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -15,11 +16,14 @@ namespace GSoftPosNew.Controllers
     {
         private readonly AppDbContext _context;
         private readonly ICompositeViewEngine _viewEngine;
+        private readonly InvoiceService _invoiceService;
 
-        public SalesController(AppDbContext context, ICompositeViewEngine viewEngine)
+        public SalesController(AppDbContext context, ICompositeViewEngine viewEngine, InvoiceService invoiceService)
         {
             _context = context;
             _viewEngine = viewEngine;
+            _invoiceService = invoiceService;
+
         }
 
         public async Task<IActionResult> Index(DateTime? fromDate, DateTime? toDate, string search, int customerId)
@@ -100,11 +104,11 @@ namespace GSoftPosNew.Controllers
                 string currentInvoice = previous.Trim();
                 var parts = currentInvoice.Split('-');
 
-                if (parts.Length == 3)
+                if (parts.Length == 5)
                 {
                     string prefix = parts[0];       // INV
-                    string datePart = parts[1];     // 20260220
-                    string numberPart = parts[2];   // 0001
+                    string datePart = parts[1] + "-" + parts[2] + "-" + parts[3];     // 20260220
+                    string numberPart = parts[4];   // 0001
 
                     if (int.TryParse(numberPart, out int numericPart))
                     {
@@ -227,9 +231,33 @@ namespace GSoftPosNew.Controllers
                 .Select(s => s.InvoiceNumber)
                 .FirstOrDefault();
 
-            ViewBag.InvoiceLastDigits = !string.IsNullOrEmpty(saleInvNo) && saleInvNo.Length >= 4
-                ? saleInvNo.Substring(saleInvNo.Length - 4)
-                : "0000";
+            var today = DateTime.Today;
+
+            // Try to get today's invoice sequence
+            var sequence = _context.InvoiceSequences.FirstOrDefault(x => x.Date == today);
+
+            // If no sequence exists OR today’s sequence is closed → start new day
+            if (sequence == null)
+            {
+                sequence = new InvoiceSequence
+                {
+                    Date = today,
+                    LastNumber = 0,   // start from 0001
+                    IsClosed = false
+                };
+
+                _context.InvoiceSequences.Add(sequence);
+                _context.SaveChanges();
+            }
+
+            // Increment last number
+            sequence.LastNumber++;
+
+            // Format: INV-MM-dd-yyyy-0001
+            string datePart1 = today.ToString("MM-dd-yyyy");
+            string numberPart1 = sequence.LastNumber.ToString("D4");
+
+            ViewBag.NextInvoice = $"INV-{datePart1}-{numberPart1}";
 
             ViewBag.ShopName = _context.ShopSettings
                 .OrderByDescending(s => s.Id)
@@ -595,8 +623,8 @@ namespace GSoftPosNew.Controllers
 
             try
             {
-                if (string.IsNullOrEmpty(sale.InvoiceNumber))
-                    sale.InvoiceNumber = GenerateInvoiceNumber();
+                // Generate invoice number safely
+                
 
                 sale.SaleDate = DateTime.Now;
                 sale.CashierId = User.Identity?.Name ?? "Unknown";
@@ -723,6 +751,8 @@ namespace GSoftPosNew.Controllers
 
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
+
+                    _invoiceService.GenerateInvoiceNumber();
 
                     return Ok(new
                     {
@@ -880,6 +910,8 @@ namespace GSoftPosNew.Controllers
 
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
+
+                    _invoiceService.GenerateInvoiceNumber();
 
                     return Ok(new
                     {
@@ -1334,9 +1366,7 @@ namespace GSoftPosNew.Controllers
 
             try
             {
-                if (string.IsNullOrEmpty(sale.InvoiceNumber))
-                    sale.InvoiceNumber = GenerateInvoiceNumber();
-
+                
                 sale.SaleDate = DateTime.Now;
                 sale.CashierId = User.Identity?.Name ?? "Unknown";
                 sale.Id = 0;
@@ -1461,6 +1491,8 @@ namespace GSoftPosNew.Controllers
 
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
+
+                    _invoiceService.GenerateInvoiceNumber();
 
                     return Ok(new
                     {
@@ -1620,6 +1652,8 @@ namespace GSoftPosNew.Controllers
 
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
+
+                    _invoiceService.GenerateInvoiceNumber();
 
                     return Ok(new
                     {

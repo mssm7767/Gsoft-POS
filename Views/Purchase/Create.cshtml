@@ -1197,7 +1197,7 @@
                 }
 
                 suggestionBox.style.display = "block";
-                currentList = list.slice(0, 20);
+                currentList = list;
                 activeIndex = 0;
 
                 currentList.forEach((item, index) => {
@@ -1244,16 +1244,20 @@
             /* ===== Exact + Smart Ordering ===== */
             function buildSuggestionList(term) {
 
-                const q = term.toLowerCase();
+                const q = term.trim().toLowerCase();
 
                 const exact = itemsFromDb.find(x =>
                     String(x.ItemCode || "").toLowerCase() === q
                 );
 
-                const matches = itemsFromDb.filter(x =>
-                    String(x.ItemCode || "").toLowerCase().includes(q) ||
-                    String(x.ItemName || "").toLowerCase().includes(q)
-                );
+                const matches = itemsFromDb.filter(item => {
+                    const name = String(item.ItemName || "").toLowerCase();
+                    const code = String(item.ItemCode || "").toLowerCase();
+
+                    return name.includes(q) || code.includes(q);
+                });
+
+                console.log(matches.length); // correct way to get count
 
                 if (exact) {
                     const withoutExact = matches.filter(x => x !== exact);
