@@ -1,4 +1,7 @@
-﻿using GSoftPosNew.Data;
+﻿using GSoftPosNew.Services.Printing;
+using System.Drawing.Printing;
+using System.Text;
+using GSoftPosNew.Data;
 using GSoftPosNew.Models;
 using GSoftPosNew.Services;
 using GSoftPosNew.ViewModels;
@@ -7,7 +10,6 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using System.Text.Json;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace GSoftPosNew.Controllers
@@ -183,20 +185,26 @@ namespace GSoftPosNew.Controllers
                 string currentInvoice = next.Trim();
                 var parts = currentInvoice.Split('-');
 
-                if (parts.Length == 3 && int.TryParse(parts[2], out int numberPart))
+                if (parts.Length == 5)
                 {
-                    numberPart++;
-
-                    string newInvoice =
-                        $"{parts[0]}-{parts[1]}-{numberPart.ToString("D4")}";
-
-                    sale = _context.Sales
-                        .FirstOrDefault(s => s.InvoiceNumber == newInvoice);
-
-                    // If next invoice does not exist → get FIRST invoice
-                    if (sale == null)
+                    string prefix = parts[0];       // INV
+                    string datePart = parts[1] + "-" + parts[2] + "-" + parts[3];     // 20260220
+                    string numberPart = parts[4];
+                    if (int.TryParse(numberPart, out int numericPart))
                     {
-                        sale = new Sale();
+                        numericPart++;
+
+                        string newInvoice =
+                                $"{prefix}-{datePart}-{numericPart.ToString("D4")}";
+
+                        sale = _context.Sales
+                            .FirstOrDefault(s => s.InvoiceNumber == newInvoice);
+
+                        // If next invoice does not exist → get FIRST invoice
+                        if (sale == null)
+                        {
+                            sale = new Sale();
+                        }
                     }
                 }
             }
@@ -230,34 +238,6 @@ namespace GSoftPosNew.Controllers
                 .OrderByDescending(s => s.Id)
                 .Select(s => s.InvoiceNumber)
                 .FirstOrDefault();
-
-            var today = DateTime.Today;
-
-            // Try to get today's invoice sequence
-            var sequence = _context.InvoiceSequences.FirstOrDefault(x => x.Date == today);
-
-            // If no sequence exists OR today’s sequence is closed → start new day
-            if (sequence == null)
-            {
-                sequence = new InvoiceSequence
-                {
-                    Date = today,
-                    LastNumber = 0,   // start from 0001
-                    IsClosed = false
-                };
-
-                _context.InvoiceSequences.Add(sequence);
-                _context.SaveChanges();
-            }
-
-            // Increment last number
-            sequence.LastNumber++;
-
-            // Format: INV-MM-dd-yyyy-0001
-            string datePart1 = today.ToString("MM-dd-yyyy");
-            string numberPart1 = sequence.LastNumber.ToString("D4");
-
-            ViewBag.NextInvoice = $"INV-{datePart1}-{numberPart1}";
 
             ViewBag.ShopName = _context.ShopSettings
                 .OrderByDescending(s => s.Id)
@@ -599,11 +579,16 @@ namespace GSoftPosNew.Controllers
 
 
 
+                bool printSuccess = PrintReceiptToDefaultPrinter(existingSale.Id, out string printError);
+
                 return Ok(new
                 {
-                    existingSale.Id,
-                    existingSale.InvoiceNumber,
-                    ReceiptUrl = Url.Action("Receipt", "Sales", new { id = existingSale.Id })
+                    id = existingSale.Id,
+                    invoiceNumber = existingSale.InvoiceNumber,
+                    printSuccess = printSuccess,
+                    Message = printSuccess
+                        ? "Sale updated and printed successfully"
+                        : $"Sale updated but print failed: {printError}"
                 });
             }
 
@@ -754,12 +739,16 @@ namespace GSoftPosNew.Controllers
 
                     _invoiceService.GenerateInvoiceNumber();
 
+                    bool printSuccess = PrintReceiptToDefaultPrinter(sale.Id, out string printError);
+
                     return Ok(new
                     {
-                        sale.Id,
-                        sale.InvoiceNumber,
-                        ReceiptUrl = Url.Action("Receipt", "Sales", new { id = sale.Id }),
-                        Message = "Sale saved successfully"
+                        id = sale.Id,
+                        invoiceNumber = sale.InvoiceNumber,
+                        printSuccess = printSuccess,
+                        Message = printSuccess
+                            ? "Return sale saved and printed successfully"
+                            : $"Return sale saved but print failed: {printError}"
                     });
                 }
                 else
@@ -913,12 +902,16 @@ namespace GSoftPosNew.Controllers
 
                     _invoiceService.GenerateInvoiceNumber();
 
+                    bool printSuccess = PrintReceiptToDefaultPrinter(sale.Id, out string printError);
+
                     return Ok(new
                     {
-                        sale.Id,
-                        sale.InvoiceNumber,
-                        ReceiptUrl = Url.Action("Receipt", "Sales", new { id = sale.Id }),
-                        Message = "Sale saved successfully"
+                        id = sale.Id,
+                        invoiceNumber = sale.InvoiceNumber,
+                        printSuccess = printSuccess,
+                        Message = printSuccess
+                       ? "Sale saved and printed successfully"
+                       : $"Sale saved but print failed: {printError}"
                     });
                 }
 
@@ -928,6 +921,87 @@ namespace GSoftPosNew.Controllers
                 await transaction.RollbackAsync();
                 var errorMessage = ex.InnerException?.Message ?? ex.Message;
                 return StatusCode(500, "Error saving sale: " + errorMessage);
+            }
+        }
+
+        private string GetDefaultPrinterName()
+        {
+            PrinterSettings settings = new PrinterSettings();
+            return settings.PrinterName;
+        }
+
+        private string BuildReceiptText(int saleId)
+        {
+            var sale = _context.Sales
+                .Include(s => s.Payment)
+                .Include(s => s.SaleItems)
+                .FirstOrDefault(s => s.Id == saleId);
+
+            if (sale == null)
+                return "Sale not found";
+
+            var shop = _context.ShopSettings
+                .OrderByDescending(x => x.Id)
+                .FirstOrDefault();
+
+            var sb = new StringBuilder();
+
+            sb.AppendLine(shop?.ShopName ?? "GSoft POS");
+            sb.AppendLine("--------------------------------");
+            sb.AppendLine("Invoice: " + (sale.InvoiceNumber ?? ""));
+            sb.AppendLine("Date: " + sale.SaleDate.ToString("dd-MM-yyyy hh:mm tt"));
+            sb.AppendLine("Cashier: " + (sale.CashierId ?? ""));
+            sb.AppendLine("--------------------------------");
+
+            foreach (var si in sale.SaleItems)
+            {
+                var itemName = _context.Items
+                    .Where(i => i.Id == si.ItemId)
+                    .Select(i => i.ItemName)
+                    .FirstOrDefault() ?? "Item";
+
+                sb.AppendLine(itemName);
+                sb.AppendLine($"{si.Quantity} x {si.UnitPrice:0.##} = {si.LineTotal:0.##}");
+            }
+
+            sb.AppendLine("--------------------------------");
+            sb.AppendLine($"Sub Total : {sale.SubTotal:0.##}");
+            sb.AppendLine($"Discount  : {sale.Discount:0.##}");
+            sb.AppendLine($"Tax       : {sale.Tax:0.##}");
+            sb.AppendLine($"Total     : {sale.Total:0.##}");
+            sb.AppendLine("--------------------------------");
+            sb.AppendLine("Thank you");
+            sb.AppendLine();
+            sb.AppendLine();
+            sb.AppendLine();
+
+            return sb.ToString();
+        }
+
+        private bool PrintReceiptToDefaultPrinter(int saleId, out string errorMessage)
+        {
+            errorMessage = "";
+
+            try
+            {
+                string printerName = GetDefaultPrinterName();
+
+                if (string.IsNullOrWhiteSpace(printerName))
+                {
+                    errorMessage = "Default printer not found.";
+                    return false;
+                }
+
+                string receiptText = BuildReceiptText(saleId);
+
+                RawPrinterHelper.SendStringToPrinter(printerName, receiptText);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                errorMessage = ex.Message;
+                return false;
             }
         }
 
@@ -2024,7 +2098,60 @@ namespace GSoftPosNew.Controllers
             return View(vmList);
         }
 
-        
+        [HttpGet]
+        public IActionResult GetNextInvoice()
+        {
+            var today = DateTime.Today;
+
+            // 🔍 Get last sequence (latest by date)
+            var lastSequence = _context.InvoiceSequences
+                .OrderByDescending(x => x.Date)
+                .FirstOrDefault();
+
+            // 🔴 If last sequence exists, is from previous day, and NOT closed → block
+            if (lastSequence != null
+                && lastSequence.Date < today
+                && lastSequence.IsClosed == false)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = $"Previous day ({lastSequence.Date:MM-dd-yyyy}) is not closed. Please close it first."
+                });
+            }
+
+            // 🔍 Get today's sequence
+            var sequence = _context.InvoiceSequences
+                .FirstOrDefault(x => x.Date == today);
+
+            // ✅ Create new if not exists
+            if (sequence == null)
+            {
+                sequence = new InvoiceSequence
+                {
+                    Date = today,
+                    LastNumber = 0,
+                    IsClosed = false
+                };
+
+                _context.InvoiceSequences.Add(sequence);
+                _context.SaveChanges();
+            }
+
+            // ✅ Generate invoice
+            sequence.LastNumber++;
+
+            string datePart = today.ToString("MM-dd-yyyy");
+            string numberPart = sequence.LastNumber.ToString("D4");
+
+            var invoice = $"INV-{datePart}-{numberPart}";
+
+            return Json(new
+            {
+                success = true,
+                invoice = invoice
+            });
+        }
 
         private string GenerateInvoiceNumber()
         {

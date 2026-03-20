@@ -36,15 +36,47 @@ namespace GSoftPosNew.Controllers
         [HttpPost]
         public IActionResult EndDay()
         {
-            try
+            var today = DateTime.Today;
+
+            // 🔍 Get latest sequence
+            var sequence = _context.InvoiceSequences
+                .OrderByDescending(x => x.Date)
+                .FirstOrDefault();
+
+            if (sequence == null)
             {
-                _invoiceService.EndDay();  // Call your service method
-                return Json(new { success = true, message = "Day closed successfully." });
+                return Json(new { success = false, message = "No sequence found." });
             }
-            catch (Exception ex)
+
+            // 🔴 Only allow closing if it's a previous day
+            if (today <= sequence.Date)
             {
-                return Json(new { success = false, message = ex.Message });
+                return Json(new
+                {
+                    success = false,
+                    message = "You can only close previous days."
+                });
             }
+
+            // 🔴 Already closed check
+            if (sequence.IsClosed)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Day is already closed."
+                });
+            }
+
+            // ✅ Close day
+            sequence.IsClosed = true;
+            _context.SaveChanges();
+
+            return Json(new
+            {
+                success = true,
+                message = $"Day {sequence.Date:MM-dd-yyyy} closed successfully."
+            });
         }
 
         [HttpPost]
