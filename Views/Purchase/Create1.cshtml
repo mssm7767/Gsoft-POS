@@ -6,7 +6,7 @@
     //ViewData["Title"] = "Add Purchase";
     //Layout = "~/Views/Shared/_Layout.cshtml";
     var items = ViewBag.Items as IEnumerable<ItemModel>;
-     var itemsJson = items != null ? JsonSerializer.Serialize(items) : "[]";
+    var itemsJson = items != null ? JsonSerializer.Serialize(items) : "[]";
     //var itemsJson = Model.ProductItems;
     //var itemsJson = JsonSerializer.Serialize(safeModel);
 }

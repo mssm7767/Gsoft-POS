@@ -487,27 +487,65 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/lib/sweetalert2/sweetalert2.min.js"></script>
     <script>
-        document.getElementById("endDayBtn").addEventListener("click", function () {
-            Swal.fire({
+                document.getElementById("endDayBtn").addEventListener("click", async function () {
+            const btn = this;
+
+            // Step 1: Ask confirmation
+            const result = await Swal.fire({
                 title: 'End Day?',
-                text: 'All new invoices will stop for today.',
+                text: 'All new invoices will stop for this day.',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonText: 'Yes, End Day',
+                cancelButtonText: 'Cancel',
                 confirmButtonColor: '#d33'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    fetch('/Settings/EndDay', { method: 'POST' })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) {
-                                Swal.fire('Done', data.message, 'success');
-                            } else {
-                                Swal.fire('Error', data.message, 'error');
-                            }
-                        });
-                }
             });
+
+            if (!result.isConfirmed) return;
+
+            // Step 2: Disable button to prevent double-click
+            btn.disabled = true;
+
+            try {
+                // Optional: Include Anti-forgery token if needed
+                const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+                const headers = tokenInput
+                    ? { 'RequestVerificationToken': tokenInput.value }
+                    : {};
+
+                // Step 3: Call EndDay API
+                const response = await fetch('/Settings/EndDay', {
+                    method: 'POST',
+                    headers: headers
+                });
+
+                const data = await response.json();
+
+                // Step 4: Show SweetAlert message
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Day Closed',
+                        text: data.message
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Cannot Close Day',
+                        text: data.message
+                    });
+                }
+
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Something went wrong while closing the day.'
+                });
+                console.error(error);
+            } finally {
+                btn.disabled = false; // Re-enable button
+            }
         });
 
         document.getElementById("btnServiceCharges").addEventListener("click", function () {

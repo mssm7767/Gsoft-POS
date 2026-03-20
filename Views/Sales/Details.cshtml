@@ -4,6 +4,13 @@
 @{
     ViewData["Title"] = "Sale Details";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    decimal invoiceProfit = 0m;
+
+    if (Model?.Items != null && Model.Items.Any())
+    {
+        invoiceProfit = Model.Items.Sum(x => x.LineTotal - (x.PurchasePrice * x.Quantity));
+    }
 }
 
 <style>
@@ -249,13 +256,22 @@
                                 <span class="totals-label">Subtotal</span>
                                 <span>@Model.SubTotal.ToString("C", new CultureInfo("ur-PK"))</span>
                             </div>
+
                             <div class="totals-row">
                                 <span class="totals-label">Tax</span>
                                 <span>@Model.Tax.ToString("C", new CultureInfo("ur-PK"))</span>
                             </div>
+
                             <div class="totals-row">
                                 <span class="totals-label">Discount</span>
                                 <span>- @Model.Discount.ToString("C", new CultureInfo("ur-PK"))</span>
+                            </div>
+
+                            <div class="totals-row">
+                                <span class="totals-label">Profit</span>
+                                <span class="fw-bold @(invoiceProfit < 0 ? "text-danger" : "text-success")">
+                                    @invoiceProfit.ToString("C", new CultureInfo("ur-PK"))
+                                </span>
                             </div>
 
                             <hr class="my-2" />

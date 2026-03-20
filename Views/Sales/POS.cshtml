@@ -86,6 +86,21 @@
             overflow: auto;
         }
 
+    body.gsoft-expanded-body {
+        overflow: hidden;
+    }
+
+    #posShell.gsoft-expanded {
+        position: fixed;
+        inset: 0;
+        background: var(--bg);
+        padding: 8px;
+        width: 100vw;
+        height: 100vh;
+        overflow: auto;
+        z-index: 9998;
+    }
+
     .pos-header {
         background: linear-gradient(135deg,var(--brand) 0%, var(--brand-2) 100%);
         border-radius: 16px;
@@ -413,6 +428,38 @@
             border-color: #3b82f6;
             color: #1d4ed8;
             background: #e0f2fe;
+        }
+
+    /* ADDED: Denomination pill style */
+    .denom-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .4rem;
+        border: 1px solid #dee2e6;
+        border-radius: 40px;
+        padding: .6rem 1.2rem;
+        cursor: pointer;
+        user-select: none;
+        color: #0f172a;
+        background: #ffffff;
+        font-weight: 700;
+        transition: all .15s;
+        min-width: 80px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+        .denom-pill:hover {
+            background: #f1f5f9;
+            border-color: #adb5bd;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.04);
+        }
+
+        .denom-pill:active {
+            background: #e9ecef;
+            transform: translateY(0);
+            box-shadow: none;
         }
 
     .actions .btn {
@@ -872,6 +919,375 @@
     body.disc-mode-amount .disc-amount-wrap {
         display: inline-flex !important;
     }
+
+    /* =========================
+           MODERN TAKE PAYMENT MODAL
+           ========================= */
+
+    .payment-modal {
+        background: #ffffff;
+        border-radius: 24px;
+        box-shadow: 0 40px 100px rgba(2,6,23,.30);
+        width: 920px;
+        max-width: 96vw;
+        max-height: 96vh;
+        overflow-y: auto;
+        border: 1px solid #dbeafe;
+    }
+
+        .payment-modal .titlebar {
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            color: #0f172a;
+            border-radius: 24px 24px 0 0;
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #dbeafe;
+        }
+
+            .payment-modal .titlebar .ttl {
+                font-weight: 900;
+                font-size: 1.2rem;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                color: #0b1324;
+            }
+
+    .payment-body-grid {
+        display: grid;
+        grid-template-columns: 1.15fr .85fr;
+        gap: 18px;
+        padding: 18px;
+    }
+
+    @@media (max-width: 900px) {
+        .payment-body-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .payment-panel {
+        background: #f8fbff;
+        border: 1px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 16px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+    }
+
+    .payment-panel-title {
+        font-weight: 900;
+        font-size: 1rem;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 14px;
+    }
+
+    .payment-summary-card {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: 1px solid #e5e7eb;
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 12px 14px;
+        margin-bottom: 10px;
+    }
+
+        .payment-summary-card .left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #334155;
+            font-weight: 700;
+        }
+
+            .payment-summary-card .left i {
+                width: 34px;
+                height: 34px;
+                border-radius: 10px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                background: #eff6ff;
+                color: #2563eb;
+                font-size: 1rem;
+            }
+
+        .payment-summary-card .right {
+            font-weight: 900;
+            color: #0f172a;
+            font-size: 1rem;
+        }
+
+        .payment-summary-card.total-highlight {
+            background: linear-gradient(135deg,#eff6ff 0%, #f5f3ff 100%);
+            border-color: #bfdbfe;
+        }
+
+            .payment-summary-card.total-highlight .right {
+                font-size: 1.35rem;
+                color: #0f172a;
+            }
+
+    .payment-method-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        border: 1px solid #bfdbfe;
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-weight: 900;
+    }
+
+    .tender-input-wrap {
+        margin-top: 10px;
+    }
+
+    .tender-label {
+        font-weight: 800;
+        color: #475569;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .tender-box {
+        position: relative;
+    }
+
+        .tender-box i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+
+    .tender-big-input {
+        width: 100%;
+        height: 62px;
+        border-radius: 16px;
+        border: 2px solid #dbeafe;
+        background: #fff;
+        padding: 0 16px 0 44px;
+        font-size: 1.4rem;
+        font-weight: 900;
+        color: #0f172a;
+        outline: none;
+        transition: .2s ease;
+    }
+
+        .tender-big-input:focus {
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 .25rem rgba(96,165,250,.18);
+        }
+
+    .quick-notes-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 14px;
+    }
+
+    @@media (max-width: 520px) {
+        .quick-notes-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    .note-btn {
+        border: 1px solid #cbd5e1;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        padding: 12px 10px;
+        text-align: left;
+        min-height: 76px;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+        transition: .18s ease;
+        box-shadow: 0 8px 18px rgba(2,6,23,.05);
+    }
+
+        .note-btn:hover {
+            transform: translateY(-2px);
+            border-color: #93c5fd;
+            box-shadow: 0 12px 24px rgba(59,130,246,.12);
+        }
+
+        .note-btn::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top right, rgba(96,165,250,.14), transparent 32%), radial-gradient(circle at bottom left, rgba(167,139,250,.12), transparent 35%);
+            pointer-events: none;
+        }
+
+    .note-top {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 6px;
+    }
+
+    .note-currency {
+        font-size: .72rem;
+        font-weight: 900;
+        color: #64748b;
+        letter-spacing: .5px;
+    }
+
+    .note-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        background: #ecfeff;
+        color: #0f766e;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .9rem;
+        border: 1px solid #bae6fd;
+    }
+
+    .note-value {
+        position: relative;
+        z-index: 1;
+        font-size: 1.2rem;
+        font-weight: 900;
+        color: #0f172a;
+        line-height: 1.1;
+    }
+
+    .note-sub {
+        position: relative;
+        z-index: 1;
+        font-size: .78rem;
+        color: #64748b;
+        margin-top: 4px;
+        font-weight: 700;
+    }
+
+    .balance-cards {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 14px;
+    }
+
+    .balance-box {
+        border-radius: 16px;
+        padding: 14px;
+        border: 1px solid #e5e7eb;
+        background: #fff;
+    }
+
+        .balance-box .lbl {
+            font-size: .82rem;
+            color: #64748b;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .balance-box .amt {
+            font-size: 1.25rem;
+            font-weight: 900;
+        }
+
+        .balance-box.remaining {
+            background: #fffbeb;
+            border-color: #fde68a;
+        }
+
+            .balance-box.remaining .amt {
+                color: #92400e;
+            }
+
+        .balance-box.change {
+            background: #ecfdf5;
+            border-color: #bbf7d0;
+        }
+
+            .balance-box.change .amt {
+                color: #065f46;
+            }
+
+    .payment-actions-modern {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 0 18px 18px 18px;
+        flex-wrap: wrap;
+    }
+
+        .payment-actions-modern .btn {
+            min-width: 150px;
+            border-radius: 14px;
+            font-weight: 800;
+            padding: 12px 16px;
+        }
+
+    .note-btn {
+        border: 1px solid #cbd5e1;
+        border-radius: 16px;
+        background: #fff;
+        padding: 8px;
+        text-align: center;
+        min-height: 110px;
+        cursor: pointer;
+        transition: .18s ease;
+        box-shadow: 0 8px 18px rgba(2,6,23,.05);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+    }
+
+        .note-btn:hover {
+            transform: translateY(-2px);
+            border-color: #93c5fd;
+            box-shadow: 0 12px 24px rgba(59,130,246,.12);
+        }
+
+    .note-img {
+        width: 100%;
+        max-width: 120px;
+        height: 56px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .note-value {
+        font-size: .95rem;
+        font-weight: 900;
+        color: #0f172a;
+    }
+
+    .note-full-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        height: 100%;
+        width: 100%;
+        font-weight: 900;
+        color: #065f46;
+    }
+
+        .note-full-box i {
+            font-size: 1.5rem;
+        }
 </style>
 
 
@@ -1131,93 +1547,202 @@
         <div id="paymentModalOverlay" class="modal-overlay">
             <div class="payment-modal" id="paymentModalCard" tabindex="-1">
                 <div class="titlebar">
-                    <div class="ttl"><i class="bi bi-wallet2"></i> Take Payment</div>
-                    <button class="btn btn-soft-slate" onclick="closePaymentModal()" title="Close (Esc)"><i class="bi bi-x-lg"></i></button>
+                    <div class="ttl">
+                        <i class="bi bi-wallet2"></i>
+                        Take Payment
+                    </div>
+                    <button class="btn btn-soft-slate" onclick="closePaymentModal()" title="Close (Esc)">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
                 </div>
 
-                <div class="p-3">
-                    <div class="payment-row">
-                        <div class="d-flex align-items-center gap-2"><span class="pill"><i class="bi bi-credit-card-2-front"></i> Method</span></div>
-                        <div id="modalMethod" class="pill"><i class="bi bi-cash"></i> Cash</div>
+                <div class="payment-body-grid">
+                    <!-- LEFT -->
+                    <div class="payment-panel">
+                        <div class="payment-panel-title">
+                            <i class="bi bi-receipt-cutoff"></i>
+                            Payment Summary
+                        </div>
+
+                        <div class="payment-summary-card">
+                            <div class="left">
+                                <i class="bi bi-credit-card-2-front"></i>
+                                <span>Method</span>
+                            </div>
+                            <div class="right">
+                                <span id="modalMethod" class="payment-method-badge">
+                                    <i class="bi bi-cash"></i> Cash
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="payment-summary-card total-highlight">
+                            <div class="left">
+                                <i class="bi bi-cash-stack"></i>
+                                <span>Grand Total</span>
+                            </div>
+                            <div class="right" id="tenderGrandTotal">0.00</div>
+                        </div>
+
+                        <div class="payment-summary-card" id="rowDiscount" style="display:none;">
+                            <div class="left">
+                                <i class="bi bi-patch-minus"></i>
+                                <span>Discount</span>
+                            </div>
+                            <div class="right" id="tenderDiscount">0.00</div>
+                        </div>
+
+                        <div class="payment-summary-card" id="rowTax" style="display:none;">
+                            <div class="left">
+                                <i class="bi bi-receipt"></i>
+                                <span>Tax</span>
+                            </div>
+                            <div class="right" id="tenderTax">0.00</div>
+                        </div>
+                    </div>
+                    <div class="payment-summary-card" id="rowCustomer" style="display:none;">
+                        <div class="left">
+                            <i class="bi bi-person-circle"></i>
+                            <span>Customer</span>
+                        </div>
+                        <div class="right" id="modalCustomerName">Walk-in Customer</div>
                     </div>
 
-                    <div class="payment-row">
-                        <div class="d-flex align-items-center gap-2"><i class="bi bi-cash-stack"></i><span>Grand Total</span></div>
-                        <div id="tenderGrandTotal" class="fw-bold">0.00</div>
+                    <div class="payment-summary-card" id="rowCustomerBalance" style="display:none;">
+                        <div class="left">
+                            <i class="bi bi-wallet"></i>
+                            <span>Customer Balance</span>
+                        </div>
+                        <div class="right" id="modalCustomerBalance">0.00</div>
                     </div>
 
-                    <div class="payment-row" id="rowDiscount" style="display:none;">
-                        <div class="d-flex align-items-center gap-2"><i class="bi bi-patch-minus"></i><span>Discount</span></div>
-                        <div id="tenderDiscount">0.00</div>
-                    </div>
+                    <!-- RIGHT -->
+                    <div class="payment-panel">
+                        <div class="payment-panel-title">
+                            <i class="bi bi-cash-coin"></i>
+                            Receive Amount
+                        </div>
 
-                    <div class="payment-row" id="rowTax" style="display:none;">
-                        <div class="d-flex align-items-center gap-2"><i class="bi bi-receipt"></i><span>Tax</span></div>
-                        <div id="tenderTax">0.00</div>
-                    </div>
+                        <div class="tender-input-wrap">
+                            <label class="tender-label">Enter Payment Amount</label>
+                            <div class="tender-box">
+                                <i class="bi bi-currency-dollar"></i>
+                                <input id="tenderInput" type="number" class="tender-big-input" placeholder="0.00" min="0" step="0.01" />
+                            </div>
+                        </div>
 
-                    <div class="mb-3">
-                        <label class="form-label text-muted"><i class="bi bi-pencil-square"></i> Enter Payment Amount</label>
-                        <input id="tenderInput" type="number" class="form-control" placeholder="Amount" min="0" step="0.01" />
-                    </div>
+                        <div class="quick-notes-grid">
+                            <button type="button" class="note-btn" onclick="setTenderAmount(10)">
+                                <img src="/images/notes/10.jpg" class="note-img" alt="10 note">
+                                <div class="note-value">PKR 10</div>
+                            </button>
 
-                    <div class="payment-row">
-                        <div class="d-flex align-items-center gap-2"><i class="bi bi-hourglass-split"></i><span>Remaining Due</span></div>
-                        <div id="modalRemaining" class="stat-warn fw-bold px-3 py-1 rounded">0.00</div>
-                    </div>
+                            <button type="button" class="note-btn" onclick="setTenderAmount(50)">
+                                <img src="/images/notes/50.jpg" class="note-img" alt="50 note">
+                                <div class="note-value">PKR 50</div>
+                            </button>
 
-                    <div class="payment-row mb-3">
-                        <div class="d-flex align-items-center gap-2"><i class="bi bi-arrow-repeat"></i><span>Change</span></div>
-                        <div id="tenderChangeText" class="stat-ok fw-bold px-3 py-1 rounded">0.00</div>
-                    </div>
+                            <button type="button" class="note-btn" onclick="setTenderAmount(100)">
+                                <img src="/images/notes/100.jpg" class="note-img" alt="100 note">
+                                <div class="note-value">PKR 100</div>
+                            </button>
 
-                    <div class="d-flex justify-content-end gap-2 pb-2">
-                        <button class="btn btn-soft-gray" onclick="closePaymentModal()"><i class="bi bi-x-circle"></i> Cancel</button>
-                        <button class="btn btn-soft-green" id="tenderOkBtn"><i class="bi bi-check2-circle"></i> <span id="btnPayConfirm">Confirm & Print (F4)</span></button>
+                            <button type="button" class="note-btn" onclick="setTenderAmount(500)">
+                                <img src="/images/notes/500.jpg" class="note-img" alt="500 note">
+                                <div class="note-value">PKR 500</div>
+                            </button>
+
+                            <button type="button" class="note-btn" onclick="setTenderAmount(1000)">
+                                <img src="/images/notes/1000.jpg" class="note-img" alt="1000 note">
+                                <div class="note-value">PKR 1000</div>
+                            </button>
+
+                            <button type="button" class="note-btn" onclick="setTenderAmount(5000)">
+                                <img src="/images/notes/5000.jpg" class="note-img" alt="5000 note">
+                                <div class="note-value">PKR 5000</div>
+                            </button>
+
+                            <button type="button" class="note-btn" onclick="setTenderFullAmount()">
+                                <div class="note-full-box">
+                                    <i class="bi bi-check2-circle"></i>
+                                    <span>FULL AMOUNT</span>
+                                </div>
+                            </button>
+                        </div>
+
+                        <div class="balance-cards">
+                            <div class="balance-box remaining">
+                                <div class="lbl">Remaining Due</div>
+                                <div class="amt" id="modalRemaining">0.00</div>
+                            </div>
+
+                            <div class="balance-box change">
+                                <div class="lbl">Change</div>
+                                <div class="amt" id="tenderChangeText">0.00</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+
+                <div class="d-flex justify-content-between align-items-center gap-2 pb-2 flex-wrap">
+                    <button class="btn btn-soft-amber" type="button" onclick="clearTenderInput()">
+                        <i class="bi bi-eraser"></i> Clear
+                    </button>
+
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-soft-gray" type="button" onclick="closePaymentModal()">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </button>
+
+                        <button class="btn btn-soft-green" type="button" id="tenderOkBtn">
+                            <i class="bi bi-check2-circle"></i>
+                            <span id="btnPayConfirm">Confirm & Print (F4)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Retrieve Held Modal -->
+                <div id="retrieveOverlay" class="modal-overlay">
+                    <div class="retrieve-modal">
+                        <div class="retrieve-head">
+                            <div class="title"><i class="bi bi-archive"></i> Retrieve Held Invoices</div>
+                            <button class="btn btn-soft-slate" onclick="closeRetrieveModal()"><i class="bi bi-x-lg"></i></button>
+                        </div>
+                        <div class="retrieve-toolbar">
+                            <div class="input-group" style="max-width:340px;">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input id="holdSearch" type="text" class="form-control" placeholder="Search by invoice #">
+                            </div>
+                            <button class="btn btn-soft-gray" onclick="sortHeld('time')"><i class="bi bi-clock"></i> Latest</button>
+                            <button class="btn btn-soft-gray" onclick="sortHeld('grand')"><i class="bi bi-cash-coin"></i> Grand Total</button>
+                            <button class="btn btn-soft-amber" onclick="clearAllHeld()"><i class="bi bi-trash3"></i> Clear All</button>
+                        </div>
+                        <div class="p-3">
+                            <div class="table-responsive" style="max-height:60vh;">
+                                <table class="table table-hover align-middle table-hold" id="heldTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Invoice #</th>
+                                            <th>Items</th>
+                                            <th>Preview</th>
+                                            <th>Grand</th>
+                                            <th>Held At</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="heldTbody"></tbody>
+                                </table>
+                            </div>
+                            <div id="noHeldRow" class="text-center text-muted py-4" style="display:none;">
+                                <i class="bi bi-inbox fs-3 d-block mb-2"></i>No held invoices
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
-
-        <!-- Retrieve Held Modal -->
-        <div id="retrieveOverlay" class="modal-overlay">
-            <div class="retrieve-modal">
-                <div class="retrieve-head">
-                    <div class="title"><i class="bi bi-archive"></i> Retrieve Held Invoices</div>
-                    <button class="btn btn-soft-slate" onclick="closeRetrieveModal()"><i class="bi bi-x-lg"></i></button>
-                </div>
-                <div class="retrieve-toolbar">
-                    <div class="input-group" style="max-width:340px;">
-                        <span class="input-group-text"><i class="bi bi-search"></i></span>
-                        <input id="holdSearch" type="text" class="form-control" placeholder="Search by invoice #">
-                    </div>
-                    <button class="btn btn-soft-gray" onclick="sortHeld('time')"><i class="bi bi-clock"></i> Latest</button>
-                    <button class="btn btn-soft-gray" onclick="sortHeld('grand')"><i class="bi bi-cash-coin"></i> Grand Total</button>
-                    <button class="btn btn-soft-amber" onclick="clearAllHeld()"><i class="bi bi-trash3"></i> Clear All</button>
-                </div>
-                <div class="p-3">
-                    <div class="table-responsive" style="max-height:60vh;">
-                        <table class="table table-hover align-middle table-hold" id="heldTable">
-                            <thead>
-                                <tr>
-                                    <th>Invoice #</th>
-                                    <th>Items</th>
-                                    <th>Preview</th>
-                                    <th>Grand</th>
-                                    <th>Held At</th>
-                                    <th class="text-end">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="heldTbody"></tbody>
-                        </table>
-                    </div>
-                    <div id="noHeldRow" class="text-center text-muted py-4" style="display:none;">
-                        <i class="bi bi-inbox fs-3 d-block mb-2"></i>No held invoices
-                    </div>
-                </div>
-            </div>
-        </div>
-
     </div>
 </div>
 
@@ -1225,1515 +1750,1671 @@
 <script src="~/lib/sweetalert2/sweetalert2.min.js"></script>
 
 <script>
+          document.getElementById("btnInvPrev").addEventListener("click", function () {
+              const invoiceNo = document.getElementById("invoiceNoValue").innerText.trim();
+              if (!invoiceNo) return;
+              window.location.href = `/Sales/POS?previous=${invoiceNo}`;
+          });
 
-    document.getElementById("btnInvPrev").addEventListener("click", function () {
-        const invoiceNo = document.getElementById("invoiceNoValue").innerText.trim();
-        if (!invoiceNo) return;
+          document.getElementById("btnInvNext").addEventListener("click", function () {
+              const invoiceNo = document.getElementById("invoiceNoValue").innerText.trim();
+              if (!invoiceNo) return;
+              window.location.href = `/Sales/POS?next=${invoiceNo}`;
+          });
 
-        window.location.href = `/Sales/POS?previous=${invoiceNo}`;
-    });
+          /* ---------- SERVER DATA ---------- */
+          const items = @Html.Raw(itemsJson);
 
-    document.getElementById("btnInvNext").addEventListener("click", function () {
-        const invoiceNo = document.getElementById("invoiceNoValue").innerText.trim();
-        if (!invoiceNo) return;
+          const allowSaleLowStock = @((ViewBag.SaleLowStock ?? false).ToString().ToLower());
+          const DASHBOARD_URL = "@dashboardUrl";
 
-        window.location.href = `/Sales/POS?next=${invoiceNo}`;
-    });
+          const SEARCH_INVOICE_NO = '@((searchSale)?.InvoiceNumber ?? "")';
+          const SEARCH_SALETYPE = '@((searchSale)?.SaleType ?? "Sale")';
+          const SEARCH_CUSTOMERID = '@((searchSale?.Customers?.Id) ?? 0)';
+          const SEARCH_HAS_CUSTOMER = @((searchSale?.Customers != null).ToString().ToLower());
+          const SEARCH_PAYMENT_METHOD = '@(searchSale?.Payment?.PaymentMethod ?? "cash")'.toLowerCase();
+          const SEARCH_PAYMENT = '@(searchSale?.Payment?.Amount ?? 0)';
+          const SEARCH_SALE_ID = @((searchSale?.Id ?? 0));
 
+          const saleItems = @Html.Raw(saleItemsJson);
 
-    /* ---------- SERVER DATA ---------- */
-    const items = @Html.Raw(itemsJson);
+          /* ---------- GLOBALS ---------- */
+          let filtered = [];
+          let selectedIdx = -1;
+          let focusMode = 'scan';
+          let itemDiscMode = 'percent';
 
-    const allowSaleLowStock = @((ViewBag.SaleLowStock ?? false).ToString().ToLower());
-    const DASHBOARD_URL = "@dashboardUrl";
+          let posShell, btnFullscreen, itemInputEl, suggDiv;
+          let invoiceDiscountPercentEl, invoiceDiscountAmountEl;
 
-    const SEARCH_INVOICE_NO = '@((searchSale)?.InvoiceNumber ?? "")';
-    const SEARCH_SALETYPE   = '@((searchSale)?.SaleType ?? "Sale")';
-    const SEARCH_CUSTOMERID = '@((searchSale?.Customers?.Id) ?? 0)';
-    const SEARCH_HAS_CUSTOMER = @((searchSale?.Customers != null).ToString().ToLower());
-    const SEARCH_PAYMENT_METHOD = '@(searchSale?.Payment?.PaymentMethod ?? "cash")'.toLowerCase();
-    const SEARCH_PAYMENT = '@(searchSale?.Payment?.Amount ?? 0)';
-    const SEARCH_SALE_ID = @((searchSale?.Id ?? 0));
+          let invoiceCounter = "@invoiceNo";
+          let pendingAction = null;
+          const EXPAND_STATE_KEY = 'gposExpanded';
 
-    const saleItems = @Html.Raw(saleItemsJson);
+          let lastSavedSaleId = 0;
+          let invoiceIsFresh = true;
 
-    /* ---------- GLOBALS ---------- */
-    let filtered = [];
-    let selectedIdx = -1;
-    let focusMode = 'scan';
-    let itemDiscMode = 'percent'; // 'percent' | 'amount'
+          function markDirty() { invoiceIsFresh = false; }
 
-    let posShell, btnFullscreen, itemInputEl, suggDiv;
-    let invoiceDiscountPercentEl, invoiceDiscountAmountEl;
-
-    let invoiceCounter = "@invoiceNo";
-    let pendingAction = null;
-
-    let lastSavedSaleId = 0; // ✅ used by F8 printing (current saved)
-
-    /* ✅ F12 SPAM FIX FLAG */
-    let invoiceIsFresh = true;   // empty/new invoice = true (F12 spam block)
-
-    function markDirty(){ invoiceIsFresh = false; }
-
-    /* ---------- UTILS ---------- */
-    function getToastTarget() {
-      return document.fullscreenElement || document.webkitFullscreenElement || document.body;
-    }
-
-    function toast(msg, icon = 'info', ms = 1500) {
-      Swal.fire({
-        toast: true,
-        icon,
-        title: msg,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: ms,
-        timerProgressBar: true,
-        target: getToastTarget(),
-        didOpen: (container) => {
-          const c = container?.closest?.('.swal2-container');
-          if (c) c.classList.add('gpos-swal-fixed');
-        }
-      });
-    }
-
-    function showServerError(title, details) {
-      Swal.fire({
-        icon: 'error',
-        title: title || 'Error',
-        html: `<div style="text-align:left;white-space:pre-wrap;font-family:ui-monospace,Consolas,monospace;font-size:12px;max-height:280px;overflow:auto;border:1px solid #e5e7eb;padding:10px;border-radius:10px;background:#f9fafb;">${String(details||'').replace(/</g,'&lt;')}</div>`,
-        target: getToastTarget()
-      });
-    }
-
-    function money(n) { return `₨${(Number(n)||0).toFixed(2)}`; }
-
-    function clamp(n, min, max) {
-      n = parseFloat(n);
-      if (isNaN(n)) n = 0;
-      return Math.min(Math.max(n, min), max);
-    }
-
-    function hasLineItems() {
-      return !!document.querySelector('#salesTable tbody tr:not(#noDataRow)');
-    }
-
-    function nowIso() { return new Date().toISOString(); }
-
-    function getAntiForgeryToken() {
-      return document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]')?.value
-          || document.querySelector('input[name="__RequestVerificationToken"]')?.value
-          || '';
-    }
-
-    async function readResponseSmart(res) {
-      const ct = (res.headers.get('content-type') || '').toLowerCase();
-      const text = await res.text();
-      let json = null;
-      if (ct.includes('application/json')) {
-        try { json = JSON.parse(text); } catch { json = null; }
-      }
-      return { ct, text, json };
-    }
-
-    /* ---------- EXIT / CLOSE ---------- */
-    function exitToDashboard() {
-      window.location.href = DASHBOARD_URL || '/Home/Index';
-    }
-
-    function closeSoftware() {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Close Software?',
-        text: 'Browser apps normally cannot force-close tabs. If allowed, it will close. Otherwise it will take you to Dashboard.',
-        showCancelButton: true,
-        confirmButtonText: 'Close',
-        cancelButtonText: 'Cancel',
-        target: getToastTarget()
-      }).then(r => {
-        if (!r.isConfirmed) return;
-        try { window.open('', '_self'); window.close(); } catch {}
-        setTimeout(() => window.location.href = DASHBOARD_URL || '/Home/Index', 200);
-      });
-    }
-
-    /* ---------- DISC MODE (Percent / Amount) ---------- */
-    function setItemDiscMode(mode, showToast = true) {
-      itemDiscMode = (mode === 'amount') ? 'amount' : 'percent';
-
-      document.body.classList.remove('disc-mode-percent','disc-mode-amount');
-      document.body.classList.add(itemDiscMode === 'percent' ? 'disc-mode-percent' : 'disc-mode-amount');
-
-      const chip = document.getElementById('itemDiscModeChip');
-      const bP = document.getElementById('itemDiscModePercentBtn');
-      const bA = document.getElementById('itemDiscModeAmountBtn');
-
-      if (chip) chip.textContent = (itemDiscMode === 'percent') ? 'Item Disc: %' : 'Item Disc: PKR';
-      bP?.classList.toggle('active', itemDiscMode === 'percent');
-      bA?.classList.toggle('active', itemDiscMode === 'amount');
-
-      recalculateTotals();
-
-      if (showToast) toast(itemDiscMode === 'percent' ? 'Item discount: %' : 'Item discount: PKR', 'info', 900);
-    }
-
-    /* ---------- FOCUS MODE ---------- */
-    function setFocusMode(mode, showToast = true) {
-      focusMode = mode;
-
-      document.body.classList.remove('focus-mode-qty','focus-mode-price','focus-mode-scan');
-
-      if (mode === 'qty') document.body.classList.add('focus-mode-qty');
-      else if (mode === 'price') document.body.classList.add('focus-mode-price');
-      else document.body.classList.add('focus-mode-scan');
-
-      const lbl = document.getElementById('currentFocusMode');
-      const chip = document.getElementById('modeChip');
-
-      const text = (mode === 'qty' ? 'Quantity' : mode === 'price' ? 'Price' : 'Scan');
-
-      if (lbl) lbl.textContent = text;
-      if (chip) chip.textContent = text;
-
-      updateFocusModeIndicator();
-
-      if (showToast) toast(`Mode: ${text}`, 'info', 800);
-
-      // ✅ Focus behavior based on mode
-      setTimeout(() => {
-        if (mode === 'qty') {
-          const lastQty = document.querySelector('#salesTable tbody tr:last-child .qty-main');
-          if (lastQty) {
-            lastQty.focus();
-            lastQty.select();
-            return;
+          /* ---------- UTILS ---------- */
+          function getToastTarget() {
+              return document.fullscreenElement || document.webkitFullscreenElement || document.body;
           }
-        }
 
-        if (mode === 'price') {
-          const lastPrice = document.querySelector('#salesTable tbody tr:last-child .price-cell');
-          if (lastPrice) {
-            lastPrice.focus();
-            return;
+          function toast(msg, icon = 'info', ms = 1500) {
+              Swal.fire({
+                  toast: true,
+                  icon,
+                  title: msg,
+                  position: 'top-end',
+                  showConfirmButton: false,
+                  timer: ms,
+                  timerProgressBar: true,
+                  target: getToastTarget(),
+                  didOpen: (container) => {
+                      const c = container?.closest?.('.swal2-container');
+                      if (c) c.classList.add('gpos-swal-fixed');
+                  }
+              });
           }
-        }
 
-        // default scan mode
-        focusBarcode();
+          function showServerError(title, details) {
+              Swal.fire({
+                  icon: 'error',
+                  title: title || 'Error',
+                  html: `<div style="text-align:left;white-space:pre-wrap;font-family:ui-monospace,Consolas,monospace;font-size:12px;max-height:280px;overflow:auto;border:1px solid #e5e7eb;padding:10px;border-radius:10px;background:#f9fafb;">${String(details || '').replace(/</g, '&lt;')}</div>`,
+                  target: getToastTarget()
+              });
+          }
 
-      }, 0);
-    }
+          function money(n) { return `₨${(Number(n) || 0).toFixed(2)}`; }
 
-    function updateFocusModeIndicator() {
-      let i = document.getElementById('focusModeIndicator');
-      if (!i) {
-        i = document.createElement('div');
-        i.id = 'focusModeIndicator';
-        i.className = 'focus-mode-indicator';
-        const p = document.getElementById('itemSearchInput')?.parentNode;
-        if (p) { p.style.position = 'relative'; p.appendChild(i); }
-      }
-      if (!i) return;
-      i.textContent = (focusMode === 'qty' ? 'Q' : focusMode === 'price' ? 'P' : 'S');
-      i.style.background = (focusMode === 'qty' ? '#22c55e' : focusMode === 'price' ? '#3b82f6' : '#64748b');
-    }
+          function clamp(n, min, max) {
+              n = parseFloat(n);
+              if (isNaN(n)) n = 0;
+              return Math.min(Math.max(n, min), max);
+          }
 
-    function toggleQtyMode()   { (focusMode === 'qty')   ? setFocusMode('scan') : setFocusMode('qty'); }
-    function togglePriceMode() { (focusMode === 'price') ? setFocusMode('scan') : setFocusMode('price'); }
+          function hasLineItems() {
+              return !!document.querySelector('#salesTable tbody tr:not(#noDataRow)');
+          }
 
-    function focusBarcode() {
-      const bi = document.getElementById('itemSearchInput');
-      if (!bi) return;
-      bi.classList.add('blinking');
-      bi.focus();
-      bi.select();
-    }
+          function nowIso() { return new Date().toISOString(); }
 
-    function applySaleTypeVisual() {
-      const isReturn = document.getElementById('rbReturn')?.checked;
-      document.body.classList.toggle('return-mode', !!isReturn);
-      const bi = document.getElementById('itemSearchInput');
-      if (bi) bi.placeholder = isReturn ? "Return item scan karein… (Alt + B)" : "Sale item scan karein… (Alt + B)";
-    }
+          function getAntiForgeryToken() {
+              return document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]')?.value
+                  || document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                  || '';
+          }
 
-    function ensureActiveVisible() {
-      const box = document.getElementById('itemSuggestions');
-      if (!box || box.style.display !== 'block') return;
-      const active = box.querySelector('.suggestion-item.active');
-      if (!active) return;
+          async function readResponseSmart(res) {
+              const ct = (res.headers.get('content-type') || '').toLowerCase();
+              const text = await res.text();
+              let json = null;
+              if (ct.includes('application/json')) {
+                  try { json = JSON.parse(text); } catch { json = null; }
+              }
+              return { ct, text, json };
+          }
 
-      const top = active.offsetTop;
-      const bottom = top + active.offsetHeight;
+          /* ---------- EXIT / CLOSE ---------- */
+          function exitToDashboard() {
+              window.location.href = DASHBOARD_URL || '/Home/Index';
+          }
 
-      if (top < box.scrollTop) box.scrollTop = top - 6;
-      else if (bottom > box.scrollTop + box.clientHeight) box.scrollTop = bottom - box.clientHeight + 6;
-    }
+          function closeSoftware() {
+              Swal.fire({
+                  icon: 'warning',
+                  title: 'Close Software?',
+                  text: 'Browser apps normally cannot force-close tabs. If allowed, it will close. Otherwise it will take you to Dashboard.',
+                  showCancelButton: true,
+                  confirmButtonText: 'Close',
+                  cancelButtonText: 'Cancel',
+                  target: getToastTarget()
+              }).then(r => {
+                  if (!r.isConfirmed) return;
+                  try { window.open('', '_self'); window.close(); } catch { }
+                  setTimeout(() => window.location.href = DASHBOARD_URL || '/Home/Index', 200);
+              });
+          }
 
-    function updateHighlight() {
-      document.querySelectorAll('#itemSuggestions .suggestion-item')
-        .forEach((el, i) => el.classList.toggle('active', i === selectedIdx));
-      ensureActiveVisible();
-    }
+          /* ---------- DISC MODE ---------- */
+          function setItemDiscMode(mode, showToast = true) {
+              itemDiscMode = (mode === 'amount') ? 'amount' : 'percent';
 
-    let itemCodeMap = {};
+              document.body.classList.remove('disc-mode-percent', 'disc-mode-amount');
+              document.body.classList.add(itemDiscMode === 'percent' ? 'disc-mode-percent' : 'disc-mode-amount');
 
-    function buildItemLookup() {
-        itemCodeMap = {};
+              const chip = document.getElementById('itemDiscModeChip');
+              const bP = document.getElementById('itemDiscModePercentBtn');
+              const bA = document.getElementById('itemDiscModeAmountBtn');
 
-        items.forEach(i => {
-            if (i.ItemCode) {
-                itemCodeMap[i.ItemCode.toLowerCase()] = i;
-            }
-        });
-    }
+              if (chip) chip.textContent = (itemDiscMode === 'percent') ? 'Item Disc: %' : 'Item Disc: PKR';
+              bP?.classList.toggle('active', itemDiscMode === 'percent');
+              bA?.classList.toggle('active', itemDiscMode === 'amount');
 
-    
+              recalculateTotals();
 
-    // Call AFTER items are loaded
-    buildItemLookup();
+              if (showToast) toast(itemDiscMode === 'percent' ? 'Item discount: %' : 'Item discount: PKR', 'info', 900);
+          }
 
-    /* ---------- SUGGESTIONS ---------- */
-    function showItemSuggestions (term) {
-        term = (term || '').trim();
-        const listDiv = document.getElementById('itemSuggestions');
+          /* ---------- FOCUS MODE ---------- */
+          function setFocusMode(mode, showToast = true) {
+              focusMode = mode;
 
-        if (!term) {
-            listDiv.style.display = 'none';
-            filtered = [];
-            selectedIdx = -1;
-            return;
-        }
+              document.body.classList.remove('focus-mode-qty', 'focus-mode-price', 'focus-mode-scan');
 
-        const lc = term.toLowerCase();
+              if (mode === 'qty') document.body.classList.add('focus-mode-qty');
+              else if (mode === 'price') document.body.classList.add('focus-mode-price');
+              else document.body.classList.add('focus-mode-scan');
 
-        // Filter items
-        filtered = items.filter(x =>
-            (x.ItemCode || '').toLowerCase().includes(lc) ||
-            (x.ItemName || '').toLowerCase().includes(lc)
-        );
+              const lbl = document.getElementById('currentFocusMode');
+              const chip = document.getElementById('modeChip');
+              const text = (mode === 'qty' ? 'Quantity' : mode === 'price' ? 'Price' : 'Scan');
 
-        // Check for exact match
-        const exactMatchIndex = filtered.findIndex(x => (x.ItemCode || '').toLowerCase() === lc);
-        if (exactMatchIndex > 0) {
-            // Move exact match to the top
-            const exactMatch = filtered.splice(exactMatchIndex, 1)[0];
-            filtered.unshift(exactMatch);
-        }
+              if (lbl) lbl.textContent = text;
+              if (chip) chip.textContent = text;
 
-        if (filtered.length === 0) {
-            listDiv.innerHTML = `
-            <div class="suggestion-item">
-                <span class="suggestion-name text-muted">No items found</span>
-            </div>`;
-            selectedIdx = -1;
-        } else {
-            if (selectedIdx < 0) selectedIdx = 0;
+              updateFocusModeIndicator();
 
-            listDiv.innerHTML = filtered.map((it, i) => {
-                const code = it.ItemCode || '—';
-                const qty = (it.Quantity ?? 0);
-                const name = it.ItemName || '';
-                const price = (+(it.SalePrice || 0)).toFixed(2);
-                return `
-                <div class="suggestion-item ${i === selectedIdx ? 'active' : ''}"
-                     data-idx="${i}" onclick="selectItemSuggestion(${i})">
-                    <span class="suggestion-code"><i class="bi bi-upc-scan"></i>${code}</span>
-                    <span class="suggestion-qty">(${qty})</span>
-                    <span class="suggestion-name">${name}</span>
-                    <span class="suggestion-price">(PKR ${price})</span>
-                </div>`;
-            }).join('');
-            updateHighlight();
-        }
+              if (showToast) toast(`Mode: ${text}`, 'info', 800);
 
-        listDiv.style.display = 'block';
-    }
+              setTimeout(() => {
+                  if (mode === 'qty') {
+                      const lastQty = document.querySelector('#salesTable tbody tr:last-child .qty-main');
+                      if (lastQty) {
+                          lastQty.focus();
+                          lastQty.select();
+                          return;
+                      }
+                  }
 
-    function resetItemUI() {
-        suggDiv.style.display = 'none';
-        itemInputEl.value = '';
-        filtered = [];
-        selectedIdx = -1;
-    }
+                  if (mode === 'price') {
+                      const lastPrice = document.querySelector('#salesTable tbody tr:last-child .price-cell');
+                      if (lastPrice) {
+                          lastPrice.focus();
+                          return;
+                      }
+                  }
 
-    function checkStockBeforeAdd(item) {
-        if ((item.Quantity <= 0) && !allowSaleLowStock) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Stock Unavailable',
-                html: `
-                    <div style="font-size:14px;">
-                        This item is currently <b>out of stock</b>.<br><br>
-                        To proceed, enable <b>"Allow Sale on Low Stock"</b> from
-                        <a href="/Settings/Index"
-                           style="color:#0d6efd;font-weight:600;text-decoration:underline;">
-                           Shop Settings
-                        </a>.
-                    </div>
-                `,
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#dc3545'
-            });
-            return false;
-        }
+                  focusBarcode();
+              }, 0);
+          }
 
-        return true;
-    }
+          function updateFocusModeIndicator() {
+              let i = document.getElementById('focusModeIndicator');
+              if (!i) {
+                  i = document.createElement('div');
+                  i.id = 'focusModeIndicator';
+                  i.className = 'focus-mode-indicator';
+                  const p = document.getElementById('itemSearchInput')?.parentNode;
+                  if (p) { p.style.position = 'relative'; p.appendChild(i); }
+              }
+              if (!i) return;
+              i.textContent = (focusMode === 'qty' ? 'Q' : focusMode === 'price' ? 'P' : 'S');
+              i.style.background = (focusMode === 'qty' ? '#22c55e' : focusMode === 'price' ? '#3b82f6' : '#64748b');
+          }
 
-    function checkSalePrice(item) {
+          function toggleQtyMode() { (focusMode === 'qty') ? setFocusMode('scan') : setFocusMode('qty'); }
+          function togglePriceMode() { (focusMode === 'price') ? setFocusMode('scan') : setFocusMode('price'); }
 
-        if (item.SalePrice < item.PurchasePrice) {
+          function focusBarcode() {
+              const bi = document.getElementById('itemSearchInput');
+              if (!bi) return;
+              bi.classList.add('blinking');
+              bi.focus();
+              bi.select();
+          }
 
-            Swal.fire({
-                icon: 'warning',
-                title: 'Low Sale Price',
-                html: `
-                    <div style="font-size:14px;">
-                        The <b>Sale Price</b> is lower than the <b>Purchase Price</b>.<br><br>
-                        This may cause a <b>loss on this item</b>.<br><br>
+          function applySaleTypeVisual() {
+              const isReturn = document.getElementById('rbReturn')?.checked;
+              document.body.classList.toggle('return-mode', !!isReturn);
+              const bi = document.getElementById('itemSearchInput');
+              if (bi) bi.placeholder = isReturn ? "Return item scan karein… (Alt + B)" : "Sale item scan karein… (Alt + B)";
+          }
 
-                        To fix it, edit the item from
-                        <a href="/Item/Add?itemCode=${item.ItemCode}"
-                           style="color:#0d6efd;font-weight:600;text-decoration:underline;">
-                           Item Edit
-                        </a>
-                    </div>
-                `,
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#f39c12'
-            });
+          function ensureActiveVisible() {
+              const box = document.getElementById('itemSuggestions');
+              if (!box || box.style.display !== 'block') return;
+              const active = box.querySelector('.suggestion-item.active');
+              if (!active) return;
 
-            return false;
-        }
+              const top = active.offsetTop;
+              const bottom = top + active.offsetHeight;
 
-        return true;
-    }
+              if (top < box.scrollTop) box.scrollTop = top - 6;
+              else if (bottom > box.scrollTop + box.clientHeight) box.scrollTop = bottom - box.clientHeight + 6;
+          }
 
-    function selectItemSuggestion(i) {
+          function updateHighlight() {
+              document.querySelectorAll('#itemSuggestions .suggestion-item')
+                  .forEach((el, i) => el.classList.toggle('active', i === selectedIdx));
+              ensureActiveVisible();
+          }
 
-        if (i < 0 || i >= filtered.length) return;
+          /* ---------- ITEM LOOKUP ---------- */
+          let itemCodeMap = {};
 
-        const item = filtered[i];
+          function buildItemLookup() {
+              itemCodeMap = {};
+              items.forEach(i => {
+                  if (i.ItemCode) {
+                      itemCodeMap[i.ItemCode.toLowerCase()] = i;
+                  }
+              });
+          }
 
-        if (!checkStockBeforeAdd(item)) {
-            resetItemUI();
-            return;
-        }
-        if (!checkSalePrice(item)) {
-            resetItemUI();
-            return;
-        }
+          buildItemLookup();
 
-        addToSalesTable(item);
-        resetItemUI();
-    }
+          /* ---------- SUGGESTIONS ---------- */
+          function showItemSuggestions(term) {
+              term = (term || '').trim();
+              const listDiv = document.getElementById('itemSuggestions');
 
-    /* ---------- ✅ SCANNER FIX (NO ENTER REQUIRED) ---------- */
-    let scanTimer = null;
+              if (!term) {
+                  listDiv.style.display = 'none';
+                  filtered = [];
+                  selectedIdx = -1;
+                  return;
+              }
 
-    function scannerSmartAdd(term) {
+              const lc = term.toLowerCase();
 
-        const t = (term || '').trim();
-        if (!t) return;
+              filtered = items.filter(x =>
+                  (x.ItemCode || '').toLowerCase().includes(lc) ||
+                  (x.ItemName || '').toLowerCase().includes(lc)
+              );
 
-        const lc = t.toLowerCase();
+              const exactMatchIndex = filtered.findIndex(x => (x.ItemCode || '').toLowerCase() === lc);
+              if (exactMatchIndex > 0) {
+                  const exactMatch = filtered.splice(exactMatchIndex, 1)[0];
+                  filtered.unshift(exactMatch);
+              }
 
-        // 🔥 O(1) barcode lookup
-        const exact = itemCodeMap[lc];
+              if (filtered.length === 0) {
+                  listDiv.innerHTML = `
+                      <div class="suggestion-item">
+                          <span class="suggestion-name text-muted">No items found</span>
+                      </div>`;
+                  selectedIdx = -1;
+              } else {
+                  if (selectedIdx < 0) selectedIdx = 0;
 
-        if (exact) {
+                  listDiv.innerHTML = filtered.map((it, i) => {
+                      const code = it.ItemCode || '—';
+                      const qty = (it.Quantity ?? 0);
+                      const name = it.ItemName || '';
+                      const price = (+(it.SalePrice || 0)).toFixed(2);
+                      return `
+                          <div class="suggestion-item ${i === selectedIdx ? 'active' : ''}"
+                               data-idx="${i}" onclick="selectItemSuggestion(${i})">
+                              <span class="suggestion-code"><i class="bi bi-upc-scan"></i>${code}</span>
+                              <span class="suggestion-qty">(${qty})</span>
+                              <span class="suggestion-name">${name}</span>
+                              <span class="suggestion-price">(PKR ${price})</span>
+                          </div>`;
+                  }).join('');
+                  updateHighlight();
+              }
 
-            if (!checkStockBeforeAdd(exact)) {
-                resetItemUI();
-                return;
-            }
+              listDiv.style.display = 'block';
+          }
 
-            addToSalesTable(exact);
-            resetItemUI();
-            return;
-        }
+          function resetItemUI() {
+              if (suggDiv) suggDiv.style.display = 'none';
+              if (itemInputEl) itemInputEl.value = '';
+              filtered = [];
+              selectedIdx = -1;
+          }
 
-        // If not exact barcode → show suggestions
-        showItemSuggestions(t);
-    }
+          function checkStockBeforeAdd(item) {
+              if ((item.Quantity <= 0) && !allowSaleLowStock) {
+                  Swal.fire({
+                      icon: 'error',
+                      title: 'Stock Unavailable',
+                      html: `
+                          <div style="font-size:14px;">
+                              This item is currently <b>out of stock</b>.<br><br>
+                              To proceed, enable <b>"Allow Sale on Low Stock"</b> from
+                              <a href="/Settings/Index" style="color:#0d6efd;font-weight:600;text-decoration:underline;">
+                                 Shop Settings
+                              </a>.
+                          </div>
+                      `,
+                      confirmButtonText: 'OK',
+                      confirmButtonColor: '#dc3545'
+                  });
+                  return false;
+              }
 
-     function attachScannerHandlers() {
+              return true;
+          }
 
-        // Manual typing → show suggestions
-        itemInputEl.addEventListener('input', () => {
+          function checkSalePrice(item) {
+              if (item.SalePrice < item.PurchasePrice) {
+                  Swal.fire({
+                      icon: 'warning',
+                      title: 'Low Sale Price',
+                      html: `
+                          <div style="font-size:14px;">
+                              The <b>Sale Price</b> is lower than the <b>Purchase Price</b>.<br><br>
+                              This may cause a <b>loss on this item</b>.<br><br>
+                              To fix it, edit the item from
+                              <a href="/Item/Add?itemCode=${item.ItemCode}" style="color:#0d6efd;font-weight:600;text-decoration:underline;">
+                                 Item Edit
+                              </a>
+                          </div>
+                      `,
+                      confirmButtonText: 'OK',
+                      confirmButtonColor: '#f39c12'
+                  });
 
-            const term = itemInputEl.value.trim();
+                  return false;
+              }
 
-            if (!term) {
-                suggDiv.style.display = 'none';
-                return;
-            }
+              return true;
+          }
 
-            showItemSuggestions(term);
-        });
+          function selectItemSuggestion(i) {
+              if (i < 0 || i >= filtered.length) return;
 
-        // Scanner OR manual Enter → instant add
-        itemInputEl.addEventListener('keydown', (e) => {
+              const item = filtered[i];
 
-            if (e.key === 'Enter') {
+              if (!checkStockBeforeAdd(item)) {
+                  resetItemUI();
+                  return;
+              }
+              if (!checkSalePrice(item)) {
+                  resetItemUI();
+                  return;
+              }
 
-                e.preventDefault();
+              addToSalesTable(item);
+              resetItemUI();
+          }
 
-                const term = itemInputEl.value.trim();
-                if (!term) return;
+          /* ---------- SCANNER ---------- */
+          function scannerSmartAdd(term) {
+              const t = (term || '').trim();
+              if (!t) return;
 
-                scannerSmartAdd(term);
-            }
-        });
-    }
+              const lc = t.toLowerCase();
+              const exact = itemCodeMap[lc];
 
-    /* ---------- GRID OPS ---------- */
-    function makePriceEditable(cell) {
-      cell.contentEditable = true;
-      cell.classList.add('editable-price');
-    }
+              if (exact) {
+                  if (!checkStockBeforeAdd(exact)) {
+                      resetItemUI();
+                      return;
+                  }
 
-    function savePrice(cell) {
-      // user edited price => invoice dirty
-      markDirty();
+                  addToSalesTable(exact);
+                  resetItemUI();
+                  return;
+              }
 
-      cell.contentEditable = false;
-      cell.classList.remove('editable-price');
+              showItemSuggestions(t);
+          }
 
-      let val = parseFloat((cell.textContent || '').replace('₨','').trim());
-      if (isNaN(val) || val < 0) {
-        const orig = cell.dataset.originalPrice;
-        cell.textContent = `₨${parseFloat(orig || 0).toFixed(2)}`;
-      } else {
-        cell.textContent = `₨${val.toFixed(2)}`;
-        updateRowTotal(cell.closest('tr'));
-      }
-      recalculateTotals();
-    }
+          function attachScannerHandlers() {
+              itemInputEl.addEventListener('input', () => {
+                  const term = itemInputEl.value.trim();
+                  if (!term) {
+                      suggDiv.style.display = 'none';
+                      return;
+                  }
+                  showItemSuggestions(term);
+              });
 
-    /* ✅ UPDATED addToSalesTable (Cost removed + markDirty) */
-    function addToSalesTable(item) {
-      markDirty(); // ✅ invoice now used
+              itemInputEl.addEventListener('keydown', (e) => {
+                  if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const term = itemInputEl.value.trim();
+                      if (!term) return;
+                      scannerSmartAdd(term);
+                  }
+              });
+          }
 
-      const tb = document.querySelector('#salesTable tbody');
-      document.getElementById('noDataRow')?.remove();
+          /* ---------- GRID OPS ---------- */
+          function makePriceEditable(cell) {
+              cell.contentEditable = true;
+              cell.classList.add('editable-price');
+          }
 
-      // if already exists
-      const existing = tb.querySelector(`tr[data-item-id="${item.Id}"]`);
+          function savePrice(cell) {
+              markDirty();
+
+              cell.contentEditable = false;
+              cell.classList.remove('editable-price');
+
+              let val = parseFloat((cell.textContent || '').replace('₨', '').trim());
+              if (isNaN(val) || val < 0) {
+                  const orig = cell.dataset.originalPrice;
+                  cell.textContent = `₨${parseFloat(orig || 0).toFixed(2)}`;
+              } else {
+                  cell.textContent = `₨${val.toFixed(2)}`;
+                  updateRowTotal(cell.closest('tr'));
+              }
+              recalculateTotals();
+          }
+
+          function addToSalesTable(item) {
+              markDirty();
+
+              const tb = document.querySelector('#salesTable tbody');
+              document.getElementById('noDataRow')?.remove();
+
+                 const existing = tb.querySelector(`tr[data-item-id="${item.Id}"]`);
       if (existing) {
-        const q = existing.querySelector('.qty-main');
-        if (focusMode !== 'price') {
-          q.value = (parseFloat(q.value) || 0) + 1;
-          qtyInputChanged(q);
-        }
-        recalculateTotals();
-        focusBarcode();
-        return;
+          const q = existing.querySelector('.qty-main');
+          const priceCellExisting = existing.querySelector('.price-cell');
+
+          if (focusMode !== 'price') {
+              q.value = (parseFloat(q.value) || 0) + 1;
+              qtyInputChanged(q);
+          }
+
+          recalculateTotals();
+
+          if (focusMode === 'qty') {
+              setTimeout(() => {
+                  q.focus();
+                  q.select();
+              }, 50);
+          }
+          else if (focusMode === 'price') {
+              setTimeout(() => {
+                  priceCellExisting.focus();
+                  makePriceEditable(priceCellExisting);
+                  selectAllContent(priceCellExisting);
+              }, 50);
+          }
+          else {
+              focusBarcode();
+          }
+
+          return;
       }
 
-      const row = document.createElement('tr');
-      row.dataset.itemId = item.Id;
+              const row = document.createElement('tr');
+              row.dataset.itemId = item.Id;
 
-      const originalPrice = item.PackSize ? item.UnitPrice : item.SalePrice;
-      const codeSafe = (item.ItemCode || ('I' + item.Id)).replace(/[^a-zA-Z0-9_-]/g, '');
+              const originalPrice = item.PackSize ? item.UnitPrice : item.SalePrice;
+              const codeSafe = (item.ItemCode || ('I' + item.Id)).replace(/[^a-zA-Z0-9_-]/g, '');
 
-      row.innerHTML = `
-        <td>${tb.rows.length + 1}</td>
-        <td>
-          <div class="fw-bold">${item.ItemName ?? ''}</div>
+              row.innerHTML = `
+                  <td>${tb.rows.length + 1}</td>
+                  <td>
+                      <div class="fw-bold">${item.ItemName ?? ''}</div>
+                      <div class="small text-muted mt-1">
+                          <span class="badge text-bg-light">
+                              Stock: <span class="js-stock">${(item.Stock && item.Stock > 0 ? item.Stock : (item.Quantity ?? 0))}</span>
+                          </span>
+                      </div>
+                  </td>
+                  <td>
+                      <span tabindex="0" class="price-cell" data-original-price="${Number(originalPrice || 0).toFixed(2)}">₨${Number(originalPrice || 0).toFixed(2)}</span>
+                  </td>
+                  <td>
+                      <div class="d-inline-flex gap-1 align-items-center">
+                          <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(this,-1)"><i class="bi bi-dash-lg"></i></button>
+                          <input type="number" class="qty-input qty-main" value="1" min="1" onchange="qtyInputChanged(this)" />
+                          <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(this,1)"><i class="bi bi-plus-lg"></i></button>
+                      </div>
+                  </td>
+                  <td>
+                      <div class="d-inline-flex gap-1 align-items-center disc-percent-wrap">
+                          <input type="number" class="qty-input disc-percent" value="0" min="0" max="100" step="0.01" onchange="discPercentChanged(this)" />
+                          <span class="text-muted">%</span>
+                      </div>
+                      <div class="d-inline-flex gap-1 align-items-center disc-amount-wrap">
+                          <input type="number" class="qty-input disc-amount" value="0" min="0" step="0.01" onchange="discAmountChanged(this)" />
+                          <span class="text-muted">₨</span>
+                      </div>
+                  </td>
+                  <td>0</td>
+                  <td id="salePrice-${codeSafe}" class="line-total">₨0.00</td>
+                  <td><button class="delete-row-btn" onclick="deleteRow(this)"><i class="bi bi-trash3"></i></button></td>
+              `;
 
-          <!-- ✅ Stock only (Cost removed) -->
-          <div class="small text-muted mt-1">
-            <span class="badge text-bg-light">
-                Stock: <span class="js-stock">${(item.Stock && item.Stock > 0 ? item.Stock : (item.Quantity ?? 0))}</span>
-            </span>
-          </div>
+              tb.appendChild(row);
 
-        </td>
+              refreshRowLiveInfo(item.Id, row);
 
-        <td>
-          <span tabindex="0" class="price-cell" data-original-price="${Number(originalPrice||0).toFixed(2)}">₨${Number(originalPrice||0).toFixed(2)}</span>
-        </td>
+              const priceCell = row.querySelector('.price-cell');
+              const qtyInput = row.querySelector('.qty-main');
+              const discPercentEl = row.querySelector('.disc-percent');
+              const discAmountEl = row.querySelector('.disc-amount');
 
-        <td>
-          <div class="d-inline-flex gap-1 align-items-center">
-            <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(this,-1)"><i class="bi bi-dash-lg"></i></button>
-            <input type="number" class="qty-input qty-main" value="1" min="1" onchange="qtyInputChanged(this)" />
-            <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(this,1)"><i class="bi bi-plus-lg"></i></button>
-          </div>
-        </td>
+              priceCell.addEventListener('dblclick', () => {
+                  makePriceEditable(priceCell);
+                  selectAllContent(priceCell);
+                  priceCell.focus();
+              });
 
-        <td>
-          <div class="d-inline-flex gap-1 align-items-center disc-percent-wrap">
-            <input type="number" class="qty-input disc-percent" value="0" min="0" max="100" step="0.01" onchange="discPercentChanged(this)" />
-            <span class="text-muted">%</span>
-          </div>
+              priceCell.addEventListener('keydown', e => {
+                  if (e.key === 'Enter') {
+                      e.preventDefault();
+                      savePrice(priceCell);
+                      qtyInput?.focus();
+                      qtyInput?.select();
+                  }
+                  else if (e.key === 'Escape') {
+                      e.preventDefault();
+                      const orig = priceCell.dataset.originalPrice;
+                      priceCell.textContent = `₨${parseFloat(orig || 0).toFixed(2)}`;
+                      savePrice(priceCell);
+                      focusBarcode();
+                  }
+              });
 
-          <div class="d-inline-flex gap-1 align-items-center disc-amount-wrap">
-            <input type="number" class="qty-input disc-amount" value="0" min="0" step="0.01" onchange="discAmountChanged(this)" />
-            <span class="text-muted">₨</span>
-          </div>
-        </td>
+              priceCell.addEventListener('blur', () => {
+                  if (priceCell.isContentEditable) savePrice(priceCell);
+              });
 
-        <td>0</td>
-        <td id="salePrice-${codeSafe}" class="line-total">₨0.00</td>
-        <td><button class="delete-row-btn" onclick="deleteRow(this)"><i class="bi bi-trash3"></i></button></td>
-      `;
+              qtyInput.addEventListener('keydown', e => {
+                  if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (itemDiscMode === 'amount') {
+                          discAmountEl?.focus();
+                          discAmountEl?.select?.();
+                      } else {
+                          discPercentEl?.focus();
+                          discPercentEl?.select?.();
+                      }
+                  }
+              });
 
-      tb.appendChild(row);
+              discPercentEl?.addEventListener('keydown', e => {
+                  if (e.key === 'Enter') {
+                      e.preventDefault();
+                      focusBarcode();
+                  }
+              });
 
-      refreshRowLiveInfo(item.Id, row);
+              discAmountEl?.addEventListener('keydown', e => {
+                  if (e.key === 'Enter') {
+                      e.preventDefault();
+                      focusBarcode();
+                  }
+              });
 
-      const priceCell = row.querySelector('.price-cell');
-      const qtyInput = row.querySelector('.qty-main');
-      const discPercentEl = row.querySelector('.disc-percent');
-      const discAmountEl  = row.querySelector('.disc-amount');
+             updateRowTotal(row);
+      recalculateTotals();
 
-      priceCell.addEventListener('dblclick', () => { makePriceEditable(priceCell); selectAllContent(priceCell); priceCell.focus(); });
-
-      priceCell.addEventListener('keydown', e => {
-        if (e.key === 'Enter') { e.preventDefault(); savePrice(priceCell); qtyInput?.focus(); qtyInput?.select(); }
-        else if (e.key === 'Escape') {
-          e.preventDefault();
-          const orig = priceCell.dataset.originalPrice;
-          priceCell.textContent = `₨${parseFloat(orig||0).toFixed(2)}`;
-          savePrice(priceCell);
+      if (focusMode === 'qty') {
+          setTimeout(() => {
+              qtyInput.focus();
+              qtyInput.select();
+          }, 50);
+      }
+      else if (focusMode === 'price') {
+          setTimeout(() => {
+              priceCell.focus();
+              makePriceEditable(priceCell);
+              selectAllContent(priceCell);
+          }, 50);
+      }
+      else {
           focusBarcode();
-        }
-      });
-
-      priceCell.addEventListener('blur', () => { if (priceCell.isContentEditable) savePrice(priceCell); });
-
-      qtyInput.addEventListener('keydown', e => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          if (itemDiscMode === 'amount') { discAmountEl?.focus(); discAmountEl?.select?.(); }
-          else { discPercentEl?.focus(); discPercentEl?.select?.(); }
-        }
-      });
-
-      discPercentEl?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); focusBarcode(); } });
-      discAmountEl?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); focusBarcode(); } });
-
-      updateRowTotal(row);
-      recalculateTotals();
-      focusBarcode();
-    }
-
-    function selectAllContent(el) {
-      const r = document.createRange(); r.selectNodeContents(el);
-      const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
-    }
-
-    /* ✅ markDirty added */
-    function discPercentChanged(inp) {
-      markDirty();
-      inp.value = clamp(inp.value, 0, 100);
-      updateRowTotal(inp.closest('tr'));
-      recalculateTotals();
-    }
-
-    function discAmountChanged(inp) {
-      markDirty();
-      let v = parseFloat(inp.value) || 0;
-      if (v < 0) v = 0;
-      inp.value = v;
-      updateRowTotal(inp.closest('tr'));
-      recalculateTotals();
-    }
-
-    function updateRowTotal(row) {
-      if (!row) return;
-
-      const p = parseFloat(row.querySelector('.price-cell')?.textContent.replace(/[₨,]/g, '')) || 0;
-      const q = parseFloat(row.querySelector('.qty-main')?.value || 0) || 0;
-      const gross = p * q;
-
-      let discAmt = 0;
-      if (itemDiscMode === 'percent') {
-        const dp = clamp(row.querySelector('.disc-percent')?.value || 0, 0, 100);
-        discAmt = gross * (dp / 100);
-      } else {
-        const da = Math.max(parseFloat(row.querySelector('.disc-amount')?.value || 0), 0);
-        discAmt = Math.min(da, gross);
       }
 
-      const net = Math.max(gross - discAmt, 0);
-      const lineCell = row.querySelector('.line-total');
-      if (lineCell) lineCell.textContent = `₨${net.toFixed(2)}`;
     }
-
-    /* ✅ markDirty added */
-    function qtyInputChanged(input) {
-      markDirty();
-      updateRowTotal(input.closest('tr'));
-      recalculateTotals();
-    }
-
-    function changeQty(btn, d) {
-      markDirty();
-      const inp = btn.parentNode.querySelector('.qty-main');
-      let v = parseFloat(inp.value || 1);
-      v = Math.max(1, v + d);
-      inp.value = v;
-      qtyInputChanged(inp);
-    }
-
-    /* ✅ UPDATED deleteRow (markDirty) */
-    function deleteRow(btn) {
-      markDirty();
-      btn.closest('tr').remove();
-      const tb = document.querySelector('#salesTable tbody');
-      if (tb.rows.length === 0) {
-        const tr = document.createElement('tr'); tr.id = 'noDataRow';
-        tr.innerHTML = `<td colspan="8" class="text-center text-muted py-4"><i class="bi bi-bag-x fs-4 d-block mb-2"></i>No items added yet</td>`;
-        tb.appendChild(tr);
-      }
-      recalculateTotals();
-    }
-
-    /* ---------- TOTALS ---------- */
-    const TAX_PERCENT = 0;
-
-    function recalculateTotals() {
-      const rows = [...document.querySelectorAll('#salesTable tbody tr')].filter(r => r.id !== 'noDataRow');
-
-      if (!rows.length) {
-        document.getElementById('subTotal').innerText = '₨0.00';
-        document.getElementById('sumQty').innerText = '0';
-        document.getElementById('sumItems').innerText = '0';
-        document.getElementById('sumTax').innerText = '₨0.00';
-        document.getElementById('grandTotal').innerText = '₨0.00';
-        document.getElementById('invoiceDiscountComputed').innerText = '₨0.00';
-        document.getElementById('sumPayable').innerText = '0.00';
-        return;
-      }
-
-      let subNet = 0, qtySum = 0, lineDiscTotal = 0;
-
-      rows.forEach(r => {
-        const p = parseFloat(r.querySelector('.price-cell')?.textContent.replace(/[₨,]/g, '')) || 0;
-        const q = parseFloat(r.querySelector('.qty-main')?.value || 0) || 0;
-        const gross = p * q;
-
-        let discAmt = 0;
-        if (itemDiscMode === 'percent') {
-          const dp = clamp(r.querySelector('.disc-percent')?.value || 0, 0, 100);
-          discAmt = gross * (dp / 100);
-        } else {
-          const da = Math.max(parseFloat(r.querySelector('.disc-amount')?.value || 0), 0);
-          discAmt = Math.min(da, gross);
-        }
-
-        const net = Math.max(gross - discAmt, 0);
-        r.querySelector('.line-total').textContent = `₨${net.toFixed(2)}`;
-
-        subNet += net;
-        lineDiscTotal += discAmt;
-        qtySum += q;
-      });
-
-      const discP = clamp(invoiceDiscountPercentEl?.value || 0, 0, 100);
-      const discL = Math.max(parseFloat(invoiceDiscountAmountEl?.value || 0), 0);
-
-      const invDiscFromP = subNet * (discP / 100);
-      const invDisc = Math.min(invDiscFromP + discL, subNet);
-
-      const taxable = Math.max(subNet - invDisc, 0);
-      const tax = TAX_PERCENT > 0 ? taxable * (TAX_PERCENT / 100) : 0;
-      const grand = taxable + tax;
-
-      const totalDiscountShown = lineDiscTotal + invDisc;
-
-      document.getElementById('subTotal').innerText = money(subNet);
-      document.getElementById('sumQty').innerText = String(qtySum);
-      document.getElementById('sumItems').innerText = String(rows.length);
-      document.getElementById('sumTax').innerText = money(tax);
-      document.getElementById('invoiceDiscountComputed').innerText = money(totalDiscountShown);
-      document.getElementById('grandTotal').innerText = money(grand);
-      document.getElementById('sumPayable').innerText = grand.toFixed(2);
-    }
-
-    /* ---------- CUSTOMER ---------- */
-    function toggleCustomerType() {
-      const walkin = document.getElementById("walkinRadio").checked;
-      document.getElementById("walkinBlock").style.display = walkin ? "block" : "none";
-      document.getElementById("customerBlock").style.display = walkin ? "none" : "block";
-      if (walkin) clearCustomer();
-    }
-
-    function setSelectedCustomer(sel) {
-      const id = parseInt(sel?.value || "0", 10);
-      if (!id) { clearCustomer(); return; }
-      document.getElementById("selectedCustomerId").value = id;
-      document.getElementById("selectedCustomerBlock").style.display = "block";
-    }
-
-    function clearCustomer() {
-      const dd = document.getElementById("customerDropdown");
-      if (dd) dd.selectedIndex = 0;
-      document.getElementById("selectedCustomerBlock").style.display = "none";
-      document.getElementById("selectedCustomerId").value = "";
-    }
-
-    /* ---------- PAYMENT METHOD ---------- */
-    function setPaymentMethod(val) {
-      const sel = document.getElementById('paymentMethod');
-      if (sel) sel.value = val;
-
-      document.querySelectorAll('#paymentPills .method-pill').forEach(x => x.classList.remove('active'));
-      const pill = document.querySelector(`#paymentPills .method-pill[data-value="${val}"]`);
-      pill?.classList.add('active');
-    }
-
-    /* ---------- PAYMENT MODAL ---------- */
-    function openTenderModal(_, actionFn) {
-      if (!hasLineItems()) return toast('Please add at least one item', 'warning');
-      pendingAction = actionFn;
-
-      const overlay = document.getElementById('paymentModalOverlay');
-      overlay.style.display = 'flex';
-
-      document.getElementById('btnPayConfirm').textContent = (actionFn === handleSaveOnly ? 'Confirm (Save)' : 'Confirm & Print');
-
-      const method = (document.getElementById('paymentMethod')?.value || 'cash').toLowerCase();
-      const iconMap = { cash: 'bi-cash', credit: 'bi-journal-text', credit_card: 'bi-credit-card', bank: 'bi-bank', online: 'bi-wifi' };
-      const labelMap = { cash: 'Cash', credit: 'Credit', credit_card: 'Card', bank: 'Bank', online: 'Online' };
-      document.getElementById('modalMethod').innerHTML = `<i class="bi ${iconMap[method] || 'bi-cash'}"></i> ${labelMap[method] || method}`;
-
-      const grand = parseFloat(document.getElementById('grandTotal').textContent.replace(/[₨,]/g, '')) || 0;
-      const tax = parseFloat(document.getElementById('sumTax')?.textContent?.replace(/[₨,]/g, '') || 0) || 0;
-      const disc = parseFloat(document.getElementById('invoiceDiscountComputed').textContent.replace(/[₨,]/g, '')) || 0;
-
-      document.getElementById('tenderGrandTotal').innerText = grand.toFixed(2);
-      document.getElementById('rowDiscount').style.display = disc > 0 ? 'flex' : 'none';
-      document.getElementById('tenderDiscount').innerText = disc.toFixed(2);
-      document.getElementById('rowTax').style.display = tax > 0 ? 'flex' : 'none';
-      document.getElementById('tenderTax').innerText = tax.toFixed(2);
-
-      const ti = document.getElementById('tenderInput');
-      // ti.value = '';
-      ti.focus();
-      updateChange();
-    }
-
-    function closePaymentModal() {
-      document.getElementById('paymentModalOverlay').style.display = 'none';
-      focusBarcode();
-    }
-
-    function updateChange() {
-      const tendered = parseFloat(document.getElementById('tenderInput').value) || 0;
-      const grand = parseFloat(document.getElementById('tenderGrandTotal').innerText) || 0;
-      const change = tendered - grand;
-      document.getElementById('modalRemaining').textContent = (change < 0 ? Math.abs(change) : 0).toFixed(2);
-      document.getElementById('tenderChangeText').textContent = (change > 0 ? change : 0).toFixed(2);
-    }
-
-    /* ✅ PAYMENT RULE FIX */
-    function handleTenderOk() {
-      const tendered = parseFloat(document.getElementById('tenderInput').value) || 0;
-      const grand = parseFloat(document.getElementById('tenderGrandTotal').innerText) || 0;
-      const method = (document.getElementById('paymentMethod')?.value || 'cash').toLowerCase();
-
-      const allowPartial = (method === 'credit'); // ✅ only credit allows partial
-
-      if (tendered < 0) {
-        Swal.fire({ icon:'warning', title:'Invalid Amount', text:'Tendered amount negative nahi ho sakta.', target:getToastTarget() });
-        return;
-      }
-
-      if (!allowPartial && tendered < grand) {
-        Swal.fire({
-          icon:'error',
-          title:'Payment Short',
-          html:`Total: <b>₨${grand.toFixed(2)}</b><br>Received: <b>₨${tendered.toFixed(2)}</b><br><br>Please enter full payment (>= total).`,
-          confirmButtonText:'OK',
-          target:getToastTarget()
-        });
-        document.getElementById('tenderInput').focus();
-        document.getElementById('tenderInput').select();
-        return;
-      }
-
-      if (typeof pendingAction === "function") { pendingAction(); pendingAction = null; }
-      closePaymentModal();
-    }
-
-    /* ---------- SAVE / PRINT ---------- */
-    async function handleSavePrint() { await saveSaleCommon(true); }
-    async function handleSaveOnly()  { await saveSaleCommon(false); }
-
-    function getSelectedSaleType() {
-      const s = document.querySelector('input[name="SaleType"]:checked');
-      return s ? s.value : "Sale";
-    }
-
-    function getSaleItemsFromTable() {
-      const rows = document.querySelectorAll('#salesTable tbody tr');
-      const arr = [];
-
-      rows.forEach(r => {
-        if (r.id === 'noDataRow') return;
-
-        const unitPrice = parseFloat((r.querySelector('.price-cell')?.textContent || "0").replace(/[₨,]/g, '')) || 0;
-        const qty = parseFloat(r.querySelector('.qty-main')?.value || 0) || 0;
-        const gross = unitPrice * qty;
-
-        const discP = parseFloat(r.querySelector('.disc-percent')?.value || 0) || 0;
-        const discA = parseFloat(r.querySelector('.disc-amount')?.value || 0) || 0;
-
-        let finalDiscPercent = 0;
-        let finalDiscAmount = 0;
-
-        if (itemDiscMode === 'percent') {
-          finalDiscPercent = clamp(discP, 0, 100);
-          finalDiscAmount = gross * (finalDiscPercent / 100);
-        } else {
-          finalDiscAmount = Math.min(Math.max(discA, 0), gross);
-          finalDiscPercent = gross > 0 ? (finalDiscAmount / gross) * 100 : 0;
-        }
-
-        const lineTotal = parseFloat((r.querySelector('.line-total')?.textContent || "0").replace(/[₨,]/g, '')) || 0;
-
-        arr.push({
-          ItemId: parseInt(r.dataset.itemId),
-          Quantity: qty,
-          UnitPrice: unitPrice,
-          DiscountPercent: finalDiscPercent,
-          DiscountAmount: finalDiscAmount,
-          TaxAmount: 0,
-          LineTotal: lineTotal
-        });
-      });
-
-      return arr;
-    }
-
-    function cleanSaleData(sd) {
-      if (sd.Payment) delete sd.Payment.Id;
-      (sd.SaleItems || []).forEach(i => delete i.Id);
-      // delete sd.Id;
-      return sd;
-    }
-
-    async function saveSaleCommon(printAfter) {
-      const grand = parseFloat(document.getElementById('grandTotal')?.textContent.replace(/[₨,]/g, '') || 0);
-      const subtotal = parseFloat(document.getElementById('subTotal')?.textContent.replace(/[₨,]/g, '') || 0);
-
-      let cust = parseInt(document.getElementById("selectedCustomerId")?.value) || 0;
-      let id = parseInt(document.getElementById("saleId")?.value) || 0;
-      let tender = parseFloat(document.getElementById("tenderInput")?.value) || 0;
-
-      const percent = Math.max(parseFloat(invoiceDiscountPercentEl?.value || 0), 0);
-      const less = Math.max(parseFloat(invoiceDiscountAmountEl?.value || 0), 0);
-      const discFromP = subtotal * (percent / 100);
-      const totalDisc = Math.min(discFromP + less, subtotal);
-
-      const method = (document.getElementById('paymentMethod')?.value || 'cash').toLowerCase();
-      const allowPartial = (method === 'credit');
-
-      // ✅ double-protection (no bypass)
-      if (!allowPartial && tender < grand) {
-        Swal.fire({
-          icon:'error',
-          title:'Payment Short',
-          html:`Total: <b>₨${grand.toFixed(2)}</b><br>Received: <b>₨${tender.toFixed(2)}</b><br><br>Please enter full payment (>= total).`,
-          confirmButtonText:'OK',
-          target:getToastTarget()
-        });
-        return;
-      }
-      console.log(id);
-
-      const saleData = cleanSaleData({
-          Id:id,
-        InvoiceNumber: document.getElementById('invoiceNoValue').textContent,
-        SubTotal: subtotal,
-        Tax: parseFloat(document.getElementById('sumTax')?.textContent.replace(/[₨,]/g,'') || 0),
-        Discount: totalDisc,
-        DiscountPercent: percent,
-        DiscountLessAmount: less,
-        SaleType: getSelectedSaleType(),
-        Total: grand,
-        custId: cust,
-        tender_amount: tender,
-        Payment: { Amount: tender, PaymentMethod: method, Change: Math.max(tender - grand, 0) },
-        SaleItems: getSaleItemsFromTable()
-      });
-
-      if (!saleData.SaleItems || saleData.SaleItems.length === 0) {
-        Swal.fire({ icon:'warning', title:'No Items', text:'Please add at least one item!', target:getToastTarget() });
-        return;
-      }
-
-      try {
-        const endpoint = printAfter ? '/Sales/SaveSale' : '/Sales/SaveOnly';
-        const token = getAntiForgeryToken();
-
-        const res = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
-          body: JSON.stringify(saleData)
-        });
-
-        const rsp = await readResponseSmart(res);
-
-        if (!res.ok) {
-          if (rsp.json && (rsp.json.Message || rsp.json.message)) {
-            toast(rsp.json.Message || rsp.json.message, 'error', 2500);
-            return;
+          function selectAllContent(el) {
+              const r = document.createRange();
+              r.selectNodeContents(el);
+              const s = window.getSelection();
+              s.removeAllRanges();
+              s.addRange(r);
           }
-          showServerError(`Save Failed (HTTP ${res.status})`, rsp.text || 'No response body');
-          return;
-        }
 
-        const result = rsp.json;
-        if (!result || typeof result !== 'object') {
-          showServerError('Saved but response is not JSON', `Content-Type: ${rsp.ct}\n\n${rsp.text}`);
-          return;
-        }
-
-        toast(result.Message || 'Saved', 'success', 1100);
-
-            const ti = document.getElementById('tenderInput');
-            ti.value = '';
-
-        if (result?.id) lastSavedSaleId = Number(result.id) || 0;
-
-        if (printAfter && result?.id) {
-          window.open(`/Sales/Receipt/${result.id}`, '_blank');
-        }
-
-        // ✅ after successful save -> new invoice generate (allowed)
-        // handleNewInvoice(true);
-
-        window.location.reload();
-
-      } catch (e) {
-        console.error(e);
-        showServerError('JS/Network Error', e?.message || String(e));
-      }
-    }
-
-    const printBtn = document.getElementById("print-btn");
-
-    if (printBtn) {
-        printBtn.addEventListener("click", function () {
-            printCurrentSavedInvoice();
-        });
-    }
-
-    /* ---------- F8 PRINT (Only saved invoice) ---------- */
-    function printCurrentSavedInvoice() {
-      const id = (Number(SEARCH_SALE_ID) > 0) ? Number(SEARCH_SALE_ID) : (Number(lastSavedSaleId) || 0);
-
-      if (!id) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Print Error',
-          text: 'Please Save (F5) or Save & Print (F4) first, then Print (F8).',
-          target: getToastTarget()
-        });
-        return;
-      }
-      window.open(`/Sales/Receipt/${id}`, '_blank');
-    }
-
-    /* ---------- HOLD / RETRIEVE ---------- */
-    const HOLD_KEY = 'gposHeldInvoices';
-
-    function getAllHeld() { try { return JSON.parse(localStorage.getItem(HOLD_KEY) || '[]'); } catch { return []; } }
-    function saveAllHeld(list) { localStorage.setItem(HOLD_KEY, JSON.stringify(list)); }
-
-    function cryptoRandomId() {
-      try { return [...crypto.getRandomValues(new Uint8Array(8))].map(x => x.toString(16).padStart(2,'0')).join(''); }
-      catch { return String(Date.now()); }
-    }
-
-    /* ✅ HOLD FIX: English msg + clear screen */
-    function holdCurrentInvoice() {
-      if (!hasLineItems()) return toast('No items to hold', 'warning');
-
-      const itemsArr = getSaleItemsFromTable();
-      const invoiceNumber = document.getElementById('invoiceNoValue').textContent;
-
-      const sub = parseFloat(document.getElementById('subTotal').textContent.replace(/[₨,]/g, '')) || 0;
-      const tax = parseFloat(document.getElementById('sumTax')?.textContent?.replace(/[₨,]/g, '') || 0) || 0;
-      const grand = parseFloat(document.getElementById('grandTotal').textContent.replace(/[₨,]/g, '')) || 0;
-
-      const invDiscPercent = clamp(invoiceDiscountPercentEl?.value || 0, 0, 100);
-      const invDiscLess = Math.max(parseFloat(invoiceDiscountAmountEl?.value || 0), 0);
-      const invDiscFromP = sub * (invDiscPercent / 100);
-      const invDisc = Math.min(invDiscFromP + invDiscLess, sub);
-
-      const held = {
-        id: cryptoRandomId(),
-        invoiceNumber,
-        items: itemsArr,
-        discount: invDisc,
-        discountPercent: invDiscPercent,
-        discountLessAmount: invDiscLess,
-        tax,
-        grandTotal: grand,
-        saleType: getSelectedSaleType(),
-        itemDiscMode,
-        heldAt: nowIso()
-      };
-
-      const list = getAllHeld();
-      list.unshift(held);
-      saveAllHeld(list);
-
-      toast('Invoice held successfully', 'success', 1400);
-
-      // clear screen + generate next invoice ONCE
-      handleNewInvoice(true);
-    }
-
-    function openRetrieveModal() {
-      document.getElementById('retrieveOverlay').style.display = 'flex';
-      renderHeldTable();
-      document.getElementById('holdSearch')?.focus();
-    }
-    function closeRetrieveModal() { document.getElementById('retrieveOverlay').style.display = 'none'; }
-
-    function renderHeldTable() {
-      const tbody = document.getElementById('heldTbody');
-      tbody.innerHTML = '';
-
-      const list = getAllHeld();
-      const q = (document.getElementById('holdSearch')?.value || '').trim().toLowerCase();
-      const view = list.filter(h => !q || (h.invoiceNumber || '').toLowerCase().includes(q));
-
-      document.getElementById('noHeldRow').style.display = view.length ? 'none' : 'block';
-
-      view.forEach(h => {
-        const previewNames = (h.items || [])
-          .slice(0, 3)
-          .map(it => (items.find(x => x.Id === it.ItemId)?.ItemName) || (`Item#${it.ItemId}`))
-          .join(', ');
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><span class="badge text-bg-light">${h.invoiceNumber}</span></td>
-          <td>${h.items?.length || 0}</td>
-          <td>${previewNames || '—'}</td>
-          <td><strong>${money(h.grandTotal || 0)}</strong></td>
-          <td>${new Date(h.heldAt).toLocaleString()}</td>
-          <td class="text-end">
-            <button class="btn btn-sm btn-soft-green me-1" onclick="retrieveInvoice('${h.id}')"><i class="bi bi-pencil-square"></i> Edit</button>
-            <button class="btn btn-sm btn-soft-amber" onclick="deleteHeld('${h.id}')"><i class="bi bi-trash3"></i> Delete</button>
-          </td>`;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function deleteHeld(id) {
-      let list = getAllHeld();
-      list = list.filter(x => x.id !== id);
-      saveAllHeld(list);
-      renderHeldTable();
-      toast('Held invoice deleted', 'success', 1000);
-    }
-
-    function clearAllHeld() {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Clear all held invoices?',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, Clear',
-        target: getToastTarget()
-      }).then(r => {
-        if (r.isConfirmed) {
-          localStorage.removeItem(HOLD_KEY);
-          renderHeldTable();
-          toast('All cleared', 'success', 1000);
-        }
-      });
-    }
-
-    function sortHeld(by) {
-      let list = getAllHeld();
-      if (by === 'time') list.sort((a, b) => new Date(b.heldAt) - new Date(a.heldAt));
-      if (by === 'grand') list.sort((a, b) => (b.grandTotal || 0) - (a.grandTotal || 0));
-      saveAllHeld(list);
-      renderHeldTable();
-    }
-
-    function retrieveInvoice(id) {
-      const list = getAllHeld();
-      const h = list.find(x => x.id === id);
-      if (!h) { toast('Not found', 'error'); return; }
-
-      if (h.itemDiscMode) setItemDiscMode(h.itemDiscMode, false);
-
-      const tb = document.querySelector('#salesTable tbody');
-      tb.innerHTML = '';
-
-      (h.items || []).forEach((it, idx) => {
-        const meta = items.find(x => x.Id === it.ItemId) || { Id: it.ItemId, ItemCode: "", ItemName: ("Item#" + it.ItemId) };
-        const row = document.createElement('tr');
-        row.dataset.itemId = it.ItemId;
-
-        const codeSafe = (meta.ItemCode || ('X' + idx)).replace(/[^a-zA-Z0-9_-]/g, '');
-        const discPercent = Number(it.DiscountPercent || 0);
-        const discAmount = Number(it.DiscountAmount || 0);
-
-        row.innerHTML = `
-          <td>${idx + 1}</td>
-          <td>
-            <div class="fw-bold">${meta.ItemName || ('Item#' + it.ItemId)}</div>
-            <div class="small text-muted mt-1">
-              <span class="badge text-bg-light">Stock: <span class="js-stock">0</span></span>
-            </div>
-          </td>
-          <td><span tabindex="0" class="price-cell" data-original-price="${Number(it.UnitPrice).toFixed(2)}">₨${Number(it.UnitPrice).toFixed(2)}</span></td>
-          <td>
-            <div class="d-inline-flex gap-1 align-items-center">
-              <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(this,-1)"><i class="bi bi-dash-lg"></i></button>
-              <input type="number" class="qty-input qty-main" value="${Number(it.Quantity)}" min="1" onchange="qtyInputChanged(this)" />
-              <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(this,1)"><i class="bi bi-plus-lg"></i></button>
-            </div>
-          </td>
-          <td>
-            <div class="d-inline-flex gap-1 align-items-center disc-percent-wrap">
-              <input type="number" class="qty-input disc-percent" value="${discPercent}" min="0" max="100" step="0.01" onchange="discPercentChanged(this)" />
-              <span class="text-muted">%</span>
-            </div>
-            <div class="d-inline-flex gap-1 align-items-center disc-amount-wrap">
-              <input type="number" class="qty-input disc-amount" value="${discAmount}" min="0" step="0.01" onchange="discAmountChanged(this)" />
-              <span class="text-muted">₨</span>
-            </div>
-          </td>
-          <td>0</td>
-          <td id="salePrice-${codeSafe}" class="line-total">₨${Number(it.LineTotal || (it.UnitPrice * it.Quantity)).toFixed(2)}</td>
-          <td><button class="delete-row-btn" onclick="deleteRow(this)"><i class="bi bi-trash3"></i></button></td>
-        `;
-        tb.appendChild(row);
-
-        refreshRowLiveInfo(meta.Id, row);
-
-        const priceCell = row.querySelector('.price-cell');
-        const qtyInput = row.querySelector('.qty-main');
-
-        priceCell.addEventListener('dblclick', () => { makePriceEditable(priceCell); selectAllContent(priceCell); priceCell.focus(); });
-        priceCell.addEventListener('keydown', e => {
-          if (e.key === 'Enter') { e.preventDefault(); savePrice(priceCell); qtyInput?.focus(); qtyInput?.select(); }
-          else if (e.key === 'Escape') {
-            e.preventDefault();
-            const orig = priceCell.dataset.originalPrice;
-            priceCell.textContent = `₨${parseFloat(orig||0).toFixed(2)}`;
-            savePrice(priceCell);
-            focusBarcode();
+          function discPercentChanged(inp) {
+              markDirty();
+              inp.value = clamp(inp.value, 0, 100);
+              updateRowTotal(inp.closest('tr'));
+              recalculateTotals();
           }
-        });
-        priceCell.addEventListener('blur', () => { if (priceCell.isContentEditable) savePrice(priceCell); });
 
-        updateRowTotal(row);
-      });
+          function discAmountChanged(inp) {
+              markDirty();
+              let v = parseFloat(inp.value) || 0;
+              if (v < 0) v = 0;
+              inp.value = v;
+              updateRowTotal(inp.closest('tr'));
+              recalculateTotals();
+          }
 
-      invoiceDiscountPercentEl.value = String(h.discountPercent ?? 0);
-      invoiceDiscountAmountEl.value = String(h.discountLessAmount ?? 0);
+          function updateRowTotal(row) {
+              if (!row) return;
 
-      if (h.saleType === 'Return') document.getElementById('rbReturn').checked = true;
-      else document.getElementById('rbSale').checked = true;
+              const p = parseFloat(row.querySelector('.price-cell')?.textContent.replace(/[₨,]/g, '')) || 0;
+              const q = parseFloat(row.querySelector('.qty-main')?.value || 0) || 0;
+              const gross = p * q;
 
-      applySaleTypeVisual();
-      recalculateTotals();
+              let discAmt = 0;
+              if (itemDiscMode === 'percent') {
+                  const dp = clamp(row.querySelector('.disc-percent')?.value || 0, 0, 100);
+                  discAmt = gross * (dp / 100);
+              } else {
+                  const da = Math.max(parseFloat(row.querySelector('.disc-amount')?.value || 0), 0);
+                  discAmt = Math.min(da, gross);
+              }
 
-      // remove from held list after retrieving
-      saveAllHeld(list.filter(x => x.id !== id));
-      closeRetrieveModal();
-      toast('Invoice retrieved', 'success', 1000);
+              const net = Math.max(gross - discAmt, 0);
+              const lineCell = row.querySelector('.line-total');
+              if (lineCell) lineCell.textContent = `₨${net.toFixed(2)}`;
+          }
 
-      // restore invoice number
-      document.getElementById('invoiceNoValue').innerText = h.invoiceNumber || generateInvoiceNumber();
+          function qtyInputChanged(input) {
+              markDirty();
+              updateRowTotal(input.closest('tr'));
+              recalculateTotals();
+          }
 
-      // retrieved invoice has data => not fresh
-      invoiceIsFresh = false;
+          function changeQty(btn, d) {
+              markDirty();
+              const inp = btn.parentNode.querySelector('.qty-main');
+              let v = parseFloat(inp.value || 1);
+              v = Math.max(1, v + d);
+              inp.value = v;
+              qtyInputChanged(inp);
+          }
 
-      focusBarcode();
+          function deleteRow(btn) {
+              markDirty();
+              btn.closest('tr').remove();
+              const tb = document.querySelector('#salesTable tbody');
+              if (tb.rows.length === 0) {
+                  const tr = document.createElement('tr');
+                  tr.id = 'noDataRow';
+                  tr.innerHTML = `<td colspan="8" class="text-center text-muted py-4"><i class="bi bi-bag-x fs-4 d-block mb-2"></i>No items added yet</td>`;
+                  tb.appendChild(tr);
+              }
+              recalculateTotals();
+          }
+
+          /* ---------- TOTALS ---------- */
+          const TAX_PERCENT = 0;
+
+          function recalculateTotals() {
+              const rows = [...document.querySelectorAll('#salesTable tbody tr')].filter(r => r.id !== 'noDataRow');
+
+              if (!rows.length) {
+                  document.getElementById('subTotal').innerText = '₨0.00';
+                  document.getElementById('sumQty').innerText = '0';
+                  document.getElementById('sumItems').innerText = '0';
+                  document.getElementById('sumTax').innerText = '₨0.00';
+                  document.getElementById('grandTotal').innerText = '₨0.00';
+                  document.getElementById('invoiceDiscountComputed').innerText = '₨0.00';
+                  document.getElementById('sumPayable').innerText = '0.00';
+                  return;
+              }
+
+              let subNet = 0, qtySum = 0, lineDiscTotal = 0;
+
+              rows.forEach(r => {
+                  const p = parseFloat(r.querySelector('.price-cell')?.textContent.replace(/[₨,]/g, '')) || 0;
+                  const q = parseFloat(r.querySelector('.qty-main')?.value || 0) || 0;
+                  const gross = p * q;
+
+                  let discAmt = 0;
+                  if (itemDiscMode === 'percent') {
+                      const dp = clamp(r.querySelector('.disc-percent')?.value || 0, 0, 100);
+                      discAmt = gross * (dp / 100);
+                  } else {
+                      const da = Math.max(parseFloat(r.querySelector('.disc-amount')?.value || 0), 0);
+                      discAmt = Math.min(da, gross);
+                  }
+
+                  const net = Math.max(gross - discAmt, 0);
+                  r.querySelector('.line-total').textContent = `₨${net.toFixed(2)}`;
+
+                  subNet += net;
+                  lineDiscTotal += discAmt;
+                  qtySum += q;
+              });
+
+              const discP = clamp(invoiceDiscountPercentEl?.value || 0, 0, 100);
+              const discL = Math.max(parseFloat(invoiceDiscountAmountEl?.value || 0), 0);
+
+              const invDiscFromP = subNet * (discP / 100);
+              const invDisc = Math.min(invDiscFromP + discL, subNet);
+
+              const taxable = Math.max(subNet - invDisc, 0);
+              const tax = TAX_PERCENT > 0 ? taxable * (TAX_PERCENT / 100) : 0;
+              const grand = taxable + tax;
+
+              const totalDiscountShown = lineDiscTotal + invDisc;
+
+              document.getElementById('subTotal').innerText = money(subNet);
+              document.getElementById('sumQty').innerText = String(qtySum);
+              document.getElementById('sumItems').innerText = String(rows.length);
+              document.getElementById('sumTax').innerText = money(tax);
+              document.getElementById('invoiceDiscountComputed').innerText = money(totalDiscountShown);
+              document.getElementById('grandTotal').innerText = money(grand);
+              document.getElementById('sumPayable').innerText = grand.toFixed(2);
+          }
+
+          /* ---------- CUSTOMER ---------- */
+          function toggleCustomerType() {
+              const walkin = document.getElementById("walkinRadio").checked;
+              document.getElementById("walkinBlock").style.display = walkin ? "block" : "none";
+              document.getElementById("customerBlock").style.display = walkin ? "none" : "block";
+              if (walkin) clearCustomer();
+          }
+
+          function setSelectedCustomer(sel) {
+              const id = parseInt(sel?.value || "0", 10);
+              if (!id) { clearCustomer(); return; }
+              document.getElementById("selectedCustomerId").value = id;
+              document.getElementById("selectedCustomerBlock").style.display = "block";
+          }
+
+          function clearCustomer() {
+              const dd = document.getElementById("customerDropdown");
+              if (dd) dd.selectedIndex = 0;
+              document.getElementById("selectedCustomerBlock").style.display = "none";
+              document.getElementById("selectedCustomerId").value = "";
+          }
+
+          /* ---------- PAYMENT METHOD ---------- */
+          function setPaymentMethod(val) {
+              const sel = document.getElementById('paymentMethod');
+              if (sel) sel.value = val;
+
+              document.querySelectorAll('#paymentPills .method-pill').forEach(x => x.classList.remove('active'));
+              const pill = document.querySelector(`#paymentPills .method-pill[data-value="${val}"]`);
+              pill?.classList.add('active');
+          }
+
+          /* ---------- PAYMENT MODAL ---------- */
+          // ADDED: Helper function to set tender amount from denomination buttons
+          function setTenderAmount(amount) {
+              const input = document.getElementById('tenderInput');
+              if (input) {
+                  input.value = amount;
+                  updateChange();
+                  input.focus();
+                  input.select();
+              }
+          }
+
+          function openTenderModal(_, actionFn) {
+              if (!hasLineItems()) return toast('Please add at least one item', 'warning');
+              pendingAction = actionFn;
+
+              const overlay = document.getElementById('paymentModalOverlay');
+              overlay.style.display = 'flex';
+
+              document.getElementById('btnPayConfirm').textContent =
+                  (actionFn === handleSaveOnly ? 'Confirm (Save)' : 'Confirm & Print');
+
+              const method = (document.getElementById('paymentMethod')?.value || 'cash').toLowerCase();
+              const iconMap = {
+                  cash: 'bi-cash',
+                  credit: 'bi-journal-text',
+                  credit_card: 'bi-credit-card',
+                  bank: 'bi-bank',
+                  online: 'bi-wifi'
+              };
+              const labelMap = {
+                  cash: 'Cash',
+                  credit: 'Credit',
+                  credit_card: 'Card',
+                  bank: 'Bank',
+                  online: 'Online'
+              };
+
+              document.getElementById('modalMethod').innerHTML =
+                  `<i class="bi ${iconMap[method] || 'bi-cash'}"></i> ${labelMap[method] || method}`;
+
+              const grand = parseFloat(document.getElementById('grandTotal').textContent.replace(/[₨,]/g, '')) || 0;
+              const tax = parseFloat(document.getElementById('sumTax')?.textContent?.replace(/[₨,]/g, '') || 0) || 0;
+              const disc = parseFloat(document.getElementById('invoiceDiscountComputed').textContent.replace(/[₨,]/g, '')) || 0;
+
+              document.getElementById('tenderGrandTotal').innerText = grand.toFixed(2);
+              document.getElementById('rowDiscount').style.display = disc > 0 ? 'flex' : 'none';
+              document.getElementById('tenderDiscount').innerText = disc.toFixed(2);
+              document.getElementById('rowTax').style.display = tax > 0 ? 'flex' : 'none';
+              document.getElementById('tenderTax').innerText = tax.toFixed(2);
+
+              const ti = document.getElementById('tenderInput');
+              ti.value = '';
+              updateChange();
+
+              setTimeout(() => {
+                  ti.focus();
+                  ti.select();
+              }, 0);
+          }
+
+    const customerDropdown = document.getElementById("customerDropdown");
+    const selectedCustomerId = parseInt(document.getElementById("selectedCustomerId")?.value || "0");
+    const customerBalanceText = document.getElementById("customerBalance")?.innerText || "0.00";
+
+    if (selectedCustomerId > 0 && customerDropdown) {
+        const selectedOption = customerDropdown.options[customerDropdown.selectedIndex];
+        const customerName = selectedOption ? selectedOption.text : "Registered Customer";
+
+        document.getElementById("rowCustomer").style.display = "flex";
+        document.getElementById("rowCustomerBalance").style.display = "flex";
+        document.getElementById("modalCustomerName").innerText = customerName;
+        document.getElementById("modalCustomerBalance").innerText = customerBalanceText || "0.00";
+    } else {
+        document.getElementById("rowCustomer").style.display = "none";
+        document.getElementById("rowCustomerBalance").style.display = "none";
     }
 
-    /* ---------- NEW INVOICE ---------- */
-    function generateInvoiceNumber() {
-        const date = new Date().toISOString().slice(0, 10);
-        const random = Math.floor(Math.random() * 1000);
-        return `@ViewBag.NextInvoice`;
-    }
+          function closePaymentModal() {
+              document.getElementById('paymentModalOverlay').style.display = 'none';
+              focusBarcode();
+          }
 
-    /* ✅ F12 FIX inside handleNewInvoice */
-    function handleNewInvoice(saved = false) {
-      const hasItems = hasLineItems();
+          function updateChange() {
+              const tendered = parseFloat(document.getElementById('tenderInput').value) || 0;
+              const grand = parseFloat(document.getElementById('tenderGrandTotal').innerText) || 0;
+              const change = tendered - grand;
 
-      // block if has items and not saved
-      if (!saved && hasItems) {
-        Swal.fire({
-          icon:'warning',
-          title:'Unsaved Invoice',
-          text:'This invoice has items. Please Save (F5) or Save & Print (F4) first.',
-          target:getToastTarget()
-        });
-        return;
-      }
+              document.getElementById('modalRemaining').textContent =
+                  (change < 0 ? Math.abs(change) : 0).toFixed(2);
 
-      // ✅ KEY FIX: empty + fresh => don't advance invoice number
-      if (!saved && !hasItems && invoiceIsFresh === true) {
-        toast('Already on a new invoice', 'info', 900);
-        focusBarcode();
-        return;
-      }
+              document.getElementById('tenderChangeText').textContent =
+                  (change > 0 ? change : 0).toFixed(2);
+          }
 
-      const tb = document.querySelector('#salesTable tbody');
-      tb.innerHTML = `<tr id="noDataRow"><td colspan="8" class="text-center text-muted py-4"><i class="bi bi-bag-x fs-4 d-block mb-2"></i>No items added yet</td></tr>`;
+          function handleTenderOk() {
+              const tendered = parseFloat(document.getElementById('tenderInput').value) || 0;
+              const grand = parseFloat(document.getElementById('tenderGrandTotal').innerText) || 0;
+              const method = (document.getElementById('paymentMethod')?.value || 'cash').toLowerCase();
 
-      invoiceDiscountPercentEl.value = '0';
-      invoiceDiscountAmountEl.value = '0';
+              const allowPartial = (method === 'credit');
 
-      document.getElementById('subTotal').innerText = '₨0.00';
-      document.getElementById('sumQty').innerText = '0';
-      document.getElementById('sumItems').innerText = '0';
-      document.getElementById('sumTax').innerText = '₨0.00';
-      document.getElementById('grandTotal').innerText = '₨0.00';
-      document.getElementById('invoiceDiscountComputed').innerText = '₨0.00';
-      document.getElementById('sumPayable').innerText = '0.00';
+              if (tendered < 0) {
+                  Swal.fire({ icon: 'warning', title: 'Invalid Amount', text: 'Tendered amount negative nahi ho sakta.', target: getToastTarget() });
+                  return;
+              }
 
-      document.getElementById('paymentModalOverlay').style.display = 'none';
+              if (!allowPartial && tendered < grand) {
+                  Swal.fire({
+                      icon: 'error',
+                      title: 'Payment Short',
+                      html: `Total: <b>₨${grand.toFixed(2)}</b><br>Received: <b>₨${tendered.toFixed(2)}</b><br><br>Please enter full payment (>= total).`,
+                      confirmButtonText: 'OK',
+                      target: getToastTarget()
+                  });
+                  document.getElementById('tenderInput').focus();
+                  document.getElementById('tenderInput').select();
+                  return;
+              }
 
-      // ✅ new invoice number only when: saved/hold happened OR invoice was used (dirty)
-      if (saved === true || invoiceIsFresh === false) {
-        document.getElementById('invoiceNoValue').innerText = generateInvoiceNumber();
-      }
+              if (typeof pendingAction === "function") {
+                  pendingAction();
+                  pendingAction = null;
+              }
+              closePaymentModal();
+          }
 
-      // now it's fresh
-      invoiceIsFresh = true;
+          /* ---------- SAVE / PRINT ---------- */
+          async function handleSavePrint() { await saveSaleCommon(true); }
+          async function handleSaveOnly() { await saveSaleCommon(false); }
 
-      setPaymentMethod('cash');
-      focusBarcode();
+          function getSelectedSaleType() {
+              const s = document.querySelector('input[name="SaleType"]:checked');
+              return s ? s.value : "Sale";
+          }
 
-      toast('New invoice ready', 'success', 900);
-    }
+          function getSaleItemsFromTable() {
+              const rows = document.querySelectorAll('#salesTable tbody tr');
+              const arr = [];
 
-    /* ---------- LIVE CLOCK ---------- */
-    function updateLiveClock() {
-      const n = new Date();
-      const d = n.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
-      const t = n.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      document.getElementById('liveClock').innerText = d + " | " + t;
-    }
+              rows.forEach(r => {
+                  if (r.id === 'noDataRow') return;
 
-    /* ---------- FULLSCREEN ---------- */
-    function isFullscreen() { return document.fullscreenElement === posShell || document.webkitFullscreenElement === posShell; }
-    function enterFullscreen() { if (posShell.requestFullscreen) posShell.requestFullscreen(); else if (posShell.webkitRequestFullscreen) posShell.webkitRequestFullscreen(); }
-    function exitFullscreen() { if (document.exitFullscreen) document.exitFullscreen(); else if (document.webkitExitFullscreen) document.webkitExitFullscreen(); }
-    function toggleFullscreen() { isFullscreen() ? exitFullscreen() : enterFullscreen(); }
+                  const unitPrice = parseFloat((r.querySelector('.price-cell')?.textContent || "0").replace(/[₨,]/g, '')) || 0;
+                  const qty = parseFloat(r.querySelector('.qty-main')?.value || 0) || 0;
+                  const gross = unitPrice * qty;
 
-    /* ---------- SHORTCUTS ---------- */
-    function globalKeyHandler(e) {
-      const listDiv = document.getElementById('itemSuggestions');
+                  const discP = parseFloat(r.querySelector('.disc-percent')?.value || 0) || 0;
+                  const discA = parseFloat(r.querySelector('.disc-amount')?.value || 0) || 0;
 
-      if (filtered.length && listDiv.style.display === 'block') {
-        if (e.key === 'ArrowDown') { e.preventDefault(); if (selectedIdx < filtered.length - 1) selectedIdx++; updateHighlight(); return; }
-        if (e.key === 'ArrowUp')   { e.preventDefault(); if (selectedIdx > 0) selectedIdx--; updateHighlight(); return; }
-        if (e.key === 'Enter') {
-          if (selectedIdx === -1 && filtered.length > 0) selectedIdx = 0;
-          if (selectedIdx >= 0) { e.preventDefault(); selectItemSuggestion(selectedIdx); }
-          return;
-        }
-        if (e.key === 'Escape') { listDiv.style.display = 'none'; filtered = []; selectedIdx = -1; return; }
-      }
+                  let finalDiscPercent = 0;
+                  let finalDiscAmount = 0;
 
-      if (e.key === 'F2') { e.preventDefault(); e.stopPropagation(); toggleQtyMode(); return; }
-      if (e.key === 'F3') { e.preventDefault(); e.stopPropagation(); togglePriceMode(); return; }
+                  if (itemDiscMode === 'percent') {
+                      finalDiscPercent = clamp(discP, 0, 100);
+                      finalDiscAmount = gross * (finalDiscPercent / 100);
+                  } else {
+                      finalDiscAmount = Math.min(Math.max(discA, 0), gross);
+                      finalDiscPercent = gross > 0 ? (finalDiscAmount / gross) * 100 : 0;
+                  }
 
-      if (e.key === 'F4') { e.preventDefault(); e.stopPropagation(); openTenderModal(null, handleSavePrint); return; }
-      if (e.key === 'F5') { e.preventDefault(); e.stopPropagation(); openTenderModal(null, handleSaveOnly); return; }
+                  const lineTotal = parseFloat((r.querySelector('.line-total')?.textContent || "0").replace(/[₨,]/g, '')) || 0;
 
-      if (e.key === 'F8') { e.preventDefault(); e.stopPropagation(); printCurrentSavedInvoice(); return; }
+                  arr.push({
+                      ItemId: parseInt(r.dataset.itemId),
+                      Quantity: qty,
+                      UnitPrice: unitPrice,
+                      DiscountPercent: finalDiscPercent,
+                      DiscountAmount: finalDiscAmount,
+                      TaxAmount: 0,
+                      LineTotal: lineTotal
+                  });
+              });
 
-      if (e.key === 'F12') { e.preventDefault(); e.stopPropagation(); handleNewInvoice(false); return; }
+              return arr;
+          }
 
-      if (e.altKey && e.key.toLowerCase() === 'enter') { e.preventDefault(); toggleFullscreen(); return; }
-      if (e.altKey && e.key.toLowerCase() === 'b') { e.preventDefault(); focusBarcode(); return; }
-      if (e.altKey && e.key.toLowerCase() === 's') { e.preventDefault(); document.getElementById('rbSale').checked = true; applySaleTypeVisual(); return; }
-      if (e.altKey && e.key.toLowerCase() === 'r') { e.preventDefault(); document.getElementById('rbReturn').checked = true; applySaleTypeVisual(); return; }
-      if (e.altKey && e.key.toLowerCase() === 'p') { e.preventDefault(); setItemDiscMode('percent'); return; }
-      if (e.altKey && e.key.toLowerCase() === 'a') { e.preventDefault(); setItemDiscMode('amount'); return; }
+          function cleanSaleData(sd) {
+              if (sd.Payment) delete sd.Payment.Id;
+              (sd.SaleItems || []).forEach(i => delete i.Id);
+              return sd;
+          }
 
-      if (e.ctrlKey && e.key.toLowerCase() === 'd') {
-        e.preventDefault();
-        invoiceDiscountPercentEl.focus();
-        invoiceDiscountPercentEl.select();
-        return;
-      }
-    }
+          async function saveSaleCommon(printAfter) {
+              const grand = parseFloat(document.getElementById('grandTotal')?.textContent.replace(/[₨,]/g, '') || 0);
+              const subtotal = parseFloat(document.getElementById('subTotal')?.textContent.replace(/[₨,]/g, '') || 0);
 
-    /* ---------- LIVE STOCK API ---------- */
-    async function refreshRowLiveInfo(itemId, row) {
-      try {
-        const res = await fetch(`/Sales/GetItemLive?id=${itemId}`);
-        if (!res.ok) return;
+              let cust = parseInt(document.getElementById("selectedCustomerId")?.value) || 0;
+              let id = parseInt(document.getElementById("saleId")?.value) || 0;
+              let tender = parseFloat(document.getElementById("tenderInput")?.value) || 0;
 
-        const js = await res.json();
-        if (!js || !js.ok) return;
+              const percent = Math.max(parseFloat(invoiceDiscountPercentEl?.value || 0), 0);
+              const less = Math.max(parseFloat(invoiceDiscountAmountEl?.value || 0), 0);
+              const discFromP = subtotal * (percent / 100);
+              const totalDisc = Math.min(discFromP + less, subtotal);
 
-        const stockEl = row.querySelector('.js-stock');
-        if (stockEl) stockEl.textContent = (js.qty ?? 0);
-      } catch (e) {
-        console.error('refreshRowLiveInfo', e);
-      }
-    }
+              const method = (document.getElementById('paymentMethod')?.value || 'cash').toLowerCase();
+              const allowPartial = (method === 'credit');
 
-    /* ---------- INIT ---------- */
-    document.addEventListener('DOMContentLoaded', () => {
-      posShell = document.getElementById('posShell');
-      btnFullscreen = document.getElementById('btnFullscreen');
-      itemInputEl = document.getElementById('itemSearchInput');
-      suggDiv = document.getElementById('itemSuggestions');
+              if (!allowPartial && tender < grand) {
+                  Swal.fire({
+                      icon: 'error',
+                      title: 'Payment Short',
+                      html: `Total: <b>₨${grand.toFixed(2)}</b><br>Received: <b>₨${tender.toFixed(2)}</b><br><br>Please enter full payment (>= total).`,
+                      confirmButtonText: 'OK',
+                      target: getToastTarget()
+                  });
+                  return;
+              }
 
-      invoiceDiscountPercentEl = document.getElementById('invoiceDiscountPercent');
-      invoiceDiscountAmountEl  = document.getElementById('invoiceDiscountAmount');
+              const saleData = cleanSaleData({
+                  Id: id,
+                  InvoiceNumber: document.getElementById('invoiceNoValue').textContent,
+                  SubTotal: subtotal,
+                  Tax: parseFloat(document.getElementById('sumTax')?.textContent.replace(/[₨,]/g, '') || 0),
+                  Discount: totalDisc,
+                  DiscountPercent: percent,
+                  DiscountLessAmount: less,
+                  SaleType: getSelectedSaleType(),
+                  Total: grand,
+                  custId: cust,
+                  tender_amount: tender,
+                  Payment: { Amount: tender, PaymentMethod: method, Change: Math.max(tender - grand, 0) },
+                  SaleItems: getSaleItemsFromTable()
+              });
 
-      setFocusMode('scan', false);
-      applySaleTypeVisual();
-      setItemDiscMode('percent', false);
+              if (!saleData.SaleItems || saleData.SaleItems.length === 0) {
+                  Swal.fire({ icon: 'warning', title: 'No Items', text: 'Please add at least one item!', target: getToastTarget() });
+                  return;
+              }
 
-      setPaymentMethod((document.getElementById("paymentMethod")?.value || "cash").toLowerCase());
+              try {
+                  const endpoint = printAfter ? '/Sales/SaveSale' : '/Sales/SaveOnly';
+                  const token = getAntiForgeryToken();
 
-      attachScannerHandlers();
+                  const res = await fetch(endpoint, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
+                      body: JSON.stringify(saleData)
+                  });
 
-      document.getElementById('rbSale')?.addEventListener('change', applySaleTypeVisual);
-      document.getElementById('rbReturn')?.addEventListener('change', applySaleTypeVisual);
+                  const rsp = await readResponseSmart(res);
 
-      document.querySelectorAll('#paymentPills .method-pill').forEach(p => {
-        p.addEventListener('click', () => setPaymentMethod(p.getAttribute('data-value')));
-      });
+                  if (!res.ok) {
+                      if (rsp.json && (rsp.json.Message || rsp.json.message)) {
+                          toast(rsp.json.Message || rsp.json.message, 'error', 2500);
+                          return;
+                      }
+                      showServerError(`Save Failed (HTTP ${res.status})`, rsp.text || 'No response body');
+                      return;
+                  }
 
-      document.getElementById('btnHold')?.addEventListener('click', holdCurrentInvoice);
-      document.getElementById('btnRetrieveHeld')?.addEventListener('click', openRetrieveModal);
+                  const result = rsp.json;
+                  if (!result || typeof result !== 'object') {
+                      showServerError('Saved but response is not JSON', `Content-Type: ${rsp.ct}\n\n${rsp.text}`);
+                      return;
+                  }
 
-      document.getElementById('new-btn')?.addEventListener('click', () => handleNewInvoice(false));
+                  toast(result.Message || 'Saved', 'success', 1100);
 
-      document.querySelector('.saveprint-btn')?.addEventListener('click', () => openTenderModal(null, handleSavePrint));
-      document.querySelector('.saveonly-btn')?.addEventListener('click', () => openTenderModal(null, handleSaveOnly));
+                  const ti = document.getElementById('tenderInput');
+                  ti.value = '';
 
-      document.getElementById('tenderOkBtn')?.addEventListener('click', handleTenderOk);
-      document.getElementById('tenderInput')?.addEventListener('input', updateChange);
-      document.getElementById('tenderInput')?.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); handleTenderOk(); }
-      });
+                  if (result?.id) lastSavedSaleId = Number(result.id) || 0;
 
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && document.getElementById('paymentModalOverlay').style.display === 'flex') {
-          e.preventDefault();
-          closePaymentModal();
-        }
-      });
 
-      document.getElementById('holdSearch')?.addEventListener('input', renderHeldTable);
 
-      // ✅ markDirty on invoice discount edits
-      invoiceDiscountPercentEl?.addEventListener('input', () => {
-        markDirty();
-        let v = parseFloat(invoiceDiscountPercentEl.value) || 0;
-        if (v < 0) v = 0; if (v > 100) v = 100;
-        invoiceDiscountPercentEl.value = v;
-        recalculateTotals();
-      });
+          handleNewInvoice(true);
 
-      invoiceDiscountAmountEl?.addEventListener('input', () => {
-        markDirty();
-        let v = parseFloat(invoiceDiscountAmountEl.value) || 0;
-        if (v < 0) v = 0;
-        invoiceDiscountAmountEl.value = v;
-        recalculateTotals();
-      });
+              } catch (e) {
+                  console.error(e);
+                  showServerError('JS/Network Error', e?.message || String(e));
+              }
+          }
 
-      btnFullscreen?.addEventListener('click', toggleFullscreen);
-      // document.addEventListener('fullscreenchange', handleFsChange);
-      // document.addEventListener('webkitfullscreenchange', handleFsChange);
+          /* ---------- F8 PRINT ---------- */
+          function printCurrentSavedInvoice() {
+              const id = (Number(SEARCH_SALE_ID) > 0) ? Number(SEARCH_SALE_ID) : (Number(lastSavedSaleId) || 0);
 
-      // ✅ capture true so browser refresh shortcuts won't override
-      window.addEventListener('keydown', globalKeyHandler, true);
+              if (!id) {
+                  Swal.fire({
+                      icon: 'error',
+                      title: 'Print Error',
+                      text: 'Please Save (F5) or Save & Print (F4) first, then Print (F8).',
+                      target: getToastTarget()
+                  });
+                  return;
+              }
+              window.open(`/Sales/Receipt/${id}`, '_blank');
+          }
 
-      // set invoice number (search or new)
-      if (SEARCH_INVOICE_NO) {
-        document.getElementById('invoiceNoValue').innerText = SEARCH_INVOICE_NO;
+          /* ---------- HOLD / RETRIEVE ---------- */
+          const HOLD_KEY = 'gposHeldInvoices';
 
-        // searched invoice => not fresh
-        invoiceIsFresh = false;
+          function getAllHeld() {
+              try { return JSON.parse(localStorage.getItem(HOLD_KEY) || '[]'); }
+              catch { return []; }
+          }
 
-        if (SEARCH_SALE_ID > 0) lastSavedSaleId = Number(SEARCH_SALE_ID);
-      } else {
-        document.getElementById('invoiceNoValue').innerText = generateInvoiceNumber();
-        invoiceIsFresh = true;
-      }
+          function saveAllHeld(list) {
+              localStorage.setItem(HOLD_KEY, JSON.stringify(list));
+          }
 
-      if (SEARCH_SALETYPE === "Return") document.getElementById("rbReturn").checked = true;
-      else document.getElementById("rbSale").checked = true;
-      applySaleTypeVisual();
+          function cryptoRandomId() {
+              try { return [...crypto.getRandomValues(new Uint8Array(8))].map(x => x.toString(16).padStart(2, '0')).join(''); }
+              catch { return String(Date.now()); }
+          }
 
-      if (SEARCH_HAS_CUSTOMER && SEARCH_CUSTOMERID > 0) {
-        document.getElementById("customerRadio").checked = true;
-        document.getElementById("walkinRadio").checked = false;
-        toggleCustomerType();
-        const ddl = document.getElementById("customerDropdown");
-        if (ddl) ddl.value = String(SEARCH_CUSTOMERID);
-        document.getElementById("selectedCustomerId").value = String(SEARCH_CUSTOMERID);
-        document.getElementById("selectedCustomerBlock").style.display = "block";
-      }
+          function holdCurrentInvoice() {
+              if (!hasLineItems()) return toast('No items to hold', 'warning');
 
-      if (SEARCH_PAYMENT_METHOD) setPaymentMethod(SEARCH_PAYMENT_METHOD);
+              const itemsArr = getSaleItemsFromTable();
+              const invoiceNumber = document.getElementById('invoiceNoValue').textContent;
 
-      document.getElementById("tenderInput").value= SEARCH_PAYMENT;
-      document.getElementById("saleId").value= SEARCH_SALE_ID;
+              const sub = parseFloat(document.getElementById('subTotal').textContent.replace(/[₨,]/g, '')) || 0;
+              const tax = parseFloat(document.getElementById('sumTax')?.textContent?.replace(/[₨,]/g, '') || 0) || 0;
+              const grand = parseFloat(document.getElementById('grandTotal').textContent.replace(/[₨,]/g, '')) || 0;
 
-        // Add all sale items to the table
-        if (Array.isArray(saleItems) && saleItems.length > 0) {
-            saleItems.forEach(si => {
-                const tableItem = {
-                    Id: si.ItemId,
-                    ItemCode: si.Item.ItemCode,
-                    ItemName: si.Item.ItemName,
-                    PackSize: si.Item.PackSize,
-                    SalePrice: si.Item.SalePrice ?? si.UnitPrice,
-                    UnitPrice: si.UnitPrice,
-                    Quantity: si.Quantity,
-                    Stock: si.Item.Quantity,
-                    LineTotal: si.LineTotal,
-                    DiscountPercent: si.DiscountPercent
-                };
+              const invDiscPercent = clamp(invoiceDiscountPercentEl?.value || 0, 0, 100);
+              const invDiscLess = Math.max(parseFloat(invoiceDiscountAmountEl?.value || 0), 0);
+              const invDiscFromP = sub * (invDiscPercent / 100);
+              const invDisc = Math.min(invDiscFromP + invDiscLess, sub);
 
-                // Call your existing function
-                addToSalesTable(tableItem);
+              const held = {
+                  id: cryptoRandomId(),
+                  invoiceNumber,
+                  items: itemsArr,
+                  discount: invDisc,
+                  discountPercent: invDiscPercent,
+                  discountLessAmount: invDiscLess,
+                  tax,
+                  grandTotal: grand,
+                  saleType: getSelectedSaleType(),
+                  itemDiscMode,
+                  heldAt: nowIso()
+              };
 
-                // Optionally update the row with LineTotal and DiscountPercent
-                const tb = document.querySelector('#salesTable tbody');
-                const row = tb.querySelector(`tr[data-item-id="${tableItem.Id}"]`);
-                if (row) {
-                    // Set quantity, line total, discount
-                    const qtyInput = row.querySelector('.qty-main');
-                    qtyInput.value = tableItem.Quantity;
+              const list = getAllHeld();
+              list.unshift(held);
+              saveAllHeld(list);
 
-                    const discPercentEl = row.querySelector('.disc-percent');
-                    discPercentEl.value = tableItem.DiscountPercent;
+              toast('Invoice held successfully', 'success', 1400);
+              handleNewInvoice(true);
+          }
 
-                    const lineTotalEl = row.querySelector('.line-total');
-                    lineTotalEl.textContent = `₨${parseFloat(tableItem.LineTotal || 0).toFixed(2)}`;
+          function openRetrieveModal() {
+              document.getElementById('retrieveOverlay').style.display = 'flex';
+              renderHeldTable();
+              document.getElementById('holdSearch')?.focus();
+          }
 
-                    updateRowTotal(row); // recalc totals in your function
+          function closeRetrieveModal() {
+              document.getElementById('retrieveOverlay').style.display = 'none';
+          }
+
+          function renderHeldTable() {
+              const tbody = document.getElementById('heldTbody');
+              tbody.innerHTML = '';
+
+              const list = getAllHeld();
+              const q = (document.getElementById('holdSearch')?.value || '').trim().toLowerCase();
+              const view = list.filter(h => !q || (h.invoiceNumber || '').toLowerCase().includes(q));
+
+              document.getElementById('noHeldRow').style.display = view.length ? 'none' : 'block';
+
+              view.forEach(h => {
+                  const previewNames = (h.items || [])
+                      .slice(0, 3)
+                      .map(it => (items.find(x => x.Id === it.ItemId)?.ItemName) || (`Item#${it.ItemId}`))
+                      .join(', ');
+
+                  const tr = document.createElement('tr');
+                  tr.innerHTML = `
+                      <td><span class="badge text-bg-light">${h.invoiceNumber}</span></td>
+                      <td>${h.items?.length || 0}</td>
+                      <td>${previewNames || '—'}</td>
+                      <td><strong>${money(h.grandTotal || 0)}</strong></td>
+                      <td>${new Date(h.heldAt).toLocaleString()}</td>
+                      <td class="text-end">
+                          <button class="btn btn-sm btn-soft-green me-1" onclick="retrieveInvoice('${h.id}')"><i class="bi bi-pencil-square"></i> Edit</button>
+                          <button class="btn btn-sm btn-soft-amber" onclick="deleteHeld('${h.id}')"><i class="bi bi-trash3"></i> Delete</button>
+                      </td>`;
+                  tbody.appendChild(tr);
+              });
+          }
+
+          function deleteHeld(id) {
+              let list = getAllHeld();
+              list = list.filter(x => x.id !== id);
+              saveAllHeld(list);
+              renderHeldTable();
+              toast('Held invoice deleted', 'success', 1000);
+          }
+
+          function clearAllHeld() {
+              Swal.fire({
+                  icon: 'warning',
+                  title: 'Clear all held invoices?',
+                  showCancelButton: true,
+                  confirmButtonText: 'Yes, Clear',
+                  target: getToastTarget()
+              }).then(r => {
+                  if (r.isConfirmed) {
+                      localStorage.removeItem(HOLD_KEY);
+                      renderHeldTable();
+                      toast('All cleared', 'success', 1000);
+                  }
+              });
+          }
+
+          function sortHeld(by) {
+              let list = getAllHeld();
+              if (by === 'time') list.sort((a, b) => new Date(b.heldAt) - new Date(a.heldAt));
+              if (by === 'grand') list.sort((a, b) => (b.grandTotal || 0) - (a.grandTotal || 0));
+              saveAllHeld(list);
+              renderHeldTable();
+          }
+
+          function retrieveInvoice(id) {
+              const list = getAllHeld();
+              const h = list.find(x => x.id === id);
+              if (!h) { toast('Not found', 'error'); return; }
+
+              if (h.itemDiscMode) setItemDiscMode(h.itemDiscMode, false);
+
+              const tb = document.querySelector('#salesTable tbody');
+              tb.innerHTML = '';
+
+              (h.items || []).forEach((it, idx) => {
+                  const meta = items.find(x => x.Id === it.ItemId) || { Id: it.ItemId, ItemCode: "", ItemName: ("Item#" + it.ItemId) };
+                  const row = document.createElement('tr');
+                  row.dataset.itemId = it.ItemId;
+
+                  const codeSafe = (meta.ItemCode || ('X' + idx)).replace(/[^a-zA-Z0-9_-]/g, '');
+                  const discPercent = Number(it.DiscountPercent || 0);
+                  const discAmount = Number(it.DiscountAmount || 0);
+
+                  row.innerHTML = `
+                      <td>${idx + 1}</td>
+                      <td>
+                          <div class="fw-bold">${meta.ItemName || ('Item#' + it.ItemId)}</div>
+                          <div class="small text-muted mt-1">
+                              <span class="badge text-bg-light">Stock: <span class="js-stock">0</span></span>
+                          </div>
+                      </td>
+                      <td><span tabindex="0" class="price-cell" data-original-price="${Number(it.UnitPrice).toFixed(2)}">₨${Number(it.UnitPrice).toFixed(2)}</span></td>
+                      <td>
+                          <div class="d-inline-flex gap-1 align-items-center">
+                              <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(this,-1)"><i class="bi bi-dash-lg"></i></button>
+                              <input type="number" class="qty-input qty-main" value="${Number(it.Quantity)}" min="1" onchange="qtyInputChanged(this)" />
+                              <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(this,1)"><i class="bi bi-plus-lg"></i></button>
+                          </div>
+                      </td>
+                      <td>
+                          <div class="d-inline-flex gap-1 align-items-center disc-percent-wrap">
+                              <input type="number" class="qty-input disc-percent" value="${discPercent}" min="0" max="100" step="0.01" onchange="discPercentChanged(this)" />
+                              <span class="text-muted">%</span>
+                          </div>
+                          <div class="d-inline-flex gap-1 align-items-center disc-amount-wrap">
+                              <input type="number" class="qty-input disc-amount" value="${discAmount}" min="0" step="0.01" onchange="discAmountChanged(this)" />
+                              <span class="text-muted">₨</span>
+                          </div>
+                      </td>
+                      <td>0</td>
+                      <td id="salePrice-${codeSafe}" class="line-total">₨${Number(it.LineTotal || (it.UnitPrice * it.Quantity)).toFixed(2)}</td>
+                      <td><button class="delete-row-btn" onclick="deleteRow(this)"><i class="bi bi-trash3"></i></button></td>
+                  `;
+                  tb.appendChild(row);
+
+                  refreshRowLiveInfo(meta.Id, row);
+
+                  const priceCell = row.querySelector('.price-cell');
+                  const qtyInput = row.querySelector('.qty-main');
+
+                  priceCell.addEventListener('dblclick', () => { makePriceEditable(priceCell); selectAllContent(priceCell); priceCell.focus(); });
+                  priceCell.addEventListener('keydown', e => {
+                      if (e.key === 'Enter') { e.preventDefault(); savePrice(priceCell); qtyInput?.focus(); qtyInput?.select(); }
+                      else if (e.key === 'Escape') {
+                          e.preventDefault();
+                          const orig = priceCell.dataset.originalPrice;
+                          priceCell.textContent = `₨${parseFloat(orig || 0).toFixed(2)}`;
+                          savePrice(priceCell);
+                          focusBarcode();
+                      }
+                  });
+                  priceCell.addEventListener('blur', () => { if (priceCell.isContentEditable) savePrice(priceCell); });
+
+                  updateRowTotal(row);
+              });
+
+              invoiceDiscountPercentEl.value = String(h.discountPercent ?? 0);
+              invoiceDiscountAmountEl.value = String(h.discountLessAmount ?? 0);
+
+              if (h.saleType === 'Return') document.getElementById('rbReturn').checked = true;
+              else document.getElementById('rbSale').checked = true;
+
+              applySaleTypeVisual();
+              recalculateTotals();
+
+              saveAllHeld(list.filter(x => x.id !== id));
+              closeRetrieveModal();
+              toast('Invoice retrieved', 'success', 1000);
+
+                if (h.invoiceNumber) {
+                    document.getElementById('invoiceNoValue').innerText = h.invoiceNumber;
+                } else {
+                    generateInvoiceNumber().then(invoice => {
+                        document.getElementById('invoiceNoValue').innerText = invoice || '';
+                    });
                 }
-            });
+              invoiceIsFresh = false;
+              focusBarcode();
+          }
+
+          /* ---------- NEW INVOICE ---------- */
+            function generateInvoiceNumber() {
+                return fetch('/Sales/GetNextInvoice')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (!data.success) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Day Not Closed',
+                                html: `
+                                    ${data.message}<br><br>
+                                    <a href="/Settings/Index"
+                                       style="color:#3085d6; text-decoration:underline;">
+                                       Go to Settings & Close the day
+                                    </a>
+                                `
+                            });
+                            return null;
+                        }
+
+                        console.log(data.invoice);
+
+                        return data.invoice;
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        return null;
+                    });
+            }
+
+          function handleNewInvoice(saved = false) {
+              const hasItems = hasLineItems();
+
+              if (!saved && hasItems) {
+                  Swal.fire({
+                      icon: 'warning',
+                      title: 'Unsaved Invoice',
+                      text: 'This invoice has items. Please Save (F5) or Save & Print (F4) first.',
+                      target: getToastTarget()
+                  });
+                  return;
+              }
+
+              if (!saved && !hasItems && invoiceIsFresh === true) {
+                  toast('Already on a new invoice', 'info', 900);
+                  focusBarcode();
+                  return;
+              }
+
+              const tb = document.querySelector('#salesTable tbody');
+              tb.innerHTML = `<tr id="noDataRow"><td colspan="8" class="text-center text-muted py-4"><i class="bi bi-bag-x fs-4 d-block mb-2"></i>No items added yet</td></tr>`;
+
+              invoiceDiscountPercentEl.value = '0';
+              invoiceDiscountAmountEl.value = '0';
+
+              document.getElementById('subTotal').innerText = '₨0.00';
+              document.getElementById('sumQty').innerText = '0';
+              document.getElementById('sumItems').innerText = '0';
+              document.getElementById('sumTax').innerText = '₨0.00';
+              document.getElementById('grandTotal').innerText = '₨0.00';
+              document.getElementById('invoiceDiscountComputed').innerText = '₨0.00';
+              document.getElementById('sumPayable').innerText = '0.00';
+
+              document.getElementById('paymentModalOverlay').style.display = 'none';
+
+              if (saved === true || invoiceIsFresh === false) {
+                  let x = generateInvoiceNumber();
+
+                    x.then(invoice => {
+                        document.getElementById('invoiceNoValue').innerText = invoice;
+                    });
+              }
+
+              invoiceIsFresh = true;
+
+              setPaymentMethod('cash');
+              focusBarcode();
+
+              toast('New invoice ready', 'success', 900);
+          }
+
+          /* ---------- LIVE CLOCK ---------- */
+          function updateLiveClock() {
+              const n = new Date();
+              const d = n.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
+              const t = n.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+              document.getElementById('liveClock').innerText = d + " | " + t;
+          }
+
+        function applyExpandedState(on) {
+        if (!posShell) return;
+
+        posShell.classList.toggle('gsoft-expanded', on);
+        document.body.classList.toggle('gsoft-expanded-body', on);
+        sessionStorage.setItem(EXPAND_STATE_KEY, on ? '1' : '0');
+      }
+
+      function isFullscreen() {
+        return !!(document.fullscreenElement || document.webkitFullscreenElement);
+      }
+
+      async function enterFullscreen() {
+        applyExpandedState(true);
+
+        try {
+          if (posShell.requestFullscreen) {
+            await posShell.requestFullscreen();
+          } else if (posShell.webkitRequestFullscreen) {
+            posShell.webkitRequestFullscreen();
+          }
+        } catch (e) {
+          console.log('Fullscreen request failed:', e);
         }
+      }
 
-      updateLiveClock();
-      setInterval(updateLiveClock, 1000);
+      async function exitFullscreen() {
+        applyExpandedState(false);
 
-      recalculateTotals();
-      setTimeout(() => focusBarcode(), 50);
-    });
+        try {
+          if (document.fullscreenElement && document.exitFullscreen) {
+            await document.exitFullscreen();
+          } else if (document.webkitFullscreenElement && document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+          }
+        } catch (e) {
+          console.log('Exit fullscreen failed:', e);
+        }
+      }
+
+      function toggleFullscreen() {
+        if (isFullscreen()) exitFullscreen();
+        else enterFullscreen();
+      }
+          /* ---------- SHORTCUTS ---------- */
+          function globalKeyHandler(e) {
+              const listDiv = document.getElementById('itemSuggestions');
+
+              if (filtered.length && listDiv.style.display === 'block') {
+                  if (e.key === 'ArrowDown') { e.preventDefault(); if (selectedIdx < filtered.length - 1) selectedIdx++; updateHighlight(); return; }
+                  if (e.key === 'ArrowUp') { e.preventDefault(); if (selectedIdx > 0) selectedIdx--; updateHighlight(); return; }
+                  if (e.key === 'Enter') {
+                      if (selectedIdx === -1 && filtered.length > 0) selectedIdx = 0;
+                      if (selectedIdx >= 0) { e.preventDefault(); selectItemSuggestion(selectedIdx); }
+                      return;
+                  }
+                  if (e.key === 'Escape') { listDiv.style.display = 'none'; filtered = []; selectedIdx = -1; return; }
+              }
+
+              if (e.key === 'F2') { e.preventDefault(); e.stopPropagation(); toggleQtyMode(); return; }
+              if (e.key === 'F3') { e.preventDefault(); e.stopPropagation(); togglePriceMode(); return; }
+
+              if (e.key === 'F4') { e.preventDefault(); e.stopPropagation(); openTenderModal(null, handleSavePrint); return; }
+              if (e.key === 'F5') { e.preventDefault(); e.stopPropagation(); openTenderModal(null, handleSaveOnly); return; }
+
+              if (e.key === 'F8') { e.preventDefault(); e.stopPropagation(); printCurrentSavedInvoice(); return; }
+              if (e.key === 'F12') { e.preventDefault(); e.stopPropagation(); handleNewInvoice(false); return; }
+
+              if (e.altKey && e.key.toLowerCase() === 'enter') { e.preventDefault(); toggleFullscreen(); return; }
+              if (e.altKey && e.key.toLowerCase() === 'b') { e.preventDefault(); focusBarcode(); return; }
+              if (e.altKey && e.key.toLowerCase() === 's') { e.preventDefault(); document.getElementById('rbSale').checked = true; applySaleTypeVisual(); return; }
+              if (e.altKey && e.key.toLowerCase() === 'r') { e.preventDefault(); document.getElementById('rbReturn').checked = true; applySaleTypeVisual(); return; }
+              if (e.altKey && e.key.toLowerCase() === 'p') { e.preventDefault(); setItemDiscMode('percent'); return; }
+              if (e.altKey && e.key.toLowerCase() === 'a') { e.preventDefault(); setItemDiscMode('amount'); return; }
+
+              if (e.ctrlKey && e.key.toLowerCase() === 'd') {
+                  e.preventDefault();
+                  invoiceDiscountPercentEl.focus();
+                  invoiceDiscountPercentEl.select();
+                  return;
+              }
+          }
+
+          /* ---------- LIVE STOCK API ---------- */
+          async function refreshRowLiveInfo(itemId, row) {
+              try {
+                  const res = await fetch(`/Sales/GetItemLive?id=${itemId}`);
+                  if (!res.ok) return;
+
+                  const js = await res.json();
+                  if (!js || !js.ok) return;
+
+                  const stockEl = row.querySelector('.js-stock');
+                  if (stockEl) stockEl.textContent = (js.qty ?? 0);
+              } catch (e) {
+                  console.error('refreshRowLiveInfo', e);
+              }
+          }
+
+              function setTenderAmount(amount) {
+        const input = document.getElementById('tenderInput');
+        if (!input) return;
+
+        input.value = amount;
+        updateChange();
+        input.focus();
+        input.select();
+    }
+
+    function setTenderFullAmount() {
+        const grand = parseFloat(document.getElementById('tenderGrandTotal')?.innerText || 0) || 0;
+        const input = document.getElementById('tenderInput');
+        if (!input) return;
+
+        input.value = grand.toFixed(2);
+        updateChange();
+        input.focus();
+        input.select();
+    }
+
+          /* ---------- INIT ---------- */
+          document.addEventListener('DOMContentLoaded', () => {
+              posShell = document.getElementById('posShell');
+              btnFullscreen = document.getElementById('btnFullscreen');
+              itemInputEl = document.getElementById('itemSearchInput');
+              suggDiv = document.getElementById('itemSuggestions');
+
+              invoiceDiscountPercentEl = document.getElementById('invoiceDiscountPercent');
+              invoiceDiscountAmountEl = document.getElementById('invoiceDiscountAmount');
+
+              if (sessionStorage.getItem(EXPAND_STATE_KEY) === '1') {
+                  applyExpandedState(true);
+              }
+
+              setFocusMode('scan', false);
+              applySaleTypeVisual();
+              setItemDiscMode('percent', false);
+
+              setPaymentMethod((document.getElementById("paymentMethod")?.value || "cash").toLowerCase());
+
+              attachScannerHandlers();
+
+              document.getElementById('rbSale')?.addEventListener('change', applySaleTypeVisual);
+              document.getElementById('rbReturn')?.addEventListener('change', applySaleTypeVisual);
+
+              document.querySelectorAll('#paymentPills .method-pill').forEach(p => {
+                  p.addEventListener('click', () => setPaymentMethod(p.getAttribute('data-value')));
+              });
+
+              document.getElementById('btnHold')?.addEventListener('click', holdCurrentInvoice);
+              document.getElementById('btnRetrieveHeld')?.addEventListener('click', openRetrieveModal);
+
+              document.getElementById('btnItemsList')?.addEventListener('click', () => {
+                  window.location.href = '/Item/ItemList';
+              });
+
+              document.getElementById('new-btn')?.addEventListener('click', () => handleNewInvoice(false));
+
+              document.querySelector('.saveprint-btn')?.addEventListener('click', () => openTenderModal(null, handleSavePrint));
+              document.querySelector('.saveonly-btn')?.addEventListener('click', () => openTenderModal(null, handleSaveOnly));
+
+              document.getElementById('print-btn')?.addEventListener('click', printCurrentSavedInvoice);
+
+              document.getElementById('tenderOkBtn')?.addEventListener('click', handleTenderOk);
+              document.getElementById('tenderInput')?.addEventListener('input', updateChange);
+              document.getElementById('tenderInput')?.addEventListener('keydown', (e) => {
+                  if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleTenderOk();
+                  }
+              });
+
+              document.addEventListener('keydown', (e) => {
+                  if (e.key === 'Escape' && document.getElementById('paymentModalOverlay').style.display === 'flex') {
+                      e.preventDefault();
+                      closePaymentModal();
+                  }
+              });
+
+              document.getElementById('holdSearch')?.addEventListener('input', renderHeldTable);
+
+              invoiceDiscountPercentEl?.addEventListener('input', () => {
+                  markDirty();
+                  let v = parseFloat(invoiceDiscountPercentEl.value) || 0;
+                  if (v < 0) v = 0;
+                  if (v > 100) v = 100;
+                  invoiceDiscountPercentEl.value = v;
+                  recalculateTotals();
+              });
+
+              invoiceDiscountAmountEl?.addEventListener('input', () => {
+                  markDirty();
+                  let v = parseFloat(invoiceDiscountAmountEl.value) || 0;
+                  if (v < 0) v = 0;
+                  invoiceDiscountAmountEl.value = v;
+                  recalculateTotals();
+              });
+
+              btnFullscreen?.addEventListener('click', toggleFullscreen);
+
+              window.addEventListener('keydown', globalKeyHandler, true);
+
+              if (SEARCH_INVOICE_NO) {
+                  document.getElementById('invoiceNoValue').innerText = SEARCH_INVOICE_NO;
+                  invoiceIsFresh = false;
+
+                  if (SEARCH_SALE_ID > 0) {
+                      lastSavedSaleId = Number(SEARCH_SALE_ID);
+                  }
+              } else {
+                  let x = generateInvoiceNumber();
+
+                    x.then(invoice => {
+                        document.getElementById('invoiceNoValue').innerText = invoice;
+                    });
+                  invoiceIsFresh = true;
+              }
+
+              if (SEARCH_SALETYPE === "Return") {
+                  document.getElementById("rbReturn").checked = true;
+              } else {
+                  document.getElementById("rbSale").checked = true;
+              }
+
+              applySaleTypeVisual();
+
+              if (SEARCH_HAS_CUSTOMER && SEARCH_CUSTOMERID > 0) {
+                  document.getElementById("customerRadio").checked = true;
+                  document.getElementById("walkinRadio").checked = false;
+                  toggleCustomerType();
+
+                  const ddl = document.getElementById("customerDropdown");
+                  if (ddl) ddl.value = String(SEARCH_CUSTOMERID);
+
+                  document.getElementById("selectedCustomerId").value = String(SEARCH_CUSTOMERID);
+                  document.getElementById("selectedCustomerBlock").style.display = "block";
+              }
+
+              if (SEARCH_PAYMENT_METHOD) {
+                  setPaymentMethod(SEARCH_PAYMENT_METHOD);
+              }
+
+              document.getElementById("tenderInput").value = Number(SEARCH_PAYMENT) > 0 ? SEARCH_PAYMENT : '';
+              document.getElementById("saleId").value = SEARCH_SALE_ID;
+
+              if (Array.isArray(saleItems) && saleItems.length > 0) {
+                  saleItems.forEach(si => {
+                      const tableItem = {
+                          Id: si.ItemId,
+                          ItemCode: si.Item.ItemCode,
+                          ItemName: si.Item.ItemName,
+                          PackSize: si.Item.PackSize,
+                          SalePrice: si.Item.SalePrice ?? si.UnitPrice,
+                          UnitPrice: si.UnitPrice,
+                          Quantity: si.Quantity,
+                          Stock: si.Item.Quantity,
+                          LineTotal: si.LineTotal,
+                          DiscountPercent: si.DiscountPercent
+                      };
+
+                      addToSalesTable(tableItem);
+
+                      const tb = document.querySelector('#salesTable tbody');
+                      const row = tb.querySelector(`tr[data-item-id="${tableItem.Id}"]`);
+                      if (row) {
+                          const qtyInput = row.querySelector('.qty-main');
+                          qtyInput.value = tableItem.Quantity;
+
+                          const discPercentEl = row.querySelector('.disc-percent');
+                          discPercentEl.value = tableItem.DiscountPercent;
+
+                          const lineTotalEl = row.querySelector('.line-total');
+                          lineTotalEl.textContent = `₨${parseFloat(tableItem.LineTotal || 0).toFixed(2)}`;
+
+                          updateRowTotal(row);
+                      }
+                  });
+              }
+
+              updateLiveClock();
+              setInterval(updateLiveClock, 1000);
+
+              recalculateTotals();
+              setTimeout(() => focusBarcode(), 50);
+          });
 </script>
 
 

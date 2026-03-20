@@ -10,81 +10,168 @@
     var prevBal = ViewBag.PreviousBalance as string ?? "0.00";
     var userName = ViewBag.CurrentUser as string ?? "Admin";
 }
+
 @section Styles {
     <style>
-        /* ==== Dimmer palette ==== */
         :root {
-            --ink: #1f2b3f;
-            --line: #d7deea;
-            --blue: #1e78d8;
-            --green: #1faa55;
-            --shadow: 0 10px 30px rgba(16,28,48,.10);
-            --grad: linear-gradient(120deg,#e6ecf6 0%,#e1ebff 45%,#deefe8 100%);
-            --stage-bg: #f2f5f9;
-            --stage-br: #cfd8e6;
-            --muted: #5a6a84;
+            --bg: #f4f7fb;
+            --card: #ffffff;
+            --card-soft: #f8fbff;
+            --line: #dbe4f0;
+            --line-soft: #eaf0f7;
+            --ink: #0f172a;
+            --muted: #64748b;
+            --primary: #2563eb;
+            --primary-soft: #eff6ff;
+            --primary-border: #bfdbfe;
+            --success: #16a34a;
+            --success-soft: #ecfdf5;
+            --success-border: #bbf7d0;
+            --warning: #d97706;
+            --warning-soft: #fff7ed;
+            --warning-border: #fed7aa;
+            --danger: #dc2626;
+            --danger-soft: #fef2f2;
+            --danger-border: #fecaca;
+            --teal: #0f766e;
+            --teal-soft: #ecfeff;
+            --teal-border: #a5f3fc;
+            --shadow: 0 16px 45px rgba(15, 23, 42, .08);
+            --shadow-soft: 0 8px 24px rgba(15,23,42,.06);
+            --radius: 18px;
+            --radius-sm: 12px;
+            --grad-main: linear-gradient(135deg,#60a5fa 0%,#2563eb 55%,#14b8a6 100%);
+            --grad-head: linear-gradient(90deg,#0f172a 0%,#1d4ed8 60%,#0f766e 100%);
         }
 
         body {
-            background: linear-gradient(180deg,#eef3fb 0%,#edf4fb 50%,#eaf7f2 100%);
+            background: linear-gradient(180deg, #f8fbff 0%, #f4f7fb 50%, #eef8f7 100%);
             color: var(--ink);
         }
 
         #purchaseRoot {
-            padding: 14px
+            padding: 18px;
+        }
+
+        .purchase-shell {
+            max-width: 1550px;
+            margin: 0 auto 30px;
+        }
+
+        .hero-bar {
+            background: var(--grad-main);
+            color: #fff;
+            border-radius: 24px;
+            padding: 20px 24px;
+            box-shadow: 0 18px 40px rgba(37,99,235,.20);
+            margin-bottom: 18px;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .hero-bar::after {
+                content: "";
+                position: absolute;
+                top: -50px;
+                right: -50px;
+                width: 180px;
+                height: 180px;
+                border-radius: 999px;
+                background: rgba(255,255,255,.10);
+            }
+
+        .hero-left h2 {
+            margin: 0;
+            font-size: 1.55rem;
+            font-weight: 900;
+            letter-spacing: .2px;
+        }
+
+        .hero-left p {
+            margin: 6px 0 0;
+            font-size: .95rem;
+            opacity: .95;
+        }
+
+        .hero-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 14px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.16);
+            border: 1px solid rgba(255,255,255,.22);
+            backdrop-filter: blur(8px);
+            font-weight: 800;
+            font-size: .9rem;
         }
 
         .purchase-main-card {
-            background: var(--grad);
-            padding: 0 0 22px;
-            border-radius: 20px;
-            max-width: 1200px;
-            margin: 0 auto 36px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--stage-br);
+            background: transparent;
+            border-radius: 24px;
+            max-width: 100%;
+            margin: 0 auto;
         }
 
         #purchaseRoot.expanded .purchase-main-card {
-            max-width: 1600px
+            max-width: 100%;
         }
 
-        /* Top info bar */
         .inner-info-bar {
             width: 100%;
-            background: linear-gradient(90deg,#233b60 60%,#249a7f 100%);
+            background: var(--grad-head);
             color: #fff;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            padding: 13px 14px 13px 34px;
-            border-radius: 14px 14px 0 0;
-            font-size: 1.02rem;
-            font-weight: 500;
+            padding: 15px 18px;
+            border-radius: 18px;
+            font-size: 1rem;
+            font-weight: 700;
+            box-shadow: var(--shadow);
         }
 
+
+
+
         .expand-btn {
-            background: #ffffff1f;
+            background: rgba(255,255,255,.16);
             color: #fff;
-            border: none;
-            border-radius: 10px;
-            padding: 8px 12px;
+            border: 1px solid rgba(255,255,255,.22);
+            border-radius: 999px;
+            padding: 9px 14px;
             font-weight: 800;
-            cursor: pointer
+            cursor: pointer;
+            transition: .18s ease;
+            backdrop-filter: blur(8px);
         }
 
             .expand-btn:hover {
-                background: #ffffff33
+                background: rgba(255,255,255,.26);
+                color: #fff;
             }
 
-        /* Stage sections */
         .stage {
-            background: var(--stage-bg);
-            border: 1px solid var(--stage-br);
-            border-radius: 14px;
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 20px;
             padding: 16px;
-            margin: 16px 16px 0;
-            box-shadow: 0 4px 14px rgba(15,23,42,.06);
+            margin: 18px 0 0;
+            box-shadow: var(--shadow);
+        }
+
+        .stage-banner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            background: linear-gradient(135deg,#f8fbff 0%,#f1f7ff 45%,#f0fdf9 100%);
+            border: 1px solid #dbe7f5;
+            border-left: 5px solid var(--success);
+            padding: 14px 18px;
+            border-radius: 14px;
+            margin-bottom: 14px;
         }
 
         .stage-header {
@@ -93,97 +180,124 @@
             gap: 10px;
             font-weight: 900;
             color: #0f1e36;
-            margin: -6px -6px 12px;
-            padding: 4px;
+            margin-bottom: 14px;
+            padding: 2px 2px 0;
         }
 
             .stage-header .num {
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                width: 28px;
-                height: 28px;
+                width: 32px;
+                height: 32px;
                 border-radius: 50%;
-                background: #0d8fdc;
+                background: var(--primary);
                 color: #fff;
                 font-weight: 900;
+                box-shadow: 0 8px 18px rgba(37,99,235,.20);
             }
 
             .stage-header .title {
-                font-size: 1.05rem;
+                font-size: 1.08rem;
                 letter-spacing: .2px;
                 color: #0f274a;
             }
 
-        /* Divider */
-        .hr-soft {
-            border: 0;
-            height: 1px;
-            margin: 14px 0;
-            background: #D3D3D3;
-            opacity: .95;
-            border-radius: 2px;
+        .form-label,
+        .form-label-sm {
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 6px;
         }
 
-        /* Supplier & invoice */
+        .form-control,
+        .form-select {
+            min-height: 44px;
+            border-radius: 12px;
+            border: 1px solid #d6deea;
+            box-shadow: none !important;
+            color: var(--ink);
+            font-weight: 600;
+        }
+
+            .form-control:focus,
+            .form-select:focus {
+                border-color: #93c5fd;
+                box-shadow: 0 0 0 .20rem rgba(59,130,246,.12) !important;
+            }
+
+        .input-group-text {
+            border-radius: 12px 0 0 12px !important;
+            background: #f8fbff;
+            border: 1px solid #d6deea;
+            color: var(--primary);
+            min-width: 46px;
+            justify-content: center;
+            font-weight: 800;
+        }
+
+        .input-group .form-control,
+        .input-group .form-select {
+            border-left: 0;
+        }
+
         .input-group-supplier {
-            border-radius: 8px;
-            border: 1.5px solid #1f73c9;
-            background: #edf3fb;
-            box-shadow: 0 2px 8px rgba(28,55,92,.08)
+            border-radius: 12px;
+            border: 1.5px solid #cfe0f6;
+            background: #f7fbff;
+            box-shadow: var(--shadow-soft);
         }
 
-            .input-group-supplier .input-group-text {
-                background: #edf3fb;
-                color: #1f73c9;
-                border: none;
-                font-size: 1.12rem
-            }
-
-            .input-group-supplier .form-select {
-                border: none;
-                background: transparent;
-                color: #284a7b;
-                font-size: 1.02rem;
-                font-weight: 600
-            }
-
-            .input-group-supplier .btn-success {
-                border-radius: 7px;
-                margin-left: 6px;
-                padding: 4px 10px
-            }
-
-        .invoice-bar {
-            border-radius: 8px;
-            border: 1.5px solid #a6c2e4;
-            background: #eff6ff;
-            box-shadow: 0 2px 8px rgba(28,55,92,.08)
-        }
-
+            .input-group-supplier .input-group-text,
             .invoice-bar .input-group-text {
+                background: transparent;
                 border: none;
-                background: #eff6ff;
-                color: #1e78d8;
-                font-size: 1.12rem
+                color: var(--primary);
             }
 
+            .input-group-supplier .form-select,
             .invoice-bar .form-control {
                 background: transparent;
                 border: none;
-                box-shadow: none;
-                color: #104d97;
-                font-size: 1.02rem;
-                font-weight: 700
+                color: #1e3a5f;
+                font-weight: 700;
             }
 
-        /* Products row */
+        .invoice-bar {
+            border-radius: 12px;
+            border: 1.5px solid #d6e4f6;
+            background: #f7fbff;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .radio-pills {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .radio-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 14px;
+            border-radius: 999px;
+            border: 1px solid #d7e3f2;
+            background: #fff;
+            font-weight: 800;
+            color: #334155;
+        }
+
+            .radio-pill input {
+                margin: 0;
+            }
+
         .products-row {
             display: flex;
             align-items: center;
             gap: 12px;
             flex-wrap: wrap;
-            margin: 0 16px .6rem 16px
+            margin-bottom: 12px;
         }
 
         .btn-modern {
@@ -191,232 +305,281 @@
             align-items: center;
             gap: 8px;
             padding: 10px 16px;
-            border-radius: 10px;
+            border-radius: 12px;
             border: 1px solid transparent;
             font-weight: 800;
-            box-shadow: 0 6px 16px rgba(2,6,23,.08);
-            transition: transform .05s,filter .15s
+            box-shadow: 0 8px 18px rgba(2,6,23,.08);
+            transition: transform .05s, filter .15s, box-shadow .15s;
+            text-decoration: none;
         }
 
             .btn-modern:active {
                 transform: translateY(1px);
-                filter: brightness(.97)
+                filter: brightness(.97);
+            }
+
+            .btn-modern:hover {
+                box-shadow: 0 10px 24px rgba(2,6,23,.10);
             }
 
         .btn-import {
-            background: #1f8fc0;
-            color: #fff
+            background: linear-gradient(135deg,#0ea5e9,#2563eb);
+            color: #fff;
         }
 
         .btn-new {
-            background: linear-gradient(90deg,#149a6f,#1fc174);
-            color: #fff
+            background: linear-gradient(135deg,#10b981,#22c55e);
+            color: #fff;
         }
 
         .btn-recipe {
-            background: linear-gradient(90deg,#f59e0b,#f97316);
+            background: linear-gradient(135deg,#f59e0b,#f97316);
+            color: #fff;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg,#16a34a,#22c55e);
+            color: #fff;
+        }
+
+        .btn-clear {
+            background: #f8fafc;
+            border: 1px solid #d6dde8;
+            color: #0f172a;
+        }
+
+        .btn-exit {
+            background: linear-gradient(135deg,#ef4444,#b91c1c);
             color: #fff;
         }
 
         .scan-group.input-group {
-            background: #e2edf9;
-            border-radius: 10px;
+            background: #eef6ff;
+            border-radius: 14px;
             padding: 0 12px;
             align-items: center;
-            width: 460px;
+            width: 520px;
             max-width: 100%;
-            border: 2px solid #3e93cc;
-            transition: border .2s;
-            height: 44px;
+            border: 2px solid #b7d5f5;
+            transition: border .2s, box-shadow .2s;
+            height: 48px;
+            box-shadow: var(--shadow-soft);
         }
 
             .scan-group.input-group:focus-within {
-                border-color: #226bb0
+                border-color: #2563eb;
+                box-shadow: 0 0 0 .20rem rgba(37,99,235,.10);
             }
 
         .scan-group .input-group-text {
             background: transparent;
             border: none;
-            color: #1f8fc0;
-            font-size: 1.08rem
+            color: var(--primary);
+            font-size: 1.08rem;
         }
 
         .form-control-compact {
             background: transparent;
             border: none;
             box-shadow: none;
-            font-size: 1.02rem;
+            font-size: 1rem;
             height: 38px;
             line-height: 38px;
             padding: 0 8px;
-            color: var(--ink)
+            color: var(--ink);
+            font-weight: 700;
         }
 
-        /* Suggestions */
         .barcode-suggestion-box {
-            position: fixed; /* attach to screen */
-            top: 0; /* start from top of screen */
-            right: 0;
-            width: 500px;
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            width: 100%;
             background: #fff;
-            border: 1px solid #c3d6f1;
-            z-index: 2000;
-            max-height: 100vh; /* full screen height */
+            border: 1px solid #cfe0f4;
+            z-index: 3000;
+            max-height: 360px;
             overflow-y: auto;
-            box-shadow: 0 6px 16px rgba(0,34,85,.14);
+            box-shadow: 0 18px 35px rgba(0,34,85,.12);
             display: none;
+            border-radius: 16px;
+            padding: 8px;
         }
 
         .barcode-suggestion-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             padding: 10px 12px;
             cursor: pointer;
             transition: background .15s;
             font-weight: 700;
-            color: #24334a
-        }
-
-            .barcode-suggestion-item small {
-                font-weight: 600;
-                color: #6a7d99
-            }
-
-            .barcode-suggestion-item:hover, .barcode-suggestion-item.active {
-                background: #eaf2ff
-            }
-
-        /* Grid */
-        .purchase-items .table {
-            background: #fbfcfe;
+            color: #24334a;
             border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(49,130,206,.07)
+            margin-bottom: 4px;
+            background: #f9fbff;
+            border: 1px solid transparent;
         }
 
-        .purchase-table thead {
-            background: linear-gradient(90deg,#d9f1ed 0%,#bfe0e3 100%)
-        }
-
-            .purchase-table thead th {
-                color: #1e6357;
-                font-weight: 700;
-                font-size: 1.02rem;
-                border: none;
-                border-bottom: 2px solid #b7d6c6
+            .barcode-suggestion-item:hover,
+            .barcode-suggestion-item.active {
+                background: #eef6ff;
+                border-color: #d7e7fa;
             }
 
-        .purchase-table th, .purchase-table td {
-            vertical-align: middle;
-            border-top: 1px solid #d9e1ee;
-            font-size: 1.02rem;
-            color: #203049
+        .purchase-entry-row {
+            background: linear-gradient(135deg,#f8fbff 0%,#ffffff 55%,#f4fbf8 100%);
+            border: 1px solid #e2ebf5;
+            border-radius: 16px;
+            padding: 14px 10px 8px;
+            box-shadow: var(--shadow-soft);
         }
 
-        .purchase-table tbody tr:hover {
-            background: #edf4ff
-        }
+            .purchase-entry-row .form-control {
+                background: #ffffff !important;
+                border: 1.6px solid #d4dfec !important;
+                color: #1f2b3f;
+                border-radius: 10px;
+                min-height: 40px;
+                box-shadow: 0 1px 2px rgba(16,28,48,.03) inset;
+                font-weight: 700;
+            }
 
-        .purchase-table tfoot td {
-            font-weight: 700;
-            background: #dfefff;
-            color: #1a5a60;
-            border-top: 2px solid #80d3e3
-        }
+                .purchase-entry-row .form-control::placeholder {
+                    color: #7a8aa3;
+                    opacity: .9;
+                }
 
-        /* === Entry row brighter === */
-        .purchase-entry-row .form-control {
-            background: #ffffff !important;
-            border: 1.6px solid #b8c7dc !important;
-            color: #1f2b3f;
-            border-radius: 8px;
-            height: 36px;
-            line-height: 36px;
-            box-shadow: 0 1px 2px rgba(16, 28, 48, .03) inset;
-        }
-
-        .purchase-entry-row input[type="text"],
-        .purchase-entry-row input[type="number"] {
-            background: #ffffff !important;
-        }
-
-        .purchase-entry-row .form-control::placeholder {
-            color: #7a8aa3;
-            opacity: .9;
-        }
-
-        .purchase-entry-row .form-control:focus {
-            outline: none;
-            background: #ffffff !important;
-            border-color: #1e78d8 !important;
-            box-shadow: 0 0 0 3px rgba(30, 120, 216, .15);
-        }
-
-        .purchase-entry-row label {
-            color: #203049 !important;
-            font-weight: 700 !important;
-        }
-
-        .purchase-entry-row .col-md-1 .form-control,
-        .purchase-entry-row .col-md-2 .form-control {
-            padding: 0 10px;
-            font-weight: 600;
-        }
+                .purchase-entry-row .form-control:focus {
+                    outline: none;
+                    background: #ffffff !important;
+                    border-color: #2563eb !important;
+                    box-shadow: 0 0 0 3px rgba(37,99,235,.13);
+                }
 
         #qtyMessage {
             color: #51627c !important;
+            font-weight: 700;
         }
 
-        /* Summary */
-        .payment-summary-box {
-            margin: 10px 16px 0;
-            gap: 10px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: flex-start
+        .purchase-items .table {
+            background: #fbfcfe;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .purchase-table thead {
+            background: linear-gradient(90deg,#ecfdf5 0%,#e0f2fe 100%);
+        }
+
+            .purchase-table thead th {
+                color: #134e4a;
+                font-weight: 900;
+                font-size: .90rem;
+                border: none;
+                border-bottom: 2px solid #cfe8dc;
+                white-space: nowrap;
+                text-transform: uppercase;
+                letter-spacing: .03em;
+                padding: 12px 10px;
+            }
+
+        .purchase-table th,
+        .purchase-table td {
+            vertical-align: middle;
+            border-top: 1px solid #e5edf6;
+            font-size: .94rem;
+            color: #203049;
+            padding: 10px;
+        }
+
+        .purchase-table tbody tr:hover {
+            background: #f7fbff;
+        }
+
+        .purchase-table tfoot td {
+            font-weight: 900;
+            background: #eff6ff;
+            color: #1a5a60;
+            border-top: 2px solid #bcd6f2;
+        }
+
+        .summary-panel {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 10px;
         }
 
         .summary-card {
-            min-width: 120px;
-            border-radius: 10px;
-            padding: 10px 14px;
-            font-size: 1.02rem;
-            font-weight: 700;
+            border-radius: 16px;
+            padding: 14px 16px;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .summary-leftbox {
             display: flex;
             align-items: center;
             gap: 10px;
-            background: #f7f9fc;
-            border: 1.1px solid #d2d9e6;
-            box-shadow: 0 2px 7px rgba(49,130,206,.08)
         }
 
-            .summary-card input[type="number"] {
-                width: 84px;
-                border-radius: 8px;
-                padding: 6px 8px;
-                border: 1px solid #ccd6e6;
-                background: #fff;
-                font-size: .98rem;
-                font-weight: 700;
-                color: #1f2b3f
-            }
-
-        /* Buttons */
-        .btn-save {
-            background: linear-gradient(90deg,#1fb056,#199648);
-            color: #fff
+        .summary-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: 900;
         }
 
-        .btn-clear {
-            background: #f7f8fb;
-            border: 1px solid #d4dae6;
-            color: #0f172a
+        .summary-total .summary-icon {
+            background: var(--primary-soft);
+            color: var(--primary);
+            border: 1px solid var(--primary-border);
         }
 
-        .btn-exit {
-            background: linear-gradient(90deg,#df3f3f,#a91c1c);
-            color: #fff
+        .summary-paid .summary-icon {
+            background: var(--success-soft);
+            color: var(--success);
+            border: 1px solid var(--success-border);
         }
 
-        /* Success overlay */
+        .summary-rem .summary-icon {
+            background: var(--warning-soft);
+            color: var(--warning);
+            border: 1px solid var(--warning-border);
+        }
+
+        .summary-card input[type="number"] {
+            width: 110px;
+            border-radius: 10px;
+            padding: 8px 10px;
+            border: 1px solid #d7e0ea;
+            background: #fff;
+            font-size: .98rem;
+            font-weight: 800;
+            color: #1f2b3f;
+        }
+
+        .save-bar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 18px;
+            flex-wrap: wrap;
+        }
+
         #successOverlay {
             position: fixed;
             inset: 0;
@@ -425,24 +588,38 @@
             justify-content: center;
             z-index: 99999;
             background: rgba(2,6,23,.30);
-            backdrop-filter: blur(2px)
+            backdrop-filter: blur(2px);
         }
 
         .succ-card {
             background: #ffffff;
             border: 1px solid #d7e0ef;
-            border-radius: 16px;
-            padding: 22px 26px;
+            border-radius: 18px;
+            padding: 24px 28px;
             text-align: center;
             box-shadow: var(--shadow);
-            min-width: 320px
+            min-width: 320px;
+        }
+
+        .succ-icon {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: #ecfdf5;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            margin-bottom: 12px;
         }
 
         .succ-title {
             font-size: 1.15rem;
             font-weight: 900;
             color: #114a2a;
-            margin-bottom: 8px
+            margin-bottom: 8px;
         }
 
         .succ-chip {
@@ -454,14 +631,13 @@
             border: 1px solid #a9efc8;
             border-radius: 999px;
             padding: 6px 12px;
-            font-weight: 800
+            font-weight: 800;
         }
 
-        /* ==== RECIPE MODAL STYLING ==== */
         #recipeModal .modal-content {
-            border-radius: 18px;
-            border: 1px solid #cfd8e6;
-            box-shadow: 0 18px 45px rgba(15,23,42,.28);
+            border-radius: 20px;
+            border: 1px solid #d7e3ef;
+            box-shadow: 0 18px 45px rgba(15,23,42,.24);
             background: radial-gradient(circle at top left,#e0f2fe 0,#f9fafb 50%,#ecfdf3 100%);
         }
 
@@ -469,20 +645,17 @@
             border-bottom: 1px solid rgba(148,163,184,.35);
             background: linear-gradient(90deg,#0f172a,#1d4ed8);
             color: #e5e7eb;
+            border-radius: 20px 20px 0 0;
         }
 
         #recipeModal .modal-title {
             display: flex;
             align-items: center;
             gap: 10px;
-            font-weight: 800;
+            font-weight: 900;
             letter-spacing: .2px;
-            font-size: 1.02rem;
+            font-size: 1.05rem;
         }
-
-            #recipeModal .modal-title i {
-                font-size: 1.25rem;
-            }
 
         .recipe-pill {
             display: inline-flex;
@@ -490,32 +663,25 @@
             gap: 6px;
             padding: 4px 10px;
             border-radius: 999px;
-            background: rgba(15,23,42,.12);
+            background: rgba(255,255,255,.14);
             color: #e5e7eb;
             font-size: .78rem;
-            font-weight: 600;
+            font-weight: 700;
         }
-
-            .recipe-pill i {
-                font-size: .8rem;
-            }
 
         .recipe-helper {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 8px 10px;
-            border-radius: 10px;
+            padding: 10px 12px;
+            border-radius: 12px;
             background: rgba(37,99,235,.06);
             border: 1px dashed rgba(37,99,235,.35);
-            font-size: .82rem;
+            font-size: .84rem;
             color: #1e3a8a;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            font-weight: 700;
         }
-
-            .recipe-helper i {
-                font-size: .9rem;
-            }
 
         #recipeTable thead {
             position: sticky;
@@ -530,14 +696,16 @@
                 font-size: .8rem;
                 text-transform: uppercase;
                 letter-spacing: .06em;
+                font-weight: 900;
             }
 
         #recipeTable tbody tr:hover {
             background: rgba(219,234,254,.65);
         }
 
-        .ing-qty {
-            max-width: 70px;
+        .ing-qty,
+        .ing-cost {
+            max-width: 86px;
             text-align: right;
         }
 
@@ -548,6 +716,7 @@
             font-size: .78rem;
             border-radius: 999px;
             padding-inline: 10px;
+            font-weight: 800;
         }
 
         .suggestion-code {
@@ -557,7 +726,7 @@
             font-weight: 900;
             font-family: ui-monospace, Menlo, Consolas, monospace;
             color: #1e3a8a;
-            padding: 3px 8px;
+            padding: 4px 8px;
             border-radius: 8px;
             border: 1px solid #c7d2fe;
             background: #eef2ff;
@@ -571,9 +740,9 @@
             background: #ecfdf5;
             border: 1px solid #a7f3d0;
             border-radius: 999px;
-            padding: 1px 8px;
+            padding: 2px 8px;
             white-space: nowrap;
-            font-size: .9rem;
+            font-size: .88rem;
             line-height: 1.1;
         }
 
@@ -585,7 +754,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            font-size: .95rem;
+            font-size: .94rem;
         }
 
         .suggestion-price {
@@ -594,397 +763,783 @@
             background: #fffbeb;
             border: 1px solid #fde68a;
             border-radius: 999px;
-            padding: 1px 8px;
+            padding: 2px 8px;
             white-space: nowrap;
-            font-size: .9rem;
+            font-size: .88rem;
             line-height: 1.1;
+        }
+
+        .hr-soft {
+            border: 0;
+            height: 1px;
+            margin: 16px 0;
+            background: linear-gradient(90deg, transparent, #d6dfeb, transparent);
+            border-radius: 2px;
+        }
+
+        @@media (max-width: 1200px) {
+            .summary-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 992px) {
+            #purchaseRoot {
+                padding: 12px;
+            }
+
+
+
+            .stage-banner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .save-bar {
+                justify-content: stretch;
+            }
+
+                .save-bar .btn-modern {
+                    flex: 1 1 100%;
+                    justify-content: center;
+                }
+        }
+
+        .recipe-modal-dialog {
+            max-width: 1220px;
+        }
+
+        .recipe-modal-content {
+            border-radius: 26px;
+            border: 1px solid #dbe7f5;
+            overflow: hidden;
+            box-shadow: 0 24px 60px rgba(15,23,42,.22);
+            background: radial-gradient(circle at top left, #edf6ff 0%, #f8fbff 35%, #f6fffb 100%);
+        }
+
+        .recipe-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 18px 22px;
+            border-bottom: 1px solid rgba(255,255,255,.14);
+            background: linear-gradient(135deg,#0f172a 0%, #1d4ed8 58%, #0f766e 100%);
+            color: #fff;
+        }
+
+        .recipe-head-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+        }
+
+        .recipe-head-icon {
+            width: 58px;
+            height: 58px;
+            border-radius: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,.14);
+            border: 1px solid rgba(255,255,255,.18);
+            font-size: 1.35rem;
+            box-shadow: 0 10px 24px rgba(0,0,0,.14);
+            flex: 0 0 auto;
+        }
+
+        .recipe-modal-title {
+            font-size: 1.2rem;
+            font-weight: 900;
+            letter-spacing: .2px;
+            margin: 0;
+            color: #fff;
+        }
+
+        .recipe-modal-subtitle {
+            margin-top: 4px;
+            font-size: .92rem;
+            color: rgba(255,255,255,.86);
+            font-weight: 500;
+        }
+
+        .recipe-top-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 14px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.14);
+            border: 1px solid rgba(255,255,255,.18);
+            color: #fff;
+            font-size: .82rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .recipe-modal-body {
+            padding: 18px;
+            background: transparent;
+        }
+
+        .recipe-toolbar {
+            display: grid;
+            grid-template-columns: 1.05fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .recipe-helper-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 18px;
+            background: linear-gradient(135deg,#f8fbff 0%,#eef6ff 100%);
+            border: 1px solid #dbe7f5;
+            box-shadow: 0 10px 28px rgba(15,23,42,.06);
+        }
+
+        .recipe-helper-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #eff6ff;
+            color: #2563eb;
+            border: 1px solid #bfdbfe;
+            font-size: 1rem;
+            flex: 0 0 auto;
+        }
+
+        .recipe-helper-title {
+            font-size: .92rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin-bottom: 2px;
+        }
+
+        .recipe-helper-text {
+            font-size: .87rem;
+            color: #475569;
+            line-height: 1.45;
+            font-weight: 600;
+        }
+
+        .recipe-search-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            min-height: 58px;
+            border-radius: 18px;
+            background: #fff;
+            border: 1.6px solid #dbe7f5;
+            box-shadow: 0 10px 28px rgba(15,23,42,.06);
+            padding: 0 14px 0 50px;
+        }
+
+            .recipe-search-wrap:focus-within {
+                border-color: #60a5fa;
+                box-shadow: 0 0 0 .20rem rgba(59,130,246,.12);
+            }
+
+        .recipe-search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #2563eb;
+            font-size: 1rem;
+        }
+
+        .recipe-search-input {
+            border: none !important;
+            box-shadow: none !important;
+            background: transparent !important;
+            min-height: 52px;
+            font-size: .98rem;
+            font-weight: 700;
+            color: #0f172a;
+            padding-left: 0;
+        }
+
+        .recipe-table-wrap {
+            border-radius: 20px;
+            border: 1px solid #dbe7f5;
+            background: #fff;
+            overflow: auto;
+            max-height: 520px;
+            box-shadow: 0 12px 30px rgba(15,23,42,.06);
+        }
+
+        .recipe-modern-table {
+            margin-bottom: 0;
+        }
+
+            .recipe-modern-table thead {
+                position: sticky;
+                top: 0;
+                z-index: 2;
+                background: linear-gradient(90deg,#eff6ff,#ecfeff);
+            }
+
+                .recipe-modern-table thead th {
+                    border-bottom: 1px solid #dbe7f5;
+                    color: #0f172a;
+                    font-size: .82rem;
+                    text-transform: uppercase;
+                    letter-spacing: .05em;
+                    font-weight: 900;
+                    white-space: nowrap;
+                    padding: 14px 12px;
+                }
+
+            .recipe-modern-table tbody td {
+                padding: 12px;
+                border-top: 1px solid #edf2f7;
+                color: #1e293b;
+                font-weight: 700;
+                vertical-align: middle;
+            }
+
+            .recipe-modern-table tbody tr:hover {
+                background: #f8fbff;
+            }
+
+            .recipe-modern-table .ing-qty,
+            .recipe-modern-table .ing-cost {
+                max-width: 110px;
+                min-width: 92px;
+                text-align: right;
+                border-radius: 10px;
+                font-weight: 800;
+            }
+
+        .btn-add-ing {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-width: 88px;
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: .80rem;
+            font-weight: 900;
+            background: linear-gradient(135deg,#2563eb,#0ea5e9);
+            border: none;
+            color: #fff;
+            box-shadow: 0 8px 18px rgba(37,99,235,.18);
+        }
+
+            .btn-add-ing:hover {
+                filter: brightness(1.03);
+                color: #fff;
+            }
+
+        .recipe-modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 16px 18px;
+            background: #fbfdff;
+            border-top: 1px solid #e6edf6;
+        }
+
+        .recipe-footer-note {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #0f766e;
+            font-weight: 800;
+            font-size: .88rem;
+        }
+
+        .recipe-close-btn {
+            border-radius: 999px;
+            padding: 9px 16px;
+            font-weight: 800;
+            border: 1px solid #d6deea;
+            background: #fff;
+            color: #0f172a;
+        }
+
+            .recipe-close-btn:hover {
+                background: #f8fafc;
+                color: #0f172a;
+            }
+
+        @@media (max-width: 992px) {
+            .recipe-toolbar {
+                grid-template-columns: 1fr;
+            }
+
+            .recipe-modal-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .recipe-modal-footer {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .recipe-top-badge {
+                display: none;
+            }
         }
     </style>
 }
 
-
 <div id="purchaseRoot" class="expanded">
-    <div class="purchase-main-card">
-        <!-- TOP BAR -->
-        <div class="inner-info-bar">
-            <div><i class="fa fa-user-circle"></i> @userName</div>
-            <div>
-                <i class="fa fa-clock"></i> <span id="currentTime"></span>
-                <span style="margin-left:18px;"><i class="fa fa-calendar"></i> <span id="currentDate"></span></span>
+    <div class="purchase-shell">
+        <div class="hero-bar d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div class="hero-left">
+                <h2><i class="fa-solid fa-cart-flatbed-suitcase me-2"></i>Purchase Entry</h2>
+                <p>Supplier details, scan items, recipe purchase, payment summary and save — all in one professional screen.</p>
             </div>
-            <button id="toggleSizeBtn" type="button" class="expand-btn">
-                <i class="fa fa-down-left-and-up-right-to-center"></i> Compact
-            </button>
+
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <div class="hero-chip">
+                    <i class="fa fa-user-circle"></i>
+                    <span>@userName</span>
+                </div>
+
+                <div class="hero-chip">
+                    <i class="fa fa-clock"></i>
+                    <span id="currentTime"></span>
+                </div>
+
+                <div class="hero-chip">
+                    <i class="fa fa-calendar"></i>
+                    <span id="currentDate"></span>
+                </div>
+
+                <button id="toggleSizeBtn" type="button" class="expand-btn">
+                    <i class="fa fa-down-left-and-up-right-to-center"></i> Compact
+                </button>
+            </div>
         </div>
 
-        @using (Html.BeginForm("Create", "Purchase", FormMethod.Post, new { enctype = "multipart/form-data" }))
-        {
-            @Html.AntiForgeryToken()
-            @Html.HiddenFor(m => m.ItemsJson, new { id = "ItemsJson" })
+        <div class="purchase-main-card">
 
-            <!-- =============== STAGE 1: SUPPLIER → ATTACH PIC =============== -->
-            <div class="stage">
-                <div style="display:flex; justify-content:space-between; align-items:center;
-                            background:#f8f9fa; border-left:5px solid #28a745; padding:12px 18px;
-                            border-radius:8px; margin-bottom:15px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
+            @using (Html.BeginForm("Create", "Purchase", FormMethod.Post, new { enctype = "multipart/form-data" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.ItemsJson, new { id = "ItemsJson" })
 
-                    <!-- LEFT SIDE -->
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <span style="background:#28a745; color:white; padding:6px 12px; border-radius:50%;
-                                font-weight:bold; width:32px; height:32px; display:flex; justify-content:center; align-items:center;">
-                            1
-                        </span>
+                <!-- STAGE 1 -->
+                <div class="stage">
+                    <div class="stage-banner">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="stage-header mb-0">
+                                <span class="num">1</span>
+                            </span>
+                            <div>
+                                <div class="fw-bold fs-6 text-dark">
+                                    <i class="fa-solid fa-truck-field me-2 text-success"></i>
+                                    Supplier & Invoice Details
+                                </div>
+                                <div class="small text-muted">Supplier, invoice number, balance, purchase type and attachment</div>
+                            </div>
+                        </div>
 
-                        <span style="font-weight:700; font-size:18px; color:#333;">
-                            Supplier & Invoice Details (with Attachment)
-                        </span>
+                        <div class="d-flex flex-wrap gap-3">
+                            <div class="radio-pills">
+                                <label class="radio-pill">
+                                    @Html.RadioButtonFor(m => m.PurchaseType, "New", new { id = "PurchaseTypeNew" })
+                                    <span><i class="fa fa-circle-plus text-success me-1"></i>New</span>
+                                </label>
+
+                                <label class="radio-pill">
+                                    @Html.RadioButtonFor(m => m.PurchaseType, "Return", new { id = "PurchaseTypeReturn" })
+                                    <span><i class="fa fa-rotate-left text-warning me-1"></i>Return</span>
+                                </label>
+                            </div>
+
+                            <div class="radio-pills">
+                                <label class="radio-pill">
+                                    @Html.RadioButtonFor(m => m.PurchaseSource, "Item", new { id = "PurchaseSourceItem" })
+                                    <span><i class="fa fa-box text-primary me-1"></i>Item</span>
+                                </label>
+
+                                <label class="radio-pill">
+                                    @Html.RadioButtonFor(m => m.PurchaseSource, "Ingredient", new { id = "PurchaseSourceIngredient" })
+                                    <span><i class="fa fa-bowl-food text-danger me-1"></i>Ingredient</span>
+                                </label>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- RIGHT SIDE (RADIO: NEW / RETURN) -->
-                    <div style="display:flex; align-items:center; gap:10px; font-weight:500;">
+                    <div class="stage-body">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-12 col-md-5">
+                                <label class="form-label form-label-sm mb-1">Supplier</label>
+                                <div class="input-group input-group-supplier input-group-sm">
+                                    <span class="input-group-text"><i class="fa fa-truck"></i></span>
+                                    @Html.DropDownListFor(
+                                    m => m.SupplierId,
+                                                                (SelectList)ViewBag.SupplierList,
+                                                                "— Select Supplier —",
+                                                                new { @class = "form-select form-select-sm", @id = "SupplierId" }
+                                                                )
+                                <button type="button" class="btn btn-success" title="Add Supplier"
+                                        onclick="window.location.href='@Url.Action("Create", "Supplier")'">
+                                    <i class="fa fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
 
-                            @Html.RadioButtonFor(m => m.PurchaseType, "New",
-                            new { id = "PurchaseTypeNew", style = "cursor:pointer;" })
-                        <label for="PurchaseTypeNew" style="cursor:pointer;">New</label>
+                        <div class="col-12 col-md-3">
+                            <label class="form-label form-label-sm">Previous Balance</label>
+                            <input type="text" class="form-control form-control-sm bg-light" id="OldBalance" value="@prevBal" readonly />
+                        </div>
 
-                        @Html.RadioButtonFor(m => m.PurchaseType, "Return",
-                                            new { id = "PurchaseTypeReturn", style = "cursor:pointer;" })
-                        <label for="PurchaseTypeReturn" style="cursor:pointer;">Return</label>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label form-label-sm">Supplier Inv #</label>
+                            <div class="input-group invoice-bar input-group-sm">
+                                <span class="input-group-text"><i class="fa fa-file-invoice"></i></span>
+                                <input type="text" id="SupplierInv" class="form-control" value="@invoiceNo" placeholder="Supplier Invoice Number">
+                                <button type="button" class="btn btn-outline-secondary" title="Ref No"><i class="fa fa-hashtag"></i></button>
+                            </div>
+                        </div>
 
+                        <div class="col-12 mt-2">
+                            <div class="row g-3 align-items-center">
+                                <div class="col-12 col-sm-6 col-lg-3">
+                                    @Html.LabelFor(m => m.Date, "Purchase Date", new { @class = "form-label form-label-sm" })
+                                    @Html.TextBoxFor(m => m.Date, "{0:yyyy-MM-ddTHH:mm}", new { @type = "datetime-local", @class = "form-control form-control-sm", id = "PurchaseDate" })
+                                </div>
+
+                                <div class="col-12 col-sm-6 col-lg-3">
+                                    @Html.LabelFor(m => m.BusinessLocation, "Business Location", new { @class = "form-label form-label-sm" })
+                                    @Html.TextBoxFor(m => m.BusinessLocation, new { @class = "form-control form-control-sm", id = "BusinessLocation" })
+                                </div>
+
+                                <div class="col-12 col-sm-6 col-lg-2">
+                                    @Html.LabelFor(m => m.ReferenceNo, "Reference No", new { @class = "form-label form-label-sm" })
+                                    @Html.TextBoxFor(m => m.ReferenceNo, new { @class = "form-control form-control-sm", @readonly = "readonly", id = "ReferenceNo" })
+                                </div>
+
+                                <div class="col-12 col-sm-6 col-lg-4 d-flex flex-wrap align-items-center">
+                                    <label for="DocumentFile" class="form-label form-label-sm mb-2 mb-lg-0 me-2 text-primary fw-bold">
+                                        <i class="fa fa-paperclip"></i> Attach
+                                    </label>
+                                    <input type="file" id="DocumentFile" name="DocumentFile" class="form-control form-control-sm me-2"
+                                           style="max-width:170px;background:#eef6ff;color:#1e88e5;border:1px solid #93c5fd;"
+                                           accept=".jpeg,.jpg,.png,.pdf,.xls,.xlsx" />
+                                    <span class="attach-info small text-muted">jpg, png, pdf, xls</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <!-- RIGHT SIDE (RADIO: NEW / RETURN) -->
-                    <div style="display:flex; align-items:center; gap:10px; font-weight:500;">
-
-                            @Html.RadioButtonFor(m => m.PurchaseSource, "Item",
-                            new { id = "PurchaseSourceItem", style = "cursor:pointer;" })
-                        <label for="PurchaseSourceItem" style="cursor:pointer;">Item</label>
-
-                        @Html.RadioButtonFor(m => m.PurchaseSource, "Ingredient",
-                            new { id = "PurchaseSourceIngredient", style = "cursor:pointer;" })
-                    <label for="PurchaseSourceIngredient" style="cursor:pointer;">Ingredient</label>
-
-                    </div>
-
+                </div>
             </div>
 
-            <div class="stage-body">
-                <div class="row g-3 align-items-end">
-                    <!-- Supplier -->
-                    <div class="col-12 col-md-5">
-                        <label class="form-label form-label-sm mb-1">Supplier</label>
-                        <div class="input-group input-group-supplier input-group-sm">
-                            <span class="input-group-text"><i class="fa fa-truck"></i></span>
-                            @Html.DropDownListFor(
-                                                        m => m.SupplierId,
-                                                        (SelectList)ViewBag.SupplierList,
-                                                        "— Select Supplier —",
-                                                        new { @class = "form-select form-select-sm", @id = "SupplierId" }
-                                                        )
-                            <button type="button" class="btn btn-success" title="Add Supplier"
-                                    onclick="window.location.href='@Url.Action("Create", "Supplier")'">
-                                <i class="fa fa-plus"></i>
+            <!-- STAGE 2 -->
+            <div class="stage">
+                <div class="stage-header">
+                    <span class="num">2</span>
+                    <span class="title">Scan / Search Items & Line Items</span>
+                </div>
+
+                <div class="stage-body">
+                    <div class="products-row">
+                        <button type="button" class="btn-modern btn-import">
+                            <i class="fa fa-file-import"></i> Import
+                        </button>
+
+                        <div class="scan-group input-group position-relative">
+                            <span class="input-group-text"><i class="fa fa-barcode"></i></span>
+                            <input type="text" id="barcodeInput" class="form-control form-control-compact"
+                                   placeholder="Scan or type name/code, then Enter" autocomplete="off" />
+                            <div id="barcodeSuggestions" class="barcode-suggestion-box"></div>
+                        </div>
+
+                        <button type="button" class="btn-modern btn-new"
+                                onclick="window.location.href='@Url.Action("Add", "Item")'">
+                            <i class="fa fa-plus"></i> Add New
+                        </button>
+
+                        <button type="button" class="btn-modern btn-recipe" id="btnPurchaseRecipe">
+                            <i class="fa-solid fa-bowl-food"></i> Recipe Ingredients
+                        </button>
+                    </div>
+
+                    <hr class="hr-soft" />
+
+                    <div class="purchase-entry-row row align-items-end mb-2">
+                        <div class="col-md-1">
+                            <label class="form-label-sm mb-1">Item Code</label>
+                            <input type="text" id="itemCode" class="form-control form-control-sm" placeholder="Barcode" readonly>
+                            <input type="hidden" id="itemId">
+                            <input type="hidden" id="itemCategory">
+                            <input type="hidden" id="itemUnit">
+                        </div>
+
+                        <div class="col-md-2">
+                            <label class="form-label-sm mb-1">Item Name <span id="stock" style="display: none;"></span></label>
+                            <input type="text" id="itemName" class="form-control form-control-sm" placeholder="Name" readonly>
+                        </div>
+
+                        <div class="col-md-1">
+                            <label class="form-label-sm mb-1">Batch #</label>
+                            <input type="text" id="batchNo" class="form-control form-control-sm" placeholder="Batch">
+                        </div>
+
+                        <div class="col-md-1">
+                            <label class="form-label-sm mb-1">Expiry</label>
+                            <input type="text" id="expiry" class="form-control form-control-sm" placeholder="MM/YYYY">
+                        </div>
+
+                        <div class="col-md-1">
+                            <small id="qtyMessage" class="text-muted d-block mt-1"></small>
+                            <label class="form-label-sm mb-1">Qty</label>
+                            <input type="number" id="qty" class="form-control form-control-sm" placeholder="Qty">
+                        </div>
+
+                        <div class="col-md-1">
+                            <label class="form-label-sm mb-1">MRP(saleP)</label>
+                            <input type="number" id="mrp" class="form-control form-control-sm" placeholder="MRP">
+                        </div>
+
+                        <div class="col-md-1 col-lg-1 field-compact">
+                            <label class="form-label-sm mb-1 small-label">Dis% /Mkup</label>
+                            <input type="number" id="disPct" class="form-control form-control-sm" placeholder="Discount %">
+                        </div>
+
+                        <div class="col-md-1 col-lg-1 field-compact">
+                            <label class="form-label-sm mb-1 small-label">Cost /Pur.</label>
+                            <input type="number" id="cost" class="form-control form-control-sm" placeholder="Purchase Price">
+                        </div>
+
+                        <div class="col-md-1">
+                            <label class="form-label-sm mb-1">Ex.Dis</label>
+                            <input type="number" id="exDis" class="form-control form-control-sm" placeholder="Ex. Disc">
+                        </div>
+
+                        <div class="col-md-1">
+                            <label class="form-label-sm mb-1">Tax %</label>
+                            <input type="number" id="taxPercent" class="form-control form-control-sm" placeholder="Tax %">
+                        </div>
+
+                        <div class="col-md-1">
+                            <label class="form-label-sm mb-1">Tax Amt</label>
+                            <input type="number" id="taxAmt" class="form-control form-control-sm" placeholder="Tax Amount">
+                        </div>
+
+                        <div class="col-md-1 d-flex align-items-end pt-2">
+                            <button id="btnAddRow" class="btn btn-success btn-sm w-100" onclick="addToGrid()" type="button">
+                                <i class="fa fa-plus"></i> Add
                             </button>
                         </div>
                     </div>
 
-                    <!-- Previous Balance -->
-                    <div class="col-12 col-md-3">
-                        <label class="form-label form-label-sm">Previous Balance</label>
-                        <input type="text" class="form-control form-control-sm bg-light" id="OldBalance" value="@prevBal" readonly />
+                    <hr class="hr-soft" />
+
+                    <div class="purchase-items mb-3 table-responsive">
+                        <table class="table purchase-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Item Code</th>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>Unit</th>
+                                    <th>Batch #</th>
+                                    <th>Expiry</th>
+                                    <th>Qty</th>
+                                    <th>MRP</th>
+                                    <th>Dis %</th>
+                                    <th>Ex. Dis</th>
+                                    <th>Cost</th>
+                                    <th>Tax %</th>
+                                    <th>Tax Amt</th>
+                                    <th>Total</th>
+                                    <th>Edit</th>
+                                    <th>Delete</th>
+                                </tr>
+                            </thead>
+                            <tbody id="purchaseLines"></tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="7"><b>Totals</b></td>
+                                    <td id="tQty"></td>
+                                    <td id="tMRP"></td>
+                                    <td id="tDisPct"></td>
+                                    <td id="tExDis"></td>
+                                    <td id="tCost"></td>
+                                    <td id="tTaxPercent"></td>
+                                    <td id="tTaxAmt"></td>
+                                    <td id="tGrand"></td>
+                                    <td colspan="2"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
                     </div>
-
-                    <!-- Supplier Inv -->
-                    <div class="col-12 col-md-4">
-                        <label class="form-label form-label-sm">Supplier Inv #</label>
-                        <div class="input-group invoice-bar input-group-sm">
-                            <span class="input-group-text"><i class="fa fa-file-invoice"></i></span>
-                            <input type="text" id="SupplierInv" class="form-control" value="@invoiceNo" placeholder="Supplier Invoice Number">
-                            <button type="button" class="btn btn-outline-secondary" title="Ref No"><i class="fa fa-hashtag"></i></button>
-                        </div>
-                    </div>
-
-                    <!-- Row 2 -->
-                    <div class="col-12 mt-2">
-                        <div class="row g-3 align-items-center">
-                            <div class="col-12 col-sm-6 col-lg-3">
-                                @Html.LabelFor(m => m.Date, "Purchase Date", new { @class = "form-label form-label-sm" })
-                                @Html.TextBoxFor(m => m.Date, "{0:yyyy-MM-ddTHH:mm}", new { @type = "datetime-local", @class = "form-control form-control-sm", id = "PurchaseDate" })
-                            </div>
-                            <div class="col-12 col-sm-6 col-lg-3">
-                                @Html.LabelFor(m => m.BusinessLocation, "Business Location", new { @class = "form-label form-label-sm" })
-                                @Html.TextBoxFor(m => m.BusinessLocation, new { @class = "form-control form-control-sm", id = "BusinessLocation" })
-                            </div>
-                            <div class="col-12 col-sm-6 col-lg-2">
-                                @Html.LabelFor(m => m.ReferenceNo, "Reference No", new { @class = "form-label form-label-sm" })
-                                @Html.TextBoxFor(m => m.ReferenceNo, new { @class = "form-control form-control-sm", @readonly = "readonly", id = "ReferenceNo" })
-                            </div>
-                            <div class="col-12 col-sm-6 col-lg-4 d-flex flex-wrap align-items-center">
-                                <label for="DocumentFile" class="form-label form-label-sm mb-2 mb-lg-0 me-2 text-primary">
-                                    <i class="fa fa-paperclip"></i> Attach
-                                </label>
-                                <input type="file" id="DocumentFile" name="DocumentFile" class="form-control form-control-sm me-2"
-                                       style="max-width:150px;background:#e3f2fd;color:#1e88e5;border:1px solid #2196f3;"
-                                       accept=".jpeg,.jpg,.png,.pdf,.xls,.xlsx" />
-                                <span class="attach-info" style="font-size:.80rem;color:#64b5f6;">jpg, png, pdf, xls</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- =============== STAGE 2: BARCODE/ENTRY/GRID =============== -->
-        <div class="stage">
-            <div class="stage-header">
-                <span class="num">2</span>
-                <span class="title">Scan / Search Items & Line Items</span>
-            </div>
-            <div class="stage-body">
-                <!-- PRODUCTS ROW -->
-                <div class="products-row">
-                    <button type="button" class="btn-modern btn-import">
-                        <i class="fa fa-file-import"></i> Import
-                    </button>
-
-                    <div class="scan-group input-group position-relative">
-                        <span class="input-group-text"><i class="fa fa-barcode"></i></span>
-                        <input type="text" id="barcodeInput" class="form-control form-control-compact"
-                               placeholder="Scan or type name/code, then Enter" autocomplete="off" />
-                        <div id="barcodeSuggestions" class="barcode-suggestion-box"></div>
-                    </div>
-
-                    <button type="button" class="btn-modern btn-new"
-                            onclick="window.location.href='@Url.Action("Add", "Item")'">
-                        <i class="fa fa-plus"></i> Add New
-                    </button>
-
-                    <button type="button" class="btn-modern btn-recipe" id="btnPurchaseRecipe">
-                        <i class="fa fa-bowl-food"></i> Purchase Recipe
-                    </button>
                 </div>
             </div>
 
-            <hr class="hr-soft" />
-
-            <!-- ENTRY ROW -->
-            <div class="purchase-entry-row row align-items-end mb-2">
-                <div class="col-md-1">
-                    <label class="form-label-sm mb-1">Item Code</label>
-                    <input type="text" id="itemCode" class="form-control form-control-sm" placeholder="Barcode" readonly>
-                    <input type="hidden" id="itemId">
-                    <input type="hidden" id="itemCategory">
-                    <input type="hidden" id="itemUnit">
-                </div>
-
-                <div class="col-md-2">
-                    <label class="form-label-sm mb-1">Item Name  <span id="stock" style="display: none;">( stock: 123)</span> </label>
-                    <input type="text" id="itemName" class="form-control form-control-sm" placeholder="Name" readonly>
-                </div>
-                <div class="col-md-1">
-                    <label class="form-label-sm mb-1">Batch #</label>
-                    <input type="text" id="batchNo" class="form-control form-control-sm" placeholder="Batch">
-                </div>
-                <div class="col-md-1">
-                    <label class="form-label-sm mb-1">Expiry</label>
-                    <input type="text" id="expiry" class="form-control form-control-sm" placeholder="MM/YYYY">
-                </div>
-                <div class="col-md-1">
-                    <small id="qtyMessage" class="text-muted d-block mt-1"></small>
-                    <label class="form-label-sm mb-1">Qty</label>
-                    <input type="number" id="qty" class="form-control form-control-sm" placeholder="Qty">
-                </div>
-                <div class="col-md-1">
-                    <label class="form-label-sm mb-1">MRP</label>
-                    <input type="number" id="mrp" class="form-control form-control-sm" placeholder="MRP">
-                </div>
-                <div class="col-md-1">
-                    <label class="form-label-sm mb-1">Dis % / Markup %</label>
-                    <input type="number" id="disPct" class="form-control form-control-sm" placeholder="Discount %">
-                </div>
-                <div class="col-md-1">
-                    <label class="form-label-sm mb-1">Cost</label>
-                    <input type="number" id="cost" class="form-control form-control-sm" placeholder="Purchase Price">
-                </div>
-                <div class="col-md-1">
-                    <label class="form-label-sm mb-1">Ex. Dis</label>
-                    <input type="number" id="exDis" class="form-control form-control-sm" placeholder="Ex. Disc">
-                </div>
-                <div class="col-md-1">
-                    <label class="form-label-sm mb-1">Tax %</label>
-                    <input type="number" id="taxPercent" class="form-control form-control-sm" placeholder="Tax %">
-                </div>
-                <div class="col-md-1">
-                    <label class="form-label-sm mb-1">Tax Amt</label>
-                    <input type="number" id="taxAmt" class="form-control form-control-sm" placeholder="Tax Amount">
-                </div>
-                <div class="col-md-1 d-flex align-items-end pt-2">
-                    <button id="btnAddRow" class="btn btn-success btn-sm w-100" onclick="addToGrid()" type="button">
-                        <i class="fa fa-plus"></i> Add
-                    </button>
-                </div>
-            </div>
-
-            <hr class="hr-soft" />
-
-            <!-- GRID -->
-            <div class="purchase-items mb-3">
-                <table class="table purchase-table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Item Code</th>
-                            <th>Name</th>
-                            <th>Category</th>
-                            <th>Unit</th>
-                            <th>Batch #</th>
-                            <th>Expiry</th>
-                            <th>Qty</th>
-                            <th>MRP</th>
-                            <th>Dis %</th>
-                            <th>Ex. Dis</th>
-                            <th>Cost</th>
-                            <th>Tax %</th>
-                            <th>Tax Amt</th>
-                            <th>Total</th>
-                            <th>Edit</th>
-                            <th>Delete</th>
-                        </tr>
-                    </thead>
-                    <tbody id="purchaseLines"></tbody>
-                    <tfoot>
-                        <tr>
-                            <td colspan="7"><b>Totals</b></td>
-                            <td id="tQty"></td>
-                            <td id="tMRP"></td>
-                            <td id="tDisPct"></td>
-                            <td id="tExDis"></td>
-                            <td id="tCost"></td>
-                            <td id="tTaxPercent"></td>
-                            <td id="tTaxAmt"></td>
-                            <td id="tGrand"></td>
-                            <td colspan="2"></td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-        </div>
-
-        <!-- ========== RECIPE INGREDIENT MODAL ========== -->
-        <div class="modal fade" id="recipeModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <div class="d-flex flex-column">
-                            <div class="modal-title">
-                                <i class="fa fa-bowl-food"></i>
-                                <span>Purchase Recipe – Ingredients</span>
+            <!-- RECIPE MODAL -->
+            <!-- RECIPE MODAL -->
+            <div class="modal fade" id="recipeModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-xl modal-dialog-scrollable recipe-modal-dialog">
+                    <div class="modal-content recipe-modal-content">
+                        <div class="modal-header recipe-modal-header">
+                            <div class="recipe-head-left">
+                                <div class="recipe-head-icon">
+                                    <i class="fa-solid fa-bowl-food"></i>
+                                </div>
+                                <div>
+                                    <div class="modal-title recipe-modal-title">
+                                        Purchase Recipe Ingredients
+                                    </div>
+                                    <div class="recipe-modal-subtitle">
+                                        Search ingredients, enter qty and cost, then add directly to purchase grid.
+                                    </div>
+                                </div>
                             </div>
-                            <div class="mt-1">
-                                <span class="recipe-pill">
-                                    <i class="fa fa-wand-magic-sparkles"></i>
-                                    Select ingredients & push to purchase grid
+
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="recipe-top-badge">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                    Smart Recipe Panel
                                 </span>
+
+                                <button type="button"
+                                        class="btn-close btn-close-white"
+                                        data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
                             </div>
                         </div>
-                        <button type="button" class="btn-close btn-close-white"
-                                data-bs-dismiss="modal"
-                                aria-label="Close"></button>
+
+                        <div class="modal-body recipe-modal-body">
+                            <div class="recipe-toolbar">
+                                <div class="recipe-helper-card">
+                                    <div class="recipe-helper-icon">
+                                        <i class="fa-solid fa-circle-info"></i>
+                                    </div>
+                                    <div>
+                                        <div class="recipe-helper-title">How it works</div>
+                                        <div class="recipe-helper-text">
+                                            Search by <strong>name</strong>, <strong>code</strong> or <strong>category</strong>,
+                                            enter <strong>Qty</strong> and <strong>Cost</strong>, then press <strong>Add</strong>.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="recipe-search-wrap">
+                                    <span class="recipe-search-icon">
+                                        <i class="fa-solid fa-magnifying-glass"></i>
+                                    </span>
+                                    <input type="text"
+                                           id="recipeSearch"
+                                           class="form-control recipe-search-input"
+                                           placeholder="Search ingredient by name, code or category..." />
+                                </div>
+                            </div>
+
+                            <div class="recipe-table-wrap table-responsive">
+                                <table class="table table-hover align-middle recipe-modern-table" id="recipeTable">
+                                    <thead>
+                                        <tr>
+                                            <th><i class="fa fa-barcode me-1"></i> Code</th>
+                                            <th><i class="fa fa-tag me-1"></i> Name</th>
+                                            <th><i class="fa fa-layer-group me-1"></i> Category</th>
+                                            <th><i class="fa fa-ruler-combined me-1"></i> Unit</th>
+                                            <th class="text-end"><i class="fa fa-coins me-1"></i> Cost</th>
+                                            <th class="text-end"><i class="fa fa-scale-balanced me-1"></i> Qty</th>
+                                            <th class="text-center"><i class="fa fa-circle-plus me-1"></i> Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer recipe-modal-footer">
+                            <div class="recipe-footer-note">
+                                <i class="fa-solid fa-circle-check"></i>
+                                Items same save flow ke through purchase grid mein add honge.
+                            </div>
+
+                            <button type="button" class="btn recipe-close-btn" data-bs-dismiss="modal">
+                                <i class="fa fa-xmark me-1"></i> Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STAGE 3 -->
+            <div class="stage">
+                <div class="stage-header">
+                    <span class="num">3</span>
+                    <span class="title">Payment Summary & Save</span>
+                </div>
+
+                <div class="stage-body">
+                    <div class="summary-panel">
+                        <div class="summary-card summary-total">
+                            <div class="summary-leftbox">
+                                <span class="summary-icon"><i class="fa fa-receipt"></i></span>
+                                <div>
+                                    <div class="small text-muted fw-bold">Total</div>
+                                    <div id="sumTotal">0.00</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="summary-card summary-paid">
+                            <div class="summary-leftbox">
+                                <span class="summary-icon"><i class="fa fa-hand-holding-dollar"></i></span>
+                                <div>
+                                    <div class="small text-muted fw-bold">Paid Amount</div>
+                                </div>
+                            </div>
+                            <input type="number" name="Paid" id="paidAmount" value="0" min="0" onchange="updatePaymentSummary()" />
+                        </div>
+
+                        <div class="summary-card summary-rem">
+                            <div class="summary-leftbox">
+                                <span class="summary-icon"><i class="fa fa-scale-balanced"></i></span>
+                                <div>
+                                    <div class="small text-muted fw-bold">Remaining</div>
+                                    <div id="remainingAmount">0.00</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="modal-body">
-                        <div class="recipe-helper">
-                            <i class="fa fa-circle-info"></i>
-                            <span>
-                                Search by <strong>name / code / category</strong>, set required
-                                <strong>Qty</strong> and click <strong>Add</strong>.
-                                Items will appear in the <strong>purchase grid</strong> with totals.
-                            </span>
-                        </div>
+                    <input type="hidden" name="TotalAmount" id="hiddenTotalAmount" />
+                    <input type="hidden" name="Remaining" id="hiddenRemainingAmount" />
 
-                        <div class="mb-2">
-                            <input type="text" id="recipeSearch"
-                                   class="form-control form-control-sm"
-                                   placeholder="Search ingredient by name, code or category..." />
-                        </div>
-
-                        <div class="table-responsive" style="max-height:420px;">
-                            <table class="table table-sm table-hover align-middle" id="recipeTable">
-                                <thead>
-                                    <tr>
-                                        <th><i class="fa fa-barcode me-1"></i>Code</th>
-                                        <th><i class="fa fa-tag me-1"></i>Name</th>                                       
-                                        <th><i class="fa fa-layer-group me-1"></i>Category</th>
-                                        <th><i class="fa fa-ruler-combined me-1"></i>Unit</th>
-                                        <th class="text-end"><i class="fa fa-coins me-1"></i>Cost</th>
-                                        <th class="text-end" style="width:90px;"><i class="fa fa-scale-balanced me-1"></i>Qty</th>
-                                        <th style="width:90px;"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- rows JS se fill hongi -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="modal-footer justify-content-between">
-                        <small class="text-muted">
-                            Tip: Recipe items bhi <strong>ItemsJson</strong> mein add ho kar
-                            same purchase save flow mein jayenge.
-                        </small>
-                        <button type="button" class="btn btn-sm btn-outline-secondary"
-                                data-bs-dismiss="modal">
-                            <i class="fa fa-xmark"></i> Close
+                    <div class="save-bar">
+                        <button id="btnSave" type="submit" class="btn-modern btn-save" onclick="updateItemsJson()">
+                            <i class="fa fa-floppy-disk"></i> Save Purchase
                         </button>
+
+                        <button type="reset" class="btn-modern btn-clear">
+                            <i class="fa fa-eraser"></i> Clear
+                        </button>
+
+                        <a href='@Url.Action("Index", "Dashboard")' class="btn-modern btn-exit">
+                            <i class="fa fa-gauge"></i> Exit to Dashboard
+                        </a>
                     </div>
                 </div>
             </div>
+                        }
         </div>
-
-
-        <!-- =============== STAGE 3: PAYMENT + TOTALS + SAVE =============== -->
-        <div class="stage">
-            <div class="stage-header">
-                <span class="num">3</span>
-                <span class="title">Payment Summary & Save</span>
-            </div>
-            <div class="stage-body">
-                <div class="payment-summary-box">
-                    <div class="summary-card">
-                        <i class="fa fa-receipt"></i> Total: <span id="sumTotal">0.00</span>
-                    </div>
-                    <div class="summary-card">
-                        <i class="fa fa-hand-holding-dollar"></i> Paid:
-                        <input type="number" name="Paid" id="paidAmount" value="0" min="0" onchange="updatePaymentSummary()" />
-                    </div>
-                    <div class="summary-card">
-                        <i class="fa fa-scale-balanced"></i> Remaining: <span id="remainingAmount">0.00</span>
-                    </div>
-                </div>
-
-                <input type="hidden" name="TotalAmount" id="hiddenTotalAmount" />
-                <input type="hidden" name="Remaining" id="hiddenRemainingAmount" />
-
-                <div class="d-flex justify-content-end gap-2 mt-3">
-                    <button id="btnSave" type="submit" class="btn-modern btn-save" onclick="updateItemsJson()">
-                        <i class="fa fa-floppy-disk"></i> Save Purchase
-                    </button>
-                    <button type="reset" class="btn-modern btn-clear">
-                        <i class="fa fa-eraser"></i> Clear
-                    </button>
-                    <a href='@Url.Action("Index", "Dashboard")' class="btn-modern btn-exit">
-                        <i class="fa fa-gauge"></i> Exit to Dashboard
-                    </a>
-                </div>
-            </div>
-        </div>
-                }
     </div>
 </div>
 
-<!-- Success overlay -->
 <div id="successOverlay">
     <div class="succ-card">
+        <div class="succ-icon"><i class="fa fa-circle-check"></i></div>
         <div class="succ-title">Purchase Saved</div>
         <div class="succ-chip">
             <i class="fa fa-circle-check"></i>
@@ -995,14 +1550,12 @@
 
 @section Scripts {
     <script src="~/lib/jquery/dist/jquery-3.6.0.min.js"></script>
-    <!-- Bootstrap JS for modal -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         (function () {
             "use strict";
 
-            /* ===== UTIL ===== */
             function setVal(id, v) { const el = document.getElementById(id); if (el) el.value = v; }
             function getVal(id) { const el = document.getElementById(id); return el ? el.value : ""; }
             function setText(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
@@ -1016,7 +1569,6 @@
             }
             function toNum(v) { const n = parseFloat(v); return isFinite(n) ? n : 0; }
 
-            /* ===== CLOCK ===== */
             function tick() {
                 const n = new Date();
                 const t = document.getElementById("currentTime");
@@ -1026,7 +1578,6 @@
             }
             setInterval(tick, 1000); tick();
 
-            /* ===== LAYOUT TOGGLE ===== */
             const root = document.getElementById('purchaseRoot');
             const btn = document.getElementById('toggleSizeBtn');
             if (btn) {
@@ -1038,7 +1589,6 @@
                 });
             }
 
-            /* ===== SUCCESS OVERLAY (server redirect ke baad hi) ===== */
             let _succTO = null;
             function showSuccess() {
                 const ov = document.getElementById('successOverlay'); if (!ov) return;
@@ -1057,7 +1607,6 @@
                 if (el) el.value = 'REF-' + y + m + d + '-' + r;
             }
 
-            /* ===== ENTRY STATE (2-way binding) ===== */
             const entryState = { lastEdited: 'dis' };
 
             const qtyEl = document.getElementById('qty');
@@ -1086,7 +1635,6 @@
                 const cost = toNum(getVal('cost'));
                 if (mrp > 0) {
                     const eff = Math.max(0, (1 - (cost / mrp)) * 100);
-
                     setVal('disPct', eff.toFixed(2));
                 } else {
                     setVal('disPct', '0');
@@ -1112,16 +1660,12 @@
                 if (bn) { bn.focus(); bn.select && bn.select(); }
             }
 
-            /* ===== FILL ITEM (BARCODE / SEARCH SE) ===== */
             function fillItem(found) {
                 const purchasePrice = +found.PurchasePrice || 0;
                 const salePrice = +found.SalePrice || 0;
 
                 var stock = document.getElementById('stock');
-                
-
                 const markupPct = (found.MarkupPercentage != null) ? +found.MarkupPercentage : 0;
-
                 const exDis = (found.ExDis != null) ? +found.ExDis : 0;
 
                 setVal('itemCode', found.ItemCode || "");
@@ -1133,14 +1677,12 @@
 
                 if (stock) {
                     stock.style.display = "inline";
-                    stock.textContent = "(Stock: " + (found.Quantity || 0) +")";
+                    stock.textContent = "(Stock: " + (found.Quantity || 0) + ")";
                 }
 
-                // category + unit (agar property exist nahi bhi hogi to "" set ho jayega)
                 setVal('itemCategory', found.CategoryName || found.Category || "");
                 setVal('itemUnit', found.Unit || found.UnitName || "");
 
-                // Pack size message
                 if (found.PackSize) {
                     const m = String(found.PackSize).match(/\d+/);
                     if (m) {
@@ -1171,9 +1713,6 @@
                 setValAndFocusNext();
             }
 
-            /* ===== SCAN / SUGGESTIONS ===== */
-            /* ===== POS STYLE: SMART EXACT PRIORITY ===== */
-
             const itemsFromDb = @Html.Raw(itemsJson);
             const barcodeInput = document.getElementById("barcodeInput");
             const suggestionBox = document.getElementById("barcodeSuggestions");
@@ -1181,10 +1720,7 @@
             let currentList = [];
             let activeIndex = -1;
 
-
-            /* ===== Render Suggestions ===== */
             function renderSuggestions(list) {
-
                 if (!suggestionBox) return;
 
                 suggestionBox.innerHTML = "";
@@ -1201,7 +1737,6 @@
                 activeIndex = 0;
 
                 currentList.forEach((item, index) => {
-
                     const div = document.createElement("div");
                     div.className = "barcode-suggestion-item" + (index === 0 ? " active" : "");
 
@@ -1226,13 +1761,11 @@
                 });
             }
 
-
             function setActive(index) {
                 activeIndex = index;
                 suggestionBox.querySelectorAll(".barcode-suggestion-item")
                     .forEach((el, i) => el.classList.toggle("active", i === index));
             }
-
 
             function chooseItem(item) {
                 fillItem(item);
@@ -1240,10 +1773,7 @@
                 if (barcodeInput) barcodeInput.value = "";
             }
 
-
-            /* ===== Exact + Smart Ordering ===== */
             function buildSuggestionList(term) {
-
                 const q = term.trim().toLowerCase();
 
                 const exact = itemsFromDb.find(x =>
@@ -1257,8 +1787,6 @@
                     return name.includes(q) || code.includes(q);
                 });
 
-                console.log(matches.length); // correct way to get count
-
                 if (exact) {
                     const withoutExact = matches.filter(x => x !== exact);
                     return [exact, ...withoutExact];
@@ -1267,13 +1795,8 @@
                 return matches;
             }
 
-
-            /* ===== Input Handling ===== */
             if (barcodeInput) {
-
-                /* Live Search */
                 barcodeInput.addEventListener("input", function () {
-
                     const value = this.value.trim();
 
                     if (!value) {
@@ -1285,16 +1808,12 @@
                     renderSuggestions(list);
                 });
 
-
-                /* ENTER = Select (Scanner or Keyboard) */
                 barcodeInput.addEventListener("keydown", function (e) {
-
                     const value = this.value.trim();
                     const exact = itemsFromDb.find(x =>
                         String(x.ItemCode || "").toLowerCase() === value.toLowerCase()
                     );
 
-                    // ENTER key
                     if (e.key === "Enter") {
                         e.preventDefault();
 
@@ -1310,28 +1829,23 @@
                         return;
                     }
 
-                    // Arrow Down
                     if (e.key === "ArrowDown" && currentList.length) {
                         e.preventDefault();
                         activeIndex = Math.min(activeIndex + 1, currentList.length - 1);
                         setActive(activeIndex);
                     }
 
-                    // Arrow Up
                     if (e.key === "ArrowUp" && currentList.length) {
                         e.preventDefault();
                         activeIndex = Math.max(activeIndex - 1, 0);
                         setActive(activeIndex);
                     }
 
-                    // Escape
                     if (e.key === "Escape") {
                         suggestionBox.style.display = "none";
                     }
                 });
 
-
-                /* Click Outside */
                 document.addEventListener("click", function (e) {
                     if (!barcodeInput.contains(e.target) &&
                         !(suggestionBox && suggestionBox.contains(e.target))) {
@@ -1340,8 +1854,6 @@
                 });
             }
 
-
-            /* ===== GRID / TOTALS (COST-BASED) ===== */
             let gridRows = [], editIndex = -1;
             const addBtn = document.getElementById('btnAddRow');
 
@@ -1405,9 +1917,8 @@
                 }
 
                 var stock = document.getElementById('stock');
-                if (stock) {
-                    stock.style.display = "none";  
-                }
+                if (stock) stock.style.display = "none";
+
                 clearEntry();
                 renderGrid();
                 if (barcodeInput) { barcodeInput.focus(); barcodeInput.select && barcodeInput.select(); }
@@ -1519,7 +2030,6 @@
                 }
             };
 
-            /* ===== RECIPE INGREDIENTS INTEGRATION ===== */
             let allIngredients = [];
 
             function onPurchaseRecipeClick() {
@@ -1549,119 +2059,110 @@
                 }
             }
 
-                   function renderRecipeTable(list) {
-            const tbody = document.querySelector('#recipeTable tbody');
-            if (!tbody) return;
-            tbody.innerHTML = '';
+            function renderRecipeTable(list) {
+                const tbody = document.querySelector('#recipeTable tbody');
+                if (!tbody) return;
+                tbody.innerHTML = '';
 
-            if (!list || list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-2">No ingredients found</td></tr>`;
-                return;
-            }
+                if (!list || list.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-2">No ingredients found</td></tr>`;
+                    return;
+                }
 
-            list.forEach(row => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${row.code || ''}</td>
-                    <td>${row.name || ''}</td>                    
-                    <td>${row.categoryName || ''}</td>
-                    <td>${row.unit || ''}</td>
-                    <td class="text-end">
-                         <input type="number" name="IngredientCost"
-                        class="form-control form-control-sm ing-cost"
-                        value="1" min="1" step="1">
-                    </td>
-                    </td>
-                    <td class="text-end">
-                        <input type="number"
-                               class="form-control form-control-sm ing-qty"
-                               value="1"
-                               min="0.001"
-                               step="0.001">
-                    </td>
-                    <td class="text-center">
-                        <button type="button"
-                                class="btn btn-sm btn-primary btn-add-ing"
-                                data-id="${row.id}">
-                            <i class="fa fa-plus"></i> Add
-                        </button>
-                    </td>`;
-                tbody.appendChild(tr);
-            });
-
-            // Add button click
-            tbody.querySelectorAll('.btn-add-ing').forEach(btn => {
-                btn.addEventListener('click', function () {
-                    const id = parseInt(this.dataset.id);
-                    const ing = allIngredients.find(x => x.id === id);
-                    const tr = this.closest('tr');
-                    const qtyInput = tr ? tr.querySelector('.ing-qty') : null;
-                    const costInput = tr ? tr.querySelector('.ing-cost') : null;
-                    const qty = qtyInput ? (parseFloat(qtyInput.value) || 1) : 1;
-                    const cost = costInput ? (parseFloat(costInput.value) || 1) : 1;
-
-                    if (ing) {
-                        addIngredientToGrid(ing, qty, cost);
-                        // modal close
-                        const modalEl = document.getElementById('recipeModal');
-                        if (modalEl) {
-                            const instance = bootstrap.Modal.getInstance(modalEl);
-                            if (instance) instance.hide();
-                        }
-                    }
+                list.forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${row.code || ''}</td>
+                        <td>${row.name || ''}</td>
+                        <td>${row.categoryName || ''}</td>
+                        <td>${row.unit || ''}</td>
+                        <td class="text-end">
+                            <input type="number" name="IngredientCost"
+                                class="form-control form-control-sm ing-cost"
+                                value="1" min="1" step="1">
+                        </td>
+                        <td class="text-end">
+                            <input type="number"
+                                   class="form-control form-control-sm ing-qty"
+                                   value="1"
+                                   min="0.001"
+                                   step="0.001">
+                        </td>
+                        <td class="text-center">
+                            <button type="button"
+                                    class="btn btn-sm btn-primary btn-add-ing"
+                                    data-id="${row.id}">
+                                <i class="fa fa-plus"></i> Add
+                            </button>
+                        </td>`;
+                    tbody.appendChild(tr);
                 });
-            });
 
-            // Qty pe Enter se bhi Add
-            tbody.querySelectorAll('.ing-qty').forEach(input => {
-                input.addEventListener('keydown', function (e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
+                tbody.querySelectorAll('.btn-add-ing').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const id = parseInt(this.dataset.id);
+                        const ing = allIngredients.find(x => x.id === id);
                         const tr = this.closest('tr');
-                        const btn = tr ? tr.querySelector('.btn-add-ing') : null;
-                        if (btn) btn.click();
-                    }
+                        const qtyInput = tr ? tr.querySelector('.ing-qty') : null;
+                        const costInput = tr ? tr.querySelector('.ing-cost') : null;
+                        const qty = qtyInput ? (parseFloat(qtyInput.value) || 1) : 1;
+                        const cost = costInput ? (parseFloat(costInput.value) || 1) : 1;
+
+                        if (ing) {
+                            addIngredientToGrid(ing, qty, cost);
+                            const modalEl = document.getElementById('recipeModal');
+                            if (modalEl) {
+                                const instance = bootstrap.Modal.getInstance(modalEl);
+                                if (instance) instance.hide();
+                            }
+                        }
+                    });
                 });
-            });
-        }
 
-
-         function addIngredientToGrid(ing, qty, cost) {
-            const q = (qty && qty > 0) ? qty : 1;
-            const unitCost = +(ing.costPerUnit ?? 0);
-
-            const row = {
-                itemCode: ing.code || '',
-                itemName: ing.name || '',
-                batchNo: '',
-                expiry: '',
-                qty: q,
-                mrp: cost,
-                disPct: 0,
-                exDis: 0,
-                cost: cost,
-                taxPercent: 0,
-                taxAmt: 0,
-                id: 0,
-                categoryName: ing.categoryName || '',
-                unit: ing.unit || ''
-            };
-
-            computeRowTotals(row);
-            gridRows.push(row);
-            editIndex = -1;
-            setEditingUI(false);
-            renderGrid();
-
-            // barcode input par focus back
-            if (barcodeInput) {
-                barcodeInput.focus();
-                if (barcodeInput.select) barcodeInput.select();
+                tbody.querySelectorAll('.ing-qty').forEach(input => {
+                    input.addEventListener('keydown', function (e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const tr = this.closest('tr');
+                            const btn = tr ? tr.querySelector('.btn-add-ing') : null;
+                            if (btn) btn.click();
+                        }
+                    });
+                });
             }
-        }
 
+            function addIngredientToGrid(ing, qty, cost) {
+                const q = (qty && qty > 0) ? qty : 1;
 
-            /* ===== PAYMENT SUMMARY ===== */
+                const row = {
+                    itemCode: ing.code || '',
+                    itemName: ing.name || '',
+                    batchNo: '',
+                    expiry: '',
+                    qty: q,
+                    mrp: cost,
+                    disPct: 0,
+                    exDis: 0,
+                    cost: cost,
+                    taxPercent: 0,
+                    taxAmt: 0,
+                    id: 0,
+                    categoryName: ing.categoryName || '',
+                    unit: ing.unit || ''
+                };
+
+                computeRowTotals(row);
+                gridRows.push(row);
+                editIndex = -1;
+                setEditingUI(false);
+                renderGrid();
+
+                if (barcodeInput) {
+                    barcodeInput.focus();
+                    if (barcodeInput.select) barcodeInput.select();
+                }
+            }
+
             window.updatePaymentSummary = function () {
                 let g = 0; gridRows.forEach(r => { computeRowTotals(r); g += r.rowTotal; });
                 setText('sumTotal', g.toFixed(2));
@@ -1673,18 +2174,17 @@
                 if (hR) hR.value = (g - p).toFixed(2);
             };
 
-            /* ===== SAVE PACK ===== */
             window.updateItemsJson = function () {
                 const el = document.getElementById('ItemsJson');
                 if (el) el.value = JSON.stringify(gridRows || []);
             };
 
-            /* ===== ENTER KEY FLOW ===== */
             const flow = [
                 'SupplierId', 'OldBalance', 'SupplierInv', 'PurchaseDate', 'BusinessLocation', 'ReferenceNo',
                 'barcodeInput', 'batchNo', 'expiry', 'qty', 'mrp', 'disPct', 'cost', 'exDis', 'taxPercent', 'taxAmt',
                 'btnAddRow', 'paidAmount', 'btnSave'
             ];
+
             function focusNext(curr) {
                 const ix = flow.indexOf(curr);
                 if (ix >= 0 && ix < flow.length - 1) {
@@ -1692,6 +2192,7 @@
                     if (nx) { nx.focus(); if (nx.select && nx.tagName === 'INPUT') nx.select(); }
                 }
             }
+
             flow.forEach(id => {
                 const el = document.getElementById(id); if (!el) return;
                 el.addEventListener('keydown', e => {
@@ -1704,10 +2205,10 @@
                 });
             });
 
-            /* ===== DOMContentLoaded init ===== */
             document.addEventListener('DOMContentLoaded', () => {
                 const sel = document.getElementById('SupplierId'); if (sel) sel.focus();
                 generateReferenceNo();
+
                 var msg = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["Message"] as string ?? ""));
                 if (msg) { document.getElementById('successMsgText').textContent = msg; showSuccess(); }
 
@@ -1729,14 +2230,10 @@
                     });
                 }
 
-                // Supplier balance load if already selected
                 if ($("#SupplierId").val()) $("#SupplierId").trigger("change");
-
-                // Initial render
                 renderGrid();
             });
 
-            /* ===== SUPPLIER BALANCE ===== */
             $("#SupplierId").change(function () {
                 var supplierId = $(this).val();
                 if (!supplierId) { $("#OldBalance").val(0); return; }

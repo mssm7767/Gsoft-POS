@@ -26,10 +26,12 @@
     decimal grandSaleTotal = 0m;
     decimal grandReturnTotal = 0m;
     decimal grandTotal = 0m;
+
     decimal runningSubtotal = 0m;
     decimal runningTax = 0m;
     decimal runningDiscount = 0m;
     decimal runningTotal = 0m;
+    decimal runningProfit = 0m;
 
     var itemsList = new ArrayList();
 
@@ -49,8 +51,7 @@
                 CostPrice =
                     int.TryParse(i.Item?.PackSize, out var ps) && ps > 0
                         ? i.Item.PurchasePrice / ps
-                        : i.Item.PurchasePrice,
-
+                        : i.Item.PurchasePrice
             }))
             .ToList();
 
@@ -77,25 +78,63 @@
 
         itemsCount = groupedItemsData.Count;
         purchaseTotal = groupedItemsData.Sum(p => p.PurchaseTotal);
-        grandItemTotalQty = allSaleItemsQty.Sum(i => (i.Quantity * i.UnitPrice) - i.Discount);
-        grandProfit = grandItemTotalQty - purchaseTotal;
+        grandItemTotalQty = allSaleItemsQty.Sum(i => (i.Quantity * i.UnitPrice) - ((i.Quantity * i.UnitPrice) * i.Discount / 100m));
 
-        foreach (var item in groupedItemsData) { itemsList.Add(item); }
+        foreach (var item in groupedItemsData)
+        {
+            itemsList.Add(item);
+        }
 
         grandSaleSubtotal = Model.Sales.Where(s => s.SaleType == "Sale").Sum(s => s.SubTotal);
         grandReturnSubtotal = Model.Sales.Where(s => s.SaleType == "Return").Sum(s => s.SubTotal);
-
         grandSubtotal = grandSaleSubtotal - grandReturnSubtotal;
+
         grandTax = Model.Sales.Sum(s => s.Tax);
         grandDiscount = Model.Sales.Sum(s => s.Discount);
 
         grandSaleTotal = Model.Sales.Where(s => s.SaleType == "Sale").Sum(s => s.Total);
         grandReturnTotal = Model.Sales.Where(s => s.SaleType == "Return").Sum(s => s.Total);
-
         grandTotal = grandSaleTotal - grandReturnTotal;
 
         foreach (var sale in Model.Sales)
         {
+            decimal invoiceProfit = 0m;
+
+            if (sale.SaleItems != null && sale.SaleItems.Any())
+            {
+                foreach (var i in sale.SaleItems)
+                {
+                    var qty = i.Quantity;
+                    var grossSale = i.UnitPrice * qty;
+                    var discountAmount = (grossSale * i.DiscountPercent) / 100m;
+                    var netSale = grossSale - discountAmount;
+
+                    decimal purchasePrice = 0m;
+                    if (i.Item != null)
+                    {
+                        purchasePrice = i.Item.PurchasePrice;
+                    }
+
+                    decimal costPrice = purchasePrice;
+                    if (int.TryParse(i.Item?.PackSize, out var ps) && ps > 0)
+                    {
+                        costPrice = purchasePrice / ps;
+                    }
+
+                    var purchaseCost = costPrice * qty;
+                    var itemProfit = netSale - purchaseCost;
+
+                    if (sale.SaleType == "Return")
+                    {
+                        invoiceProfit -= itemProfit;
+                    }
+                    else
+                    {
+                        invoiceProfit += itemProfit;
+                    }
+                }
+            }
+
             if (sale.SaleType == "Return")
             {
                 runningSubtotal -= sale.SubTotal;
@@ -110,11 +149,14 @@
                 runningDiscount += sale.Discount;
                 runningTotal += sale.Total;
             }
+
+            runningProfit += invoiceProfit;
         }
+
+        grandProfit = runningProfit;
     }
 }
 
-<!-- Icons (agar layout me nahi hain to yahan se load ho jayenge) -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 <style>
@@ -284,7 +326,6 @@
         width: fit-content;
     }
 
-    /* ✅ Header top CTA */
     .header-cta {
         border: 1px solid rgba(255,255,255,.25);
         background: linear-gradient(135deg, rgba(16,185,129,.95) 0%, rgba(13,156,109,.95) 100%);
@@ -935,12 +976,10 @@
 
 <div class="sales-dashboard">
 
-    <!-- ✅ Anti-forgery token (for AJAX delete) -->
     <form id="antiForgeryForm" class="d-none">
         @Html.AntiForgeryToken()
     </form>
 
-    <!-- HEADER -->
     <div class="dashboard-header">
         <div class="header-content">
             <div class="header-left">
@@ -957,7 +996,6 @@
             </div>
 
             <div class="header-right">
-                <!-- ✅ New Sale button header me (System Administrator ke sath) -->
                 <a asp-action="POS" class="btn header-cta no-print">
                     <i class="fas fa-plus-circle me-2"></i> New Sale
                 </a>
@@ -975,7 +1013,6 @@
         </div>
     </div>
 
-    <!-- FILTER -->
     <div class="filter-section">
         <div class="section-title">
             <i class="fas fa-sliders-h"></i>
@@ -1044,7 +1081,6 @@
 
     @if (Model?.Sales != null && Model.Sales.Any())
     {
-        <!-- KPI -->
         <div class="kpi-section">
             <div class="kpi-grid">
                 <div class="kpi-card">
@@ -1070,16 +1106,6 @@
                 <div class="kpi-card">
                     <div class="kpi-content">
                         <div class="kpi-info">
-                            <div class="kpi-label"><i class="fas fa-percentage"></i> Total Tax</div>
-                            <div class="kpi-value">@grandTax.ToString("N2")</div>
-                        </div>
-                        <div class="kpi-icon"><i class="fas fa-file-invoice"></i></div>
-                    </div>
-                </div>
-
-                <div class="kpi-card">
-                    <div class="kpi-content">
-                        <div class="kpi-info">
                             <div class="kpi-label"><i class="fas fa-tag"></i> Total Discount</div>
                             <div class="kpi-value">@grandDiscount.ToString("N2")</div>
                         </div>
@@ -1096,10 +1122,21 @@
                         <div class="kpi-icon"><i class="fas fa-money-bill-wave"></i></div>
                     </div>
                 </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-content">
+                        <div class="kpi-info">
+                            <div class="kpi-label"><i class="fas fa-chart-line"></i> Total Profit</div>
+                            <div class="kpi-value @(grandProfit < 0 ? "profit-negative" : "profit-positive")">
+                                @grandProfit.ToString("N2")
+                            </div>
+                        </div>
+                        <div class="kpi-icon"><i class="fas fa-sack-dollar"></i></div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- CATEGORY FILTER (Items view only) -->
         <div class="category-filter no-print" id="categoryFilter">
             <div class="filter-group">
                 <label class="filter-label"><i class="fas fa-filter"></i> Filter by Category</label>
@@ -1116,7 +1153,6 @@
             </div>
         </div>
 
-        <!-- INVOICES TABLE -->
         <div class="table-section" id="invoicesTable">
             <div class="table-container">
                 <div class="table-header">
@@ -1139,6 +1175,7 @@
                                 <th class="text-end"><i class="fas fa-layer-group"></i> Subtotal</th>
                                 <th class="text-end"><i class="fas fa-percent"></i> Tax</th>
                                 <th class="text-end"><i class="fas fa-tag"></i> Discount</th>
+                                <th class="text-end"><i class="fas fa-chart-line"></i> Profit</th>
                                 <th class="text-end"><i class="fas fa-wallet"></i> Total</th>
                                 <th class="text-center"><i class="fas fa-cogs"></i> Actions</th>
                             </tr>
@@ -1146,59 +1183,100 @@
                         <tbody>
                             @{
                                 var index = 1;
-                                foreach (var sale in Model.Sales)
+                            }
+
+                            @foreach (var sale in Model.Sales)
+                            {
+                                decimal invoiceProfit = 0m;
+
+                                if (sale.SaleItems != null && sale.SaleItems.Any())
                                 {
-                                    <tr>
-                                        <td class="fw-semibold text-muted">@index</td>
-                                        <td>
-                                            <span class="sale-type-badge sale-type-@sale.SaleType.ToLower()">@sale.SaleType</span>
-                                        </td>
-                                        <td>
-                                            <span class="invoice-badge">
-                                                <i class="fas fa-file-invoice"></i>
-                                                @sale.InvoiceNumber
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <i class="far fa-clock me-1 text-muted"></i>
-                                            @sale.SaleDate.ToString("dd MMM • HH:mm")
-                                        </td>
-                                        <td>
-                                            <span class="cashier-chip">
-                                                <i class="fas fa-user-circle"></i>
-                                                @sale.CashierId
-                                            </span>
-                                        </td>
-                                        <td class="text-end @(sale.SaleType == "Return" ? "text-danger" : "")">
-                                            @(sale.SaleType == "Return" ? "-" : "")@sale.SubTotal.ToString("N2")
-                                        </td>
-                                        <td class="text-end">@sale.Tax.ToString("N2")</td>
-                                        <td class="text-end text-danger">-@sale.Discount.ToString("N2")</td>
-                                        <td class="text-end fw-bold @(sale.SaleType == "Return" ? "text-danger" : "text-success")">
-                                            @(sale.SaleType == "Return" ? "-" : "")@sale.Total.ToString("N2")
-                                        </td>
-                                        <td class="text-center">
-                                            <div class="action-buttons">
-                                                <a asp-action="Receipt" asp-route-id="@sale.Id"
-                                                   class="action-btn action-btn-view" title="View Receipt">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
+                                    foreach (var i in sale.SaleItems)
+                                    {
+                                        var qty = i.Quantity;
+                                        var grossSale = i.UnitPrice * qty;
+                                        var discountAmount = (grossSale * i.DiscountPercent) / 100m;
+                                        var netSale = grossSale - discountAmount;
 
-                                                <a asp-action="Edit" asp-route-id="@sale.Id"
-                                                   class="action-btn action-btn-edit" title="Edit">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
+                                        decimal purchasePrice = 0m;
+                                        if (i.Item != null)
+                                        {
+                                            purchasePrice = i.Item.PurchasePrice;
+                                        }
 
-                                                <!-- ✅ FIX: type="button" so form submit na ho -->
-                                                <button type="button" onclick="deleteSale(@sale.Id)"
-                                                        class="action-btn action-btn-delete" title="Delete">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    index++;
+                                        decimal costPrice = purchasePrice;
+                                        if (int.TryParse(i.Item?.PackSize, out var ps) && ps > 0)
+                                        {
+                                            costPrice = purchasePrice / ps;
+                                        }
+
+                                        var purchaseCost = costPrice * qty;
+                                        var itemProfit = netSale - purchaseCost;
+
+                                        if (sale.SaleType == "Return")
+                                        {
+                                            invoiceProfit -= itemProfit;
+                                        }
+                                        else
+                                        {
+                                            invoiceProfit += itemProfit;
+                                        }
+                                    }
                                 }
+
+                                <tr>
+                                    <td class="fw-semibold text-muted">@index</td>
+                                    <td>
+                                        <span class="sale-type-badge sale-type-@sale.SaleType.ToLower()">@sale.SaleType</span>
+                                    </td>
+                                    <td>
+                                        <span class="invoice-badge">
+                                            <i class="fas fa-file-invoice"></i>
+                                            @sale.InvoiceNumber
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <i class="far fa-clock me-1 text-muted"></i>
+                                        @sale.SaleDate.ToString("dd MMM • HH:mm")
+                                    </td>
+                                    <td>
+                                        <span class="cashier-chip">
+                                            <i class="fas fa-user-circle"></i>
+                                            @sale.CashierId
+                                        </span>
+                                    </td>
+                                    <td class="text-end @(sale.SaleType == "Return" ? "text-danger" : "")">
+                                        @(sale.SaleType == "Return" ? "-" : "")@sale.SubTotal.ToString("N2")
+                                    </td>
+                                    <td class="text-end">@sale.Tax.ToString("N2")</td>
+                                    <td class="text-end text-danger">-@sale.Discount.ToString("N2")</td>
+                                    <td class="text-end fw-bold @(invoiceProfit < 0 ? "profit-negative" : "profit-positive")">
+                                        @invoiceProfit.ToString("N2")
+                                    </td>
+                                    <td class="text-end fw-bold @(sale.SaleType == "Return" ? "text-danger" : "text-success")">
+                                        @(sale.SaleType == "Return" ? "-" : "")@sale.Total.ToString("N2")
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="action-buttons">
+                                            <a asp-action="Receipt" asp-route-id="@sale.Id"
+                                               class="action-btn action-btn-view" title="View Receipt">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+
+                                            <a asp-action="Edit" asp-route-id="@sale.Id"
+                                               class="action-btn action-btn-edit" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+
+                                            <button type="button" onclick="deleteSale(@sale.Id)"
+                                                    class="action-btn action-btn-delete" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                index++;
                             }
                         </tbody>
                         <tfoot>
@@ -1207,6 +1285,7 @@
                                 <td class="text-end fw-bold">@runningSubtotal.ToString("N2")</td>
                                 <td class="text-end fw-bold">@runningTax.ToString("N2")</td>
                                 <td class="text-end fw-bold text-danger">-@runningDiscount.ToString("N2")</td>
+                                <td class="text-end fw-bold @(runningProfit < 0 ? "profit-negative" : "profit-positive")">@runningProfit.ToString("N2")</td>
                                 <td class="text-end fw-bold text-success">@runningTotal.ToString("N2")</td>
                                 <td></td>
                             </tr>
@@ -1216,7 +1295,6 @@
             </div>
         </div>
 
-        <!-- ITEMS TABLE -->
         <div class="table-section" id="itemsTable" style="display:none;">
             <div class="table-container">
                 <div class="table-header">
@@ -1334,7 +1412,6 @@
     }
 </div>
 
-<!-- SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
@@ -1393,16 +1470,16 @@
 
             const cells = row.querySelectorAll('td');
 
-            qty      += parseFloat(cells[4].innerText.replace(/,/g, '')) || 0;
+            qty += parseFloat(cells[4].innerText.replace(/,/g, '')) || 0;
             discount += Math.abs(parseFloat(cells[6].innerText.replace(/,/g, ''))) || 0;
-            total    += parseFloat(cells[7].innerText.replace(/,/g, '')) || 0;
+            total += parseFloat(cells[7].innerText.replace(/,/g, '')) || 0;
             purchase += parseFloat(cells[8].innerText.replace(/,/g, '')) || 0;
-            profit   += parseFloat(cells[9].innerText.replace(/,/g, '')) || 0;
+            profit += parseFloat(cells[9].innerText.replace(/,/g, '')) || 0;
         });
 
-        document.getElementById('ftQty').innerText      = qty.toFixed(2);
+        document.getElementById('ftQty').innerText = qty.toFixed(2);
         document.getElementById('ftDiscount').innerText = '-' + discount.toFixed(2);
-        document.getElementById('ftTotal').innerText    = total.toFixed(2);
+        document.getElementById('ftTotal').innerText = total.toFixed(2);
         document.getElementById('ftPurchase').innerText = purchase.toFixed(2);
 
         const profitCell = document.getElementById('ftProfit');
@@ -1411,7 +1488,6 @@
             ? 'text-end fw-bold profit-negative'
             : 'text-end fw-bold profit-positive';
     }
-
 
     function initializeCategoryFilter() {
         const categorySelect = document.getElementById('categoryInput');
@@ -1426,14 +1502,17 @@
                 const show = (!selectedCategory || category === selectedCategory);
                 row.style.display = show ? '' : 'none';
             });
+
             recalculateFooterTotals();
         };
+
         recalculateFooterTotals();
     }
 
-    function printA4() { window.print(); }
+    function printA4() {
+        window.print();
+    }
 
-    // ✅ Single clean deleteSale
     function deleteSale(saleId) {
         Swal.fire({
             title: 'Delete sale?',
