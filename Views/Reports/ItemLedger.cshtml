@@ -1,0 +1,999 @@
+﻿@model GSoftPosNew.ViewModels.ItemLedgerReportVM
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    ViewData["Title"] = "Item Ledger Report";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Google Fonts + Bootstrap Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    :root {
+        --primary: #0077b6;
+        --primary-dark: #005f8c;
+        --secondary: #5bc0be;
+        --secondary-dark: #3aa39f;
+        --primary-light: #caf0f8;
+        --secondary-light: #d4f0f0;
+        --success: #10b981;
+        --danger: #ef4444;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-600: #4b5563;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08);
+        --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.05);
+        --radius-sm: 0.5rem;
+        --radius-md: 0.75rem;
+        --radius-lg: 1rem;
+        --radius-xl: 1.5rem;
+        --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, sans-serif;
+        --transition: all 0.2s ease;
+    }
+
+    body {
+        font-family: var(--font-sans);
+        background: linear-gradient(145deg, #f1f5f9 0%, #eef2ff 100%);
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+    }
+
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--gray-100);
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--gray-300);
+        border-radius: 10px;
+    }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-400);
+        }
+
+    .ledger-page {
+        max-width: 1600px;
+        margin: 2rem auto;
+        padding: 0 1.5rem;
+    }
+
+    .ledger-shell {
+        background: transparent;
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+    }
+
+    /* HERO SECTION - using #5bc0be and #0077b6 */
+    .ledger-hero {
+        background: linear-gradient(135deg, #ffffff 0%, #e0f3f2 25%, #c2e0e8 100%);
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        padding: 2rem 2rem;
+        position: relative;
+        overflow: hidden;
+        border-bottom: 3px solid var(--secondary);
+    }
+
+        .ledger-hero::after {
+            content: '';
+            position: absolute;
+            top: -30%;
+            right: -10%;
+            width: 320px;
+            height: 320px;
+            background: radial-gradient(circle, rgba(91,192,190,0.15) 0%, rgba(0,119,182,0.1) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+    .ledger-hero-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        position: relative;
+        z-index: 2;
+    }
+
+    .ledger-title {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+        .ledger-title i {
+            font-size: 2.5rem;
+            color: var(--primary);
+            background: none;
+            padding: 0;
+        }
+
+        .ledger-title div h2 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin: 0 0 0.25rem 0;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #1e293b, var(--primary-dark));
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .ledger-title div p {
+            margin: 0;
+            opacity: 0.7;
+            font-size: 0.9rem;
+            color: #475569;
+        }
+
+    .ledger-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .ledger-btn-top {
+        background: rgba(0,119,182,0.1);
+        border: 1px solid rgba(0,119,182,0.3);
+        border-radius: 2rem;
+        padding: 0.6rem 1.2rem;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: var(--primary-dark);
+        transition: var(--transition);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        backdrop-filter: blur(2px);
+    }
+
+        .ledger-btn-top:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+    /* body */
+    .ledger-body {
+        background: white;
+        padding: 2rem;
+        border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+        box-shadow: var(--shadow-xl);
+    }
+
+    /* filter card */
+    .filter-card {
+        background: var(--gray-50);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid var(--gray-200);
+        transition: var(--transition);
+    }
+
+        .filter-card:hover {
+            border-color: var(--primary-light);
+            box-shadow: var(--shadow-md);
+        }
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr auto auto;
+        gap: 1rem;
+        align-items: end;
+    }
+
+    .form-label {
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--gray-600);
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+        .form-label i {
+            color: var(--secondary);
+            margin-right: 0.3rem;
+        }
+
+    .form-control, .form-select {
+        width: 100%;
+        padding: 0.7rem 1rem;
+        border-radius: var(--radius-md);
+        border: 1.5px solid var(--gray-200);
+        background: white;
+        font-size: 0.9rem;
+        transition: var(--transition);
+        font-family: var(--font-sans);
+    }
+
+        .form-control:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0,119,182,0.1);
+        }
+    /* Smaller buttons */
+    .btn-search, .btn-print {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        padding: 0.5rem 0.8rem;
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        font-size: 0.8rem;
+        transition: var(--transition);
+        cursor: pointer;
+        border: none;
+        width: 100%;
+        min-height: 40px;
+    }
+
+    .btn-search {
+        background: var(--primary);
+        color: white;
+        box-shadow: var(--shadow-sm);
+    }
+
+        .btn-search:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+    .btn-print {
+        background: var(--gray-800);
+        color: white;
+    }
+
+        .btn-print:hover {
+            background: var(--gray-900);
+            transform: translateY(-2px);
+        }
+
+    /* item strip */
+    .item-strip {
+        background: linear-gradient(120deg, #e0f3f2 0%, #c2e0e8 100%);
+        border-radius: var(--radius-lg);
+        padding: 1rem 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        border-left: 4px solid var(--secondary);
+        box-shadow: var(--shadow-sm);
+    }
+
+        .item-strip strong {
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        .item-strip div div {
+            font-size: 0.85rem;
+            color: #1e293b;
+        }
+
+    .report-tools {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .tool-btn {
+        background: white;
+        border: 1px solid #cbd5e1;
+        border-radius: 2rem;
+        padding: 0.45rem 1rem;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: #1e293b;
+        text-decoration: none;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+        .tool-btn i {
+            color: var(--secondary);
+        }
+
+        .tool-btn:hover {
+            background: #f1f5f9;
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+            .tool-btn:hover i {
+                color: var(--primary);
+            }
+
+    /* summary cards */
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+    }
+
+    .summary-card {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: 1.25rem;
+        transition: var(--transition);
+        border: 1px solid var(--gray-200);
+        box-shadow: var(--shadow-sm);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .summary-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--gray-300);
+        }
+
+    .summary-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+        .summary-head .icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: var(--transition);
+        }
+
+    .summary-card:hover .icon {
+        transform: scale(1.05);
+    }
+
+    .summary-title {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--gray-500);
+        margin-bottom: 0.4rem;
+    }
+
+    .summary-value {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--gray-800);
+        line-height: 1.2;
+        letter-spacing: -0.02em;
+    }
+
+    .icon-purchase {
+        background: #e0f2fe;
+        color: #0284c7;
+    }
+
+    .icon-preturn {
+        background: #fff7ed;
+        color: #ea580c;
+    }
+
+    .icon-sale {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+
+    .icon-sreturn {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    .icon-net {
+        background: #ede9fe;
+        color: #7c3aed;
+    }
+
+    .icon-money {
+        background: #ecfeff;
+        color: #0891b2;
+    }
+
+    .icon-profit {
+        background: #f0fdf4;
+        color: #15803d;
+    }
+
+    /* table card */
+    .table-card {
+        background: white;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--gray-200);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        transition: var(--transition);
+    }
+
+        .table-card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+    .table-card-head {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--gray-200);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        background: var(--gray-50);
+    }
+
+        .table-card-head h4 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--gray-800);
+        }
+
+            .table-card-head h4 i {
+                color: var(--primary);
+            }
+
+    .table-wrap {
+        overflow-x: auto;
+        scrollbar-width: thin;
+    }
+
+    .ledger-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+        min-width: 1100px;
+    }
+
+        .ledger-table thead th {
+            background: var(--gray-900);
+            color: white;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 1rem 1rem;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .ledger-table tbody td {
+            padding: 1rem 0.8rem;
+            border-bottom: 1px solid var(--gray-100);
+            text-align: center;
+            vertical-align: middle;
+            color: var(--gray-700);
+        }
+
+        .ledger-table tbody tr:hover {
+            background: var(--gray-50);
+            transition: background 0.2s;
+        }
+
+    .type-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 2rem;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+    }
+
+    .badge-purchase {
+        background: #e0f2fe;
+        color: #0369a1;
+    }
+
+    .badge-purchase-return {
+        background: #fff7ed;
+        color: #c2410c;
+    }
+
+    .badge-sale {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .badge-sale-return {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .amount-positive {
+        color: #15803d;
+        font-weight: 700;
+    }
+
+    .amount-negative {
+        color: #b91c1c;
+        font-weight: 700;
+    }
+
+    .no-data {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--gray-500);
+        font-weight: 500;
+    }
+
+        .no-data i {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.6;
+        }
+
+    /* print */
+    @@media print {
+        .ledger-hero, .filter-card, .report-tools, .ledger-actions, .btn-search, .btn-print, .tool-btn, .table-card-head .text-muted {
+            display: none !important;
+        }
+
+        .ledger-page {
+            margin: 0;
+            padding: 0;
+        }
+
+        .ledger-body {
+            padding: 0;
+            background: white;
+        }
+
+        .summary-grid {
+            gap: 0.5rem;
+        }
+
+        .summary-card {
+            break-inside: avoid;
+            border: 1px solid #ccc;
+        }
+
+        .ledger-table thead th {
+            background: #eee !important;
+            color: black;
+        }
+    }
+
+    /* responsive */
+    @@media (max-width: 1200px) {
+        .filter-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .ledger-page {
+            padding: 1rem;
+        }
+
+        .filter-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .summary-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .ledger-title h2 {
+            font-size: 1.4rem;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .summary-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .suggestions-list {
+        position: absolute;
+        width: 100%;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        box-shadow: 0 16px 40px rgba(2,6,23,.12);
+        margin-top: 6px;
+        overflow: hidden;
+        z-index: 1000;
+        max-height: 420px;
+        overflow-y: auto;
+        padding: 4px;
+    }
+
+    .suggestion-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: background .15s ease, border-color .15s ease;
+        border: 1px solid transparent;
+        background: #f9fafb;
+        margin: 3px 2px;
+    }
+
+        .suggestion-item:hover,
+        .suggestion-item.active {
+            background: #eff6ff;
+            border-color: #dbeafe;
+        }
+
+    .suggestion-code {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 900;
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        color: #1e3a8a;
+        padding: 3px 8px;
+        border-radius: 8px;
+        border: 1px solid #c7d2fe;
+        background: #eef2ff;
+        white-space: nowrap;
+        line-height: 1.1;
+    }
+
+    .suggestion-qty {
+        font-weight: 800;
+        color: #065f46;
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+        border-radius: 999px;
+        padding: 1px 8px;
+        white-space: nowrap;
+        font-size: .85rem;
+        line-height: 1.1;
+    }
+
+    .suggestion-name {
+        flex: 1;
+        min-width: 0;
+        font-weight: 800;
+        color: #0f172a;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: .95rem;
+    }
+
+    .suggestion-price {
+        font-weight: 800;
+        color: #92400e;
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        border-radius: 999px;
+        padding: 1px 8px;
+        white-space: nowrap;
+        font-size: .85rem;
+        line-height: 1.1;
+    }
+</style>
+
+<div class="ledger-page">
+    <div class="ledger-shell">
+        <!-- Hero with #5bc0be & #0077b6 mix -->
+        <div class="ledger-hero">
+            <div class="ledger-hero-top">
+                <div class="ledger-title">
+                    <i class="bi bi-receipt-cutoff"></i>
+                    <div>
+                        <h2>Item Ledger Report</h2>
+                        <p>Comprehensive inventory movement • Purchase & Sales • Real-time profit analysis</p>
+                    </div>
+                </div>
+                <div class="ledger-actions">
+                    <button type="button" class="ledger-btn-top" onclick="window.print()">
+                        <i class="bi bi-printer"></i> Print
+                    </button>
+                    <a href="@Url.Action("ItemLedger", "Reports")" class="ledger-btn-top">
+                        <i class="bi bi-arrow-repeat"></i> Reset
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="ledger-body">
+            <!-- Filter Form -->
+            <div class="filter-card">
+                <form method="get" asp-action="ItemLedger" asp-controller="Reports">
+                    <div class="filter-grid">
+                        <div>
+                            <label class="form-label"><i class="bi bi-box-seam"></i> Select Item</label>
+                            <div style="position:relative;">
+                                <label class="form-label"><i class="bi bi-box-seam"></i> Select Item</label>
+
+                                <input asp-for="ItemSearch"
+                                       type="text"
+                                       id="itemLedgerSearchInput"
+                                       class="form-control"
+                                       placeholder="Item code ya item name likho..."
+                                       autocomplete="off"
+                                       onkeyup="showLedgerItemSuggestions(this.value)"
+                                       onfocus="showLedgerItemSuggestions(this.value)" />
+
+                                <input asp-for="ItemId" type="hidden" id="selectedLedgerItemId" />
+
+                                <div id="ledgerItemSuggestions" class="suggestions-list" style="display:none; left:0; right:0; max-width:100%;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="form-label"><i class="bi bi-calendar3"></i> From Date</label>
+                            <input asp-for="FromDate" type="date" class="form-control" />
+                        </div>
+                        <div>
+                            <label class="form-label"><i class="bi bi-calendar3"></i> To Date</label>
+                            <input asp-for="ToDate" type="date" class="form-control" />
+                        </div>
+                        <div>
+                            <button type="submit" class="btn-search w-100">
+                                <i class="bi bi-search"></i> Apply Filter
+                            </button>
+                        </div>
+                        <div>
+                            <button type="button" class="btn-print w-100" onclick="window.print()">
+                                <i class="bi bi-printer-fill"></i> Print Report
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Item Info Strip -->
+            @if (Model.ItemId.HasValue)
+            {
+                <div class="item-strip">
+                    <div>
+                        <div><strong><i class="bi bi-tag"></i> @Model.ItemName</strong> &nbsp;| <span class="text-muted">Code: @Model.ItemCode</span></div>
+                        <div class="mt-1"><i class="bi bi-calendar-range"></i> @Model.FromDate?.ToString("dd MMM yyyy") — @Model.ToDate?.ToString("dd MMM yyyy")</div>
+                    </div>
+                    <div class="report-tools">
+                        <a href="@Url.Action("ItemLedger", "Reports", new { itemId = Model.ItemId, fromDate = Model.FromDate?.ToString("yyyy-MM-dd"), toDate = Model.ToDate?.ToString("yyyy-MM-dd") })"
+                           class="tool-btn">
+                            <i class="bi bi-arrow-repeat"></i> Refresh
+                        </a>
+                        <button type="button" class="tool-btn" onclick="window.print()">
+                            <i class="bi bi-filetype-pdf"></i> Print View
+                        </button>
+                    </div>
+                </div>
+            }
+
+            <!-- Summary Cards -->
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <div class="summary-head">
+                        <div>
+                            <div class="summary-title">Purchase Qty</div>
+                            <div class="summary-value">@Model.TotalPurchaseQty.ToString("0.##")</div>
+                        </div>
+                        <div class="icon icon-purchase"><i class="bi bi-arrow-down-circle"></i></div>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-head">
+                        <div>
+                            <div class="summary-title">Purchase Return Qty</div>
+                            <div class="summary-value">@Model.TotalPurchaseReturnQty.ToString("0.##")</div>
+                        </div>
+                        <div class="icon icon-preturn"><i class="bi bi-arrow-return-left"></i></div>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-head">
+                        <div>
+                            <div class="summary-title">Sale Qty</div>
+                            <div class="summary-value">@Model.TotalSaleQty.ToString("0.##")</div>
+                        </div>
+                        <div class="icon icon-sale"><i class="bi bi-cart-check"></i></div>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-head">
+                        <div>
+                            <div class="summary-title">Sale Return Qty</div>
+                            <div class="summary-value">@Model.TotalSaleReturnQty.ToString("0.##")</div>
+                        </div>
+                        <div class="icon icon-sreturn"><i class="bi bi-arrow-return-right"></i></div>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-head">
+                        <div>
+                            <div class="summary-title">Net Purchase Qty</div>
+                            <div class="summary-value">@Model.NetPurchaseQty.ToString("0.##")</div>
+                        </div>
+                        <div class="icon icon-net"><i class="bi bi-boxes"></i></div>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-head">
+                        <div>
+                            <div class="summary-title">Net Sale Qty</div>
+                            <div class="summary-value">@Model.NetSaleQty.ToString("0.##")</div>
+                        </div>
+                        <div class="icon icon-net"><i class="bi bi-bag-check"></i></div>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-head">
+                        <div>
+                            <div class="summary-title">Purchase Amount</div>
+                            <div class="summary-value">@Model.TotalPurchaseAmount.ToString("0.##")</div>
+                        </div>
+                        <div class="icon icon-money"><i class="bi bi-cash-stack"></i></div>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-head">
+                        <div>
+                            <div class="summary-title">Purchase Return Amt</div>
+                            <div class="summary-value">@Model.TotalPurchaseReturnAmount.ToString("0.##")</div>
+                        </div>
+                        <div class="icon icon-preturn"><i class="bi bi-receipt"></i></div>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-head">
+                        <div>
+                            <div class="summary-title">Sale Amount</div>
+                            <div class="summary-value">@Model.TotalSaleAmount.ToString("0.##")</div>
+                        </div>
+                        <div class="icon icon-sale"><i class="bi bi-currency-dollar"></i></div>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-head">
+                        <div>
+                            <div class="summary-title">Sale Return Amt</div>
+                            <div class="summary-value">@Model.TotalSaleReturnAmount.ToString("0.##")</div>
+                        </div>
+                        <div class="icon icon-sreturn"><i class="bi bi-arrow-return-left"></i></div>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-head">
+                        <div>
+                            <div class="summary-title">Gross Profit</div>
+                            <div class="summary-value">@Model.GrossProfit.ToString("0.##")</div>
+                        </div>
+                        <div class="icon icon-profit"><i class="bi bi-graph-up"></i></div>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-head">
+                        <div>
+                            <div class="summary-title">Net Profit</div>
+                            <div class="summary-value">@Model.NetProfit.ToString("0.##")</div>
+                        </div>
+                        <div class="icon icon-profit"><i class="bi bi-wallet2"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transaction Table -->
+            <div class="table-card">
+                <div class="table-card-head">
+                    <h4><i class="bi bi-grid-3x3-gap-fill"></i> Ledger Transactions</h4>
+                    <span class="text-muted" style="font-size:0.75rem; background: #f1f5f9; padding:0.3rem 0.8rem; border-radius:20px;">
+                        <i class="bi bi-info-circle"></i> Detailed movement
+                    </span>
+                </div>
+                <div class="table-wrap">
+                    <table class="ledger-table">
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Transaction Type</th>
+                                <th>Invoice / Ref</th>
+                                <th>Qty In</th>
+                                <th>Qty Out</th>
+                                <th>Purchase Rate</th>
+                                <th>Sale Rate</th>
+                                <th>Amount</th>
+                                <th>Profit Impact</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Rows != null && Model.Rows.Any())
+                            {
+                                foreach (var row in Model.Rows)
+                                {
+                                    var badgeClass = "badge-sale";
+                                    var badgeIcon = "bi-cart-check";
+
+                                    if (row.Type == "Purchase")
+                                    {
+                                        badgeClass = "badge-purchase";
+                                        badgeIcon = "bi-box-arrow-in-down";
+                                    }
+                                    else if (row.Type == "Purchase Return")
+                                    {
+                                        badgeClass = "badge-purchase-return";
+                                        badgeIcon = "bi-arrow-counterclockwise";
+                                    }
+                                    else if (row.Type == "Sale Return")
+                                    {
+                                        badgeClass = "badge-sale-return";
+                                        badgeIcon = "bi-cart-x";
+                                    }
+
+                                    <tr>
+                                        <td>@row.Date.ToString("dd MMM yyyy hh:mm tt")</td>
+                                        <td>
+                                            <span class="type-badge @badgeClass">
+                                                <i class="bi @badgeIcon"></i> @row.Type
+                                            </span>
+                                        </td>
+                                        <td>@row.InvoiceNo</td>
+                                        <td>@row.QtyIn.ToString("0.##")</td>
+                                        <td>@row.QtyOut.ToString("0.##")</td>
+                                        <td>@row.PurchaseRate.ToString("0.##")</td>
+                                        <td>@row.SaleRate.ToString("0.##")</td>
+                                        <td class="@(row.Amount >= 0 ? "amount-positive" : "amount-negative")">
+                                            @row.Amount.ToString("0.##")
+                                        </td>
+                                        <td class="@(row.Profit >= 0 ? "amount-positive" : "amount-negative")">
+                                            @row.Profit.ToString("0.##")
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="9" class="no-data">
+                                        <i class="bi bi-inbox"></i><br />
+                                        No transactions found. Please select an item and date range.
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

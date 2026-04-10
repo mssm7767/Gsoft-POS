@@ -9,7 +9,22 @@
 
     if (Model?.Items != null && Model.Items.Any())
     {
-        invoiceProfit = Model.Items.Sum(x => x.LineTotal - (x.PurchasePrice * x.Quantity));
+        invoiceProfit = Model.Items.Sum(x =>
+        {
+            decimal packSize = 1m;
+
+            // Try parse PackSize if it's not null or empty
+            if (!string.IsNullOrEmpty(x.PackSize) && decimal.TryParse(x.PackSize, out var ps) && ps > 0)
+            {
+                packSize = ps;
+            }
+
+            // Adjusted purchase price per unit
+            decimal adjustedPurchasePrice = x.PurchasePrice / packSize;
+
+            // Profit = LineTotal - (AdjustedPurchasePrice * Quantity)
+            return x.LineTotal - (adjustedPurchasePrice * x.Quantity);
+        });
     }
 }
 
@@ -270,7 +285,7 @@
                             <div class="totals-row">
                                 <span class="totals-label">Profit</span>
                                 <span class="fw-bold @(invoiceProfit < 0 ? "text-danger" : "text-success")">
-                                    @invoiceProfit.ToString("C", new CultureInfo("ur-PK"))
+                                    @((invoiceProfit - (Model.Discount)).ToString("C", new CultureInfo("ur-PK")))
                                 </span>
                             </div>
 
@@ -319,8 +334,16 @@
                                             <td class="text-end">
                                                 @($"₨{((item.PurchasePrice) * (item.Quantity)):N2}")
                                             </td>
+                                            @{
+                                                decimal packSize = 1m;
+                                                if (!string.IsNullOrEmpty(item.PackSize) && decimal.TryParse(item.PackSize, out var ps) && ps > 0)
+                                                {
+                                                    packSize = ps;
+                                                }
+                                                decimal profit = item.LineTotal - (item.PurchasePrice / packSize * item.Quantity);
+                                            }
                                             <td class="text-end">
-                                                @($"₨{((item.LineTotal) - (item.PurchasePrice * item.Quantity)):N2}")
+                                                @($"₨{profit:N2}")
                                             </td>
                                         </tr>
                                     }

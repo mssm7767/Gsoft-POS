@@ -2,409 +2,204 @@
 @model SaleReceiptViewModel
 @{
     Layout = null;
-    bool isReturn = Model.InvoiceNumber.Contains("RETURN") || Model.InvoiceNumber.Contains("R-") || Model.Total < 0;
+    bool isReturn = (Model?.InvoiceNumber ?? "").Contains("RETURN") || (Model?.InvoiceNumber ?? "").Contains("R-") || (Model?.Total ?? 0) < 0;
+    var customerName = string.IsNullOrWhiteSpace(Model?.CustomerName) ? "Walk-in Customer" : Model.CustomerName;
+    var customerPhone = string.IsNullOrWhiteSpace(Model?.CustomerPhone) ? "" : Model.CustomerPhone;
+    var customerAddress = string.IsNullOrWhiteSpace(Model?.CustomerAddress) ? "" : Model.CustomerAddress;
 }
-
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
     <title>Receipt</title>
-
     <style>
-        * {
+        * { box-sizing: border-box; }
+        html, body {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --line: #111;
-            --line2: #d7d7d7;
-            --text: #000;
-            --soft: #f5f5f5;
-            --fs: 1.32;
-        }
-
-        html, body {
             background: #fff;
             color: #000;
-            font-family: Arial, Helvetica, sans-serif;
-            line-height: 1.15;
+            font-family: "Courier New", monospace;
+            font-weight: 700;
         }
 
         body {
             width: 80mm;
-            max-width: 80mm;
             margin: 0 auto;
-            padding: 1.5mm 1.8mm;
-            font-size: calc(10px * var(--fs));
+            padding: 4px;
+            font-size: 13px; /* overall bigger + darker */
+        }
+
+        #receiptContent {
+            width: 100%;
+        }
+
+        .text-center { text-align: center; }
+        .mb-1 { margin-bottom: 4px; }
+        .mb-2 { margin-bottom: 8px; }
+        .mt-1 { margin-top: 4px; }
+        .mt-2 { margin-top: 8px; }
+        .pt-1 { padding-top: 4px; }
+        .rounded { border-radius: 6px; }
+
+        .logo {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 8px auto;
+            display: block;
+            object-fit: cover;
+            border: 1px solid #d1d5db;
+            border-radius: 50%;
+            padding: 2px;
+        }
+
+        .shop-name {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: .3px;
+        }
+
+        .shop-line {
+            font-size: 14px;
+            line-height: 1.35;
+            font-weight: 700;
+        }
+
+        .section {
+            border-top: 1px dashed #444;
+            padding-top: 5px;
+            margin-top: 5px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            font-size: 13px;
+            margin: 2px 0;
+            font-weight: 700;
+        }
+
+        .row .label {
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .row .value {
+            text-align: right;
+            flex: 1;
+            word-break: break-word;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        thead tr {
+            border-bottom: 1px solid #cfcfcf;
+        }
+
+        th, td {
+            padding: 3px 0;
+            vertical-align: top;
+        }
+
+        th {
+            text-align: left;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .num, .amt {
+            text-align: right;
+        }
+
+        .item-name {
+            word-break: break-word;
+        }
+
+        .muted {
+            color: #444;
+        }
+
+        .totals-table td {
+            padding: 2px 0;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .grand-total td {
+            border-top: 1px solid #000;
+            font-size: 16px;
+            font-weight: 800;
+            padding-top: 4px;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .return-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: #dc2626;
+            color: #fff;
+            font-weight: 700;
+            margin-top: 5px;
+            font-size: 12px;
+        }
+
+        .print-btn {
+            display: none;
         }
 
         @@page {
             size: 80mm auto;
             margin: 0;
-            padding: 0;
         }
 
         @@media print {
             body {
-                margin: 0;
-                padding: 1mm 1.5mm;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
+                width: 80mm;
+                padding: 4px;
             }
 
-            .no-print {
+            .print-btn {
                 display: none !important;
             }
         }
-
-        .receipt-container {
-            width: 100%;
-            padding: 0;
-        }
-
-        /* HEADER */
-        .header {
-            text-align: center;
-            padding: 0 0 7px 0;
-            border-bottom: 1px solid var(--line);
-            margin-bottom: 7px;
-        }
-
-        .logo-wrap {
-            width: 100%;
-            min-height: 82px;
-            max-height: 110px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 2px auto 5px auto;
-            padding: 2px 0;
-            overflow: hidden;
-        }
-
-        .logo {
-            display: block;
-            max-width: 100%;
-            width: auto;
-            height: auto;
-            max-height: 95px;
-            object-fit: contain;
-            image-rendering: auto;
-        }
-
-        .shop-title {
-            font-size: calc(15px * var(--fs));
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: .6px;
-            color: var(--text);
-            line-height: 1.1;
-            margin: 2px 0 4px 0;
-            word-break: break-word;
-        }
-
-        .shop-details {
-            font-size: calc(9.8px * var(--fs));
-            line-height: 1.35;
-            color: #000;
-            font-weight: 800;
-            word-break: break-word;
-        }
-
-            .shop-details div {
-                margin: 1px 0;
-            }
-
-        .return-badge {
-            display: inline-block;
-            margin-top: 5px;
-            background: #d92323;
-            color: #fff;
-            border-radius: 4px;
-            padding: 3px 8px;
-            font-weight: 900;
-            font-size: calc(9.8px * var(--fs));
-            letter-spacing: .4px;
-        }
-
-        /* INFO BLOCKS */
-        .info-block {
-            margin: 7px 0;
-            padding: 4px 0 3px 0;
-            border-bottom: 1px solid var(--line);
-        }
-
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 8px;
-            margin: 3px 0;
-            padding: 1px 0;
-            font-size: calc(10px * var(--fs));
-        }
-
-            .detail-row .label {
-                font-weight: 900;
-                white-space: nowrap;
-                color: #000;
-            }
-
-            .detail-row .value {
-                font-weight: 800;
-                color: #000;
-                text-align: right;
-                word-break: break-word;
-                flex: 1;
-            }
-
-        /* ITEMS HEADER */
-        .items-header-line {
-            display: flex;
-            align-items: center;
-            font-weight: 900;
-            font-size: calc(10px * var(--fs));
-            border-top: none;
-            border-bottom: 1px solid var(--line);
-            padding: 4px 0;
-            margin: 5px 0 4px 0;
-            color: #000;
-        }
-
-            .items-header-line .h-sr {
-                width: 22px;
-                text-align: left;
-            }
-
-            .items-header-line .h-title {
-                flex: 1;
-                text-align: center;
-            }
-
-            .items-header-line .h-amt {
-                width: 76px;
-                text-align: right;
-                padding-right: 2px;
-            }
-
-        /* ITEMS */
-        .item-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 4px;
-            padding: 4px 0;
-            border-bottom: 1px solid var(--line2);
-            font-size: calc(10px * var(--fs));
-        }
-
-            .item-row:last-child {
-                border-bottom: none;
-            }
-
-        .item-left {
-            display: flex;
-            align-items: flex-start;
-            flex: 1;
-            min-width: 0;
-        }
-
-        .srbox {
-            width: 22px;
-            flex-shrink: 0;
-            font-weight: 900;
-            font-size: calc(10px * var(--fs));
-            color: #000;
-            padding-top: 1px;
-        }
-
-        .item-details {
-            flex: 1;
-            min-width: 0;
-            padding-left: 4px;
-        }
-
-        .item-name {
-            display: block;
-            font-weight: 900;
-            font-size: calc(10px * var(--fs));
-            line-height: 1.2;
-            color: #000;
-            word-break: break-word;
-            margin-bottom: 2px;
-        }
-
-        .item-meta {
-            font-size: calc(8.9px * var(--fs));
-            line-height: 1.25;
-            color: #000;
-            font-weight: 800;
-        }
-
-        .qty-price {
-            display: inline-block;
-            background: var(--soft);
-            border: 1px solid #cfcfcf;
-            border-radius: 3px;
-            padding: 2px 4px;
-            font-weight: 900;
-            color: #000;
-        }
-
-        .disc-badge {
-            color: #a30000;
-            font-weight: 900;
-            margin-left: 5px;
-        }
-
-        .tax-badge {
-            color: #0b6b0b;
-            font-weight: 900;
-            margin-left: 5px;
-        }
-
-        .item-amount {
-            width: 76px;
-            flex-shrink: 0;
-            text-align: right;
-            font-weight: 900;
-            font-size: calc(10px * var(--fs));
-            line-height: 1.2;
-            color: #000;
-            padding-top: 1px;
-        }
-
-        /* TOTALS */
-        .totals {
-            margin: 8px 0;
-            padding-top: 3px;
-            color: #000;
-        }
-
-        .total-line {
-            display: flex;
-            justify-content: space-between;
-            gap: 8px;
-            margin: 4px 0;
-            padding: 1px 0;
-            font-size: calc(11px * var(--fs));
-            color: #000;
-        }
-
-            .total-line span:first-child,
-            .total-line span:last-child {
-                font-weight: 900;
-            }
-
-        .grand-total {
-            border-top: 1px solid var(--line);
-            margin-top: 5px;
-            padding-top: 5px;
-            font-size: calc(13px * var(--fs));
-            font-weight: 900;
-        }
-
-        /* PAYMENT */
-        .payment-section {
-            background: #f5f5f5;
-            border: 1px solid #d3d3d3;
-            border-radius: 4px;
-            padding: 6px 6px;
-            margin: 8px 0;
-            color: #000;
-        }
-
-        .payment-row {
-            display: flex;
-            justify-content: space-between;
-            gap: 8px;
-            margin: 3px 0;
-            padding: 1px 0;
-            font-size: calc(10.5px * var(--fs));
-            color: #000;
-        }
-
-            .payment-row span:first-child,
-            .payment-row span:last-child {
-                font-weight: 900;
-            }
-
-        /* FOOTER NOTE AT VERY END */
-        .end-note {
-            margin-top: 8px;
-            padding-top: 5px;
-            border-top: 1px solid var(--line);
-            text-align: center;
-        }
-
-        .dynamic-message {
-            font-size: calc(8.2px * var(--fs));
-            line-height: 1.28;
-            color: #000;
-            font-weight: 800;
-            margin-bottom: 4px;
-            word-break: break-word;
-        }
-
-        .developer-line {
-            font-size: calc(8.2px * var(--fs));
-            line-height: 1.25;
-            color: #000;
-            font-weight: 900;
-            word-break: break-word;
-        }
-
-        .text-red {
-            color: #a40000;
-            font-weight: 900;
-        }
-
-        .print-btn {
-            background: #1d4ed8;
-            color: #fff;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 6px;
-            cursor: pointer;
-            margin: 14px auto;
-            display: block;
-            font-weight: 700;
-            font-size: calc(12px * var(--fs));
-        }
     </style>
 </head>
-
 <body>
-    <button class="print-btn no-print" onclick="printReceipt()">🖨 PRINT RECEIPT</button>
+    <div class="text-center mb-2">
+        <button id="printBtn" onclick="printReceipt()" class="print-btn">🖨 Print</button>
+    </div>
 
-    <div class="receipt-container">
+    <div id="receiptContent">
+        <div class="text-center mb-2">
+            <img src="@(!string.IsNullOrEmpty(ViewBag.Setting?.LogoPath)
+                         ? Url.Content(ViewBag.Setting.LogoPath)
+                         : Url.Content("~/images/gsoftLogo.jpeg"))"
+                 alt="Shop Logo"
+                 class="logo" />
 
-        <!-- HEADER -->
-        <div class="header">
-            <div class="logo-wrap">
-                <img src="@(!string.IsNullOrEmpty(ViewBag.Setting?.LogoPath)
-                                                                       ? Url.Content(ViewBag.Setting.LogoPath)
-                                                                       : "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTAiIGhlaWdodD0iOTAiIHZpZXdCb3g9IjAgMCA5MCA5MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iOTAiIGhlaWdodD0iOTAiIHJ4PSI4IiBmaWxsPSIjMWQ0ZWQ4Ii8+PHBhdGggZD0iTTI4IDYyTDYyIDI4TTYyIDYyTDI4IDI4IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==")"
-                     alt="Logo"
-                     class="logo" />
-            </div>
+            <div class="shop-name">@(@ViewBag.Setting?.ShopName ?? "G-Soft")</div>
 
-            <div class="shop-title">@(ViewBag.Setting?.ShopName ?? "G-SOFT SYSTEMS")</div>
+            @if (!string.IsNullOrWhiteSpace(ViewBag.Setting?.Address))
+            {
+                <div class="shop-line">@ViewBag.Setting.Address</div>
+            }
 
-            <div class="shop-details">
-                @if (!string.IsNullOrWhiteSpace(ViewBag.Setting?.Address))
-                {
-                    <div>@ViewBag.Setting.Address</div>
-                }
-
-                @if (!string.IsNullOrWhiteSpace(ViewBag.Setting?.Contact1) || !string.IsNullOrWhiteSpace(ViewBag.Setting?.Contact2))
-                {
-                    <div>📞 @ViewBag.Setting?.Contact1 / @ViewBag.Setting?.Contact2</div>
-                }
-            </div>
+            @if (!string.IsNullOrWhiteSpace(ViewBag.Setting?.Contact1) || !string.IsNullOrWhiteSpace(ViewBag.Setting?.Contact2))
+            {
+                <div class="shop-line">Phone: @ViewBag.Setting?.Contact1 @(!string.IsNullOrWhiteSpace(ViewBag.Setting?.Contact1) && !string.IsNullOrWhiteSpace(ViewBag.Setting?.Contact2) ? "," : "") @ViewBag.Setting?.Contact2</div>
+            }
 
             @if (isReturn)
             {
@@ -412,200 +207,196 @@
             }
         </div>
 
-        <!-- INVOICE INFO -->
-        <div class="info-block">
-            <div class="detail-row">
-                <span class="label">Invoice #:</span>
-                <span class="value">@Model.InvoiceNumber</span>
+        <div class="section">
+            <div class="row">
+                <div class="label">Invoice #:</div>
+                <div class="value">@Model.InvoiceNumber</div>
             </div>
 
-            @if (Model.OrderType != null)
+            @if (!string.IsNullOrWhiteSpace(Model?.OrderType))
             {
-                <div class="detail-row">
-                    <span class="label">Order Type:</span>
-                    <span class="value">@Model.OrderType</span>
+                <div class="row">
+                    <div class="label">Order Type:</div>
+                    <div class="value">@Model.OrderType</div>
                 </div>
             }
 
-            <div class="detail-row">
-                <span class="label">Date:</span>
-                <span class="value">@Model.SaleDate.ToString("dd/MM/yyyy hh:mm tt")</span>
+            @if (!string.IsNullOrWhiteSpace(Model?.TableNo))
+            {
+                <div class="row">
+                    <div class="label">Table #:</div>
+                    <div class="value">@Model.TableNo</div>
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Model?.Waiter))
+            {
+                <div class="row">
+                    <div class="label">Waiter:</div>
+                    <div class="value">@Model.Waiter</div>
+                </div>
+            }
+
+            <div class="row">
+                <div class="label">Date:</div>
+                <div class="value">@Model.SaleDate.ToString("dd MMM yyyy hh:mm tt")</div>
             </div>
 
-            <div class="detail-row">
-                <span class="label">Cashier:</span>
-                <span class="value">@Model.CashierName</span>
+            <div class="row">
+                <div class="label">Cashier:</div>
+                <div class="value">@Model.CashierName</div>
             </div>
         </div>
 
-        <!-- CUSTOMER INFO -->
-        <div class="info-block">
-            <div class="detail-row">
-                <span class="label">Customer:</span>
-                <span class="value">@Model.CustomerName</span>
+        <div class="section">
+            <div class="row">
+                <div class="label">Customer:</div>
+                <div class="value">@customerName</div>
             </div>
 
-            @if (Model.CustomerPhone != null)
+            @if (!string.IsNullOrWhiteSpace(customerPhone))
             {
-                <div class="detail-row">
-                    <span class="label">Phone:</span>
-                    <span class="value">@Model.CustomerPhone</span>
+                <div class="row">
+                    <div class="label">Phone:</div>
+                    <div class="value">@customerPhone</div>
                 </div>
             }
 
-            @if (Model.CustomerAddress != null)
+            @if (!string.IsNullOrWhiteSpace(customerAddress))
             {
-                <div class="detail-row">
-                    <span class="label">Address:</span>
-                    <span class="value">@Model.CustomerAddress</span>
+                <div class="row">
+                    <div class="label">Address:</div>
+                    <div class="value">@customerAddress</div>
                 </div>
             }
         </div>
 
-        <!-- ITEMS HEADER -->
-        <div class="items-header-line">
-            <div class="h-sr">#</div>
-            <div class="h-title">ITEMS</div>
-            <div class="h-amt">AMOUNT</div>
+        <div class="section">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 18px;">#</th>
+                        <th>Item</th>
+                        <th class="amt" style="width: 55px;">Price</th>
+                        <th class="amt" style="width: 38px;">Qty</th>
+                        <th class="amt" style="width: 60px;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Items != null && Model.Items.Any())
+                    {
+                        foreach (var item in Model.Items)
+                        {
+                            <tr>
+                                <td>@item.SrNo</td>
+                                <td class="item-name">
+                                    <div>@item.ItemName</div>
+                                </td>
+                                <td class="amt">@item.UnitPrice.ToString("N0")</td>
+                                <td class="amt">@item.Quantity.ToString("0.##")</td>
+                                <td class="amt">@item.LineTotal.ToString("N0")</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center muted">No items found</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
 
-        <!-- ITEMS -->
-        @if (Model.Items != null && Model.Items.Any())
-        {
-            var srNo = 1;
-            foreach (var item in Model.Items)
-            {
-                <div class="item-row">
-                    <div class="item-left">
-                        <div class="srbox">@srNo</div>
+        <div class="section">
+            <table class="totals-table">
+                <tr>
+                    <td class="amt" style="padding-right:8px;">SubTotal:</td>
+                    <td class="amt" style="width:80px;">@Model.SubTotal.ToString("N0")</td>
+                </tr>
 
-                        <div class="item-details">
-                            <span class="item-name">@item.ItemName</span>
+                @if (Model.ServiceCharges != null && Model.ServiceCharges > 0)
+                {
+                    <tr>
+                        <td class="amt" style="padding-right:8px;">Service:</td>
+                        <td class="amt">+@Model.ServiceCharges?.ToString("N0")</td>
+                    </tr>
+                }
 
-                            <div class="item-meta">
-                                <span class="qty-price">
-                                    @item.Quantity.ToString("0.##") x @item.UnitPrice.ToString("N0")
-                                </span>
+                @if (Model.Tax > 0)
+                {
+                    <tr>
+                        <td class="amt" style="padding-right:8px;">Tax:</td>
+                        <td class="amt">+@Model.Tax.ToString("N0")</td>
+                    </tr>
+                }
 
-                                @if (item.DiscountPercent > 0)
-                                {
-                                    <span class="disc-badge">@item.DiscountPercent% Disc</span>
-                                }
+                @if (Model.Discount > 0)
+                {
+                    <tr>
+                        <td class="amt" style="padding-right:8px;">Discount:</td>
+                        <td class="amt">-@Model.Discount.ToString("N0")</td>
+                    </tr>
+                }
 
-                                @if (item.TaxAmount > 0)
-                                {
-                                    <span class="tax-badge">@item.TaxAmount.ToString("N0") Tax</span>
-                                }
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="item-amount">@item.LineTotal.ToString("N0")</div>
-                </div>
-                srNo++;
-            }
-        }
-        else
-        {
-            <div class="item-row">
-                <div class="item-left">
-                    <div class="srbox">&nbsp;</div>
-                    <div class="item-details">
-                        <span class="item-name">No items in this sale</span>
-                    </div>
-                </div>
-                <div class="item-amount">0</div>
-            </div>
-        }
-
-        <!-- TOTALS -->
-        <div class="totals">
-            <div class="total-line">
-                <span>Sub Total:</span>
-                <span>@Model.SubTotal.ToString("N0")</span>
-            </div>
-
-            @if (Model.ServiceCharges != null && Model.ServiceCharges > 0)
-            {
-                <div class="total-line">
-                    <span>Service Charges:</span>
-                    <span>+@Model.ServiceCharges?.ToString("N0")</span>
-                </div>
-            }
-
-            @if (Model.Tax > 0)
-            {
-                <div class="total-line">
-                    <span>Tax Amount:</span>
-                    <span>+@Model.Tax.ToString("N0")</span>
-                </div>
-            }
-
-            @if (Model.Discount > 0)
-            {
-                <div class="total-line">
-                    <span>Total Discount:</span>
-                    <span>-@Model.Discount.ToString("N0")</span>
-                </div>
-            }
-
-            <div class="total-line grand-total @(isReturn ? "text-red" : "")">
-                <span>@(isReturn ? "RETURN AMOUNT:" : "GRAND TOTAL:")</span>
-                <span>@(isReturn ? "-" : "")@Math.Abs(Model.Total).ToString("N0")</span>
-            </div>
+                <tr class="grand-total">
+                    <td class="amt" style="padding-right:8px;">@(isReturn ? "RETURN TOTAL:" : "TOTAL:")</td>
+                    <td class="amt">@(isReturn ? "-" : "")@Math.Abs(Model.Total).ToString("N0")</td>
+                </tr>
+            </table>
         </div>
 
-        <!-- PAYMENT -->
-        <div class="payment-section">
-            <div class="payment-row">
-                <span>Payment:</span>
-                <span>@Model.PaymentMethod</span>
+        <div class="section">
+            <div class="row">
+                <div class="label">Payment:</div>
+                <div class="value">@Model.PaymentMethod</div>
             </div>
 
-            <div class="payment-row">
-                <span>@(isReturn ? "Refund Amount:" : "Amount Paid:")</span>
-                <span>@Math.Abs(Model.PaidAmount).ToString("N0")</span>
+            <div class="row">
+                <div class="label">Amount Paid:</div>
+                <div class="value">@Math.Abs(Model.PaidAmount).ToString("N0")</div>
             </div>
 
             @if (Model.Change > 0)
             {
-                <div class="payment-row">
-                    <span>@(isReturn ? "Balance:" : "Change:")</span>
-                    <span>@Math.Abs(Model.Change).ToString("N0")</span>
+                <div class="row">
+                    <div class="label">Change:</div>
+                    <div class="value">@Math.Abs(Model.Change).ToString("N0")</div>
                 </div>
             }
         </div>
 
-        <!-- LAST END NOTE -->
-        <div class="end-note">
+        <div class="section footer">
             @if (!string.IsNullOrWhiteSpace(ViewBag.Setting?.Message))
             {
-                <div class="dynamic-message">
-                    @Html.Raw((ViewBag.Setting.Message ?? "").Replace("\r\n", "<br />").Replace("\n", "<br />"))
-                </div>
+                <div class="mb-1">@ViewBag.Setting.Message</div>
             }
 
-            <div class="developer-line">
-                Software developed by G-Soft Systems
-            </div>
+            <div>Powered by <b>G-Soft Systems</b></div>
         </div>
-
     </div>
 
     <script>
-        function autoPrint() {
-            setTimeout(() => { window.print(); }, 400);
-        }
-
         function printReceipt() {
             window.print();
         }
 
-        window.onafterprint = function () {
-            setTimeout(() => { window.close(); }, 400);
+        function isPreviewMode() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('preview') === '1';
+        }
+
+        window.onload = function () {
+            if (!isPreviewMode()) {
+                window.print();
+            }
         };
 
-        document.addEventListener('DOMContentLoaded', autoPrint);
+        window.onafterprint = function () {
+            if (!isPreviewMode()) {
+                window.close();
+            }
+        };
     </script>
 </body>
 </html>

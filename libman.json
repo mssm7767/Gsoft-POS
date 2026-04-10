@@ -1,0 +1,19 @@
+{
+  "version": "3.0",
+  "defaultProvider": "cdnjs",
+  "libraries": [
+    {
+      "library": "jquery@3.6.4",
+      "destination": "E:\\g-soft pos\\Gsoft--main 2nd version\\wwwroot\\vendor\\jquery"
+    },
+    {
+      "provider": "jsdelivr",
+      "library": "bootstrap@5.3.3",
+      "destination": "E:\\g-soft pos\\Gsoft--main 2nd version\\wwwroot\\vendor\\bootstrap-icons"
+    },
+    {
+      "library": "select2@4.1.0-rc.0",
+      "destination": "E:\\g-soft pos\\Gsoft--main 2nd version\\wwwroot\\vendor\\select2"
+    }
+  ]
+}

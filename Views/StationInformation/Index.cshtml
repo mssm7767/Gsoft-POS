@@ -1,0 +1,452 @@
+﻿@model IEnumerable<GSoftPosNew.Models.TerminalPrinterSetting>
+
+@{
+    ViewData["Title"] = "Station Information";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    :root {
+        --si-bg: #f4f7fb;
+        --si-card: #ffffff;
+        --si-line: #e2e8f0;
+        --si-text: #0f172a;
+        --si-muted: #64748b;
+        --si-primary: #2563eb;
+        --si-primary-soft: #eff6ff;
+        --si-success: #16a34a;
+        --si-success-soft: #f0fdf4;
+        --si-warning: #f59e0b;
+        --si-warning-soft: #fffbeb;
+        --si-danger: #dc2626;
+        --si-danger-soft: #fef2f2;
+        --si-shadow: 0 18px 40px rgba(15, 23, 42, .08);
+        --si-radius: 20px;
+    }
+
+    .station-shell {
+        padding: 22px;
+        background: linear-gradient(180deg, #f8fbff 0%, #f4f7fb 100%);
+        border-radius: 24px;
+    }
+
+    .station-hero {
+        background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+        border-radius: 24px;
+        padding: 22px 24px;
+        color: #fff;
+        box-shadow: 0 18px 45px rgba(37, 99, 235, .22);
+        margin-bottom: 18px;
+    }
+
+        .station-hero .title {
+            font-size: 1.7rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 0 0 6px 0;
+        }
+
+        .station-hero .subtitle {
+            margin: 0;
+            color: rgba(255,255,255,.88);
+            font-size: .98rem;
+        }
+
+    .station-stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0,1fr));
+        gap: 14px;
+        margin-bottom: 18px;
+    }
+
+    .station-stat-card {
+        background: var(--si-card);
+        border: 1px solid var(--si-line);
+        border-radius: var(--si-radius);
+        padding: 18px;
+        box-shadow: var(--si-shadow);
+    }
+
+    .station-stat-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+
+    .station-stat-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        background: var(--si-primary-soft);
+        color: var(--si-primary);
+    }
+
+    .station-stat-label {
+        color: var(--si-muted);
+        font-size: .9rem;
+        font-weight: 700;
+    }
+
+    .station-stat-value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--si-text);
+    }
+
+    .station-main-card {
+        background: var(--si-card);
+        border: 1px solid var(--si-line);
+        border-radius: 24px;
+        box-shadow: var(--si-shadow);
+        overflow: hidden;
+    }
+
+    .station-card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 18px 22px;
+        border-bottom: 1px solid var(--si-line);
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        flex-wrap: wrap;
+    }
+
+        .station-card-head h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--si-text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+    .station-btn {
+        border: none;
+        border-radius: 14px;
+        padding: 10px 16px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        transition: .18s ease;
+    }
+
+        .station-btn:hover {
+            transform: translateY(-1px);
+        }
+
+    .station-btn-primary {
+        background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+        color: #fff;
+        box-shadow: 0 12px 26px rgba(37, 99, 235, .22);
+    }
+
+        .station-btn-primary:hover {
+            color: #fff;
+        }
+
+    .station-btn-warning {
+        background: var(--si-warning-soft);
+        color: #92400e;
+        border: 1px solid #fcd34d;
+    }
+
+    .station-btn-danger {
+        background: var(--si-danger-soft);
+        color: #991b1b;
+        border: 1px solid #fecaca;
+    }
+
+    .station-table-wrap {
+        padding: 18px 18px 8px;
+    }
+
+    .station-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 10px;
+    }
+
+        .station-table thead th {
+            color: var(--si-muted);
+            font-size: .88rem;
+            font-weight: 800;
+            padding: 0 14px 6px;
+            border: none;
+        }
+
+        .station-table tbody tr {
+            box-shadow: 0 8px 22px rgba(15,23,42,.04);
+        }
+
+        .station-table tbody td {
+            background: #fff;
+            padding: 16px 14px;
+            border-top: 1px solid var(--si-line);
+            border-bottom: 1px solid var(--si-line);
+            vertical-align: middle;
+        }
+
+            .station-table tbody td:first-child {
+                border-left: 1px solid var(--si-line);
+                border-top-left-radius: 16px;
+                border-bottom-left-radius: 16px;
+            }
+
+            .station-table tbody td:last-child {
+                border-right: 1px solid var(--si-line);
+                border-top-right-radius: 16px;
+                border-bottom-right-radius: 16px;
+            }
+
+    .station-name {
+        font-weight: 800;
+        color: var(--si-text);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+        .station-name .icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: var(--si-primary-soft);
+            color: var(--si-primary);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+    .station-sub {
+        display: block;
+        margin-top: 3px;
+        font-size: .84rem;
+        color: var(--si-muted);
+        font-weight: 600;
+    }
+
+    .printer-path {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #f8fafc;
+        border: 1px solid var(--si-line);
+        border-radius: 999px;
+        padding: 8px 12px;
+        font-weight: 700;
+        color: #334155;
+        max-width: 100%;
+        word-break: break-all;
+    }
+
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 8px 12px;
+        font-size: .85rem;
+        font-weight: 800;
+    }
+
+        .status-pill.active {
+            background: var(--si-success-soft);
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .status-pill.inactive {
+            background: #f8fafc;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+        }
+
+    .station-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .station-empty {
+        text-align: center;
+        padding: 48px 18px 56px;
+        color: var(--si-muted);
+    }
+
+        .station-empty i {
+            font-size: 3rem;
+            margin-bottom: 12px;
+            color: #94a3b8;
+        }
+
+        .station-empty h4 {
+            color: var(--si-text);
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+    @@media (max-width: 991px) {
+        .station-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .station-card-head {
+            align-items: stretch;
+        }
+
+            .station-card-head .station-btn {
+                justify-content: center;
+            }
+
+        .station-table-wrap {
+            overflow-x: auto;
+        }
+
+        .station-table {
+            min-width: 900px;
+        }
+    }
+</style>
+
+@{
+    var rows = Model?.ToList() ?? new List<GSoftPosNew.Models.TerminalPrinterSetting>();
+    var activeCount = rows.Count(x => x.IsActive);
+    var inactiveCount = rows.Count - activeCount;
+}
+
+<div class="station-shell">
+    <div class="station-hero">
+        <h1 class="title">
+            <i class="fa fa-desktop"></i>
+            Station Information
+        </h1>
+        <p class="subtitle">
+            Manage all billing stations, PC names, and receipt printer paths from one place.
+        </p>
+    </div>
+
+    <div class="station-stats">
+        <div class="station-stat-card">
+            <div class="station-stat-top">
+                <div class="station-stat-icon"><i class="fa fa-network-wired"></i></div>
+                <div class="station-stat-label">Total Stations</div>
+            </div>
+            <div class="station-stat-value">@rows.Count</div>
+        </div>
+
+        <div class="station-stat-card">
+            <div class="station-stat-top">
+                <div class="station-stat-icon" style="background:#f0fdf4;color:#16a34a;"><i class="fa fa-check-circle"></i></div>
+                <div class="station-stat-label">Active Stations</div>
+            </div>
+            <div class="station-stat-value">@activeCount</div>
+        </div>
+
+        <div class="station-stat-card">
+            <div class="station-stat-top">
+                <div class="station-stat-icon" style="background:#fffbeb;color:#f59e0b;"><i class="fa fa-pause-circle"></i></div>
+                <div class="station-stat-label">Inactive Stations</div>
+            </div>
+            <div class="station-stat-value">@inactiveCount</div>
+        </div>
+    </div>
+
+    <div class="station-main-card">
+        <div class="station-card-head">
+            <h3><i class="fa fa-server"></i> Station List</h3>
+            <a asp-action="Create" class="station-btn station-btn-primary">
+                <i class="fa fa-plus-circle"></i> Add New Station
+            </a>
+        </div>
+
+        @if (rows.Any())
+        {
+            <div class="station-table-wrap">
+                <table class="station-table">
+                    <thead>
+                        <tr>
+                            <th>Station</th>
+                            <th>PC Name</th>
+                            <th>Receipt Printer Path</th>
+                            <th>Status</th>
+                            <th style="width:220px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in rows)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="station-name">
+                                        <span class="icon"><i class="fa fa-desktop"></i></span>
+                                        <div>
+                                            @item.StationName
+                                            <span class="station-sub">Station / Terminal Mapping</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong>@item.PCName</strong>
+                                </td>
+                                <td>
+                                    <span class="printer-path">
+                                        <i class="fa fa-print"></i>
+                                        @item.ReceiptPrinterPath
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (item.IsActive)
+                                    {
+                                        <span class="status-pill active">
+                                            <i class="fa fa-check-circle"></i> Active
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-pill inactive">
+                                            <i class="fa fa-ban"></i> Inactive
+                                        </span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="station-actions">
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="station-btn station-btn-warning">
+                                            <i class="fa fa-pen"></i> Edit
+                                        </a>
+
+                                        <form asp-action="Delete" asp-route-id="@item.Id" method="post" style="display:inline;">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="station-btn station-btn-danger"
+                                                    onclick="return confirm('Delete this station?')">
+                                                <i class="fa fa-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="station-empty">
+                <i class="fa fa-desktop"></i>
+                <h4>No station found</h4>
+                <p>Add your first station and map its printer path to start professional multi-terminal printing.</p>
+            </div>
+        }
+    </div>
+</div>

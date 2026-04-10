@@ -79,5 +79,47 @@ namespace GSoftPosNew.Services.Printing
                 ClosePrinter(hPrinter);
             }
         }
+
+        public static bool SendBytesToPrinter(string printerName, byte[] bytes)
+        {
+            IntPtr hPrinter;
+            DOCINFOA di = new DOCINFOA
+            {
+                pDocName = "GSoft POS Receipt Cut",
+                pDataType = "RAW"
+            };
+
+            if (!OpenPrinter(printerName, out hPrinter, IntPtr.Zero))
+                return false;
+
+            try
+            {
+                if (!StartDocPrinter(hPrinter, 1, di))
+                    return false;
+
+                if (!StartPagePrinter(hPrinter))
+                    return false;
+
+                IntPtr pUnmanagedBytes = Marshal.AllocCoTaskMem(bytes.Length);
+
+                try
+                {
+                    Marshal.Copy(bytes, 0, pUnmanagedBytes, bytes.Length);
+
+                    int dwWritten;
+                    return WritePrinter(hPrinter, pUnmanagedBytes, bytes.Length, out dwWritten);
+                }
+                finally
+                {
+                    Marshal.FreeCoTaskMem(pUnmanagedBytes);
+                }
+            }
+            finally
+            {
+                EndPagePrinter(hPrinter);
+                EndDocPrinter(hPrinter);
+                ClosePrinter(hPrinter);
+            }
+        }
     }
 }

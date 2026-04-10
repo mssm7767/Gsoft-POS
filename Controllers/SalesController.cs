@@ -462,8 +462,10 @@ namespace GSoftPosNew.Controllers
                 .FirstOrDefault();
 
             ViewBag.InvoiceLastDigit = !string.IsNullOrEmpty(saleInvNo)
-                ? int.Parse(saleInvNo[saleInvNo.Length - 1].ToString())
-                : 0;
+             ? saleInvNo.Where(char.IsDigit)
+                        .Select(c => c - '0')
+                        .LastOrDefault()
+             : 0;
 
             ViewBag.ShopName = _context.ShopSettings
                 .OrderByDescending(s => s.Id)
@@ -551,6 +553,13 @@ namespace GSoftPosNew.Controllers
                 existingSale.Discount = sale.Discount;
                 existingSale.SaleType = sale.SaleType;
                 existingSale.CustomerId = sale.custId;
+                existingSale.CustomerDisplayName = sale.CustomerDisplayName;
+                existingSale.CustomerPhone = sale.CustomerPhone;
+                existingSale.CustomerAddress = sale.CustomerAddress;
+                existingSale.Waiter = sale.Waiter;
+                existingSale.TableNo = sale.TableNo;
+                existingSale.OrderType = sale.OrderType;
+                existingSale.ServiceCharges = sale.ServiceCharges;
                 existingSale.SaleDate = DateTime.Now;
 
                 // Add new SaleItems
@@ -577,18 +586,12 @@ namespace GSoftPosNew.Controllers
 
                 await _context.SaveChangesAsync();
 
-
-
-                bool printSuccess = PrintReceiptToDefaultPrinter(existingSale.Id, out string printError);
-
                 return Ok(new
                 {
                     id = existingSale.Id,
                     invoiceNumber = existingSale.InvoiceNumber,
-                    printSuccess = printSuccess,
-                    Message = printSuccess
-                        ? "Sale updated and printed successfully"
-                        : $"Sale updated but print failed: {printError}"
+                    receiptUrl = Url.Action("Receipt", "Sales", new { id = existingSale.Id }),
+                    Message = "Sale updated successfully"
                 });
             }
 
@@ -608,10 +611,15 @@ namespace GSoftPosNew.Controllers
 
             try
             {
-                // Generate invoice number safely
-                
+                var activeDay = _context.InvoiceSequences
+                    .OrderByDescending(x => x.Date)
+                    .FirstOrDefault(x => x.IsClosed == false);
 
-                sale.SaleDate = DateTime.Now;
+                var now = DateTime.Now;
+
+                // ✅ Combine business date + current time
+                sale.SaleDate = activeDay.Date.Date.Add(now.TimeOfDay);
+
                 sale.CashierId = User.Identity?.Name ?? "Unknown";
                 sale.Id = 0;
                 sale.CustomerId = sale.custId;
@@ -624,7 +632,6 @@ namespace GSoftPosNew.Controllers
                 {
                     sale.Discount = itemDiscount;
                 }
-
 
                 if (isApplied && serviceChargesValue.HasValue && serviceChargesValue > 0)
                 {
@@ -739,16 +746,16 @@ namespace GSoftPosNew.Controllers
 
                     _invoiceService.GenerateInvoiceNumber();
 
-                    bool printSuccess = PrintReceiptToDefaultPrinter(sale.Id, out string printError);
+                    string printError = "";
+                    bool printed = PrintReceiptToMappedPrinter(sale.Id, sale.TerminalName, out printError);
 
                     return Ok(new
                     {
                         id = sale.Id,
                         invoiceNumber = sale.InvoiceNumber,
-                        printSuccess = printSuccess,
-                        Message = printSuccess
-                            ? "Return sale saved and printed successfully"
-                            : $"Return sale saved but print failed: {printError}"
+                        printed = printed,
+                        printError = printError,
+                        Message = printed ? "Sale saved and printed successfully" : "Sale saved but print failed"
                     });
                 }
                 else
@@ -902,16 +909,16 @@ namespace GSoftPosNew.Controllers
 
                     _invoiceService.GenerateInvoiceNumber();
 
-                    bool printSuccess = PrintReceiptToDefaultPrinter(sale.Id, out string printError);
+                    string printError = "";
+                    bool printed = PrintReceiptToMappedPrinter(sale.Id, sale.TerminalName, out printError);
 
                     return Ok(new
                     {
                         id = sale.Id,
                         invoiceNumber = sale.InvoiceNumber,
-                        printSuccess = printSuccess,
-                        Message = printSuccess
-                       ? "Sale saved and printed successfully"
-                       : $"Sale saved but print failed: {printError}"
+                        printed = printed,
+                        printError = printError,
+                        Message = printed ? "Sale saved and printed successfully" : "Sale saved but print failed"
                     });
                 }
 
@@ -922,425 +929,6 @@ namespace GSoftPosNew.Controllers
                 var errorMessage = ex.InnerException?.Message ?? ex.Message;
                 return StatusCode(500, "Error saving sale: " + errorMessage);
             }
-        }
-
-        private string GetDefaultPrinterName()
-        {
-            PrinterSettings settings = new PrinterSettings();
-            return settings.PrinterName;
-        }
-
-        private string BuildReceiptText(int saleId)
-        {
-            var sale = _context.Sales
-                .Include(s => s.Payment)
-                .Include(s => s.SaleItems)
-                .FirstOrDefault(s => s.Id == saleId);
-
-            if (sale == null)
-                return "Sale not found";
-
-            var shop = _context.ShopSettings
-                .OrderByDescending(x => x.Id)
-                .FirstOrDefault();
-
-            var sb = new StringBuilder();
-
-            sb.AppendLine(shop?.ShopName ?? "GSoft POS");
-            sb.AppendLine("--------------------------------");
-            sb.AppendLine("Invoice: " + (sale.InvoiceNumber ?? ""));
-            sb.AppendLine("Date: " + sale.SaleDate.ToString("dd-MM-yyyy hh:mm tt"));
-            sb.AppendLine("Cashier: " + (sale.CashierId ?? ""));
-            sb.AppendLine("--------------------------------");
-
-            foreach (var si in sale.SaleItems)
-            {
-                var itemName = _context.Items
-                    .Where(i => i.Id == si.ItemId)
-                    .Select(i => i.ItemName)
-                    .FirstOrDefault() ?? "Item";
-
-                sb.AppendLine(itemName);
-                sb.AppendLine($"{si.Quantity} x {si.UnitPrice:0.##} = {si.LineTotal:0.##}");
-            }
-
-            sb.AppendLine("--------------------------------");
-            sb.AppendLine($"Sub Total : {sale.SubTotal:0.##}");
-            sb.AppendLine($"Discount  : {sale.Discount:0.##}");
-            sb.AppendLine($"Tax       : {sale.Tax:0.##}");
-            sb.AppendLine($"Total     : {sale.Total:0.##}");
-            sb.AppendLine("--------------------------------");
-            sb.AppendLine("Thank you");
-            sb.AppendLine();
-            sb.AppendLine();
-            sb.AppendLine();
-
-            return sb.ToString();
-        }
-
-        private bool PrintReceiptToDefaultPrinter(int saleId, out string errorMessage)
-        {
-            errorMessage = "";
-
-            try
-            {
-                string printerName = GetDefaultPrinterName();
-
-                if (string.IsNullOrWhiteSpace(printerName))
-                {
-                    errorMessage = "Default printer not found.";
-                    return false;
-                }
-
-                string receiptText = BuildReceiptText(saleId);
-
-                RawPrinterHelper.SendStringToPrinter(printerName, receiptText);
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                errorMessage = ex.Message;
-                return false;
-            }
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> KOTSale([FromBody] Sale sale)
-        {
-            if (sale == null || sale.SaleItems == null || !sale.SaleItems.Any())
-            {
-                using var reader = new StreamReader(Request.Body);
-                var rawBody = await reader.ReadToEndAsync();
-                return BadRequest("Invalid sale data. Raw request: " + rawBody);
-            }
-
-            return View("KOTReceipt", sale);
-
-            using var transaction = await _context.Database.BeginTransactionAsync();
-
-            try
-            {
-                if (string.IsNullOrEmpty(sale.InvoiceNumber))
-                    sale.InvoiceNumber = GenerateInvoiceNumber();
-
-                sale.SaleDate = DateTime.Now;
-                sale.CashierId = User.Identity?.Name ?? "Unknown";
-                sale.Id = 0;
-                sale.CustomerId = sale.custId;
-
-                if (sale.SaleType == "Return")
-                {
-                    if (sale.Payment != null)
-                        sale.Payment.Id = 0;
-
-                    foreach (var item in sale.SaleItems)
-                        item.Id = 0;
-
-                    _context.Sales.Add(sale);
-                    await _context.SaveChangesAsync();
-
-                    foreach (var item in sale.SaleItems)
-                        item.SaleId = sale.Id;
-
-                    if (sale.Payment != null)
-                        sale.Payment.SaleId = sale.Id;
-
-                    await _context.SaveChangesAsync();
-
-                    if (sale.Payment?.PaymentMethod?.ToLower() == "credit")
-                    {
-                        var customer = await _context.Customers.FindAsync(sale.custId);
-                        if (customer != null)
-                        {
-                            decimal paidAmount = sale.tender_amount;
-                            decimal totalAmount = sale.Total;
-                            decimal balance = totalAmount + paidAmount;
-
-                            var existingPayment = await _context.CustomerPayments
-                                .FirstOrDefaultAsync(p => p.CustomerId == sale.custId);
-
-                            if (existingPayment != null)
-                            {
-                                existingPayment.PaymentDate = DateTime.Now;
-                                existingPayment.Narration = $"Return Invoice {sale.InvoiceNumber}";
-
-                                if (balance > 0)
-                                {
-                                    existingPayment.Remaining += balance;
-                                    existingPayment.Sale = (existingPayment.Sale ?? 0) - totalAmount;
-                                }
-                                else if (balance < 0)
-                                {
-                                    decimal extraAdvance = Math.Abs(balance);
-
-                                    if (existingPayment.Remaining > 0)
-                                    {
-                                        if (existingPayment.Remaining >= extraAdvance)
-                                        {
-                                            existingPayment.Remaining += extraAdvance;
-                                            extraAdvance = 0;
-                                        }
-                                        else
-                                        {
-                                            extraAdvance += existingPayment.Remaining;
-                                            existingPayment.Remaining = 0;
-                                        }
-                                    }
-
-                                    existingPayment.Advance += extraAdvance;
-                                    existingPayment.Sale = (existingPayment.Sale ?? 0) + totalAmount;
-                                }
-                                else
-                                {
-                                    existingPayment.Sale = (existingPayment.Sale ?? 0) - totalAmount;
-                                }
-
-                                _context.CustomerPayments.Update(existingPayment);
-                            }
-                            else
-                            {
-                                var paymentEntry = new CustomerPayment
-                                {
-                                    CustomerId = sale.custId,
-                                    ReceivedBy = sale.CashierId,
-                                    Amount = paidAmount,
-                                    PaymentMethod = "Credit",
-                                    Narration = $"Credit Sale Invoice {sale.InvoiceNumber}",
-                                    PaymentDate = DateTime.Now,
-                                    Advance = balance < 0 ? Math.Abs(balance) : 0,
-                                    Remaining = balance > 0 ? balance : 0
-                                };
-
-                                _context.CustomerPayments.Add(paymentEntry);
-                            }
-
-                            customer.OpeningBalance = (existingPayment?.Remaining ?? (balance > 0 ? balance : 0));
-
-                            await _context.SaveChangesAsync();
-                        }
-                    }
-
-                    foreach (var item in sale.SaleItems)
-                    {
-                        var dbItem = await _context.Items.FindAsync(item.ItemId);
-                        if (dbItem != null)
-                        {
-                            dbItem.Quantity += item.Quantity;
-                            _context.Items.Update(dbItem);
-                        }
-                    }
-
-                    await _context.SaveChangesAsync();
-                    await transaction.CommitAsync();
-
-                    return Ok(new
-                    {
-                        sale.Id,
-                        sale.InvoiceNumber,
-                        ReceiptUrl = Url.Action("KOTReceipt", "Sales", new { id = sale.Id }),
-                        Message = "Sale saved successfully"
-                    });
-                }
-                else
-                {
-                    if (sale.Payment != null)
-                        sale.Payment.Id = 0;
-
-                    foreach (var item in sale.SaleItems)
-                        item.Id = 0;
-
-                    _context.Sales.Add(sale);
-                    await _context.SaveChangesAsync();
-
-                    foreach (var item in sale.SaleItems)
-                        item.SaleId = sale.Id;
-
-                    if (sale.Payment != null)
-                        sale.Payment.SaleId = sale.Id;
-
-                    await _context.SaveChangesAsync();
-
-                    if (sale.Payment?.PaymentMethod?.ToLower() == "credit")
-                    {
-                        var customer = await _context.Customers.FindAsync(sale.custId);
-                        if (customer != null)
-                        {
-                            decimal paidAmount = sale.tender_amount;
-                            decimal totalAmount = sale.Total;
-                            decimal balance = totalAmount - paidAmount;
-
-                            var existingPayment = await _context.CustomerPayments
-                                .FirstOrDefaultAsync(p => p.CustomerId == sale.custId);
-
-                            if (existingPayment != null)
-                            {
-                                existingPayment.Amount += paidAmount;
-                                existingPayment.PaymentDate = DateTime.Now;
-                                existingPayment.Narration = $"Credit Sale Invoice {sale.InvoiceNumber}";
-
-                                if (balance > 0)
-                                {
-                                    existingPayment.Remaining -= balance;
-                                    existingPayment.Sale = (existingPayment.Sale ?? 0) + totalAmount;
-                                }
-                                else if (balance < 0)
-                                {
-                                    decimal extraAdvance = Math.Abs(balance);
-
-                                    if (existingPayment.Remaining > 0)
-                                    {
-                                        if (existingPayment.Remaining >= extraAdvance)
-                                        {
-                                            existingPayment.Remaining += extraAdvance;
-                                            extraAdvance = 0;
-                                        }
-                                        else
-                                        {
-                                            extraAdvance += existingPayment.Remaining;
-                                            existingPayment.Remaining = 0;
-                                        }
-                                    }
-
-                                    existingPayment.Advance += extraAdvance;
-                                    existingPayment.Sale = (existingPayment.Sale ?? 0) + totalAmount;
-                                }
-                                else
-                                {
-                                    existingPayment.Sale = (existingPayment.Sale ?? 0) + totalAmount;
-                                }
-
-                                _context.CustomerPayments.Update(existingPayment);
-                            }
-                            else
-                            {
-                                var paymentEntry = new CustomerPayment
-                                {
-                                    CustomerId = sale.custId,
-                                    ReceivedBy = sale.CashierId,
-                                    Amount = paidAmount,
-                                    PaymentMethod = "Credit",
-                                    Narration = $"Credit Sale Invoice {sale.InvoiceNumber}",
-                                    PaymentDate = DateTime.Now,
-                                    Advance = balance < 0 ? Math.Abs(balance) : 0,
-                                    Remaining = balance > 0 ? balance : 0
-                                };
-
-                                _context.CustomerPayments.Add(paymentEntry);
-                            }
-
-                            customer.OpeningBalance = (existingPayment?.Remaining ?? (balance > 0 ? balance : 0));
-
-                            await _context.SaveChangesAsync();
-                        }
-                    }
-
-                    foreach (var item in sale.SaleItems)
-                    {
-                        var dbItem = await _context.Items.FindAsync(item.ItemId);
-                        if (dbItem != null)
-                        {
-                            dbItem.Quantity -= item.Quantity;
-                            _context.Items.Update(dbItem);
-                        }
-                    }
-
-                    await _context.SaveChangesAsync();
-                    await transaction.CommitAsync();
-
-                    
-
-                    //return Ok(new
-                    //{
-                    //    sale.Id,
-                    //    sale.InvoiceNumber,
-                    //    ReceiptUrl = Url.Action("KOTReceipt", "Sales", new { id = sale.Id }),
-                    //    Message = "Sale saved successfully"
-                    //});
-                }
-
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                var errorMessage = ex.InnerException?.Message ?? ex.Message;
-                return StatusCode(500, "Error saving sale: " + errorMessage);
-            }
-        }
-
-        public IActionResult KOTReceipt()
-        {
-
-            return View();
-        }
-
-        [HttpPost]
-        public IActionResult KOTReceipt(string saleJson)
-        {
-            if (string.IsNullOrEmpty(saleJson))
-                return BadRequest("Sale not found");
-
-            var sale = JsonSerializer.Deserialize<Sale>(saleJson);
-
-            ViewBag.Setting = _context.ShopSettings
-                .OrderByDescending(s => s.Id)
-                .FirstOrDefault() ?? new ShopSetting();
-
-            if (sale == null)
-                return NotFound();
-
-            ViewBag.Balance = _context.Customers
-                .Where(c => c.Id == sale.CustomerId)
-                .Select(c => c.OpeningBalance)
-                .FirstOrDefault();
-
-            var vm = new SaleReceiptViewModel
-            {
-                SaleId = sale.Id,
-                InvoiceNumber = sale.InvoiceNumber,
-                SaleDate = sale.SaleDate,
-                CashierName = sale.CashierId,
-                Waiter = sale.Waiter,
-                TableNo = sale.TableNo,
-                SubTotal = sale.SubTotal,
-                Tax = sale.Tax,
-                Discount = sale.Discount,
-                Total = sale.Total,
-                CustomerId = sale.CustomerId,
-                CustomerName = _context.Customers
-                    .AsEnumerable()
-                    .Where(c => c.Id == sale.CustomerId)
-                    .Select(c => c.CustomerName)
-                    .FirstOrDefault() ?? "Walk-in Customer",
-                CustomerPhone = _context.Customers
-                    .AsEnumerable()
-                    .Where(c => c.Id == sale.CustomerId)
-                    .Select(c => c.ContactNumber)
-                    .FirstOrDefault(),
-                PaymentMethod = sale.Payment?.PaymentMethod ?? "Cash",
-                PaidAmount = sale.Payment?.Amount ?? sale.Total,
-                Change = (sale.Payment?.Amount ?? sale.Total) - sale.Total,
-                Items = sale.SaleItems
-                        .Select((si, index) => new SaleItemReceiptVM
-                        {
-                            SrNo = index + 1,
-                            ItemName = _context.Items
-                                .Where(i => i.Id == si.ItemId)
-                                .Select(i => i.ItemName)
-                                .FirstOrDefault(),
-                            UnitPrice = si.UnitPrice,
-                            Quantity = si.Quantity,
-                            LineTotal = si.LineTotal
-                        })
-                        .ToList()
-            };
-
-            for (int i = 0; i < vm.Items.Count; i++)
-            {
-                vm.Items[i].SrNo = i + 1;
-            }
-
-            return View(vm);
         }
 
         [HttpPost]
@@ -1363,35 +951,37 @@ namespace GSoftPosNew.Controllers
                 if (existingSale == null)
                     return NotFound("Sale not found.");
 
-                // Reverse stock first (VERY IMPORTANT)
                 foreach (var oldItem in existingSale.SaleItems)
                 {
                     var dbItem = await _context.Items.FindAsync(oldItem.ItemId);
                     if (dbItem != null)
                     {
-                        dbItem.Quantity += oldItem.Quantity; // rollback old deduction
+                        dbItem.Quantity += oldItem.Quantity;
                     }
                 }
 
-                // Remove old SaleItems
                 _context.SaleItems.RemoveRange(existingSale.SaleItems);
 
-                // Remove old payment if exists
                 if (existingSale.Payment != null)
                     _context.Payments.Remove(existingSale.Payment);
 
                 await _context.SaveChangesAsync();
 
-                // Update main fields
                 existingSale.InvoiceNumber = sale.InvoiceNumber;
                 existingSale.SubTotal = sale.SubTotal;
                 existingSale.Total = sale.Total;
                 existingSale.Discount = sale.Discount;
                 existingSale.SaleType = sale.SaleType;
                 existingSale.CustomerId = sale.custId;
+                existingSale.CustomerDisplayName = sale.CustomerDisplayName;
+                existingSale.CustomerPhone = sale.CustomerPhone;
+                existingSale.CustomerAddress = sale.CustomerAddress;
+                existingSale.Waiter = sale.Waiter;
+                existingSale.TableNo = sale.TableNo;
+                existingSale.OrderType = sale.OrderType;
+                existingSale.ServiceCharges = sale.ServiceCharges;
                 existingSale.SaleDate = DateTime.Now;
 
-                // Add new SaleItems
                 foreach (var item in sale.SaleItems)
                 {
                     item.Id = 0;
@@ -1401,11 +991,10 @@ namespace GSoftPosNew.Controllers
                     var dbItem = await _context.Items.FindAsync(item.ItemId);
                     if (dbItem != null)
                     {
-                        dbItem.Quantity -= item.Quantity; // apply new deduction
+                        dbItem.Quantity -= item.Quantity;
                     }
                 }
 
-                // Add Payment again
                 if (sale.Payment != null)
                 {
                     sale.Payment.Id = 0;
@@ -1414,7 +1003,6 @@ namespace GSoftPosNew.Controllers
                 }
 
                 await _context.SaveChangesAsync();
-                //await transaction.CommitAsync();
 
                 return Ok(new
                 {
@@ -1440,8 +1028,15 @@ namespace GSoftPosNew.Controllers
 
             try
             {
-                
-                sale.SaleDate = DateTime.Now;
+                var activeDay = _context.InvoiceSequences
+                .OrderByDescending(x => x.Date)
+                .FirstOrDefault(x => x.IsClosed == false);
+
+                var now = DateTime.Now;
+
+                // ✅ Combine business date + current time
+                sale.SaleDate = activeDay.Date.Date.Add(now.TimeOfDay);
+
                 sale.CashierId = User.Identity?.Name ?? "Unknown";
                 sale.Id = 0;
                 sale.CustomerId = sale.custId;
@@ -1745,6 +1340,681 @@ namespace GSoftPosNew.Controllers
             }
         }
 
+        private string GetDefaultPrinterName()
+        {
+            PrinterSettings settings = new PrinterSettings();
+            return settings.PrinterName;
+        }
+
+        private string FitText(string text, int maxLen)
+        {
+            text ??= "";
+            text = text.Trim();
+
+            if (text.Length <= maxLen)
+                return text.PadRight(maxLen);
+
+            return text.Substring(0, maxLen);
+        }
+
+        private string AlignCenter(string text, int width = 32)
+        {
+            text ??= "";
+            text = text.Trim();
+
+            if (text.Length >= width)
+                return text;
+
+            int leftPadding = (width - text.Length) / 2;
+            return new string(' ', leftPadding) + text;
+        }
+
+        private string LeftRight(string left, string right, int width = 32)
+        {
+            left ??= "";
+            right ??= "";
+
+            int spaces = width - left.Length - right.Length;
+            if (spaces < 1) spaces = 1;
+
+            return left + new string(' ', spaces) + right;
+        }
+        private string BuildReceiptText(int saleId)
+        {
+            var sale = _context.Sales
+                .Include(s => s.Payment)
+                .Include(s => s.SaleItems)
+                .FirstOrDefault(s => s.Id == saleId);
+
+            if (sale == null)
+                return "Sale not found";
+
+            var shop = _context.ShopSettings
+                .OrderByDescending(x => x.Id)
+                .FirstOrDefault();
+
+            var customer = _context.Customers
+                .FirstOrDefault(c => c.Id == sale.CustomerId);
+
+            string receiptCustomerName = !string.IsNullOrWhiteSpace(sale.CustomerDisplayName)
+                ? sale.CustomerDisplayName
+                : customer?.CustomerName ?? "Walk-in Customer";
+
+            string receiptCustomerPhone = !string.IsNullOrWhiteSpace(sale.CustomerPhone)
+                ? sale.CustomerPhone
+                : customer?.ContactNumber ?? "";
+
+            string receiptCustomerAddress = !string.IsNullOrWhiteSpace(sale.CustomerAddress)
+                ? sale.CustomerAddress
+                : customer?.Address1 ?? "";
+
+            string shopName = shop?.ShopName ?? "G-SOFT SYSTEMS";
+            string shopAddress = shop?.Address ?? "";
+
+            string shopContact = "";
+            if (!string.IsNullOrWhiteSpace(shop?.Contact1) && !string.IsNullOrWhiteSpace(shop?.Contact2))
+                shopContact = $"{shop.Contact1} / {shop.Contact2}";
+            else if (!string.IsNullOrWhiteSpace(shop?.Contact1))
+                shopContact = shop.Contact1;
+            else if (!string.IsNullOrWhiteSpace(shop?.Contact2))
+                shopContact = shop.Contact2;
+
+            bool isReturn =
+                (!string.IsNullOrWhiteSpace(sale.InvoiceNumber) &&
+                 (sale.InvoiceNumber.Contains("RETURN") || sale.InvoiceNumber.Contains("R-")))
+                || sale.Total < 0
+                || string.Equals(sale.SaleType, "Return", StringComparison.OrdinalIgnoreCase);
+
+            const int width = 48;
+
+            string line = new string('-', width);
+            string softLine = new string('-', width);
+
+            string LeftRight(string left, string right)
+            {
+                left ??= "";
+                right ??= "";
+
+                left = left.TrimEnd();
+                right = right.Trim();
+
+                int spaces = width - left.Length - right.Length;
+                if (spaces < 1) spaces = 1;
+
+                return left + new string(' ', spaces) + right;
+            }
+
+            string CutText(string text, int maxLen)
+            {
+                text ??= "";
+                text = text.Trim();
+
+                if (text.Length <= maxLen)
+                    return text;
+
+                return text.Substring(0, maxLen);
+            }
+
+            var sb = new StringBuilder();
+
+            // =========================
+            // PRINTER INIT
+            // =========================
+            sb.Append("\x1B\x40");     // ESC @ Initialize
+            sb.Append("\x1B\x4D\x00"); // Font A
+
+            // =========================
+            // HEADER - PURE CENTER
+            // =========================
+            sb.Append("\x1B\x61\x01"); // center align
+            sb.Append("\x1B\x45\x01"); // bold on
+            sb.Append("\x1D\x21\x01"); // little bigger font, single line
+
+            sb.AppendLine(shopName.ToUpper());
+
+            sb.Append("\x1D\x21\x00"); // normal size
+            sb.Append("\x1B\x45\x00"); // bold off
+            sb.AppendLine("");
+
+            if (!string.IsNullOrWhiteSpace(shopAddress))
+            {
+                sb.AppendLine("Address: " + shopAddress);
+                sb.AppendLine("");
+            }
+
+            if (!string.IsNullOrWhiteSpace(shopContact))
+            {
+                sb.AppendLine("Ph: " + shopContact);
+                sb.AppendLine("");
+            }
+
+            // =========================
+            // BODY START LEFT ALIGN
+            // =========================
+            sb.Append("\x1B\x61\x00"); // left align
+            sb.AppendLine(line);
+
+            if (isReturn)
+            {
+                sb.Append("\x1B\x61\x01");
+                sb.Append("\x1B\x45\x01");
+                sb.AppendLine("RETURN INVOICE");
+                sb.Append("\x1B\x45\x00");
+                sb.Append("\x1B\x61\x00");
+                sb.AppendLine(line);
+            }
+
+            // Invoice info
+            sb.AppendLine(LeftRight("Invoice #:", sale.InvoiceNumber ?? ""));
+            sb.AppendLine(LeftRight("Date:", sale.SaleDate.ToString("dd-MM-yyyy hh:mm tt")));
+            sb.AppendLine(LeftRight("Cashier:", sale.CashierId ?? ""));
+            sb.AppendLine(line);
+
+            // Customer
+            sb.AppendLine(LeftRight("Customer:", receiptCustomerName));
+            if (!string.IsNullOrWhiteSpace(receiptCustomerPhone))
+                sb.AppendLine(LeftRight("Phone:", receiptCustomerPhone));
+            if (!string.IsNullOrWhiteSpace(receiptCustomerAddress))
+                sb.AppendLine(LeftRight("Address:", receiptCustomerAddress));
+            sb.AppendLine(line);
+
+            // Items heading
+            sb.Append("\x1B\x45\x01");
+            sb.AppendLine(LeftRight("#   ITEMS", "AMOUNT"));
+            sb.Append("\x1B\x45\x00");
+            sb.AppendLine(line);
+
+            int sr = 1;
+
+            foreach (var si in sale.SaleItems)
+            {
+                var itemName = _context.Items
+                    .Where(i => i.Id == si.ItemId)
+                    .Select(i => i.ItemName)
+                    .FirstOrDefault() ?? "Item";
+
+                string srText = sr.ToString();
+                string amountText = Math.Abs(si.LineTotal).ToString("0.##");
+
+                string firstLeft = srText.PadRight(4) + CutText(itemName, 28);
+
+                sb.Append("\x1B\x45\x01");
+                sb.AppendLine(LeftRight(firstLeft, amountText));
+                sb.Append("\x1B\x45\x00");
+
+                sb.AppendLine($"    Qty: {si.Quantity:0.##} x {si.UnitPrice:0.##}");
+                sb.AppendLine(softLine);
+
+                sr++;
+            }
+
+            // Totals
+            sb.AppendLine(LeftRight("Sub Total:", Math.Abs(sale.SubTotal).ToString("0.##")));
+
+            if ((sale.ServiceCharges ?? 0) > 0)
+                sb.AppendLine(LeftRight("Service Charges:", Math.Abs(sale.ServiceCharges ?? 0).ToString("0.##")));
+
+            if (sale.Tax > 0)
+                sb.AppendLine(LeftRight("Tax:", Math.Abs(sale.Tax).ToString("0.##")));
+
+            if (sale.Discount > 0)
+                sb.AppendLine(LeftRight("Discount:", Math.Abs(sale.Discount).ToString("0.##")));
+
+            sb.AppendLine(line);
+
+            // Grand total
+            sb.Append("\x1B\x45\x01");
+            sb.AppendLine(LeftRight(isReturn ? "GRAND TOTAL:" : "GRAND TOTAL:", Math.Abs(sale.Total).ToString("0.##")));
+            sb.Append("\x1B\x45\x00");
+
+            sb.AppendLine(line);
+
+            // Payment
+            sb.AppendLine(LeftRight("Payment:", sale.Payment?.PaymentMethod ?? "Cash"));
+            sb.AppendLine(LeftRight(isReturn ? "Amount Refund:" : "Amount Paid:", Math.Abs(sale.Payment?.Amount ?? sale.Total).ToString("0.##")));
+
+            decimal changeAmount = Math.Abs((sale.Payment?.Amount ?? sale.Total) - sale.Total);
+            if (changeAmount > 0)
+            {
+                sb.AppendLine(LeftRight(isReturn ? "Balance:" : "Change:", changeAmount.ToString("0.##")));
+            }
+
+            sb.AppendLine(line);
+
+            // Footer message
+            if (!string.IsNullOrWhiteSpace(shop?.Message))
+            {
+                sb.Append("\x1B\x61\x01"); // center
+                var msgLines = shop.Message
+                    .Replace("\r", "")
+                    .Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+                foreach (var msgLine in msgLines)
+                {
+                    var clean = msgLine.Trim();
+                    if (!string.IsNullOrWhiteSpace(clean))
+                        sb.AppendLine(clean);
+                }
+
+                sb.Append("\x1B\x61\x00"); // back to left
+                sb.AppendLine(line);
+            }
+
+            // Footer
+            sb.Append("\x1B\x61\x01"); // center
+            sb.Append("\x1B\x45\x01");
+            sb.AppendLine("Thank You");
+            sb.Append("\x1B\x45\x00");
+            sb.AppendLine("Software developed by G-Soft Systems");
+
+            // Feed + cut
+            sb.AppendLine("");
+            sb.AppendLine("");
+            sb.AppendLine("");
+            sb.Append("\x1D\x56\x41\x03");
+
+            return sb.ToString();
+        }
+        private bool CutPaper(string printerName, out string errorMessage)
+        {
+            errorMessage = "";
+
+            try
+            {
+                // ESC/POS Full Cut
+                byte[] cutCommand = new byte[] { 0x1D, 0x56, 0x00 };
+
+                bool ok = RawPrinterHelper.SendBytesToPrinter(printerName, cutCommand);
+
+                if (!ok)
+                {
+                    errorMessage = "Cut command failed.";
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                errorMessage = ex.Message;
+                return false;
+            }
+        }
+
+        private bool PrintReceiptToDefaultPrinter(int saleId, out string errorMessage)
+        {
+            errorMessage = "";
+
+            try
+            {
+                string printerName = GetDefaultPrinterName();
+
+                if (string.IsNullOrWhiteSpace(printerName))
+                {
+                    errorMessage = "Default printer not found.";
+                    return false;
+                }
+
+                string receiptText = BuildReceiptText(saleId);
+
+                bool printed = RawPrinterHelper.SendStringToPrinter(printerName, receiptText);
+
+                if (!printed)
+                {
+                    errorMessage = "Receipt print failed.";
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                errorMessage = ex.Message;
+                return false;
+            }
+        }
+        [HttpPost]
+        public async Task<IActionResult> KOTSale([FromBody] Sale sale)
+        {
+            if (sale == null || sale.SaleItems == null || !sale.SaleItems.Any())
+            {
+                using var reader = new StreamReader(Request.Body);
+                var rawBody = await reader.ReadToEndAsync();
+                return BadRequest("Invalid sale data. Raw request: " + rawBody);
+            }
+
+            return View("KOTReceipt", sale);
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                if (string.IsNullOrEmpty(sale.InvoiceNumber))
+                    sale.InvoiceNumber = GenerateInvoiceNumber();
+
+                sale.SaleDate = DateTime.Now;
+                sale.CashierId = User.Identity?.Name ?? "Unknown";
+                sale.Id = 0;
+                sale.CustomerId = sale.custId;
+
+                if (sale.SaleType == "Return")
+                {
+                    if (sale.Payment != null)
+                        sale.Payment.Id = 0;
+
+                    foreach (var item in sale.SaleItems)
+                        item.Id = 0;
+
+                    _context.Sales.Add(sale);
+                    await _context.SaveChangesAsync();
+
+                    foreach (var item in sale.SaleItems)
+                        item.SaleId = sale.Id;
+
+                    if (sale.Payment != null)
+                        sale.Payment.SaleId = sale.Id;
+
+                    await _context.SaveChangesAsync();
+
+                    if (sale.Payment?.PaymentMethod?.ToLower() == "credit")
+                    {
+                        var customer = await _context.Customers.FindAsync(sale.custId);
+                        if (customer != null)
+                        {
+                            decimal paidAmount = sale.tender_amount;
+                            decimal totalAmount = sale.Total;
+                            decimal balance = totalAmount + paidAmount;
+
+                            var existingPayment = await _context.CustomerPayments
+                                .FirstOrDefaultAsync(p => p.CustomerId == sale.custId);
+
+                            if (existingPayment != null)
+                            {
+                                existingPayment.PaymentDate = DateTime.Now;
+                                existingPayment.Narration = $"Return Invoice {sale.InvoiceNumber}";
+
+                                if (balance > 0)
+                                {
+                                    existingPayment.Remaining += balance;
+                                    existingPayment.Sale = (existingPayment.Sale ?? 0) - totalAmount;
+                                }
+                                else if (balance < 0)
+                                {
+                                    decimal extraAdvance = Math.Abs(balance);
+
+                                    if (existingPayment.Remaining > 0)
+                                    {
+                                        if (existingPayment.Remaining >= extraAdvance)
+                                        {
+                                            existingPayment.Remaining += extraAdvance;
+                                            extraAdvance = 0;
+                                        }
+                                        else
+                                        {
+                                            extraAdvance += existingPayment.Remaining;
+                                            existingPayment.Remaining = 0;
+                                        }
+                                    }
+
+                                    existingPayment.Advance += extraAdvance;
+                                    existingPayment.Sale = (existingPayment.Sale ?? 0) + totalAmount;
+                                }
+                                else
+                                {
+                                    existingPayment.Sale = (existingPayment.Sale ?? 0) - totalAmount;
+                                }
+
+                                _context.CustomerPayments.Update(existingPayment);
+                            }
+                            else
+                            {
+                                var paymentEntry = new CustomerPayment
+                                {
+                                    CustomerId = sale.custId,
+                                    ReceivedBy = sale.CashierId,
+                                    Amount = paidAmount,
+                                    PaymentMethod = "Credit",
+                                    Narration = $"Credit Sale Invoice {sale.InvoiceNumber}",
+                                    PaymentDate = DateTime.Now,
+                                    Advance = balance < 0 ? Math.Abs(balance) : 0,
+                                    Remaining = balance > 0 ? balance : 0
+                                };
+
+                                _context.CustomerPayments.Add(paymentEntry);
+                            }
+
+                            customer.OpeningBalance = (existingPayment?.Remaining ?? (balance > 0 ? balance : 0));
+
+                            await _context.SaveChangesAsync();
+                        }
+                    }
+
+                    foreach (var item in sale.SaleItems)
+                    {
+                        var dbItem = await _context.Items.FindAsync(item.ItemId);
+                        if (dbItem != null)
+                        {
+                            dbItem.Quantity += item.Quantity;
+                            _context.Items.Update(dbItem);
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    return Ok(new
+                    {
+                        sale.Id,
+                        sale.InvoiceNumber,
+                        ReceiptUrl = Url.Action("KOTReceipt", "Sales", new { id = sale.Id }),
+                        Message = "Sale saved successfully"
+                    });
+                }
+                else
+                {
+                    if (sale.Payment != null)
+                        sale.Payment.Id = 0;
+
+                    foreach (var item in sale.SaleItems)
+                        item.Id = 0;
+
+                    _context.Sales.Add(sale);
+                    await _context.SaveChangesAsync();
+
+                    foreach (var item in sale.SaleItems)
+                        item.SaleId = sale.Id;
+
+                    if (sale.Payment != null)
+                        sale.Payment.SaleId = sale.Id;
+
+                    await _context.SaveChangesAsync();
+
+                    if (sale.Payment?.PaymentMethod?.ToLower() == "credit")
+                    {
+                        var customer = await _context.Customers.FindAsync(sale.custId);
+                        if (customer != null)
+                        {
+                            decimal paidAmount = sale.tender_amount;
+                            decimal totalAmount = sale.Total;
+                            decimal balance = totalAmount - paidAmount;
+
+                            var existingPayment = await _context.CustomerPayments
+                                .FirstOrDefaultAsync(p => p.CustomerId == sale.custId);
+
+                            if (existingPayment != null)
+                            {
+                                existingPayment.Amount += paidAmount;
+                                existingPayment.PaymentDate = DateTime.Now;
+                                existingPayment.Narration = $"Credit Sale Invoice {sale.InvoiceNumber}";
+
+                                if (balance > 0)
+                                {
+                                    existingPayment.Remaining -= balance;
+                                    existingPayment.Sale = (existingPayment.Sale ?? 0) + totalAmount;
+                                }
+                                else if (balance < 0)
+                                {
+                                    decimal extraAdvance = Math.Abs(balance);
+
+                                    if (existingPayment.Remaining > 0)
+                                    {
+                                        if (existingPayment.Remaining >= extraAdvance)
+                                        {
+                                            existingPayment.Remaining += extraAdvance;
+                                            extraAdvance = 0;
+                                        }
+                                        else
+                                        {
+                                            extraAdvance += existingPayment.Remaining;
+                                            existingPayment.Remaining = 0;
+                                        }
+                                    }
+
+                                    existingPayment.Advance += extraAdvance;
+                                    existingPayment.Sale = (existingPayment.Sale ?? 0) + totalAmount;
+                                }
+                                else
+                                {
+                                    existingPayment.Sale = (existingPayment.Sale ?? 0) + totalAmount;
+                                }
+
+                                _context.CustomerPayments.Update(existingPayment);
+                            }
+                            else
+                            {
+                                var paymentEntry = new CustomerPayment
+                                {
+                                    CustomerId = sale.custId,
+                                    ReceivedBy = sale.CashierId,
+                                    Amount = paidAmount,
+                                    PaymentMethod = "Credit",
+                                    Narration = $"Credit Sale Invoice {sale.InvoiceNumber}",
+                                    PaymentDate = DateTime.Now,
+                                    Advance = balance < 0 ? Math.Abs(balance) : 0,
+                                    Remaining = balance > 0 ? balance : 0
+                                };
+
+                                _context.CustomerPayments.Add(paymentEntry);
+                            }
+
+                            customer.OpeningBalance = (existingPayment?.Remaining ?? (balance > 0 ? balance : 0));
+
+                            await _context.SaveChangesAsync();
+                        }
+                    }
+
+                    foreach (var item in sale.SaleItems)
+                    {
+                        var dbItem = await _context.Items.FindAsync(item.ItemId);
+                        if (dbItem != null)
+                        {
+                            dbItem.Quantity -= item.Quantity;
+                            _context.Items.Update(dbItem);
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                var errorMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, "Error saving sale: " + errorMessage);
+            }
+
+            return BadRequest();
+        }
+
+        public IActionResult KOTReceipt()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult KOTReceipt(string saleJson)
+        {
+            if (string.IsNullOrEmpty(saleJson))
+                return BadRequest("Sale not found");
+
+            var sale = JsonSerializer.Deserialize<Sale>(saleJson);
+
+            ViewBag.Setting = _context.ShopSettings
+                .OrderByDescending(s => s.Id)
+                .FirstOrDefault() ?? new ShopSetting();
+
+            if (sale == null)
+                return NotFound();
+
+            ViewBag.Balance = _context.Customers
+                .Where(c => c.Id == sale.CustomerId)
+                .Select(c => c.OpeningBalance)
+                .FirstOrDefault();
+
+            var vm = new SaleReceiptViewModel
+            {
+                SaleId = sale.Id,
+                InvoiceNumber = sale.InvoiceNumber,
+                SaleDate = sale.SaleDate,
+                CashierName = sale.CashierId,
+                Waiter = sale.Waiter,
+                TableNo = sale.TableNo,
+                SubTotal = sale.SubTotal,
+                Tax = sale.Tax,
+                Discount = sale.Discount,
+                Total = sale.Total,
+                OrderType = sale.OrderType,
+                CustomerId = sale.CustomerId,
+                CustomerName = !string.IsNullOrWhiteSpace(sale.CustomerDisplayName)
+                    ? sale.CustomerDisplayName
+                    : _context.Customers
+                        .AsEnumerable()
+                        .Where(c => c.Id == sale.CustomerId)
+                        .Select(c => c.CustomerName)
+                        .FirstOrDefault() ?? "Walk-in Customer",
+                CustomerPhone = !string.IsNullOrWhiteSpace(sale.CustomerPhone)
+                    ? sale.CustomerPhone
+                    : _context.Customers
+                        .AsEnumerable()
+                        .Where(c => c.Id == sale.CustomerId)
+                        .Select(c => c.ContactNumber)
+                        .FirstOrDefault(),
+                CustomerAddress = !string.IsNullOrWhiteSpace(sale.CustomerAddress)
+                    ? sale.CustomerAddress
+                    : _context.Customers
+                        .AsEnumerable()
+                        .Where(c => c.Id == sale.CustomerId)
+                        .Select(c => c.Address1)
+                        .FirstOrDefault(),
+                PaymentMethod = sale.Payment?.PaymentMethod ?? "Cash",
+                PaidAmount = sale.Payment?.Amount ?? sale.Total,
+                Change = (sale.Payment?.Amount ?? sale.Total) - sale.Total,
+                Items = sale.SaleItems
+                        .Select((si, index) => new SaleItemReceiptVM
+                        {
+                            SrNo = index + 1,
+                            ItemName = _context.Items
+                                .Where(i => i.Id == si.ItemId)
+                                .Select(i => i.ItemName)
+                                .FirstOrDefault(),
+                            UnitPrice = si.UnitPrice,
+                            Quantity = si.Quantity,
+                            LineTotal = si.LineTotal
+                        })
+                        .ToList()
+            };
+
+            for (int i = 0; i < vm.Items.Count; i++)
+            {
+                vm.Items[i].SrNo = i + 1;
+            }
+
+            return View(vm);
+        }
+
+        
         public async Task<IActionResult> CustomerReport()
         {
             int customerId = int.Parse(User.FindFirst("CustomerId")?.Value ?? "0");
@@ -1798,6 +2068,28 @@ namespace GSoftPosNew.Controllers
             return View(dto);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetDuplicateInvoices(DateTime? fromDate, DateTime? toDate)
+        {
+            var from = fromDate?.Date ?? DateTime.Today;
+            var to = (toDate?.Date ?? DateTime.Today).AddDays(1).AddTicks(-1);
+
+            var sales = await _context.Sales
+                .Where(s => s.SaleDate >= from && s.SaleDate <= to)
+                .OrderByDescending(s => s.Id)
+                .Take(50)
+                .Select(s => new
+                {
+                    id = s.Id,
+                    invoiceNumber = s.InvoiceNumber,
+                    customerName = string.IsNullOrWhiteSpace(s.CustomerDisplayName) ? "Walk-in Customer" : s.CustomerDisplayName,
+                    time = s.SaleDate.ToString("hh:mm tt"),
+                    total = s.Total
+                })
+                .ToListAsync();
+
+            return Json(new { success = true, data = sales });
+        }
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ProcessPayment(
@@ -1864,6 +2156,55 @@ namespace GSoftPosNew.Controllers
             return View(sale);
         }
 
+        private string GetPrinterPathByTerminal(string? terminalName)
+        {
+            if (string.IsNullOrWhiteSpace(terminalName))
+                return GetDefaultPrinterName();
+
+            var setting = _context.TerminalPrinterSettings
+                .FirstOrDefault(x => x.IsActive && x.StationName == terminalName);
+
+            if (setting == null || string.IsNullOrWhiteSpace(setting.ReceiptPrinterPath))
+                return GetDefaultPrinterName();
+
+            if (setting.ReceiptPrinterPath.Trim().ToUpper() == "DEFAULT")
+                return GetDefaultPrinterName();
+
+            return setting.ReceiptPrinterPath;
+        }
+        private bool PrintReceiptToMappedPrinter(int saleId, string? terminalName, out string errorMessage)
+        {
+            errorMessage = "";
+
+            try
+            {
+                string printerName = GetPrinterPathByTerminal(terminalName);
+
+                if (string.IsNullOrWhiteSpace(printerName))
+                {
+                    errorMessage = "Printer not found.";
+                    return false;
+                }
+
+                string receiptText = BuildReceiptText(saleId);
+
+                bool printed = RawPrinterHelper.SendStringToPrinter(printerName, receiptText);
+
+                if (!printed)
+                {
+                    errorMessage = "Receipt print failed.";
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                errorMessage = ex.Message;
+                return false;
+            }
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Edit(int id, Sale model)
@@ -1889,6 +2230,9 @@ namespace GSoftPosNew.Controllers
             existing.Tax = model.Tax;
             existing.Discount = model.Discount;
             existing.Total = model.Total;
+            existing.CustomerDisplayName = model.CustomerDisplayName;
+            existing.CustomerPhone = model.CustomerPhone;
+            existing.CustomerAddress = model.CustomerAddress;
 
             _context.SaveChanges();
             TempData["Message"] = "Sale updated successfully!";
@@ -1938,6 +2282,19 @@ namespace GSoftPosNew.Controllers
                 PaymentMethod = sale.Payment?.PaymentMethod ?? "Cash",
                 Waiter = sale.Waiter,
                 TableNo = sale.TableNo,
+                OrderType = sale.OrderType,
+                CustomerId = sale.CustomerId,
+                CustomerName = !string.IsNullOrWhiteSpace(sale.CustomerDisplayName)
+                    ? sale.CustomerDisplayName
+                    : "Walk-in Customer",
+                CustomerPhone = !string.IsNullOrWhiteSpace(sale.CustomerPhone)
+                    ? sale.CustomerPhone
+                    : null,
+                CustomerAddress = !string.IsNullOrWhiteSpace(sale.CustomerAddress)
+                    ? sale.CustomerAddress
+                    : null,
+                PaidAmount = sale.Payment?.Amount ?? sale.Total,
+                Change = (sale.Payment?.Amount ?? sale.Total) - sale.Total,
                 Items = items
             };
 
@@ -1995,23 +2352,30 @@ namespace GSoftPosNew.Controllers
                 Total = sale.Total,
                 ServiceCharges = sale.ServiceCharges,
                 Waiter = sale.Waiter,
+                TableNo = sale.TableNo,
                 OrderType = sale.OrderType,
                 CustomerId = sale.CustomerId,
-                CustomerName = _context.Customers
-                    .AsEnumerable()
-                    .Where(c => c.Id == sale.CustomerId)
-                    .Select(c => c.CustomerName)
-                    .FirstOrDefault() ?? "Walk-in Customer",
-                CustomerPhone = _context.Customers
-                    .AsEnumerable()
-                    .Where(c => c.Id == sale.CustomerId)
-                    .Select(c => c.ContactNumber)
-                    .FirstOrDefault(),
-                CustomerAddress = _context.Customers
-                    .AsEnumerable()
-                    .Where(c => c.Id == sale.CustomerId)
-                    .Select(c => c.Address1)
-                    .FirstOrDefault(),
+                CustomerName = !string.IsNullOrWhiteSpace(sale.CustomerDisplayName)
+                    ? sale.CustomerDisplayName
+                    : _context.Customers
+                        .AsEnumerable()
+                        .Where(c => c.Id == sale.CustomerId)
+                        .Select(c => c.CustomerName)
+                        .FirstOrDefault() ?? "Walk-in Customer",
+                CustomerPhone = !string.IsNullOrWhiteSpace(sale.CustomerPhone)
+                    ? sale.CustomerPhone
+                    : _context.Customers
+                        .AsEnumerable()
+                        .Where(c => c.Id == sale.CustomerId)
+                        .Select(c => c.ContactNumber)
+                        .FirstOrDefault(),
+                CustomerAddress = !string.IsNullOrWhiteSpace(sale.CustomerAddress)
+                    ? sale.CustomerAddress
+                    : _context.Customers
+                        .AsEnumerable()
+                        .Where(c => c.Id == sale.CustomerId)
+                        .Select(c => c.Address1)
+                        .FirstOrDefault(),
                 PaymentMethod = sale.Payment?.PaymentMethod ?? "Cash",
                 PaidAmount = sale.Payment?.Amount ?? sale.Total,
                 Change = (sale.Payment?.Amount ?? sale.Total) - sale.Total,
@@ -2024,8 +2388,8 @@ namespace GSoftPosNew.Controllers
                              ItemName = i.ItemName,
                              UnitPrice = si.UnitPrice,
                              Quantity = si.Quantity,
-                             DiscountPercent = si.DiscountPercent,   // ✅ ADD
-                             TaxAmount = si.TaxAmount,               // ✅ ADD
+                             DiscountPercent = si.DiscountPercent,
+                             TaxAmount = si.TaxAmount,
                              LineTotal = si.LineTotal
                          }).ToList()
             };
@@ -2065,14 +2429,24 @@ namespace GSoftPosNew.Controllers
                 Discount = sale.Discount,
                 Total = sale.Total,
                 CustomerId = sale.CustomerId,
-                CustomerName = _context.Customers
-                    .Where(c => c.Id == sale.CustomerId)
-                    .Select(c => c.CustomerName)
-                    .FirstOrDefault() ?? "Walk-in Customer",
-                CustomerPhone = _context.Customers
-                    .Where(c => c.Id == sale.CustomerId)
-                    .Select(c => c.ContactNumber)
-                    .FirstOrDefault(),
+                CustomerName = !string.IsNullOrWhiteSpace(sale.CustomerDisplayName)
+                    ? sale.CustomerDisplayName
+                    : _context.Customers
+                        .Where(c => c.Id == sale.CustomerId)
+                        .Select(c => c.CustomerName)
+                        .FirstOrDefault() ?? "Walk-in Customer",
+                CustomerPhone = !string.IsNullOrWhiteSpace(sale.CustomerPhone)
+                    ? sale.CustomerPhone
+                    : _context.Customers
+                        .Where(c => c.Id == sale.CustomerId)
+                        .Select(c => c.ContactNumber)
+                        .FirstOrDefault(),
+                CustomerAddress = !string.IsNullOrWhiteSpace(sale.CustomerAddress)
+                    ? sale.CustomerAddress
+                    : _context.Customers
+                        .Where(c => c.Id == sale.CustomerId)
+                        .Select(c => c.Address1)
+                        .FirstOrDefault(),
                 PaymentMethod = sale.Payment?.PaymentMethod ?? "Cash",
                 PaidAmount = sale.Payment?.Amount ?? sale.Total,
                 Change = (sale.Payment?.Amount ?? sale.Total) - sale.Total,
@@ -2101,35 +2475,58 @@ namespace GSoftPosNew.Controllers
         [HttpGet]
         public IActionResult GetNextInvoice()
         {
-            var today = DateTime.Today;
+            //var sequenceCheck = _context.InvoiceSequences
+            //    .OrderByDescending(x => x.Date)
+            //        .FirstOrDefault();
 
-            // 🔍 Get last sequence (latest by date)
-            var lastSequence = _context.InvoiceSequences
-                .OrderByDescending(x => x.Date)
-                .FirstOrDefault();
+            //// ✅ Update session to new date
+            //HttpContext.Session.SetString(
+            //    "BusinessDate",
+            //    sequenceCheck.Date.ToString("yyyy-MM-dd")
+            //);
 
-            // 🔴 If last sequence exists, is from previous day, and NOT closed → block
-            if (lastSequence != null
-                && lastSequence.Date < today
-                && lastSequence.IsClosed == false)
+            // 🔹 Get business date from session
+            var sessionDateStr = HttpContext.Session.GetString("BusinessDate");
+
+            if (string.IsNullOrEmpty(sessionDateStr))
             {
                 return Json(new
                 {
                     success = false,
-                    message = $"Previous day ({lastSequence.Date:MM-dd-yyyy}) is not closed. Please close it first."
+                    message = "Session expired. Please login again."
                 });
             }
 
-            // 🔍 Get today's sequence
-            var sequence = _context.InvoiceSequences
-                .FirstOrDefault(x => x.Date == today);
+            var businessDate = DateTime.Parse(sessionDateStr);
+            var systemToday = DateTime.Today;
 
-            // ✅ Create new if not exists
+            var sequenceCheck = _context.InvoiceSequences
+                .OrderByDescending(x => x.Date)
+                    .FirstOrDefault();
+
+            // 🔴 If system date changed and day not closed → block
+            if (businessDate > sequenceCheck.Date)
+            {
+
+                if (sequenceCheck != null && sequenceCheck.IsClosed == false)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = $"Previous day ({businessDate:MM-dd-yyyy}) is not closed. Please close it first."
+                    });
+                }
+            }
+
+            // 🔹 Get sequence for business date (NOT system date)
+            var sequence = _context.InvoiceSequences
+                .FirstOrDefault(x => x.Date.Date == businessDate.Date);
+
             if (sequence == null)
             {
                 sequence = new InvoiceSequence
                 {
-                    Date = today,
+                    Date = businessDate,
                     LastNumber = 0,
                     IsClosed = false
                 };
@@ -2138,10 +2535,10 @@ namespace GSoftPosNew.Controllers
                 _context.SaveChanges();
             }
 
-            // ✅ Generate invoice
+            // 🔹 Generate invoice
             sequence.LastNumber++;
 
-            string datePart = today.ToString("MM-dd-yyyy");
+            string datePart = businessDate.ToString("MM-dd-yyyy");
             string numberPart = sequence.LastNumber.ToString("D4");
 
             var invoice = $"INV-{datePart}-{numberPart}";
@@ -2225,21 +2622,27 @@ namespace GSoftPosNew.Controllers
                 Discount = sale.Discount,
                 Total = sale.Total,
                 CustomerId = sale.CustomerId,
-                CustomerName = _context.Customers
-                    .AsEnumerable()
-                    .Where(c => c.Id == sale.CustomerId)
-                    .Select(c => c.CustomerName)
-                    .FirstOrDefault() ?? "Walk-in Customer",
-                CustomerPhone = _context.Customers
-                    .AsEnumerable()
-                    .Where(c => c.Id == sale.CustomerId)
-                    .Select(c => c.ContactNumber)
-                    .FirstOrDefault(),
-                CustomerAddress = _context.Customers
-                    .AsEnumerable()
-                    .Where(c => c.Id == sale.CustomerId)
-                    .Select(c => c.Address1)
-                    .FirstOrDefault(),
+                CustomerName = !string.IsNullOrWhiteSpace(sale.CustomerDisplayName)
+                    ? sale.CustomerDisplayName
+                    : _context.Customers
+                        .AsEnumerable()
+                        .Where(c => c.Id == sale.CustomerId)
+                        .Select(c => c.CustomerName)
+                        .FirstOrDefault() ?? "Walk-in Customer",
+                CustomerPhone = !string.IsNullOrWhiteSpace(sale.CustomerPhone)
+                    ? sale.CustomerPhone
+                    : _context.Customers
+                        .AsEnumerable()
+                        .Where(c => c.Id == sale.CustomerId)
+                        .Select(c => c.ContactNumber)
+                        .FirstOrDefault(),
+                CustomerAddress = !string.IsNullOrWhiteSpace(sale.CustomerAddress)
+                    ? sale.CustomerAddress
+                    : _context.Customers
+                        .AsEnumerable()
+                        .Where(c => c.Id == sale.CustomerId)
+                        .Select(c => c.Address1)
+                        .FirstOrDefault(),
                 PaymentMethod = sale.Payment?.PaymentMethod ?? "Cash",
                 PaidAmount = sale.Payment?.Amount ?? sale.Total,
                 Change = (sale.Payment?.Amount ?? sale.Total) - sale.Total,
@@ -2249,6 +2652,7 @@ namespace GSoftPosNew.Controllers
                          select new SaleItemReceiptVM
                          {
                              SrNo = 0,
+                             PackSize = i.PackSize,
                              ItemName = i.ItemName,
                              PurchasePrice = i.PurchasePrice,
                              UnitPrice = si.UnitPrice,

@@ -64,6 +64,7 @@ namespace GSoftPosNew.Controllers
                     "User",
                     "Sales",
                     "Purchase",
+                    "PurchaseList",
                     "Reports",
                     "Customers",
                     "AddCustomers",

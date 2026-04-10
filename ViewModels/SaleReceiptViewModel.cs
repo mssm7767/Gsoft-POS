@@ -39,6 +39,7 @@ namespace GSoftPosNew.ViewModels
     {
         public int SrNo { get; set; }
         public string ItemName { get; set; }
+        public string? PackSize { get; set; }
         public decimal PurchasePrice { get; set; }
         public decimal UnitPrice { get; set; }
         public decimal Quantity { get; set; }

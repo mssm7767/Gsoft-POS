@@ -38,6 +38,8 @@ namespace GSoftPosNew.Data
         public DbSet<IngredientPurchase> IngredientPurchases { get; set; }
         public DbSet<IngredientPurchaseItem> IngredientPurchaseItems { get; set; }
 
+        public DbSet<TerminalPrinterSetting> TerminalPrinterSettings { get; set; }
+
         public DbSet<StockAdjustment> StockAdjustments { get; set; }
         public DbSet<StockAdjustmentItem> StockAdjustmentItems { get; set; }
         public DbSet<CustomerVanStock> CustomerVanStocks { get; set; }

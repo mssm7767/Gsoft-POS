@@ -45,7 +45,7 @@
         }
 
         body {
-            background: linear-gradient(180deg, #f8fbff 0%, #f4f7fb 50%, #eef8f7 100%);
+            background: linear-gradient(180deg, #fbfffb 0%, #f4fff4 18%, #f0fff0 42%, #ebfbe9 72%, #e3f4e3 100%);
             color: var(--ink);
         }
 
@@ -445,22 +445,81 @@
                 font-weight: 700;
             }
 
+        .purchase-entry-row {
+            background: #F8F8F5;
+            border: 1px solid #D9DDE3;
+            border-radius: 16px;
+            padding: 14px 10px 8px;
+            box-shadow: 0 8px 22px rgba(15,23,42,.05);
+        }
+
+            .purchase-entry-row .form-label-sm,
+            .purchase-entry-row .small-label {
+                color: #111827;
+                font-weight: 800;
+            }
+
+            .purchase-entry-row .form-control {
+                background: #FDFDFB !important;
+                border: 1.6px solid #D9DDE3 !important;
+                color: #1F2937 !important;
+                border-radius: 10px;
+                min-height: 40px;
+                box-shadow: 0 1px 2px rgba(16,28,48,.025) inset;
+                font-weight: 700;
+            }
+
+                .purchase-entry-row .form-control[readonly] {
+                    background: #F6F6F2 !important;
+                    color: #111827 !important;
+                }
+
                 .purchase-entry-row .form-control::placeholder {
-                    color: #7a8aa3;
-                    opacity: .9;
+                    color: #6B7280;
+                    opacity: .95;
+                    font-weight: 600;
                 }
 
                 .purchase-entry-row .form-control:focus {
                     outline: none;
-                    background: #ffffff !important;
-                    border-color: #2563eb !important;
-                    box-shadow: 0 0 0 3px rgba(37,99,235,.13);
+                    background: #FFFEFC !important;
+                    border-color: #94A3B8 !important;
+                    box-shadow: 0 0 0 3px rgba(148,163,184,.16) !important;
                 }
 
         #qtyMessage {
-            color: #51627c !important;
-            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 22px;
+            margin: 0 0 4px 0;
+            padding: 2px 0;
+            color: #334155 !important;
+            font-size: .82rem;
+            font-weight: 800;
+            letter-spacing: .15px;
+            line-height: 1.15;
+            white-space: nowrap;
+            text-shadow: 0 1px 0 rgba(255,255,255,.65);
         }
+
+            #qtyMessage:empty {
+                display: block;
+                min-height: 22px;
+            }
+
+            #qtyMessage::before {
+                content: "▣";
+                font-size: .72rem;
+                color: #2563eb;
+                font-weight: 900;
+                margin-right: 2px;
+            }
+
+            #qtyMessage:empty::before {
+                content: "";
+                margin-right: 0;
+            }
 
         .purchase-items .table {
             background: #fbfcfe;
@@ -468,6 +527,17 @@
             overflow: hidden;
             box-shadow: var(--shadow-soft);
         }
+
+
+        .purchase-entry-row .col-md-1:has(#qtyMessage) {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+            .purchase-entry-row .col-md-1:has(#qtyMessage) .form-label-sm {
+                margin-bottom: 6px;
+            }
 
         .purchase-table thead {
             background: linear-gradient(90deg,#ecfdf5 0%,#e0f2fe 100%);
@@ -1550,7 +1620,7 @@
 
 @section Scripts {
     <script src="~/lib/jquery/dist/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         (function () {

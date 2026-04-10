@@ -32,8 +32,8 @@ namespace GSoftPosNew.Models
         public decimal? UnitPrice { get; set; }
 
         public int? UnitId { get; set; }
-    
 
+        public decimal? ExDis { get; set; }
         public int? LocationId { get; set; }
 
         [Range(0, double.MaxValue, ErrorMessage = "Sale Price must be non-negative")]

@@ -36,47 +36,67 @@ namespace GSoftPosNew.Controllers
         [HttpPost]
         public IActionResult EndDay()
         {
-            var today = DateTime.Today;
-
-            // 🔍 Get latest sequence
-            var sequence = _context.InvoiceSequences
-                .OrderByDescending(x => x.Date)
-                .FirstOrDefault();
-
-            if (sequence == null)
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                return Json(new { success = false, message = "No sequence found." });
-            }
+                // 🔹 Get active (open) business day
+                var activeDay = _context.InvoiceSequences
+                    .OrderByDescending(x => x.Date)
+                    .FirstOrDefault(x => x.IsClosed == false);
 
-            // 🔴 Only allow closing if it's a previous day
-            if (today <= sequence.Date)
-            {
+                if (activeDay == null)
+                {
+                    return Json(new { success = false, message = "No active business day found." });
+                }
+
+                // 🔹 Get sequence for this day
+                var sequence = _context.InvoiceSequences
+                    .FirstOrDefault(x => x.Date == activeDay.Date);
+
+                if (sequence == null)
+                {
+                    return Json(new { success = false, message = "No invoice sequence found for this day." });
+                }
+
+                // 🔴 Already closed check
+                if (sequence.IsClosed)
+                {
+                    return Json(new { success = false, message = "Day is already closed." });
+                }
+
+                // ✅ Close sequence
+                sequence.IsClosed = true;
+
+                // ✅ Close business day
+                activeDay.IsClosed = true;
+
+                _context.SaveChanges();
+
+                // ➕ Create next business day
+                var newDay = new InvoiceSequence
+                {
+                    Date = DateTime.Now,
+                    LastNumber = 0,
+                    IsClosed = false
+                };
+
+
+                _context.InvoiceSequences.Add(newDay);
+                _context.SaveChanges();
+
+                transaction.Commit();
+
+                // ✅ Update session to new date
+                HttpContext.Session.SetString(
+                    "BusinessDate",
+                    newDay.Date.ToString("yyyy-MM-dd")
+                );
+
                 return Json(new
                 {
-                    success = false,
-                    message = "You can only close previous days."
+                    success = true,
+                    message = $"Day {activeDay.Date:MM-dd-yyyy} closed successfully. New day started."
                 });
             }
-
-            // 🔴 Already closed check
-            if (sequence.IsClosed)
-            {
-                return Json(new
-                {
-                    success = false,
-                    message = "Day is already closed."
-                });
-            }
-
-            // ✅ Close day
-            sequence.IsClosed = true;
-            _context.SaveChanges();
-
-            return Json(new
-            {
-                success = true,
-                message = $"Day {sequence.Date:MM-dd-yyyy} closed successfully."
-            });
         }
 
         [HttpPost]

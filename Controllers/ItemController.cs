@@ -23,22 +23,14 @@ namespace GSoftPosNew.Controllers
             _context = context;
         }
 
-        // ============================================================
-        // ✅ INDEX
-        // ============================================================
         public IActionResult Index()
         {
-            return View();  // ✅ ab heavy list yahan se nahi jayegi
+            return View();
         }
 
-
-        // ============================================================
-        // ✅ ADD (GET)
-        // ============================================================
         [HttpGet]
         public IActionResult Add(string itemCode = "")
         {
-
             ViewBag.Code = itemCode;
 
             var vm = new AddItemViewModel
@@ -49,13 +41,12 @@ namespace GSoftPosNew.Controllers
                 UnitList = GetUnitList(),
                 LocationList = GetLocationList(),
                 ExistingItems = _context.Items
-                .AsNoTracking()
-                .Include(x => x.Category)
-                .Include(x => x.Supplier)
-                .OrderByDescending(x => x.Id)
-                .Take(15)
-                .ToList()
-
+                    .AsNoTracking()
+                    .Include(x => x.Category)
+                    .Include(x => x.Supplier)
+                    .OrderByDescending(x => x.Id)
+                    .Take(15)
+                    .ToList()
             };
 
             ViewBag.CategoryList = vm.CategoryList;
@@ -72,9 +63,6 @@ namespace GSoftPosNew.Controllers
             return View(vm);
         }
 
-        // ============================================================
-        // ✅ ADD (POST) NORMAL (reload)
-        // ============================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Add(AddItemViewModel vm, IFormFile? ImageFile, List<string> MultiBarcodes)
@@ -88,33 +76,28 @@ namespace GSoftPosNew.Controllers
             vm.ItemData.ItemCode = (vm.ItemData.ItemCode ?? "").Trim();
             vm.ItemData.ItemName = (vm.ItemData.ItemName ?? "").Trim();
 
-            // ✅ image upload
             if (ImageFile != null && ImageFile.Length > 0)
                 vm.ItemData.ImagePath = await SaveImageAndGetPathAsync(ImageFile);
 
-            // ✅ auto code
             if (string.IsNullOrWhiteSpace(vm.ItemData.ItemCode))
                 vm.ItemData.ItemCode = await GetNextNumericCodeAsync();
 
-            // ✅ duplicate code check (insert)
             bool exists = await _context.Items.AnyAsync(i => i.ItemCode == vm.ItemData.ItemCode);
             if (exists)
             {
                 TempData["Error"] = $"Item Code '{vm.ItemData.ItemCode}' already exists!";
 
-                // reload lists
                 vm.CategoryList = GetCategoryList();
                 vm.SupplierList = GetSupplierList();
                 vm.UnitList = GetUnitList();
                 vm.LocationList = GetLocationList();
                 vm.ExistingItems = _context.Items
-      .AsNoTracking()
-      .Include(x => x.Category)
-      .Include(x => x.Supplier)
-      .OrderByDescending(x => x.Id)
-      .Take(15)
-      .ToList();
-
+                    .AsNoTracking()
+                    .Include(x => x.Category)
+                    .Include(x => x.Supplier)
+                    .OrderByDescending(x => x.Id)
+                    .Take(15)
+                    .ToList();
 
                 ViewBag.CategoryList = vm.CategoryList;
                 ViewBag.SupplierList = vm.SupplierList;
@@ -145,9 +128,6 @@ namespace GSoftPosNew.Controllers
             return RedirectToAction("Add");
         }
 
-        // ============================================================
-        // ✅ ADD AJAX (INSERT + UPDATE)
-        // ============================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddAjax(AddItemViewModel vm, IFormFile? ImageFile, int ExistingItemId)
@@ -155,7 +135,6 @@ namespace GSoftPosNew.Controllers
             if (vm?.ItemData == null)
                 return BadRequest(new { ok = false, error = "Invalid data." });
 
-            // ✅ remove navigation validation
             ModelState.Remove("ItemData.Category");
             ModelState.Remove("ItemData.Supplier");
             ModelState.Remove("ItemData.Unit");
@@ -164,16 +143,12 @@ namespace GSoftPosNew.Controllers
             vm.ItemData.ItemCode = (vm.ItemData.ItemCode ?? "").Trim();
             vm.ItemData.ItemName = (vm.ItemData.ItemName ?? "").Trim();
 
-            // =========================
-            // ✅ UPDATE MODE
-            // =========================
             if (vm.ItemData.Id > 0)
             {
                 var tracked = await _context.Items.FirstOrDefaultAsync(x => x.Id == vm.ItemData.Id);
                 if (tracked == null)
                     return NotFound(new { ok = false, error = "Item not found." });
 
-                // ✅ IMPORTANT: code duplicate check in update mode (ignore same id)
                 if (!string.IsNullOrWhiteSpace(vm.ItemData.ItemCode))
                 {
                     bool codeDup = await _context.Items.AnyAsync(x => x.ItemCode == vm.ItemData.ItemCode && x.Id != tracked.Id);
@@ -181,7 +156,6 @@ namespace GSoftPosNew.Controllers
                         return BadRequest(new { ok = false, error = $"Item Code '{vm.ItemData.ItemCode}' already exists!" });
                 }
 
-                // ✅ image
                 if (ImageFile != null && ImageFile.Length > 0)
                 {
                     DeleteOldImageIfAny(tracked.ImagePath);
@@ -196,7 +170,6 @@ namespace GSoftPosNew.Controllers
                 _context.Entry(tracked).CurrentValues.SetValues(vm.ItemData);
                 await _context.SaveChangesAsync();
 
-                // ✅ recipe update
                 try
                 {
                     var oldRows = _context.ItemIngredients.Where(x => x.ItemId == tracked.Id);
@@ -217,9 +190,6 @@ namespace GSoftPosNew.Controllers
                 });
             }
 
-            // =========================
-            // ✅ INSERT MODE
-            // =========================
             if (string.IsNullOrWhiteSpace(vm.ItemData.ItemCode))
                 vm.ItemData.ItemCode = await GetNextNumericCodeAsync();
 
@@ -249,9 +219,6 @@ namespace GSoftPosNew.Controllers
             });
         }
 
-        // ============================================================
-        // ✅ GET ITEM BY CODE (for barcode scanning load)
-        // ============================================================
         [HttpGet]
         public IActionResult GetItemByCode(string code)
         {
@@ -289,9 +256,6 @@ namespace GSoftPosNew.Controllers
             return Json(new { ok = true, exists = true, item = it });
         }
 
-        // ============================================================
-        // ✅ INLINE EDIT (STOCK TABLE)
-        // ============================================================
         [HttpGet]
         public IActionResult GetItemForEditAjax(int id)
         {
@@ -307,18 +271,14 @@ namespace GSoftPosNew.Controllers
                     referenceCode = x.ReferenceCode,
                     itemName = x.ItemName,
                     flavour = x.Flavour,
-
                     categoryId = x.CategoryId,
                     supplierId = x.SupplierId,
                     unitId = x.UnitId,
                     locationId = x.LocationId,
-
                     salePrice = x.SalePrice,
                     purchasePrice = x.PurchasePrice,
                     markupPercentage = x.MarkupPercentage,
-
                     quantity = x.Quantity,
-
                     packSize = x.PackSize,
                     unitPrice = x.UnitPrice,
                     packPrice = x.PackPrice
@@ -330,9 +290,6 @@ namespace GSoftPosNew.Controllers
             return Json(new { ok = true, item = it });
         }
 
-        // ============================================================
-        // ✅ DELETE AJAX (FAST + FK SAFE)
-        // ============================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteAjax(int id)
@@ -362,9 +319,6 @@ namespace GSoftPosNew.Controllers
             return Json(new { ok = true, message = "Item deleted." });
         }
 
-        // ============================================================
-        // ✅ STOCK SEARCH AJAX
-        // ============================================================
         [HttpGet]
         public async Task<IActionResult> SearchStockAjax(
             string search = "",
@@ -444,23 +398,14 @@ namespace GSoftPosNew.Controllers
             return Json(data);
         }
 
-        // ============================================================
-        // ✅ NEXT ITEM CODE
-        // ============================================================
         [HttpGet]
         public IActionResult GetNextCode()
         {
             int maxId = _context.Items.Max(x => (int?)x.Id) ?? 0;
             int next = maxId + 1;
-
-            // 6 digit serial
             return Content(next.ToString("D6"));
         }
 
-
-        // ============================================================
-        // ✅ CHECK NAME / CODE (FIXED for EDIT mode)
-        // ============================================================
         [HttpGet]
         public JsonResult CheckItemCode(string itemCode, int id = 0)
         {
@@ -479,14 +424,10 @@ namespace GSoftPosNew.Controllers
             if (string.IsNullOrWhiteSpace(itemName))
                 return Json(false);
 
-            // ✅ Ignore same item during update
             bool exists = _context.Items.Any(x => x.ItemName == itemName && x.Id != id);
             return Json(exists);
         }
 
-        // ============================================================
-        // ✅ SAVE MULTI BARCODES AJAX
-        // ============================================================
         public class SaveMultiBarcodesDto
         {
             public int ItemId { get; set; }
@@ -562,9 +503,6 @@ namespace GSoftPosNew.Controllers
             return Json(new { ok = true, count = toInsert.Count, message = "Multi barcodes saved." });
         }
 
-        // ============================================================
-        // ✅ EDIT (GET/POST) (legacy optional)
-        // ============================================================
         [HttpGet]
         public IActionResult Edit(int id)
         {
@@ -579,13 +517,12 @@ namespace GSoftPosNew.Controllers
                 UnitList = GetUnitList(),
                 LocationList = GetLocationList(),
                 ExistingItems = _context.Items
-    .AsNoTracking()
-    .Include(x => x.Category)
-    .Include(x => x.Supplier)
-    .OrderByDescending(x => x.Id)
-    .Take(15)
-    .ToList()
-
+                    .AsNoTracking()
+                    .Include(x => x.Category)
+                    .Include(x => x.Supplier)
+                    .OrderByDescending(x => x.Id)
+                    .Take(15)
+                    .ToList()
             };
 
             ViewBag.CategoryList = vm.CategoryList;
@@ -631,9 +568,6 @@ namespace GSoftPosNew.Controllers
             return RedirectToAction("Add");
         }
 
-        // ============================================================
-        // ✅ NORMAL DELETE (legacy)
-        // ============================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Delete(int id)
@@ -648,9 +582,6 @@ namespace GSoftPosNew.Controllers
             return RedirectToAction("Index");
         }
 
-        // ============================================================
-        // ✅ HELPERS
-        // ============================================================
         private List<SelectListItem> GetCategoryList()
         {
             return _context.Categories
@@ -702,11 +633,8 @@ namespace GSoftPosNew.Controllers
                 .Where(n => n > 0);
 
             long max = nums.Any() ? nums.Max() : 0;
-
-            // ✅ 00001, 00002 ... 00010 (5 digits)
             return (max + 1).ToString("D5");
         }
-
 
         private async Task<string> SaveImageAndGetPathAsync(IFormFile file)
         {
@@ -809,7 +737,7 @@ namespace GSoftPosNew.Controllers
                     x.Quantity,
                     x.LowStockThreshold,
                     x.ExpiryDate,
-                    Barcode = (string)null // ✅ agar aapke model me Barcode field hai to yahan x.Barcode likh do
+                    Barcode = (string)null
                 })
                 .AsQueryable();
 
@@ -879,7 +807,6 @@ namespace GSoftPosNew.Controllers
             });
         }
 
-
         private void SaveRecipeInternal(AddItemViewModel vm)
         {
             if (vm?.RecipeIngredients == null || !vm.RecipeIngredients.Any()) return;
@@ -903,6 +830,4 @@ namespace GSoftPosNew.Controllers
             }
         }
     }
-
-
 }

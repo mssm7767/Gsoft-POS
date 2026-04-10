@@ -33,16 +33,15 @@ namespace GSoftPosNew.Controllers
         [Authorize]
         public IActionResult PostLogin()
         {
-            return View();
+            return RedirectToAction("Index", "Home");
         }
+
         public IActionResult Index(DateTime? fromDate, DateTime? toDate)
         {
             var expiry = _license.GetExpiryDate();
             var daysLeft = (expiry - DateTime.Today).Days;
             ViewBag.DaysLeft = daysLeft;
 
-
-            // Default to today's date range if not provided
             if (!fromDate.HasValue && !toDate.HasValue)
             {
                 fromDate = DateTime.Today;
@@ -50,7 +49,6 @@ namespace GSoftPosNew.Controllers
             }
             else
             {
-                // Ensure proper range (if user selects only one side)
                 fromDate ??= DateTime.MinValue;
                 toDate ??= DateTime.MaxValue;
             }
@@ -58,7 +56,6 @@ namespace GSoftPosNew.Controllers
             ViewBag.FromDate = fromDate.Value.ToString("yyyy-MM-dd");
             ViewBag.ToDate = toDate.Value.ToString("yyyy-MM-dd");
 
-            // ---------------- Totals ----------------
             var totalItems = _context.Items.Count();
             var totalStockValue = _context.Items.Sum(i => (decimal?)i.Quantity * i.PurchasePrice) ?? 0;
 
@@ -70,12 +67,29 @@ namespace GSoftPosNew.Controllers
                 .Where(s => s.Sale.SaleType == "Sale" && s.Sale.SaleDate.Date >= fromDate && s.Sale.SaleDate.Date <= toDate)
                 .Sum(s => (decimal?)s.Quantity * s.UnitPrice) ?? 0;
 
+            //var totalCostOfSales = (from si in _context.SaleItems
+            //                        where si.Sale.SaleType == "Sale" && si.Sale.SaleDate.Date >= fromDate && si.Sale.SaleDate.Date <= toDate
+            //                        join i in _context.Items on si.ItemId equals i.Id
+            //                        select (decimal?)si.Quantity * i.PurchasePrice).Sum() ?? 0;
+
             var totalCostOfSales = (from si in _context.SaleItems
-                                    where si.Sale.SaleType == "Sale" && si.Sale.SaleDate.Date >= fromDate && si.Sale.SaleDate.Date <= toDate
+                                    where si.Sale.SaleType == "Sale"
+                                          && si.Sale.SaleDate.Date >= fromDate
+                                          && si.Sale.SaleDate.Date <= toDate
                                     join i in _context.Items on si.ItemId equals i.Id
-                                    select (decimal?)si.Quantity * i.PurchasePrice).Sum() ?? 0;
+                                    select (decimal?)si.Quantity *
+                                           (i.PackSize != null && i.PackSize != ""
+                                               ? i.PurchasePrice / Convert.ToDecimal(i.PackSize)
+                                               : i.PurchasePrice)
+                       ).Sum() ?? 0;
+
+            var totalSalesDiscount = _context.Sales.Where(s => s.SaleDate.Date >= fromDate && s.SaleDate.Date <= toDate && s.SaleType == "Sale")
+                .Sum(s => s.Discount);
 
             var totalProfit = totalSales - totalCostOfSales;
+
+            totalProfit = totalProfit - totalSalesDiscount;
+            totalSales = totalSales - totalSalesDiscount;
 
             var totalRevenuesOrPayments = _context.Payments
                 .Where(p => p.Sale.SaleType == "Sale" && p.PaymentDate >= fromDate && p.PaymentDate <= toDate)
@@ -104,7 +118,6 @@ namespace GSoftPosNew.Controllers
                 })
                 .ToList();
 
-            // ---------------- Charts ----------------
             var monthlySales = _context.SaleItems
                 .Where(s => s.Sale.SaleType == "Sale" && s.Sale.SaleDate.Date >= fromDate && s.Sale.SaleDate.Date <= toDate)
                 .GroupBy(s => s.Sale.SaleDate.Month)
@@ -121,7 +134,6 @@ namespace GSoftPosNew.Controllers
 
             var salesData = monthlySales.Select(x => x.Total).ToList();
 
-            // Top 5 products
             var topProducts = _context.SaleItems
                 .Where(s => s.Sale.SaleType == "Sale" && s.Sale.SaleDate.Date >= fromDate && s.Sale.SaleDate.Date <= toDate)
                 .GroupBy(s => s.Item.ItemName)
@@ -133,7 +145,6 @@ namespace GSoftPosNew.Controllers
             var topProductNames = topProducts.Select(x => x.Product).ToList();
             var topProductSales = topProducts.Select(x => x.Quantity).ToList();
 
-            // ---------------- Model ----------------
             var model = new DashboardViewModel
             {
                 TotalItems = totalItems,
@@ -148,7 +159,7 @@ namespace GSoftPosNew.Controllers
                 SalesMonths = salesMonths,
                 SalesData = salesData,
                 TopProducts = topProductNames,
-                TopProductSales = topProductSales   // ✅ ab types match
+                TopProductSales = topProductSales
             };
 
             return View(model);

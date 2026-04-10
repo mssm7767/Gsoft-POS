@@ -694,7 +694,10 @@
                     </a>
                     <ul class="submenu">
                         <li><a asp-controller="Purchase" asp-action="Create"><i class="fa fa-plus-circle"></i> New Purchase</a></li>
-                        <li><a asp-controller="Purchase" asp-action="Index"><i class="fa fa-list"></i> Purchase List</a></li>
+                        @if (permissions.TryGetValue("PurchaseList", out var canAccessPurchaseList) && canAccessPurchaseList)
+                        {
+                            <li><a asp-controller="Purchase" asp-action="Index"><i class="fa fa-list"></i> Purchase List</a></li>
+                        }
                         <li><a asp-controller="Purchase" asp-action="IngredientIndex"><i class="fa fa-list"></i> Ingredient Purchase List</a></li>
                     </ul>
                 </li>
@@ -734,9 +737,14 @@
                         @if (permissions.TryGetValue("SaleList", out var canAccessSaleList) && canAccessSaleList)
 
                         {
-
                             <li><a asp-controller="Sales" asp-action="Index"><i class="fa fa-list"></i> Sales List</a></li>
 
+                        }
+                        <li>
+                            <a asp-controller="Reports" asp-action="ItemLedger">
+                                <i class="fa fa-book"></i> Item Ledger Report
+                            </a>
+                        </li>
                         }
 
                         @if (permissions.TryGetValue("SaleReturn", out var canAccessSaleReturn) && canAccessSaleReturn)
@@ -747,7 +755,6 @@
                                     <i class="fa fa-rotate-left"></i> Sales Return
                                 </a>
                             </li>
-
                         }
                     </ul>
                 </li>
@@ -962,11 +969,33 @@
 
             @if (permissions.TryGetValue("Settings", out var canAccessSettings) && canAccessSettings)
             {
-                <li>
-                    <a asp-controller="Settings" asp-action="Index"><i class="fa fa-cogs"></i> <span>Settings</span></a>
+                <li class="has-sub">
+                    <a href="#">
+                        <i class="fa fa-cogs"></i> <span>Settings</span>
+                        <i class="arrow-icon">
+                            <svg class="chevron-svg" width="15" height="15" viewBox="0 0 16 16" fill="none">
+                                <path d="M5 7L8 10L11 7"
+                                      stroke="currentColor"
+                                      stroke-width="1.7"
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round" />
+                            </svg>
+                        </i>
+                    </a>
+                    <ul class="submenu">
+                        <li>
+                            <a asp-controller="Settings" asp-action="Index">
+                                <i class="fa fa-cogs"></i> General Settings
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-controller="StationInformation" asp-action="Index">
+                                <i class="fa fa-desktop"></i> Station Information
+                            </a>
+                        </li>
+                    </ul>
                 </li>
             }
-
             @if (permissions.TryGetValue("Database", out var canAccessDatabase) && canAccessDatabase)
             {
                 <li class="has-sub">

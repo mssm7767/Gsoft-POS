@@ -43,21 +43,11 @@ namespace GSoftPosNew.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            //DateTime expiryDate = Convert.ToDateTime(_config["AppSettings:LicenseDate"]);
-
-            //if (LicenseHelper.IsExpired(expiryDate))
-            //{
-            //    ViewBag.Error = "Your POS license has expired. Please contact support.";
-            //    return View(); // stop login
-            //}
-
-            // Find user by username
             var user = await _context.Users
                 .FirstOrDefaultAsync(u => u.Username == model.Username);
 
             if (user != null)
             {
-                // Hash the entered password
                 var result = _passwordHasher.VerifyPassword(model.Password, user.PasswordHash);
 
                 if (result)
@@ -66,38 +56,73 @@ namespace GSoftPosNew.Controllers
                     {
                         new Claim(ClaimTypes.Name, user.FullName ?? string.Empty),
                         new Claim(ClaimTypes.Role, user.Role),
-                        new Claim("CustomerId", user.CustomerId?.ToString() ?? "0") // <-- Add this
+                        new Claim("CustomerId", user.CustomerId?.ToString() ?? "0")
                     };
-
 
                     var claimsIdentity = new ClaimsIdentity(
                         claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
                     var authProperties = new AuthenticationProperties
                     {
-                        IsPersistent = true, // remember across sessions
-                        ExpiresUtc = DateTimeOffset.UtcNow.AddHours(2) // optional expiry
+                        IsPersistent = true,
+                        //ExpiresUtc = DateTimeOffset.UtcNow.AddHours(2)
                     };
 
-                    // ✅ Sign in and set cookie
                     await HttpContext.SignInAsync(
                         CookieAuthenticationDefaults.AuthenticationScheme,
                         new ClaimsPrincipal(claimsIdentity),
                         authProperties);
 
-                    // Set TempData flag to show SweetAlert
+                    // ================================
+                    // ✅ 🔹 ADD THIS BLOCK
+                    // ================================
+
+                    var today = DateTime.Today;
+
+                    // 🔹 Get last business day
+                    var lastDay = await _context.InvoiceSequences
+                        .OrderByDescending(x => x.Date)
+                        .FirstOrDefaultAsync();
+
+                    if (lastDay == null)
+                    {
+                        ModelState.AddModelError("", "No business day found. Contact admin.");
+                        return View(model);
+                    }
+
+                    // 🔴 Show warning if previous day not closed
+                    if (lastDay.Date < today && !lastDay.IsClosed)
+                    {
+                        TempData["Warning"] = $"Previous day ({lastDay.Date:MM-dd-yyyy}) is not closed. Please close it first.";
+                    }
+
+                    // 🔹 Get active (open) day
+                    var activeDay = await _context.InvoiceSequences
+                        .FirstOrDefaultAsync(x => x.IsClosed == false);
+
+                    if (activeDay == null)
+                    {
+                        ModelState.AddModelError("", "No active business day found.");
+                        return View(model);
+                    }
+
+                    // ✅ SET SESSION HERE
+                    HttpContext.Session.SetString(
+                        "BusinessDate",
+                        today.Date.ToString("yyyy-MM-dd")
+                    );
+
+                    // ================================
+
                     TempData["ShowBackupPrompt"] = true;
 
-                    // ✅ Login success → redirect to Home
                     return RedirectToAction("PostLogin", "Home");
                 }
             }
 
-            // If we reach here → login failed
             ModelState.AddModelError(string.Empty, "Invalid username or password");
             return View(model);
         }
-
         private string ComputeSha256Hash(string rawData)
         {
             using (SHA256 sha256Hash = SHA256.Create())

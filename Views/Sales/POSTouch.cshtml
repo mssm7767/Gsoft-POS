@@ -12,17 +12,17 @@
 @Html.AntiForgeryToken()
 
 <!-- EXTERNAL CSS / JS -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="~/vendor/fontawesome/css/all.min.css" />
+<link href="~/vendor/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
+<script src="~/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 
-<!-- Add jQuery first -->
-<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 
-<!-- Then Select2 -->
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<link href="~/lib/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
 
+<script src="~/lib/sweetalert2/sweetalert2.min.js"></script>
+
+<script src="~/vendor/select2/js/select2.min.js"></script>
 <style>
     :root {
         --bg: #f3f4f6; /* light neutral */
@@ -104,10 +104,15 @@
     }
 
         #posApp.is-fullscreen {
+            position: fixed;
+            inset: 0;
+            z-index: 2147483000;
             width: 100vw;
             height: 100vh;
+            margin: 0;
             padding: 8px 10px;
             box-sizing: border-box;
+            overflow: hidden;
             background: radial-gradient(circle at top left,#e5f2ff 0,#f6f8fb 40%,#edf2f7 100%);
         }
 
@@ -115,6 +120,38 @@
             #posApp.is-fullscreen .left-col > .card {
                 border-radius: 16px;
             }
+
+    body.pos-true-fullscreen {
+        overflow: hidden !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+        body.pos-true-fullscreen .sidebar,
+        body.pos-true-fullscreen .main-sidebar,
+        body.pos-true-fullscreen .app-sidebar,
+        body.pos-true-fullscreen .sidebar-wrapper,
+        body.pos-true-fullscreen .left-sidebar,
+        body.pos-true-fullscreen .right-sidebar,
+        body.pos-true-fullscreen header:not(#posApp header),
+        body.pos-true-fullscreen nav:not(#posApp nav),
+        body.pos-true-fullscreen footer,
+        body.pos-true-fullscreen .content-header,
+        body.pos-true-fullscreen .page-header,
+        body.pos-true-fullscreen .breadcrumb-wrap {
+            display: none !important;
+        }
+
+        body.pos-true-fullscreen .content-wrapper,
+        body.pos-true-fullscreen .page-content,
+        body.pos-true-fullscreen .main-content,
+        body.pos-true-fullscreen .container,
+        body.pos-true-fullscreen .container-fluid {
+            margin: 0 !important;
+            padding: 0 !important;
+            max-width: 100% !important;
+            width: 100% !important;
+        }
 
     .left-col {
         display: grid;
@@ -1304,18 +1341,15 @@
     }
 
     @@keyframes fadeIn {
-        from
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
 
-    {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     .floating-card .form-control {
@@ -1410,7 +1444,7 @@
                             }
                         }
                     </select>
-                    <button id="addCustomerBtn" class="icon-btn" title="Add/Quick customer">
+                    <button type="button" id="addCustomerBtn" class="icon-btn" title="Add/Quick customer" onclick="openQuickCustomerModal(); return false;">
                         <i class="fa-solid fa-user-plus"></i>
                     </button>
 
@@ -1654,89 +1688,232 @@
         </div>
     </div>
 
-    
+
 </div>
 
 <!-- Floating Customer Form -->
 <div id="floatingCustomerForm" class="floating-modal">
     <div class="floating-card">
-        <h5>Add Customer</h5>
-        <form asp-action="CreateCustomerFromPOSTouch" asp-controller="Customer" id="customerForm">
-            <input type="text" name="CustomerName" class="form-control" placeholder="Full Name" id="fullName" required>
-            <input type="text" name="ContactNumber" class="form-control" placeholder="Contact Number" id="contactNumber" required>
-            <textarea name="Address1" class="form-control" placeholder="Address" id="address" rows="2"></textarea>
+        <h5>Quick Customer</h5>
+
+        <form id="customerForm" onsubmit="return submitQuickCustomer(event);">
+            <input type="text" class="form-control" placeholder="Customer Name" id="fullName" required>
+            <input type="text" class="form-control" placeholder="Contact Number (Optional)" id="contactNumber">
+            <textarea class="form-control" placeholder="Address (Optional)" id="address" rows="2"></textarea>
+
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" id="closeFloatingForm">Cancel</button>
-                <button type="submit" class="btn btn-primary">Add Customer</button>
+                <button type="button" class="btn btn-secondary" id="closeFloatingForm" onclick="closeQuickCustomerModal(); return false;">Cancel</button>
+                <button type="submit" class="btn btn-primary">Use Customer</button>
             </div>
         </form>
     </div>
 </div>
 
+<input type="hidden" id="tempCustomerName" />
+<input type="hidden" id="tempCustomerPhone" />
+<input type="hidden" id="tempCustomerAddress" />
 
 <script>
-    $(document).ready(function() {
+    $(function () {
         $('#customer').select2({
             placeholder: "Customer / Phone",
             allowClear: true,
             width: 'resolve',
-            matcher: function(params, data) {
-                if ($.trim(params.term) === '') {
-                    return data;
-                }
+            matcher: function (params, data) {
+                if ($.trim(params.term) === '') return data;
 
-                // Convert to lowercase
-                const term = params.term.toLowerCase();
-                const text = data.text.toLowerCase();
-                const phone = $(data.element).data('phone')?.toLowerCase() || '';
+                const term = (params.term || '').toLowerCase();
+                const text = (data.text || '').toLowerCase();
+                const phone = ($(data.element).data('phone') || '').toString().toLowerCase();
 
-                // Match either name or phone
-                if (text.includes(term) || phone.includes(term)) {
-                    return data;
-                }
-
-                // Do not show option
-                return null;
+                return (text.includes(term) || phone.includes(term)) ? data : null;
             }
         });
     });
-</script>
-<script>
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const addCustomerBtn = document.getElementById('addCustomerBtn');
-        const floatingForm = document.getElementById('floatingCustomerForm');
-        const closeBtn = document.getElementById('closeFloatingForm');
+    function getCustomerElements() {
+        return {
+            floatingForm: document.getElementById('floatingCustomerForm'),
+            customerForm: document.getElementById('customerForm'),
+            customerSelect: document.getElementById('customer'),
+            fullName: document.getElementById('fullName'),
+            contactNumber: document.getElementById('contactNumber'),
+            address: document.getElementById('address'),
+            tempCustomerName: document.getElementById('tempCustomerName'),
+            tempCustomerPhone: document.getElementById('tempCustomerPhone'),
+            tempCustomerAddress: document.getElementById('tempCustomerAddress')
+        };
+    }
 
-        addCustomerBtn.addEventListener('click', () => {
-            floatingForm.style.display = 'flex'; // show overlay
-        });
+    function showTempCustomerInBox(name, phone) {
+        const { customerSelect } = getCustomerElements();
+        if (!customerSelect) return;
 
-        closeBtn.addEventListener('click', () => {
-            floatingForm.style.display = 'none'; // hide overlay
-        });
+        const displayText = phone ? `${name} ${phone}` : name;
+        const tempValue = '__temp_customer__';
 
-        // Optional: close when clicking outside the card
-        floatingForm.addEventListener('click', (e) => {
-            if (e.target === floatingForm) {
-                floatingForm.style.display = 'none';
+        const oldTemp = customerSelect.querySelector(`option[value="${tempValue}"]`);
+        if (oldTemp) oldTemp.remove();
+
+        const option = new Option(displayText, tempValue, true, true);
+        option.setAttribute('data-phone', phone || '');
+        customerSelect.appendChild(option);
+
+        if (window.jQuery && $(customerSelect).hasClass('select2-hidden-accessible')) {
+            $(customerSelect).val(tempValue).trigger('change');
+        } else {
+            customerSelect.value = tempValue;
+        }
+    }
+
+    function removeTempCustomerFromBox() {
+        const { customerSelect } = getCustomerElements();
+        if (!customerSelect) return;
+
+        const tempValue = '__temp_customer__';
+        const oldTemp = customerSelect.querySelector(`option[value="${tempValue}"]`);
+        if (oldTemp) oldTemp.remove();
+
+        if (window.jQuery && $(customerSelect).hasClass('select2-hidden-accessible')) {
+            $(customerSelect).val(null).trigger('change');
+        } else {
+            customerSelect.value = '';
+        }
+    }
+
+    function openQuickCustomerModal() {
+        const { floatingForm, fullName } = getCustomerElements();
+        if (!floatingForm) return false;
+
+        floatingForm.style.display = 'flex';
+
+        setTimeout(function () {
+            if (fullName) fullName.focus();
+        }, 100);
+
+        return false;
+    }
+
+    function closeQuickCustomerModal() {
+        const { floatingForm } = getCustomerElements();
+        if (floatingForm) {
+            floatingForm.style.display = 'none';
+        }
+        return false;
+    }
+
+    function clearTempCustomer() {
+        const {
+            fullName, contactNumber, address,
+            tempCustomerName, tempCustomerPhone, tempCustomerAddress
+        } = getCustomerElements();
+
+        if (tempCustomerName) tempCustomerName.value = '';
+        if (tempCustomerPhone) tempCustomerPhone.value = '';
+        if (tempCustomerAddress) tempCustomerAddress.value = '';
+
+        if (fullName) fullName.value = '';
+        if (contactNumber) contactNumber.value = '';
+        if (address) address.value = '';
+
+        removeTempCustomerFromBox();
+    }
+
+    function getCurrentCustomerData() {
+        const { customerSelect, tempCustomerName, tempCustomerPhone, tempCustomerAddress } = getCustomerElements();
+
+        return {
+            customerId: (customerSelect && customerSelect.value !== '__temp_customer__')
+                ? (customerSelect.value || '')
+                : '',
+            customerDisplayName: tempCustomerName?.value?.trim() || '',
+            customerPhone: tempCustomerPhone?.value?.trim() || '',
+            customerAddress: tempCustomerAddress?.value?.trim() || ''
+        };
+    }
+
+    function submitQuickCustomer(event) {
+        if (event) event.preventDefault();
+
+        const {
+            floatingForm, fullName, contactNumber, address,
+            tempCustomerName, tempCustomerPhone, tempCustomerAddress
+        } = getCustomerElements();
+
+        const name = (fullName?.value || '').trim();
+        const phone = (contactNumber?.value || '').trim();
+        const addr = (address?.value || '').trim();
+
+        if (!name) {
+            if (window.Swal) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Required',
+                    text: 'Customer name is required'
+                });
+            } else {
+                alert('Customer name is required');
             }
-        });
+            if (fullName) fullName.focus();
+            return false;
+        }
 
-        // Submit event
-        document.getElementById('customerForm').addEventListener('submit', function(e) {
-            // e.preventDefault();
-            // // handle your form submission here
-            // alert('Customer added: ' + document.getElementById('fullName').value);
-            floatingForm.style.display = 'none'; // hide after submit
-        });
-    });
+        if (tempCustomerName) tempCustomerName.value = name;
+        if (tempCustomerPhone) tempCustomerPhone.value = phone;
+        if (tempCustomerAddress) tempCustomerAddress.value = addr;
+
+        showTempCustomerInBox(name, phone);
+
+        if (floatingForm) floatingForm.style.display = 'none';
+        if (fullName) fullName.value = '';
+        if (contactNumber) contactNumber.value = '';
+        if (address) address.value = '';
+
+        if (window.Swal) {
+            Swal.fire({
+                toast: true,
+                icon: 'success',
+                title: 'Temporary customer selected',
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 1200
+            });
+        }
+
+        return false;
+    }
+
+    (function bindQuickCustomerHandlers() {
+        const { floatingForm, customerSelect } = getCustomerElements();
+
+        if (floatingForm) {
+            floatingForm.addEventListener('click', function (e) {
+                if (e.target === floatingForm) {
+                    closeQuickCustomerModal();
+                }
+            });
+        }
+
+        if (customerSelect) {
+            customerSelect.addEventListener('change', function () {
+                const selectedValue = this.value || '';
+                if (selectedValue !== '' && selectedValue !== '__temp_customer__') {
+                    const { tempCustomerName, tempCustomerPhone, tempCustomerAddress } = getCustomerElements();
+                    if (tempCustomerName) tempCustomerName.value = '';
+                    if (tempCustomerPhone) tempCustomerPhone.value = '';
+                    if (tempCustomerAddress) tempCustomerAddress.value = '';
+                }
+            });
+        }
+    })();
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="~/lib/sweetalert2/sweetalert2.min.js"></script>
 <script>
     (function () {
         "use strict";
+
+        const TERMINAL_NAME = localStorage.getItem("gsoft_station_name") || "SERVER";
 
         /* ========== SERVER DATA ========== */
         const items = @Html.Raw(itemsJson);
@@ -2327,6 +2504,8 @@
             syncCartRef(); renderCart(); recalc();
         });
 
+        clearTempCustomer();
+
         /* ========== CART CLICK HANDLERS (DECIMAL) ========== */
         cartBody?.addEventListener('click', e => {
             const row = e.target.closest('.cart-row'); if (!row) return;
@@ -2385,12 +2564,14 @@
         fsBtn?.addEventListener('click', async () => {
             try {
                 if (!document.fullscreenElement) {
-                    await posApp.requestFullscreen();
+                    await document.documentElement.requestFullscreen();
+                    document.body.classList.add('pos-true-fullscreen');
                     posApp.classList.add('is-fullscreen');
                     fsBtn.innerHTML = '<i class="fa-solid fa-down-left-and-up-right-to-center"></i>';
                     fsBtn.title = 'Exit Full Screen';
                 } else {
                     await document.exitFullscreen();
+                    document.body.classList.remove('pos-true-fullscreen');
                     posApp.classList.remove('is-fullscreen');
                     fsBtn.innerHTML = '<i class="fa-solid fa-up-right-and-down-left-from-center"></i>';
                     fsBtn.title = 'Full Screen';
@@ -2400,6 +2581,7 @@
 
         document.addEventListener('fullscreenchange', () => {
             if (!document.fullscreenElement) {
+                document.body.classList.remove('pos-true-fullscreen');
                 posApp?.classList.remove('is-fullscreen');
                 if (fsBtn) {
                     fsBtn.innerHTML = '<i class="fa-solid fa-up-right-and-down-left-from-center"></i>';
@@ -2409,30 +2591,84 @@
         });
 
         /* ========== INVOICE NUMBERS ========== */
-        let invoiceCounter = @((invoiceNo ?? 0));
-        function generateInvoiceNumber() {
-            invoiceCounter = (parseInt(invoiceCounter) || 0) + 1;
-            const counterStr = String(invoiceCounter).padStart(4, '0');
+            /* ========== INVOICE NUMBERS ========== */
+    let invoiceCounter = @((invoiceNo ?? 0));
+    let currentInvoiceNo = '';
+
+    function generateInvoiceNumber() {
+        invoiceCounter = (parseInt(invoiceCounter) || 0) + 1;
+        const counterStr = String(invoiceCounter).padStart(4, '0');
+        fetch('/Sales/GetNextInvoice')
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Day Not Closed',
+                        html: `
+                            ${data.message}<br><br>
+                            <a href="/Settings/Index"
+                               style="color:#3085d6; text-decoration:underline;">
+                               Go to Settings & Close the day
+                            </a>
+                        `
+                    });
+                    return null;
+                }
+
+                
+            })
+            .catch(err => {
+                console.error(err);
+                return null;
+            });
+
             return `${counterStr}`;
-        }
-        if (orderNoEl) orderNoEl.innerText = generateInvoiceNumber();
+        
+    }
+
+    function applyInvoiceNumber(no) {
+        currentInvoiceNo = no || '';
+        if (orderNoEl) orderNoEl.innerText = currentInvoiceNo;
+    }
+
+    function assignFreshInvoice() {
+        applyInvoiceNumber(generateInvoiceNumber());
+    }
+
+    function hasCurrentOrderData() {
+        return cart.length > 0
+            || (parseFloat(tCash?.value || '0') || 0) > 0
+            || (parseFloat(tDisc?.value || '0') || 0) > 0
+            || (parseFloat(tTax?.value || '0') || 0) > 0
+            || ((tableNo?.value || '').trim() !== '')
+            || ((customer?.value || '').trim() !== '')
+            || ((waiterSel?.value || '').trim() !== '');
+    }
+
+    assignFreshInvoice();
 
         /* ========== CLEAR SCREEN HELPER ========== */
-        function clearScreenForNewOrder() {
-            cart = []; syncCartRef(); renderCart();
-            if (tGrand) tGrand.textContent = '0.00';
-            if (tChange) tChange.textContent = '0.00';
-            if (tTax) tTax.value = '0';
-            if (tDisc) tDisc.value = '0';
-            if (tCash) tCash.value = '0';
-            if (itemSearchTop) itemSearchTop.value = '';
-            if (itemSearchBottom) itemSearchBottom.value = '';
-            if (tableNo) tableNo.value = '';
-            if (tableId) tableId.value = '';
-            if (customer) customer.value = '';
-            if (waiterSel) waiterSel.value = '';
-            orderActive = false;
-        }
+         function clearScreenForNewOrder() {
+        cart = [];
+        syncCartRef();
+        renderCart();
+
+        if (tGrand) tGrand.textContent = '0.00';
+        if (tChange) tChange.textContent = '0.00';
+        if (tTax) tTax.value = '0';
+        if (tDisc) tDisc.value = '0';
+        if (tCash) tCash.value = '0';
+        if (itemSearchTop) itemSearchTop.value = '';
+        if (itemSearchBottom) itemSearchBottom.value = '';
+        if (tableNo) tableNo.value = '';
+        if (tableId) tableId.value = '';
+
+        clearTempCustomer();
+
+        if (waiterSel) waiterSel.value = '';
+        orderActive = false;
+    }
 
         /* ========== NEW ORDER BUTTON ========== */
         if (newOrderBtn) {
@@ -2441,14 +2677,47 @@
             newOrderBtn.addEventListener('mouseleave', () => newOrderBtn.classList.remove('is-pressed'));
         }
 
-        newOrderBtn?.addEventListener('click', () => {
-            clearScreenForNewOrder();
-            if (orderNoEl) orderNoEl.innerText = generateInvoiceNumber();
-            orderActive = true;
-            toast('New order ready', 'success');
-            flashCenter('New order ready', 400);
-            itemSearchTop?.focus();
-        });
+      newOrderBtn?.addEventListener('click', () => {
+        const hadData = hasCurrentOrderData();
+
+         fetch('/Sales/GetNextInvoice')
+             .then(res => res.json())
+             .then(data => {
+                 if (!data.success) {
+                     Swal.fire({
+                         icon: 'warning',
+                         title: 'Day Not Closed',
+                         html: `
+                             ${data.message}<br><br>
+                             <a href="/Settings/Index"
+                                style="color:#3085d6; text-decoration:underline;">
+                                Go to Settings & Close the day
+                             </a>
+                         `
+                     });
+                     return null;
+                 }
+
+                 clearScreenForNewOrder();
+
+                if (!currentInvoiceNo) {
+                    assignFreshInvoice();
+                } else if (hadData) {
+                    assignFreshInvoice();
+                }
+
+                orderActive = true;
+                toast('New order ready', 'success');
+                flashCenter('New order ready', 400);
+                itemSearchTop?.focus();
+             })
+             .catch(err => {
+                 console.error(err);
+                 return null;
+             });
+
+        
+    });
 
         /* ========== QUICK ADD WAITER/CUSTOMER ========== */
         const WAITERS = ['Ali', 'Bilal', 'Hamza', 'Imran', 'Sara', 'Waqas'];
@@ -2544,7 +2813,7 @@
             flashCenter('Invoice held', 400);
 
             clearScreenForNewOrder();
-            if (orderNoEl) orderNoEl.textContent = generateInvoiceNumber();
+            assignFreshInvoice();
         }
 
         function renderRunning() {
@@ -2657,46 +2926,51 @@
             if (card) { window.selectRunning(card.getAttribute('data-id')); }
         });
 
-        /* ========== SAVE / PRINT (DECIMAL QTY) ========== */
+              /* ========== SAVE / PRINT (DECIMAL QTY) ========== */
         async function savePOS(mode) {
             const wantPrint = (mode === 'print');
             const cashStr = (tCash?.value || '').trim();
             const cashVal = parseFloat(cashStr);
-            if (!cashStr || isNaN(cashVal) || cashVal <= 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Required Field',
-                    text: 'Please enter cash amount!',
-                    target: swalTarget,
-                    timer: 900,
-                    showConfirmButton: false
-                });
-                try { tCash.focus(); } catch { }
-                return;
-            }
+
+          if (!cashStr || isNaN(cashVal) || cashVal <= 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Required Field',
+            text: 'Please enter cash amount!',
+            position: 'center',
+            timer: 1000,
+            showConfirmButton: false,
+            allowOutsideClick: true,
+            allowEscapeKey: true,
+            backdrop: true,
+            width: 420
+        });
+
+        try { tCash.focus(); } catch { }
+        return;
+    }
+
             const grandTotal = parseFloat(tGrand?.textContent.replace(/,/g, '') || 0);
             const tax = parseFloat(tTax?.value || 0);
-
             const sub = cart.reduce((a, b) => a + (b.qty * b.price), 0);
-
             const d = parseFloat(tDisc.value) || 0;
 
             const discount = tDiscType.value === 'percent'
                 ? (sub * d / 100)
                 : d;
 
-            // const discount = parseFloat(tDisc?.value || 0);
             const cash = cashVal;
             const payModeVal = payMode?.value || 'cash';
-            const custId = parseInt(customer?.value || 0);
-            const orderTypeVal = orderType?.value || 'dinein';
+            const custId = parseInt(customer?.value || 0) || 0;
             const tableNoVal = tableNo?.value || '';
             const waiterVal = waiterSel?.value || null;
             const orderNo = orderNoEl?.textContent || '';
             const orderTypeSelect = document.getElementById('orderType');
+            const selectedOrderTtypeValue = orderTypeSelect?.value || 'dinein';
 
-            // Get the selected value
-            const selectedOrderTtypeValue = orderTypeSelect.value;
+            const tempCustomerName = document.getElementById('tempCustomerName')?.value?.trim() || '';
+            const tempCustomerPhone = document.getElementById('tempCustomerPhone')?.value?.trim() || '';
+            const tempCustomerAddress = document.getElementById('tempCustomerAddress')?.value?.trim() || '';
 
             const saleItems = Array.from(document.querySelectorAll('.cart-row')).map(row => {
                 const qtyInput = row.querySelector('.qty-input');
@@ -2735,11 +3009,14 @@
                 DiscountLessAmount: discount,
                 SaleType: 'Sale',
                 Total: grandTotal,
+                TerminalName: TERMINAL_NAME,
                 custId: custId,
+                CustomerDisplayName: tempCustomerName,
+                CustomerPhone: tempCustomerPhone,
+                CustomerAddress: tempCustomerAddress,
                 tender_amount: cash,
-                OrderType: orderTypeVal,
-                TableNo: tableNoVal,
                 OrderType: selectedOrderTtypeValue,
+                TableNo: tableNoVal,
                 Waiter: waiterVal,
                 Payment: {
                     Amount: cash,
@@ -2748,8 +3025,8 @@
                 },
                 SaleItems: saleItems
             };
-            const isChecked = document.querySelector('input[name="serviceCharges"]').checked ? 1 : 0;
 
+            const isChecked = document.querySelector('input[name="serviceCharges"]').checked ? 1 : 0;
 
             try {
                 const res = await fetch(`/Sales/SaveSale?serviceCharges=${isChecked}`, {
@@ -2757,12 +3034,20 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
+
                 if (res.ok) {
                     const result = await res.json();
 
                     if (wantPrint) {
-                        window.open(`/Sales/Receipt/${result.id}`, '_blank');
-                        toast('Invoice saved & printing…', 'success');
+                        const printWindow = window.open(`/Sales/Receipt/${result.id}`, '_blank');
+
+                        if (!printWindow) {
+                            toast('Popup blocked. Please allow popups for this site.', 'warning', 2200);
+                        } else {
+                            try { printWindow.focus(); } catch { }
+                        }
+
+                        toast('Invoice print window opened', 'success');
                     } else {
                         toast('Invoice saved (no print)', 'success');
                     }
@@ -2798,11 +3083,15 @@
             const discount = parseFloat(tDisc?.value || 0);
             const cash = parseFloat(tCash?.value || 0) || 0;
             const payModeVal = payMode?.value || 'cash';
-            const custId = parseInt(customer?.value || 0);
+            const custId = parseInt(customer?.value || 0) || 0;
             const orderTypeVal = orderType?.value || 'dinein';
             const tableNoVal = tableNo?.value || '';
             const waiterVal = waiterSel?.value || null;
             const orderNo = orderNoEl?.textContent || '';
+
+            const tempCustomerName = document.getElementById('tempCustomerName')?.value?.trim() || '';
+            const tempCustomerPhone = document.getElementById('tempCustomerPhone')?.value?.trim() || '';
+            const tempCustomerAddress = document.getElementById('tempCustomerAddress')?.value?.trim() || '';
 
             const saleItems = Array.from(document.querySelectorAll('.cart-row')).map(row => {
                 const qtyInput = row.querySelector('.qty-input');
@@ -2843,6 +3132,9 @@
                 SaleType: 'Sale',
                 Total: grandTotal,
                 custId: custId,
+                CustomerDisplayName: tempCustomerName,
+                CustomerPhone: tempCustomerPhone,
+                CustomerAddress: tempCustomerAddress,
                 tender_amount: cash,
                 OrderType: orderTypeVal,
                 TableNo: tableNoVal,
@@ -2857,7 +3149,6 @@
 
             try {
                 openKOT(payload);
-
 
                 const held = {
                     invoiceNumber: orderNo,
@@ -2885,14 +3176,11 @@
                 renderRunning();
                 updateRunningBadge();
 
-
-
                 toast('KOT sent & added to running', 'success');
                 flashCenter('KOT sent, screen cleared', 400);
 
                 clearScreenForNewOrder();
-                if (orderNoEl) orderNoEl.textContent = generateInvoiceNumber();
-
+                assignFreshInvoice();
             } catch (err) {
                 console.error('KOT error:', err);
                 Swal.fire({
@@ -2904,22 +3192,22 @@
             }
         }
 
-    function openKOT(payload) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/Sales/KOTReceipt';
-        form.target = '_blank'; // open in new tab
+        function openKOT(payload) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/Sales/KOTReceipt';
+            form.target = '_blank';
 
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'saleJson';
-        input.value = JSON.stringify(payload);
-        form.appendChild(input);
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'saleJson';
+            input.value = JSON.stringify(payload);
+            form.appendChild(input);
 
-        document.body.appendChild(form);
-        form.submit();
-        document.body.removeChild(form);
-    }
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+        }
 
         /* ========== EXIT / BACK TO DASHBOARD ========== */
         exitBtn?.addEventListener('click', () => {
@@ -3008,7 +3296,6 @@
 
         /* ========== TEMP PRINT (DECIMAL) ========== */
         async function temPrint() {
-
             const cashStr = (tCash?.value || '').trim();
             const cashVal = parseFloat(cashStr);
 
@@ -3017,7 +3304,12 @@
             const discount = parseFloat(tDisc?.value || 0);
             const cash = cashVal;
             const payModeVal = payMode?.value || 'cash';
-            const custId = parseInt(customer?.value || 0);
+            const custId = parseInt(customer?.value || 0) || 0;
+
+            const tempCustomerName = document.getElementById('tempCustomerName')?.value?.trim() || '';
+            const tempCustomerPhone = document.getElementById('tempCustomerPhone')?.value?.trim() || '';
+            const tempCustomerAddress = document.getElementById('tempCustomerAddress')?.value?.trim() || '';
+
             const orderTypeVal = orderType?.value || 'dinein';
             const tableNoVal = tableNo?.value || '';
             const waiterVal = waiterSel?.value || null;
@@ -3062,6 +3354,9 @@
                 SaleType: 'Sale',
                 Total: grandTotal,
                 custId: custId,
+                CustomerDisplayName: tempCustomerName,
+                CustomerPhone: tempCustomerPhone,
+                CustomerAddress: tempCustomerAddress,
                 tender_amount: cash,
                 OrderType: orderTypeVal,
                 TableNo: tableNoVal,
@@ -3080,6 +3375,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
+
                 if (res.ok) {
                     const result = await res.json();
 
@@ -3099,12 +3395,11 @@
                     document.body.removeChild(form);
 
                     clearScreenForNewOrder();
-                    if (orderNoEl) orderNoEl.innerText = generateInvoiceNumber();
+                    assignFreshInvoice();
                     orderActive = true;
                     toast('New order ready', 'success');
                     flashCenter('New order ready', 400);
                     itemSearchTop?.focus();
-
                 } else {
                     const error = await res.json().catch(() => ({}));
                     toast(error?.Message || 'Failed to save order', 'error', 2000);

@@ -22,14 +22,21 @@ namespace GSoftPosNew.Models
         public Payment Payment { get; set; } = new Payment();
         [NotMapped]
         public Customer Customers { get; set; } = new Customer();
-       
-        public int CustomerId { get; internal set; }
+
+        public int CustomerId { get; set; }
+
+        public string? CustomerDisplayName { get; set; }
+        public string? CustomerPhone { get; set; }
+        public string? CustomerAddress { get; set; }
 
         [NotMapped]
         public int custId { get; set; }
 
         [NotMapped]
         public decimal tender_amount { get; set; }
+
+        [NotMapped]
+        public string? TerminalName { get; set; }
 
         public string? Waiter { get; set; }
         public string? TableNo { get; set; }

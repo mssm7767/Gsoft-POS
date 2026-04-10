@@ -921,8 +921,8 @@
     }
 
     /* =========================
-           MODERN TAKE PAYMENT MODAL
-           ========================= */
+                       MODERN TAKE PAYMENT MODAL
+                       ========================= */
 
     .payment-modal {
         background: #ffffff;
@@ -1488,9 +1488,9 @@
                     <div class="d-flex justify-content-between align-items-center py-1">
                         <span class="text-muted">Discount</span>
                         <div class="d-flex gap-2 align-items-center">
-                            <input id="invoiceDiscountPercent" type="number" class="qty-input" placeholder="%" min="0" max="100" step="0.01" value="0" title="Discount Percentage (Ctrl+D)" />
+                            <input id="invoiceDiscountPercent" type="number" class="qty-input" placeholder="%" min="0" max="10" step="0.01" value="0" title="Discount Percentage (Ctrl+D)" />
                             <span class="text-muted">%</span>
-                            <input id="invoiceDiscountAmount" type="number" class="qty-input" placeholder="Less (PKR)" min="0" step="0.01" value="0" title="Discount Less (PKR)" />
+                            <input id="invoiceDiscountAmount" type="number" class="qty-input" placeholder="Less (PKR)" min="0" step="0.01" value="0" title="Discount Less (PKR)" hidden />
                         </div>
                     </div>
 
@@ -2115,22 +2115,65 @@
               return true;
           }
 
+        function checkDayClosedBeforeSale() {
+            return fetch('/Sales/GetNextInvoice')
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.success) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Day Not Closed',
+                            html: `
+                                <div style="font-size:14px;">
+                                    ${data.message}<br><br>
+                                    <a href="/Settings/Index"
+                                       style="color:#0d6efd;font-weight:600;text-decoration:underline;">
+                                       Go to Settings & Close the day
+                                    </a>
+                                </div>
+                            `,
+                            confirmButtonColor: '#ffc107'
+                        });
+
+                        return false;
+                    }
+
+                    return true;
+                })
+                .catch(err => {
+                    console.error(err);
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Something went wrong while checking invoice.'
+                    });
+
+                    return false;
+                });
+        }
+
           function selectItemSuggestion(i) {
               if (i < 0 || i >= filtered.length) return;
 
               const item = filtered[i];
 
-              if (!checkStockBeforeAdd(item)) {
-                  resetItemUI();
-                  return;
-              }
-              if (!checkSalePrice(item)) {
-                  resetItemUI();
-                  return;
-              }
+              checkDayClosedBeforeSale().then(isValid => {
+                if (!isValid) return;
 
-              addToSalesTable(item);
-              resetItemUI();
+
+                  if (!checkStockBeforeAdd(item)) {
+                      resetItemUI();
+                      return;
+                  }
+                  if (!checkSalePrice(item)) {
+                      resetItemUI();
+                      return;
+                  }
+
+                  addToSalesTable(item);
+                  resetItemUI();
+              });
           }
 
           /* ---------- SCANNER ---------- */
@@ -3130,7 +3173,7 @@
               document.getElementById('liveClock').innerText = d + " | " + t;
           }
 
-        function applyExpandedState(on) {
+      function applyExpandedState(on) {
         if (!posShell) return;
 
         posShell.classList.toggle('gsoft-expanded', on);
@@ -3315,7 +3358,7 @@
                   markDirty();
                   let v = parseFloat(invoiceDiscountPercentEl.value) || 0;
                   if (v < 0) v = 0;
-                  if (v > 100) v = 100;
+                  if (v > 10) v = 10;
                   invoiceDiscountPercentEl.value = v;
                   recalculateTotals();
               });

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using System.Drawing;
@@ -291,6 +292,171 @@ namespace GSoftPosNew.Controllers
 
         #endregion
 
+
+        [HttpGet]
+        public IActionResult ItemLedger(int? itemId, DateTime? fromDate, DateTime? toDate)
+        {
+            var model = new ItemLedgerReportVM
+            {
+                ItemId = itemId,
+                FromDate = fromDate ?? DateTime.Today,
+                ToDate = toDate ?? DateTime.Today,
+                Items = _context.Items
+
+
+                    .OrderBy(i => i.ItemName)
+                    .Select(i => new SelectListItem
+                    {
+
+
+                        Value = i.Id.ToString(),
+                        Text = (i.ItemName ?? "") + " (" + (i.ItemCode ?? "") + ")"
+                    })
+                    .ToList()
+            };
+
+            ViewBag.ItemsJson = System.Text.Json.JsonSerializer.Serialize(
+    _context.Items
+        .OrderBy(i => i.ItemName)
+        .Select(i => new
+        {
+            i.Id,
+            i.ItemCode,
+            i.ItemName,
+            i.SalePrice,
+            i.Quantity
+        })
+        .ToList()
+);
+
+            if (!itemId.HasValue || itemId.Value <= 0)
+                return View(model);
+
+            var item = _context.Items.FirstOrDefault(i => i.Id == itemId.Value);
+            if (item == null)
+                return View(model);
+
+            model.ItemName = item.ItemName ?? "";
+            model.ItemCode = item.ItemCode ?? "";
+
+            var from = (model.FromDate ?? DateTime.Today).Date;
+            var to = (model.ToDate ?? DateTime.Today).Date.AddDays(1).AddTicks(-1);
+
+            // Purchase
+            var purchaseRows = _context.Purchases
+                .Include(p => p.Items)
+                .Where(p => p.PurchaseType == "New" && p.Date >= from && p.Date <= to)
+                .SelectMany(p => p.Items
+                    .Where(pi => pi.ItemId == itemId.Value)
+                    .Select(pi => new ItemLedgerRowVM
+                    {
+                        Date = p.Date,
+                        Type = "Purchase",
+                        InvoiceNo = !string.IsNullOrWhiteSpace(p.ReferenceNo) ? p.ReferenceNo : ("PUR-" + p.Id),
+                        QtyIn = pi.Quantity,
+                        QtyOut = 0,
+                        PurchaseRate = pi.UnitCost,
+                        SaleRate = 0,
+                        Amount = pi.Quantity * pi.UnitCost,
+                        Profit = 0
+                    }))
+                .ToList();
+
+            // Purchase Return
+            var purchaseReturnRows = _context.Purchases
+                .Include(p => p.Items)
+                .Where(p => p.PurchaseType == "Return" && p.Date >= from && p.Date <= to)
+                .SelectMany(p => p.Items
+                    .Where(pi => pi.ItemId == itemId.Value)
+                    .Select(pi => new ItemLedgerRowVM
+                    {
+                        Date = p.Date,
+                        Type = "Purchase Return",
+                        InvoiceNo = !string.IsNullOrWhiteSpace(p.ReferenceNo) ? p.ReferenceNo : ("PR-" + p.Id),
+                        QtyIn = 0,
+                        QtyOut = pi.Quantity,
+                        PurchaseRate = pi.UnitCost,
+                        SaleRate = 0,
+                        Amount = pi.Quantity * pi.UnitCost,
+                        Profit = 0
+                    }))
+                .ToList();
+
+            // Sale
+            var saleRows = _context.SaleItems
+                .Include(si => si.Sale)
+                .Include(si => si.Item)
+                .Where(si =>
+                    si.ItemId == itemId.Value &&
+                    si.Sale.SaleType == "Sale" &&
+                    si.Sale.SaleDate >= from &&
+                    si.Sale.SaleDate <= to)
+                .Select(si => new ItemLedgerRowVM
+                {
+                    Date = si.Sale.SaleDate,
+                    Type = "Sale",
+                    InvoiceNo = !string.IsNullOrWhiteSpace(si.Sale.InvoiceNumber) ? si.Sale.InvoiceNumber : ("SAL-" + si.SaleId),
+                    QtyIn = 0,
+                    QtyOut = si.Quantity,
+                    PurchaseRate = si.Item.PurchasePrice,
+                    SaleRate = si.UnitPrice,
+                    Amount = si.Quantity * si.UnitPrice,
+                    Profit = (si.UnitPrice - si.Item.PurchasePrice) * si.Quantity
+                })
+                .ToList();
+
+            // Sale Return
+            var saleReturnRows = _context.SaleItems
+                .Include(si => si.Sale)
+                .Include(si => si.Item)
+                .Where(si =>
+                    si.ItemId == itemId.Value &&
+                    si.Sale.SaleType == "Return" &&
+                    si.Sale.SaleDate >= from &&
+                    si.Sale.SaleDate <= to)
+                .Select(si => new ItemLedgerRowVM
+                {
+                    Date = si.Sale.SaleDate,
+                    Type = "Sale Return",
+                    InvoiceNo = !string.IsNullOrWhiteSpace(si.Sale.InvoiceNumber) ? si.Sale.InvoiceNumber : ("SR-" + si.SaleId),
+                    QtyIn = si.Quantity,
+                    QtyOut = 0,
+                    PurchaseRate = si.Item.PurchasePrice,
+                    SaleRate = si.UnitPrice,
+                    Amount = si.Quantity * si.UnitPrice,
+                    Profit = (si.UnitPrice - si.Item.PurchasePrice) * si.Quantity
+                })
+                .ToList();
+
+            var allRows = purchaseRows
+                .Concat(purchaseReturnRows)
+                .Concat(saleRows)
+                .Concat(saleReturnRows)
+                .OrderBy(r => r.Date)
+                .ThenBy(r => r.Type)
+                .ToList();
+
+            model.Rows = allRows;
+
+            model.TotalPurchaseQty = purchaseRows.Sum(x => x.QtyIn);
+            model.TotalPurchaseReturnQty = purchaseReturnRows.Sum(x => x.QtyOut);
+            model.TotalSaleQty = saleRows.Sum(x => x.QtyOut);
+            model.TotalSaleReturnQty = saleReturnRows.Sum(x => x.QtyIn);
+
+            model.NetPurchaseQty = model.TotalPurchaseQty - model.TotalPurchaseReturnQty;
+            model.NetSaleQty = model.TotalSaleQty - model.TotalSaleReturnQty;
+
+            model.TotalPurchaseAmount = purchaseRows.Sum(x => x.Amount);
+            model.TotalPurchaseReturnAmount = purchaseReturnRows.Sum(x => x.Amount);
+            model.TotalSaleAmount = saleRows.Sum(x => x.Amount);
+            model.TotalSaleReturnAmount = saleReturnRows.Sum(x => x.Amount);
+
+            model.GrossProfit = saleRows.Sum(x => x.Profit);
+            model.ReturnLoss = saleReturnRows.Sum(x => x.Profit);
+            model.NetProfit = model.GrossProfit - model.ReturnLoss;
+
+            return View(model);
+        }
         public async Task<IActionResult> IncomeStatement()
         {
             ViewBag.ExpenseSummary = await _context.Expenses
