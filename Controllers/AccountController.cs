@@ -65,7 +65,6 @@ namespace GSoftPosNew.Controllers
                     var authProperties = new AuthenticationProperties
                     {
                         IsPersistent = true,
-                        //ExpiresUtc = DateTimeOffset.UtcNow.AddHours(2)
                     };
 
                     await HttpContext.SignInAsync(

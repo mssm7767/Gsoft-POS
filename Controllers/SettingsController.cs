@@ -48,6 +48,11 @@ namespace GSoftPosNew.Controllers
                     return Json(new { success = false, message = "No active business day found." });
                 }
 
+                if (activeDay.Date.Date == DateTime.Now.Date)
+                {
+                    return Json(new { success = false, message = "Day is already closed." });
+                }
+
                 // 🔹 Get sequence for this day
                 var sequence = _context.InvoiceSequences
                     .FirstOrDefault(x => x.Date == activeDay.Date);

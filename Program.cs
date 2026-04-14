@@ -58,7 +58,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     {
         options.LoginPath = "/Account/Login";         // Redirect if not logged in
         options.AccessDeniedPath = "/Account/Denied"; // Redirect if unauthorized
-        options.ExpireTimeSpan = TimeSpan.FromHours(12);
+        options.ExpireTimeSpan = TimeSpan.FromHours(24);
         options.SlidingExpiration = true;
     });
 

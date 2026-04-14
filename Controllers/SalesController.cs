@@ -2475,16 +2475,6 @@ namespace GSoftPosNew.Controllers
         [HttpGet]
         public IActionResult GetNextInvoice()
         {
-            //var sequenceCheck = _context.InvoiceSequences
-            //    .OrderByDescending(x => x.Date)
-            //        .FirstOrDefault();
-
-            //// ✅ Update session to new date
-            //HttpContext.Session.SetString(
-            //    "BusinessDate",
-            //    sequenceCheck.Date.ToString("yyyy-MM-dd")
-            //);
-
             // 🔹 Get business date from session
             var sessionDateStr = HttpContext.Session.GetString("BusinessDate");
 
@@ -2505,7 +2495,7 @@ namespace GSoftPosNew.Controllers
                     .FirstOrDefault();
 
             // 🔴 If system date changed and day not closed → block
-            if (businessDate > sequenceCheck.Date)
+            if (businessDate.Date > sequenceCheck.Date)
             {
 
                 if (sequenceCheck != null && sequenceCheck.IsClosed == false)
@@ -2542,6 +2532,17 @@ namespace GSoftPosNew.Controllers
             string numberPart = sequence.LastNumber.ToString("D4");
 
             var invoice = $"INV-{datePart}-{numberPart}";
+
+            var sameinvoice = _context.Sales.Where(s => s.InvoiceNumber == invoice).FirstOrDefault();
+
+            if(sameinvoice != null)
+            {
+                sequence.LastNumber++;
+
+                numberPart = sequence.LastNumber.ToString("D4");
+
+                invoice = $"INV-{datePart}-{numberPart}";
+            }
 
             return Json(new
             {
