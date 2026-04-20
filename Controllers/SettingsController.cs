@@ -131,9 +131,7 @@ namespace GSoftPosNew.Controllers
                     }
 
                     model.LogoPath = "/uploads/" + uniqueFileName;
-                }
-
-                
+                }                
 
                 model.ShopName = model.ShopName.ToUpper();
                 _context.ShopSettings.Update(model);

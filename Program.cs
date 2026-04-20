@@ -33,7 +33,7 @@ builder.Services.AddScoped<IPasswordHasher<GSoftPosNew.Models.User>, PasswordHas
 // Configure session
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(20);
+    options.IdleTimeout = TimeSpan.FromHours(24);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });

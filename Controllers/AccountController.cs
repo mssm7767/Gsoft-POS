@@ -214,6 +214,10 @@ namespace GSoftPosNew.Controllers
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+            HttpContext.Session.Clear(); // 🔹 clear session
+            await HttpContext.SignOutAsync(); // 🔹 remove cookie
+
             return RedirectToAction("Login", "Account");
         }
 
