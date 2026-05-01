@@ -91,10 +91,10 @@ namespace GSoftPosNew.Controllers
                 transaction.Commit();
 
                 // ✅ Update session to new date
-                HttpContext.Session.SetString(
-                    "BusinessDate",
-                    newDay.Date.ToString("yyyy-MM-dd")
-                );
+                //HttpContext.Session.SetString(
+                //    "BusinessDate",
+                //    newDay.Date.ToString("yyyy-MM-dd")
+                //);
 
                 return Json(new
                 {

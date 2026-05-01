@@ -2476,7 +2476,7 @@ namespace GSoftPosNew.Controllers
         public IActionResult GetNextInvoice()
         {
             // 🔹 Get business date from session
-            var sessionDateStr = HttpContext.Session.GetString("BusinessDate");
+            var sessionDateStr = User.FindFirst("BusinessDate")?.Value;
 
             if (string.IsNullOrEmpty(sessionDateStr))
             {
@@ -2495,7 +2495,7 @@ namespace GSoftPosNew.Controllers
                     .FirstOrDefault();
 
             // 🔴 If system date changed and day not closed → block
-            if (businessDate.Date > sequenceCheck.Date)
+            if (businessDate.Date > sequenceCheck.Date.Date)
             {
 
                 if (sequenceCheck != null && sequenceCheck.IsClosed == false)
@@ -2503,7 +2503,7 @@ namespace GSoftPosNew.Controllers
                     return Json(new
                     {
                         success = false,
-                        message = $"Previous day ({businessDate:MM-dd-yyyy}) is not closed. Please close it first."
+                        message = $"Previous day ({sequenceCheck.Date:MM-dd-yyyy}) is not closed. Please close it first."
                     });
                 }
             }

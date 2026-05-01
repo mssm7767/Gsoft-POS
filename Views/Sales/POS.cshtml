@@ -2277,17 +2277,25 @@
 
                           const item = filtered[i];
 
-                          if (!checkStockBeforeAdd(item)) {
-                              resetItemUI();
-                              return;
-                          }
-                          if (!checkSalePrice(item)) {
-                              resetItemUI();
-                              return;
-                          }
+                          generateInvoiceNumber().then(invoice => {
+                                if (invoice == null) {
+                                    resetItemUI();
+                                    return;
+                                }
+                            
 
-                          addToSalesTable(item);
-                          resetItemUI();
+                              if (!checkStockBeforeAdd(item)) {
+                                  resetItemUI();
+                                  return;
+                              }
+                              if (!checkSalePrice(item)) {
+                                  resetItemUI();
+                                  return;
+                              }
+
+                              addToSalesTable(item);
+                              resetItemUI();
+                          });
                       }
 
                       /* ---------- SCANNER ---------- */
@@ -3250,8 +3258,6 @@
                                         });
                                         return null;
                                     }
-
-                                    console.log(data.invoice);
 
                                     return data.invoice;
                                 })

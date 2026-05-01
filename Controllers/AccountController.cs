@@ -43,6 +43,8 @@ namespace GSoftPosNew.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
+            var today = DateTime.Today;
+
             var user = await _context.Users
                 .FirstOrDefaultAsync(u => u.Username == model.Username);
 
@@ -56,7 +58,8 @@ namespace GSoftPosNew.Controllers
                     {
                         new Claim(ClaimTypes.Name, user.FullName ?? string.Empty),
                         new Claim(ClaimTypes.Role, user.Role),
-                        new Claim("CustomerId", user.CustomerId?.ToString() ?? "0")
+                        new Claim("CustomerId", user.CustomerId?.ToString() ?? "0"),
+                        new Claim("BusinessDate", today.ToString("yyyy-MM-dd"))
                     };
 
                     var claimsIdentity = new ClaimsIdentity(
@@ -76,7 +79,7 @@ namespace GSoftPosNew.Controllers
                     // ✅ 🔹 ADD THIS BLOCK
                     // ================================
 
-                    var today = DateTime.Today;
+                    
 
                     // 🔹 Get last business day
                     var lastDay = await _context.InvoiceSequences
@@ -106,10 +109,10 @@ namespace GSoftPosNew.Controllers
                     }
 
                     // ✅ SET SESSION HERE
-                    HttpContext.Session.SetString(
-                        "BusinessDate",
-                        today.Date.ToString("yyyy-MM-dd")
-                    );
+                    //HttpContext.Session.SetString(
+                    //    "BusinessDate",
+                    //    today.Date.ToString("yyyy-MM-dd")
+                    //);
 
                     // ================================
 
